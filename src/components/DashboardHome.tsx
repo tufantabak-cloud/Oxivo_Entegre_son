@@ -268,9 +268,9 @@ export function DashboardHome({
     <>
       <div className="space-y-6">
         {/* Dashboard Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           {/* Action Buttons */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center flex-wrap gap-2">
             {/* Excel Import/Export */}
             <ExcelDataManager
               customers={customers}
@@ -373,7 +373,7 @@ export function DashboardHome({
                   Widget Yönetimi
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
                 <DialogHeader>
                   <DialogTitle>Widget Yönetimi</DialogTitle>
                   <DialogDescription>
@@ -381,7 +381,7 @@ export function DashboardHome({
                   </DialogDescription>
                 </DialogHeader>
 
-                <div className="space-y-6 mt-4">
+                <div className="space-y-6 mt-4 overflow-y-auto flex-1 pr-2">
                   {/* Yeni Widget Ekle */}
                   <div>
                     <h3 className="text-sm font-semibold text-gray-700 mb-3">Yeni Widget Ekle</h3>

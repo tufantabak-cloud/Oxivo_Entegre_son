@@ -181,6 +181,16 @@ body {
   max-height: fit-content !important;
 }
 
+/* Scrollbar Hide Utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* FIX: Compact all radix scroll areas */
 [data-radix-scroll-area-viewport] > div {
   display: block !important;

@@ -1100,7 +1100,7 @@ export default function App() {
                 <span className="hidden sm:inline">Aktivite</span>
               </Button>
             </div>
-            <nav className="flex items-center gap-1.5 overflow-x-auto">
+            <nav className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
               <button
                 onClick={() => setActiveModule('home')}
                 className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-[13px] ${

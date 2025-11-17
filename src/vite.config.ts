@@ -4,29 +4,43 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
+
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './'),
     },
   },
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 🚀 CSS & POSTCSS SETTINGS — CRITICAL FOR VERCEL UI
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   css: {
     postcss: './postcss.config.js',
     devSourcemap: true,
+
+    // CSS sırasının bozulmasını engelle
+    order: 'index',
+
     preprocessorOptions: {
       css: {
-        charset: false, // Prevent duplicate charset declarations
+        charset: false,
       },
     },
   },
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 🚀 DEV SERVER
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   server: {
     port: 3000,
     host: true,
     strictPort: false,
-    // Optimize dev server for faster CSS reload
+
     hmr: {
       overlay: true,
     },
-    // Pre-transform CSS on server start
+
+    // CSS dosyalarını hızlı ısıtma (skeleton → instant load)
     warmup: {
       clientFiles: [
         './styles/globals.css',
@@ -36,11 +50,15 @@ export default defineConfig({
       ],
     },
   },
+
   preview: {
     port: 3000,
     host: true,
   },
-  // Optimize dependencies pre-bundling
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 🚀 PRE-BUNDLING OPTIMIZATION
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   optimizeDeps: {
     include: [
       'react',
@@ -48,15 +66,20 @@ export default defineConfig({
       'lucide-react',
       'sonner',
       'recharts',
+      'styles/figma-fixes.css',   // CRITICAL: treeshake etme!
     ],
-    // Force re-optimization on CSS changes
-    force: false,
   },
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 🚀 BUILD OPTIMIZATION — VERCEL FIX
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   build: {
     outDir: 'dist',
     sourcemap: false,
-    // Single CSS file for better caching
+
+    // ⚠️ CSS tek dosyada → UI BOZULMASI önlenir
     cssCodeSplit: false,
+
     minify: 'terser',
     terserOptions: {
       compress: {
@@ -64,16 +87,20 @@ export default defineConfig({
         drop_debugger: true,
       },
     },
+
     chunkSizeWarningLimit: 1000,
+
+    // Rollup output optimizasyonları
     rollupOptions: {
       output: {
-        // Optimize CSS file naming
         assetFileNames: (assetInfo) => {
           if (assetInfo.name === 'style.css') {
             return 'assets/style.[hash].css';
           }
           return 'assets/[name].[hash].[ext]';
         },
+
+        // Vendor splitting
         manualChunks: {
           'react-vendor': ['react', 'react-dom'],
           'ui-components': ['lucide-react', 'sonner'],
