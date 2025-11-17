@@ -13,7 +13,7 @@ import {
 import { Alert, AlertDescription } from './ui/alert';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { Checkbox } from './ui/checkbox';
 import { Label } from './ui/label';
 

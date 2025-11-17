@@ -8,7 +8,7 @@
  */
 
 import { connectionManager } from './connectionManager';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { checkSharingsStatus, diagnosticAndRepair } from './sharingsRecovery';
 
 interface StartupCheckResult {

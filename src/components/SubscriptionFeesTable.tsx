@@ -31,7 +31,7 @@ import { ColumnVisibilityDropdown, ColumnConfig } from './ColumnVisibilityDropdo
 import { FilterDropdown, FilterOption } from './FilterDropdown';
 import * as XLSX from 'xlsx';
 import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,

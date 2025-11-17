@@ -4,7 +4,6 @@ module.exports = {
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
-    "./**/*.{js,ts,jsx,tsx}", // <--- BU SATIR KRİTİK (Her yere bak demek)
   ],
   theme: {
     extend: {
