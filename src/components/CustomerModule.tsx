@@ -5,6 +5,7 @@ import { ExcelImport } from './ExcelImport';
 import { Plus } from 'lucide-react';
 import { Button } from './ui/button';
 import { toast } from 'sonner';
+import * as XLSX from 'xlsx';
 
 export interface DomainNode {
   id: string;
@@ -865,11 +866,10 @@ ${notMatchedDomains.length > 0 ? `\n⚠️ Eşleşmeyen domainler konsola yazdı
       if (!file) return;
       
       try {
-        const xlsx = require('xlsx');
         const data = await file.arrayBuffer();
-        const workbook = xlsx.read(data);
+        const workbook = XLSX.read(data);
         const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-        const jsonData = xlsx.utils.sheet_to_json(worksheet);
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
         
         if (jsonData.length === 0) {
           toast.error('❌ Excel dosyası boş!');
@@ -1227,7 +1227,6 @@ ${notMatchedDomains.length > 0 ? `\n⚠️ Eşleşmeyen domainler konsola yazdı
   // Banka/PF şablonu indirme
   const handleDownloadBankPFTemplate = () => {
     try {
-      const xlsx = require('xlsx');
       
       // Tüm müşterilerin verileri ile şablon oluştur
       const templateData: any[] = [];
@@ -1321,8 +1320,8 @@ ${notMatchedDomains.length > 0 ? `\n⚠️ Eşleşmeyen domainler konsola yazdı
       }
       
       // Excel workbook oluştur
-      const wb = xlsx.utils.book_new();
-      const ws = xlsx.utils.json_to_sheet(templateData);
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(templateData);
       
       // Sütun genişliklerini ayarla
       ws['!cols'] = [
@@ -1341,7 +1340,7 @@ ${notMatchedDomains.length > 0 ? `\n⚠️ Eşleşmeyen domainler konsola yazdı
         { wch: 10 }  // Durum
       ];
       
-      xlsx.utils.book_append_sheet(wb, ws, 'Banka-PF Eşleştirme');
+      XLSX.utils.book_append_sheet(wb, ws, 'Banka-PF Eşleştirme');
       
       // Kullanım kılavuzu sayfası
       const instructionData = [
@@ -1377,13 +1376,13 @@ ${notMatchedDomains.length > 0 ? `\n⚠️ Eşleşmeyen domainler konsola yazdı
         { 'ALAN': '❗', 'AÇIKLAMA': 'Büyük/küçük harf farkı gözetilmez' }
       ];
       
-      const wsInst = xlsx.utils.json_to_sheet(instructionData);
+      const wsInst = XLSX.utils.json_to_sheet(instructionData);
       wsInst['!cols'] = [{ wch: 25 }, { wch: 60 }];
-      xlsx.utils.book_append_sheet(wb, wsInst, 'Kullanım Kılavuzu');
+      XLSX.utils.book_append_sheet(wb, wsInst, 'Kullanım Kılavuzu');
       
       // Dosyayı indir
       const fileName = `banka-pf-eslestirme-${new Date().toISOString().split('T')[0]}.xlsx`;
-      xlsx.writeFile(wb, fileName);
+      XLSX.writeFile(wb, fileName);
       
       const matchedCount = templateData.filter(row => row['Banka/PF Firma Ünvanı']).length;
       toast.success(
@@ -1408,11 +1407,10 @@ ${notMatchedDomains.length > 0 ? `\n⚠️ Eşleşmeyen domainler konsola yazdı
       if (!file) return;
       
       try {
-        const xlsx = require('xlsx');
         const data = await file.arrayBuffer();
-        const workbook = xlsx.read(data);
+        const workbook = XLSX.read(data);
         const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-        const jsonData = xlsx.utils.sheet_to_json(worksheet);
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
         
         if (jsonData.length === 0) {
           toast.error('❌ Excel dosyası boş!');
@@ -1541,7 +1539,6 @@ ${notMatchedDomains.length > 0 ? `\n⚠️ Eşleşmeyen domainler konsola yazdı
   // Domain şablonu indirme
   const handleDownloadDomainTemplate = () => {
     try {
-      const xlsx = require('xlsx');
       
       // Tüm müşterilerin verileri ile şablon oluştur
       const templateData: any[] = [];
@@ -1604,7 +1601,7 @@ ${notMatchedDomains.length > 0 ? `\n⚠️ Eşleşmeyen domainler konsola yazdı
       }
       
       // Worksheet oluştur
-      const ws = xlsx.utils.json_to_sheet(templateData);
+      const ws = XLSX.utils.json_to_sheet(templateData);
       
       // Sütun genişlikleri
       ws['!cols'] = [
@@ -1619,8 +1616,8 @@ ${notMatchedDomains.length > 0 ? `\n⚠️ Eşleşmeyen domainler konsola yazdı
       ];
       
       // Workbook oluştur
-      const wb = xlsx.utils.book_new();
-      xlsx.utils.book_append_sheet(wb, ws, 'Domain Hiyerarşisi');
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Domain Hiyerarşisi');
       
       // Kullanım kılavuzu sayfası
       const instructionData = [
@@ -1650,13 +1647,13 @@ ${notMatchedDomains.length > 0 ? `\n⚠️ Eşleşmeyen domainler konsola yazdı
         { 'ALAN': '', 'AÇIKLAMA': 'ANKARA' },
         { 'ALAN': '', 'AÇIKLAMA': '(İSTANBUL node\'u otomatik birleştirildi ve 2 alt dalı var)' }
       ];
-      const wsInst = xlsx.utils.json_to_sheet(instructionData);
+      const wsInst = XLSX.utils.json_to_sheet(instructionData);
       wsInst['!cols'] = [{ wch: 15 }, { wch: 60 }];
-      xlsx.utils.book_append_sheet(wb, wsInst, 'Kullanım Kılavuzu');
+      XLSX.utils.book_append_sheet(wb, wsInst, 'Kullanım Kılavuzu');
       
       // Dosyayı indir
       const fileName = `domain-hiyerarsi-tum-musteriler.xlsx`;
-      xlsx.writeFile(wb, fileName);
+      XLSX.writeFile(wb, fileName);
       
       toast.success(`✅ Şablon indirildi: ${fileName}`);
       console.log('✅ Domain şablonu oluşturuldu:', { müşteriSayısı: customers.length, satırSayısı: templateData.length });
