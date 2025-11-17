@@ -1,10 +1,10 @@
-// Kök Dizindeki tailwind.config.js
-// export default yerine module.exports kullanıldı.
+// Kök Dizindeki tailwind.config.cjs (YENİ UZANTI)
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
     "./index.html",
+    // Vercel'in aradığı doğru yol:
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   darkMode: "class",
@@ -27,6 +27,6 @@ module.exports = {
       borderRadius: { lg: "var(--radius)", md: "calc(var(--radius) - 2px)", sm: "calc(var(--radius) - 4px)" }
     }
   },
-  // require() ile çalıştığı için burayı CommonJS söz dizimiyle bıraktık
+  // require() kullandığınız için CJS formatı zorunludur.
   plugins: [require("tailwindcss-animate")]
 };
