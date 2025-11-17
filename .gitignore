@@ -1,12 +1,15 @@
-# Build çıktıları
+Build çıktıları
+
 dist
 build
 .vercel
 
-# Kütüphaneler (Asla yüklenmemeli)
+Kütüphaneler (Asla yüklenmemeli)
+
 node_modules
 
-# Sistem dosyaları
+Sistem dosyaları
+
 .env
 .env.local
 *.log
