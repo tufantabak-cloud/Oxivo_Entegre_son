@@ -1,20 +1,25 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 🛑 GLOBAL STYLES & TAILWIND CONFIGURATION
-// Tüm stiller (Tailwind, Figma Düzeltmeleri, Resetler) artık burada:
+// 🛑 1. GLOBAL STYLES (En Üstte Olmalı)
+// Tüm stiller (Tailwind, Figma Düzeltmeleri, Resetler)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-import './index.css' 
+import './index.css';
 
-import { Toaster } from './components/ui/sonner'
-import { TooltipProvider } from './components/ui/tooltip'
-import { ConnectionStatus } from './components/ConnectionStatus'
-import { ErrorBoundary } from './components/ErrorBoundary'
-import { initStartupCheck } from './utils/startupCheck'
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 2. ANA UYGULAMA VE PROVIDER'LAR
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+import App from './App';
+import { Toaster } from './components/ui/sonner';
+import { TooltipProvider } from './components/ui/tooltip';
+import { ConnectionStatus } from './components/ConnectionStatus';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { initStartupCheck } from './utils/startupCheck';
 
+// -----------------------------------------------------------------------------
 // Service Worker cleanup (prevent caching issues)
+// -----------------------------------------------------------------------------
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then(function(registrations) {
     for(let registration of registrations) {
@@ -25,53 +30,34 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// PERFORMANCE OPTIMIZATION
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// -----------------------------------------------------------------------------
+// Uygulamayı Başlat (Startup Check)
+// -----------------------------------------------------------------------------
+// initStartupCheck(); // Eğer bu bir fonksiyonu hemen çalıştırıyorsa burada kalsın
 
-// Remove loading state after CSS is loaded
-const removeLoadingState = () => {
-  const root = document.getElementById('root');
-  if (root) {
-    // Force a reflow to ensure CSS is applied
-    void root.offsetHeight;
-    // Mark as ready for hydration
-    root.setAttribute('data-css-loaded', 'true');
-  }
-};
-
-// Wait for CSS to be parsed and applied
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', removeLoadingState);
-} else {
-  removeLoadingState();
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🚀 3. UYGULAMAYI RENDER ET (ÇALIŞTIR)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+  throw new Error("Ana 'root' elementi HTML'de bulunamadı!");
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// STARTUP HEALTH CHECK
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const root = ReactDOM.createRoot(rootElement);
 
-// Run health check before rendering
-initStartupCheck().then((success) => {
-  if (success) {
-    console.log('✅ System health check passed');
-  } else {
-    console.warn('⚠️ System health check found issues');
-  }
-});
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// REACT RENDER
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-ReactDOM.createRoot(document.getElementById('root')!).render(
+root.render(
   <React.StrictMode>
     <ErrorBoundary>
       <TooltipProvider>
+        
+        {/* Ana Uygulama */}
         <App />
-        <ConnectionStatus />
+        
+        {/* Global Bileşenler (Tüm sayfalarda görünsün) */}
         <Toaster />
+        <ConnectionStatus />
+        
       </TooltipProvider>
     </ErrorBoundary>
-  </React.StrictMode>,
-)
+  </React.StrictMode>
+);
