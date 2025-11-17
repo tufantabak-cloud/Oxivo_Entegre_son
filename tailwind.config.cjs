@@ -4,6 +4,8 @@ module.exports = {
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
+    // Eğer Oxivo_Entegre klasörü içinde de kodların varsa burayı da ekle:
+    "./Oxivo_Entegre/**/*.{js,ts,jsx,tsx}", 
   ],
   theme: {
     extend: {
