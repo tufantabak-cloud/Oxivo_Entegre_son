@@ -1,6 +1,7 @@
 {
   "framework": "vite",
-  "outputDirectory": "dist",
+  "buildCommand": "npm run build",
+  "outputDirectory": "build",
   "rewrites": [
     {
       "source": "/(.*)",
@@ -8,3 +9,33 @@
     }
   ]
 }
+```
+
+---
+
+### Adım 4: 🚀 NİHAİ FIRLATMA (Windows PowerShell)
+
+Artık tüm dosyalar doğru. Terminali aç ve **sırasıyla** şu komutları çalıştır:
+
+1.  **Paketleri Yükle (Yeni `rimraf` için):**
+    ```powershell
+    npm install
+    ```
+
+2.  **Temizle (Artık çalışacak):**
+    ```powershell
+    npm run build:clean
+    ```
+
+3.  **Yerelde Test Et (Emin olmak için):**
+    ```powershell
+    npm run build
+    npm run preview
+    ```
+    *(Yerelde sitenin hem düzgün göründüğünü hem de Excel import'un çalıştığını kontrol et)*
+
+4.  **Temiz Projeyi GitHub'a Gönder:**
+    ```powershell
+    git add .
+    git commit -m "FIX: Solved XLSX require error and Vercel styling error"
+    git push

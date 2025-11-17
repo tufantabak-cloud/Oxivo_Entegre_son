@@ -1,6 +1,6 @@
 {
   "name": "musteri-modulu-uygulamasi",
-  "version": "0.1.0",
+  "version": "3.0.8",
   "private": true,
   "type": "module",
   "dependencies": {
@@ -60,6 +60,7 @@
     "@vitejs/plugin-react-swc": "^3.5.0",
     "autoprefixer": "^10.4.19",
     "postcss": "^8.4.38",
+    "rimraf": "^5.0.7",
     "tailwindcss": "^3.4.3",
     "typescript": "^5.4.5",
     "vite": "^5.2.11"
@@ -67,6 +68,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:clean": "rimraf dist build node_modules/.vite",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   }
