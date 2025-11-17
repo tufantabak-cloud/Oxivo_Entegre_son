@@ -6,17 +6,15 @@ export default defineConfig({
   plugins: [react()], 
 
   resolve: {
-    extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
     alias: {
       '@': path.resolve(__dirname, './src'), 
     },
   },
 
   build: {
-    outDir: 'build', 
+    outDir: 'dist', // Vercel standartı 'dist'tir. 'build' yerine bunu kullanıyoruz.
     target: 'esnext',
     sourcemap: false,
-    cssCodeSplit: false,
     minify: 'terser',
     terserOptions: {
       compress: {
@@ -27,59 +25,24 @@ export default defineConfig({
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
-        assetFileNames: 'assets/[name].[hash].[ext]', 
         manualChunks: {
           'react-vendor': ['react', 'react-dom'],
           'ui-components': ['lucide-react', 'sonner'],
           'charts': ['recharts'],
-          'radix-ui': [
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-dropdown-menu',
-            '@radix-ui/react-select',
-            '@radix-ui/react-tabs',
-            '@radix-ui/react-popover',
-          ],
           'excel': ['xlsx'],
         },
       },
     },
   },
 
-  // CSS Ayarları: Buradaki yolu GÜNCELLEYİN!
+  // CSS ayarını basitleştirdik, PostCSS config dosyasını otomatik bulacak.
   css: {
-    // ARTIK .cjs UZANTISINI GÖSTERİYORUZ
-    postcss: './postcss.config.cjs', 
+    devSourcemap: true,
   },
 
   server: {
     port: 3000,
     open: true, 
     host: true, 
-    strictPort: false,
-    hmr: {
-      overlay: true,
-    },
-    warmup: {
-      clientFiles: [
-        './src/**/*.css', 
-        './src/**/*.ts',
-        './src/**/*.tsx',
-      ],
-    },
-  },
-  
-  preview: {
-    port: 3000,
-    host: true,
-  },
-
-  optimizeDeps: {
-    include: [
-      'react',
-      'react-dom',
-      'lucide-react',
-      'sonner',
-      'recharts',
-    ],
   },
 });
