@@ -2016,7 +2016,7 @@ export function FirmaTabelaTab({
                         </TableCell>
                       </TableRow>
                       
-                      {/* Gruplanmamı�� Ek Gelir Kayıtları - Sadece açıksa göster */}
+                      {/* Gruplanmamı   Ek Gelir Kayıtları - Sadece açıksa göster */}
                       {!isCollapsed && ungroupedEkGelirRecords.map((record) => {
                         const recordGroup = getRecordGroup(record.id);
                         return (
@@ -2289,7 +2289,7 @@ export function FirmaTabelaTab({
 
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                   <p className="text-sm text-blue-800">
-                    💡 Bu alan opsiyoneldir. TABELA kaydınız için kısa bir a��ıklama girebilirsiniz.
+                    💡 Bu alan opsiyoneldir. TABELA kaydınız için kısa bir a  ıklama girebilirsiniz.
                   </p>
                 </div>
               </div>

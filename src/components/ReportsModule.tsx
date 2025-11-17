@@ -17,6 +17,8 @@ import { TabelaSimulationDialog } from './TabelaSimulationDialog';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { toast } from 'sonner';
+// XLSX import - ES6 module format (v3.0.8 - fixed require issue)
+import * as XLSX from 'xlsx';
 
 interface ReportsModuleProps {
   customers?: Customer[];
@@ -858,7 +860,7 @@ export const ReportsModule = React.memo(function ReportsModule({
                                       </Badge>
                                       {referansTabela.paylaşımOranları?.kurulusOrani && referansTabela.paylaşımOranları?.oxivoOrani && (
                                         <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                                          Payla��ım: {referansTabela.paylaşımOranları.kurulusOrani}% / {referansTabela.paylaşımOranları.oxivoOrani}%
+                                          Payla  ım: {referansTabela.paylaşımOranları.kurulusOrani}% / {referansTabela.paylaşımOranları.oxivoOrani}%
                                         </Badge>
                                       )}
                                     </div>
@@ -2080,42 +2082,40 @@ export const ReportsModule = React.memo(function ReportsModule({
                           });
 
                           // Excel oluştur
-                          import('xlsx').then((XLSX) => {
-                            const ws = XLSX.utils.json_to_sheet(excelData);
-                            const wb = XLSX.utils.book_new();
-                            
-                            // Sütun genişlikleri
-                            ws['!cols'] = [
-                              { wch: 15 }, // Cari Kodu
-                              { wch: 40 }, // Cari Adı
-                              { wch: 12 }, // Cihaz Sayısı
-                              { wch: 20 }, // Sektör
-                              { wch: 12 }, // MCC
-                              { wch: 30 }, // Güncel Mypayter Domain
-                              { wch: 15 }, // Vergi Dairesi
-                              { wch: 15 }, // Vergi No
-                              { wch: 45 }, // Adres
-                              { wch: 15 }, // İlçe
-                              { wch: 12 }, // Posta Kodu
-                              { wch: 25 }, // Email
-                              { wch: 15 }, // Tel
-                              { wch: 20 }, // Yetkili
-                              { wch: 10 }, // P6X
-                              { wch: 10 }, // APOLLO
-                              { wch: 12 }  // Durum
-                            ];
-                            
-                            const selectedBankPF = selectedBankPFId === 'ALL' 
-                              ? 'Tum' 
-                              : allBankDefinitionsExcel.find(def => def.id === selectedBankPFId)?.name.replace(/[^a-z0-9]/gi, '-') || 'Secili';
-                            
-                            XLSX.utils.book_append_sheet(wb, ws, 'ÜİY Listesi');
-                            
-                            const fileName = `uiy-listesi-${selectedBankPF.toLowerCase()}-${new Date().toISOString().split('T')[0]}.xlsx`;
-                            XLSX.writeFile(wb, fileName);
-                            
-                            toast.success(`Excel başarıyla oluşturuldu!\n${fileName}`);
-                          });
+                          const ws = XLSX.utils.json_to_sheet(excelData);
+                          const wb = XLSX.utils.book_new();
+                          
+                          // Sütun genişlikleri
+                          ws['!cols'] = [
+                            { wch: 15 }, // Cari Kodu
+                            { wch: 40 }, // Cari Adı
+                            { wch: 12 }, // Cihaz Sayısı
+                            { wch: 20 }, // Sektör
+                            { wch: 12 }, // MCC
+                            { wch: 30 }, // Güncel Mypayter Domain
+                            { wch: 15 }, // Vergi Dairesi
+                            { wch: 15 }, // Vergi No
+                            { wch: 45 }, // Adres
+                            { wch: 15 }, // İlçe
+                            { wch: 12 }, // Posta Kodu
+                            { wch: 25 }, // Email
+                            { wch: 15 }, // Tel
+                            { wch: 20 }, // Yetkili
+                            { wch: 10 }, // P6X
+                            { wch: 10 }, // APOLLO
+                            { wch: 12 }  // Durum
+                          ];
+                          
+                          const selectedBankPF = selectedBankPFId === 'ALL' 
+                            ? 'Tum' 
+                            : allBankDefinitionsExcel.find(def => def.id === selectedBankPFId)?.name.replace(/[^a-z0-9]/gi, '-') || 'Secili';
+                          
+                          XLSX.utils.book_append_sheet(wb, ws, 'ÜİY Listesi');
+                          
+                          const fileName = `uiy-listesi-${selectedBankPF.toLowerCase()}-${new Date().toISOString().split('T')[0]}.xlsx`;
+                          XLSX.writeFile(wb, fileName);
+                          
+                          toast.success(`Excel başarıyla oluşturuldu!\n${fileName}`);
                         } catch (error) {
                           console.error('Excel oluşturma hatası:', error);
                           toast.error('Excel oluşturulurken hata oluştu!');
