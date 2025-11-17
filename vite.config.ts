@@ -9,8 +9,8 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-  // css: { ... } kısmını SİLDİK, otomatik bulsun diye.
   build: {
-    outDir: 'dist',
+    outDir: 'build', // <-- BURAYI "build" YAPTIK
+    emptyOutDir: true,
   }
 })
