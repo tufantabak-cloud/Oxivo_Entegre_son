@@ -1,26 +1,12 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
-import './styles/figma-fixes.css';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// CSS IMPORT ORDER - CRITICAL FOR PERFORMANCE & CLS PREVENTION
-// DO NOT CHANGE ORDER! Each file builds on the previous one.
+// 🛑 GLOBAL STYLES & TAILWIND CONFIGURATION
+// Tüm stiller (Tailwind, Figma Düzeltmeleri, Resetler) artık burada:
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-// 1. Tailwind base styles - Foundation (resets, utilities)
-import './styles/globals.css'
-
-// 2. Figma component styles - Component templates (minimized)
-import './styles/figma.css'
-
-// 3. Custom utilities - Scrollbars, animations
-import './styles/utilities.css'
-
-// 4. Figma pixel-perfect fixes - ALWAYS LAST (highest priority overrides)
-import './styles/figma-fixes.css'
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+import './index.css' 
 
 import { Toaster } from './components/ui/sonner'
 import { TooltipProvider } from './components/ui/tooltip'
