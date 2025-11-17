@@ -638,7 +638,7 @@ Mevcut kayıtları güncellemek ister misiniz?
     // Sonuçları raporla
     console.log('\n📊 SİPAY Domain Eşleştirme Sonuçları:');
     console.log('✅ Toplam eşleşme:', matchedCount);
-    console.log('���� Yeni kategori ataması:', updatedCount);
+    console.log('     Yeni kategori ataması:', updatedCount);
     console.log('♻️ Zaten atanmış:', alreadyAssignedCount);
     console.log('❌ Eşleşmeyen domain:', notMatchedDomains.length);
 
@@ -1092,13 +1092,9 @@ ${notMatchedDomains.length > 0 ? `\n⚠️ Eşleşmeyen domainler konsola yazdı
           
           // Hata mesajını göster
           
-          toast.warning(errorParts.join('\\n'), { duration: 12000 });
+          toast.warning(errorParts.join('\n'), { duration: 12000 });
         } else {
           // Tüm müşteriler başarıyla bulundu
-          toast.success(
-            `⚠️ ${updatedCount} müşteri güncellendi\n\n${notFoundCount} müşteri bulunamadı:\n${notFoundCustomers.slice(0, 5).join(', ')}${notFoundCount > 5 ? '...' : ''}`,
-            { duration: 8000 }
-          );
           toast.success(
             `✅ Domain hiyerarşisi başarıyla yüklendi!\n\n${updatedCount} müşteri güncellendi\n${jsonData.length} satır işlendi`,
             { duration: 5000 }
@@ -1386,7 +1382,7 @@ ${notMatchedDomains.length > 0 ? `\n⚠️ Eşleşmeyen domainler konsola yazdı
       
       const matchedCount = templateData.filter(row => row['Banka/PF Firma Ünvanı']).length;
       toast.success(
-        `✅ Şablon indirildi!\\n\\n${templateData.length} müşteri\\n${matchedCount} eşleşme mevcut`,
+        `✅ Şablon indirildi!\n\n${templateData.length} müşteri\n${matchedCount} eşleşme mevcut`,
         { duration: 4000 }
       );
       
@@ -1501,14 +1497,14 @@ ${notMatchedDomains.length > 0 ? `\n⚠️ Eşleşmeyen domainler konsola yazdı
         }
         
         // Sonuç mesajı
-        let message = `✅ Import tamamlandı!\\n\\n${updatedCount} eşleştirme yapıldı`;
+        let message = `✅ Import tamamlandı!\n\n${updatedCount} eşleştirme yapıldı`;
         
         if (notFoundCustomers.length > 0) {
-          message += `\\n\\n⚠️ ${notFoundCustomers.length} müşteri bulunamadı`;
+          message += `\n\n⚠️ ${notFoundCustomers.length} müşteri bulunamadı`;
         }
         
         if (notFoundBankPF.length > 0) {
-          message += `\\n\\n⚠️ ${notFoundBankPF.length} Banka/PF kaydı bulunamadı`;
+          message += `\n\n⚠️ ${notFoundBankPF.length} Banka/PF kaydı bulunamadı`;
         }
         
         if (notFoundCustomers.length > 0 || notFoundBankPF.length > 0) {
@@ -1527,7 +1523,7 @@ ${notMatchedDomains.length > 0 ? `\n⚠️ Eşleşmeyen domainler konsola yazdı
       } catch (error) {
         console.error('❌ Banka/PF import hatası:', error);
         toast.error(
-          `❌ Hata!\\n${error instanceof Error ? error.message : 'Bilinmeyen hata'}`,
+          `❌ Hata!\n${error instanceof Error ? error.message : 'Bilinmeyen hata'}`,
           { duration: 6000 }
         );
       }
