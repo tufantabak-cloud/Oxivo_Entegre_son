@@ -1,0 +1,256 @@
+@charset "UTF-8";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 
+  FIGMA MAKE - FIX_CSS.bat COMPLIANT GLOBALS
+  NO CSS VARIABLES - Direct values only
+  Let figma-fixes.css handle all typography and styling
+  
+  OPTIMIZATION: CLS Prevention & Fast Rendering
+*/
+
+/* Base Element Resets - Prevent Layout Shift */
+* {
+  border-color: hsl(214.3 31.8% 91.4%);
+}
+
+/* Force hardware acceleration for smooth rendering */
+body {
+  background-color: hsl(0 0% 100%);
+  color: hsl(222.2 84% 4.9%);
+  /* Optimize rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Prevent CLS during initial load */
+#root {
+  min-height: 100vh;
+  /* Create new stacking context */
+  isolation: isolate;
+  /* Force GPU acceleration */
+  transform: translateZ(0);
+  will-change: auto;
+}
+
+/* CRITICAL: Force Grid Display Fix 
+   Note: !important needed to override Tailwind's default behavior */
+.grid {
+  display: grid !important;
+}
+
+/* Stats Grid Fallback (Mobile First) - Prevent Layout Shift */
+.stats-grid-fallback {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  /* Prevent layout shift during resize */
+  contain: layout style;
+}
+
+@media (min-width: 768px) {
+  .stats-grid-fallback {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .stats-grid-fallback {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Optimize animations and transitions */
+@media (prefers-reduced-motion: no-preference) {
+  * {
+    scroll-behavior: smooth;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ==== UNIVERSAL DROPDOWN FIX (Tailwind + Shadcn) ==== */
+/* Fixes: bottom gaps, clipping, inconsistent scroll behavior */
+
+:root {
+  --dropdown-z-index: 9999;
+}
+
+/* Apply fix to all dropdown types */
+.dropdown-panel,
+[data-radix-popper-content-wrapper],
+[data-state="open"][role="listbox"],
+[data-radix-select-content],
+[data-radix-popover-content] {
+  max-height: fit-content;
+  overflow-y: auto;
+  border-radius: 0.75rem;
+  overflow-clip-margin: unset !important;
+  mask-image: none !important;
+  -webkit-mask-image: none !important;
+  z-index: var(--dropdown-z-index) !important;
+}
+
+/* FIX: Remove ALL scroll buttons - they cause gaps and are unnecessary for small lists */
+[data-radix-select-scroll-up-button],
+[data-radix-select-scroll-down-button],
+[data-slot="select-scroll-up-button"],
+[data-slot="select-scroll-down-button"] {
+  display: none !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  visibility: hidden !important;
+}
+
+/* FIX: Remove viewport height constraint that causes gaps */
+[data-radix-select-viewport] {
+  max-height: 100% !important;
+}
+
+/* FIX: Dropdown menu content - no gaps */
+[data-slot="dropdown-menu-content"],
+[data-radix-dropdown-menu-content] {
+  padding: 0.25rem !important;
+}
+
+/* FIX: Command list - no gaps */
+[cmdk-list] {
+  max-height: 100% !important;
+  padding: 0.25rem !important;
+}
+
+/* FIX: All Radix popper content wrappers */
+[data-radix-popper-content-wrapper] {
+  z-index: var(--dropdown-z-index) !important;
+  pointer-events: auto !important;
+}
+
+/* CRITICAL: Ensure Select Portal is always on top */
+[data-radix-portal] {
+  z-index: var(--dropdown-z-index) !important;
+  pointer-events: none !important;
+}
+
+[data-radix-portal] > * {
+  pointer-events: auto !important;
+}
+
+/* FIX: Select content - compact design without gaps */
+[data-radix-select-content] {
+  padding: 0 !important;
+  background: white !important;
+  border: 1px solid hsl(214.3 31.8% 91.4%) !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+}
+
+[data-radix-select-viewport] {
+  padding: 0.25rem !important;
+  max-height: 300px !important;
+  overflow-y: auto !important;
+}
+
+/* FIX: Ensure all select items are properly sized and clickable */
+[data-slot="select-item"] {
+  min-height: 2rem !important;
+  cursor: pointer !important;
+  user-select: none !important;
+}
+
+/* FIX: Remove any extra spacing in dropdown menus */
+[data-slot="dropdown-menu-item"],
+[cmdk-item] {
+  margin: 0 !important;
+}
+
+/* FIX: Prevent layout shift and gaps in all popovers */
+[data-radix-popper-content-wrapper] > * {
+  max-height: fit-content !important;
+}
+
+/* FIX: Compact all radix scroll areas */
+[data-radix-scroll-area-viewport] > div {
+  display: block !important;
+  min-height: fit-content !important;
+}
+
+/* CRITICAL: Force proper spacing for ALL dropdown types */
+.dropdown-panel,
+[data-radix-select-content],
+[data-radix-popover-content],
+[data-slot="dropdown-menu-content"],
+[data-slot="popover-content"] {
+  /* Remove any inherited gaps */
+  line-height: normal !important;
+  /* Ensure content fits properly */
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Scrollbar Styling - Light Mode */
+.dropdown-panel::-webkit-scrollbar,
+[data-radix-select-content]::-webkit-scrollbar,
+[data-radix-popover-content]::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dropdown-panel::-webkit-scrollbar-thumb,
+[data-radix-select-content]::-webkit-scrollbar-thumb,
+[data-radix-popover-content]::-webkit-scrollbar-thumb {
+  background-color: rgb(209 213 219);
+  border-radius: 9999px;
+}
+
+.dropdown-panel:hover::-webkit-scrollbar-thumb,
+[data-radix-select-content]:hover::-webkit-scrollbar-thumb,
+[data-radix-popover-content]:hover::-webkit-scrollbar-thumb {
+  background-color: rgb(156 163 175);
+}
+
+/* Scrollbar Styling - Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .dropdown-panel::-webkit-scrollbar-thumb,
+  [data-radix-select-content]::-webkit-scrollbar-thumb,
+  [data-radix-popover-content]::-webkit-scrollbar-thumb {
+    background-color: rgb(75 85 99);
+  }
+  
+  .dropdown-panel:hover::-webkit-scrollbar-thumb,
+  [data-radix-select-content]:hover::-webkit-scrollbar-thumb,
+  [data-radix-popover-content]:hover::-webkit-scrollbar-thumb {
+    background-color: rgb(107 114 128);
+  }
+}
+
+/* Prevent parent clipping globally */
+* {
+  overflow-clip-margin: unset !important;
+  mask-image: none !important;
+  -webkit-mask-image: none !important;
+}
+
+/* ==== SCROLL AREA OPTIMIZATIONS ==== */
+/* Radix ScrollArea viewport fixes */
+[data-radix-scroll-area-viewport] {
+  overflow-clip-margin: unset !important;
+  mask-image: none !important;
+  -webkit-mask-image: none !important;
+}
+
+/* ScrollArea in dropdown panels - ensure proper overflow */
+.dropdown-panel [data-radix-scroll-area-viewport] > div {
+  display: block !important;
+}

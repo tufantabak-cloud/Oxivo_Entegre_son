@@ -1,0 +1,113 @@
+@charset "UTF-8";
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* UTILITIES - Only Actually Used Classes */
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+/* Scrollbar - Used in multiple components */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: rgb(243 244 246);
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgb(209 213 219);
+  border-radius: 0; /* RECTANGULAR - NO ROUNDING */
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgb(156 163 175);
+}
+
+/* Animations - Used in Shadcn UI components */
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* GLOBAL MASKING REMOVAL - NO CLIPPING, NO ROUNDING */
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+/* Remove all border-radius globally */
+* {
+  border-radius: 0 !important;
+}
+
+/* Remove all overflow-hidden globally - make all content visible */
+.overflow-hidden,
+.overflow-clip,
+.overflow-x-hidden,
+.overflow-y-hidden {
+  overflow: visible !important;
+}
+
+/* Special case: scrollable areas should keep overflow-y-auto */
+.overflow-y-auto {
+  overflow-y: auto !important;
+  overflow-x: visible !important;
+}
+
+.overflow-x-auto {
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+}
+
+.overflow-auto {
+  overflow: auto !important;
+}
+
+/* Remove all gradient backgrounds */
+[class*="bg-gradient-to"],
+[class*="from-"],
+[class*="via-"],
+[class*="to-"] {
+  background-image: none !important;
+}
+
+/* Remove clip-path */
+* {
+  clip-path: none !important;
+}
+
+/* Remove mask */
+* {
+  mask: none !important;
+  -webkit-mask: none !important;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* REMOVED UNUSED CLASSES: */
+/* - .text-heading-main (0 usages) */
+/* - .text-stat-number (0 usages) */
+/* - .no-print (0 usages) */
+/* - .print-full-width (0 usages) */
+/* Total removed: 17 lines */
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
