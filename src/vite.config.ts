@@ -74,7 +74,7 @@ export default defineConfig({
   // 🚀 BUILD OPTIMIZATION — VERCEL FIX
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   build: {
-    outDir: 'dist',
+    outDir: 'build',
     sourcemap: false,
 
     // ⚠️ CSS tek dosyada → UI BOZULMASI önlenir
