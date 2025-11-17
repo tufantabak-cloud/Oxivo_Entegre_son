@@ -1,5 +1,3 @@
-// Kök Dizindeki tailwind.config.cjs (YENİ UZANTI)
-
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
