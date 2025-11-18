@@ -9,39 +9,23 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
-    // React çakışmalarını önler
+    // React kopyalarını tekilleştirme (Çok önemli)
     dedupe: ['react', 'react-dom'],
   },
+  optimizeDeps: {
+    // Bu kütüphaneleri önceden işlemesini söylüyoruz
+    include: ['react', 'react-dom', 'xlsx', 'recharts'],
+  },
   build: {
-    chunkSizeWarningLimit: 1000, // Uyarı limitini makul seviyeye çektik
+    chunkSizeWarningLimit: 2000, // Uyarı limitini yükselttik (Sarı uyarıları görmezden gel)
+    commonjsOptions: {
+      transformMixedEsModules: true, // CJS/ESM uyumsuzluklarını çözer
+    },
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          if (id.includes('node_modules')) {
-            // 1. React Çekirdeği (En Kritik)
-            if (
-              id.includes('react') ||
-              id.includes('react-dom') ||
-              id.includes('scheduler')
-            ) {
-              return 'vendor-react';
-            }
-
-            // 2. Büyük Kütüphaneleri Ayır (Performans için)
-            if (id.includes('xlsx')) {
-              return 'vendor-xlsx'; // Excel kütüphanesi ayrı yüklensin
-            }
-            if (id.includes('recharts')) {
-              return 'vendor-charts'; // Grafik kütüphanesi ayrı yüklensin
-            }
-            if (id.includes('lucide') || id.includes('@radix-ui')) {
-              return 'vendor-ui'; // UI bileşenleri ayrı yüklensin
-            }
-
-            // 3. Geri kalan her şey
-            return 'vendor-utils';
-          }
-        },
+        // manualChunks KISMINI KALDIRDIK.
+        // Vite artık yükleme sırasını kendisi yönetecek.
+        // Bu sayede "React undefined" hatası oluşmayacak.
       },
     },
   },
