@@ -2,44 +2,52 @@
  * Supabase Client Singleton
  * Frontend'de Supabase ile etkileşim için merkezi client
  * 
- * Updated: 2025-01-12 - Added connection resilience
+ * Updated: 2025-11-17 - Moved to /lib/supabase (standard convention)
+ * 
+ * NOTE: Bu dosya /utils/supabase/client.ts ile senkron tutulmalıdır
  */
 
 import { createClient } from '@supabase/supabase-js';
 
-// Environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Environment variables (SSR-safe with optional chaining)
+const supabaseUrl = import.meta.env?.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env?.VITE_SUPABASE_ANON_KEY;
 
 // Validation
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    'Missing Supabase environment variables. ' +
+  console.warn(
+    '⚠️ Missing Supabase environment variables. ' +
     'Please check .env.local file and ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set.'
   );
+  // Don't throw during SSR/build - create dummy client
 }
 
 // Create singleton client with optimized settings
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-  },
-  global: {
-    headers: {
-      'X-Client-Info': 'supabase-js-web',
+// Use fallback values for SSR/build safety
+export const supabase = createClient(
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'placeholder-anon-key',
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
     },
-  },
-  db: {
-    schema: 'public',
-  },
-  realtime: {
-    params: {
-      eventsPerSecond: 10,
+    global: {
+      headers: {
+        'X-Client-Info': 'supabase-js-web',
+      },
     },
-  },
-});
+    db: {
+      schema: 'public',
+    },
+    realtime: {
+      params: {
+        eventsPerSecond: 10,
+      },
+    },
+  }
+);
 
 /**
  * Helper: Get current authenticated user
