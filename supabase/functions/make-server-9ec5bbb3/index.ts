@@ -1,4 +1,3 @@
-typescript
 import { Hono } from "npm:hono";
 import { cors } from "npm:hono/cors";
 import { logger } from "npm:hono/logger";
@@ -60,20 +59,26 @@ await initDatabase();
 // Enable logger
 app.use('*', logger(console.log));
 
-// Enable CORS
+// Enable CORS for ALL requests (including OPTIONS)
 app.use(
-  "/*",
+  "*",
   cors({
     origin: "*",
     allowHeaders: ["Content-Type", "Authorization"],
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     exposeHeaders: ["Content-Length"],
     maxAge: 600,
+    credentials: false,
   }),
 );
 
+// Explicit OPTIONS handler for preflight requests
+app.options("*", (c) => {
+  return c.text("", 204);
+});
+
 // Health check
-app.get("/health", (c) => {
+app.get("/make-server-9ec5bbb3/health", (c) => {
   return c.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
@@ -81,7 +86,7 @@ app.get("/health", (c) => {
 // CUSTOMER ENDPOINTS
 // ========================================
 
-app.get("/customers", async (c) => {
+app.get("/make-server-9ec5bbb3/customers", async (c) => {
   try {
     const customers = await kvGet("customers");
     return c.json({ success: true, data: customers || [] });
@@ -91,7 +96,7 @@ app.get("/customers", async (c) => {
   }
 });
 
-app.get("/customers/:id", async (c) => {
+app.get("/make-server-9ec5bbb3/customers/:id", async (c) => {
   try {
     const id = c.req.param("id");
     const customers = await kvGet("customers") || [];
@@ -108,7 +113,7 @@ app.get("/customers/:id", async (c) => {
   }
 });
 
-app.post("/customers", async (c) => {
+app.post("/make-server-9ec5bbb3/customers", async (c) => {
   try {
     const body = await c.req.json();
     const { customers, strategy = "replace" } = body;
@@ -153,7 +158,7 @@ app.post("/customers", async (c) => {
   }
 });
 
-app.put("/customers/:id", async (c) => {
+app.put("/make-server-9ec5bbb3/customers/:id", async (c) => {
   try {
     const id = c.req.param("id");
     const updates = await c.req.json();
@@ -177,7 +182,7 @@ app.put("/customers/:id", async (c) => {
   }
 });
 
-app.delete("/customers/:id", async (c) => {
+app.delete("/make-server-9ec5bbb3/customers/:id", async (c) => {
   try {
     const id = c.req.param("id");
     const customers = (await kvGet("customers")) || [];
@@ -202,7 +207,7 @@ app.delete("/customers/:id", async (c) => {
 // PRODUCT ENDPOINTS
 // ========================================
 
-app.get("/products", async (c) => {
+app.get("/make-server-9ec5bbb3/products", async (c) => {
   try {
     const products = await kvGet("payterProducts");
     return c.json({ success: true, data: products || [] });
@@ -212,7 +217,7 @@ app.get("/products", async (c) => {
   }
 });
 
-app.post("/products/sync", async (c) => {
+app.post("/make-server-9ec5bbb3/products/sync", async (c) => {
   try {
     const body = await c.req.json();
     const { products, source = "excel", strategy = "merge" } = body;
@@ -286,7 +291,7 @@ app.post("/products/sync", async (c) => {
 // DOMAIN ENDPOINTS
 // ========================================
 
-app.get("/domains", async (c) => {
+app.get("/make-server-9ec5bbb3/domains", async (c) => {
   try {
     const domains = await kvGet("domains");
     return c.json({ success: true, data: domains || [] });
@@ -296,7 +301,7 @@ app.get("/domains", async (c) => {
   }
 });
 
-app.post("/domains/sync", async (c) => {
+app.post("/make-server-9ec5bbb3/domains/sync", async (c) => {
   try {
     const body = await c.req.json();
     const { domains } = body;
@@ -327,7 +332,7 @@ app.post("/domains/sync", async (c) => {
 // BANK/PF ENDPOINTS
 // ========================================
 
-app.get("/bankpf", async (c) => {
+app.get("/make-server-9ec5bbb3/bankpf", async (c) => {
   try {
     const bankpf = await kvGet("bank_pf_records");
     return c.json({ success: true, data: bankpf || [] });
@@ -337,7 +342,7 @@ app.get("/bankpf", async (c) => {
   }
 });
 
-app.post("/bankpf", async (c) => {
+app.post("/make-server-9ec5bbb3/bankpf", async (c) => {
   try {
     const body = await c.req.json();
     const { records } = body;
