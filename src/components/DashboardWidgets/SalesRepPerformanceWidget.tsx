@@ -31,7 +31,8 @@ export function SalesRepPerformanceWidget({ customers, payterProducts }: SalesRe
   // Satış temsilcisi bazlı performans hesaplama
   const salesRepMap = new Map<string, SalesRepStats>();
 
-  customers.forEach((customer) => {
+  // ✅ NULL SAFETY: customers boş olabilir
+  (customers || []).forEach((customer) => {
     const rawRepId = customer.salesRepId || 'unassigned';
     const rawRepName = customer.salesRepName || 'Atanmamış';
     

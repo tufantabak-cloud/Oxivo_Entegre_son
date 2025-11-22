@@ -2,10 +2,11 @@
  * API Client
  * Backend (Supabase Edge Functions) ile iletişim için merkezi utility
  * 
+ * Updated: 2025-11-17 - Fixed Supabase import path
  * Updated: 2025-01-12 - Added connection resilience
  */
 
-import { projectId, publicAnonKey } from './supabase/info';
+import { projectId, publicAnonKey } from '../lib/supabase/info';
 import { connectionManager } from './connectionManager';
 
 const BASE_URL = `https://${projectId}.supabase.co/functions/v1`;

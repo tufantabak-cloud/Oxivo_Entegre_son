@@ -981,7 +981,8 @@ export function HakedisReportTab({ bankPFRecords }: HakedisReportTabProps) {
                       let ekGelirTotalPFTL = 0;
                       let ekGelirTotalOXTL = 0;
                       
-                      ekGelirRecords.forEach(record => {
+                      // ✅ NULL SAFETY: ekGelirRecords boş olabilir
+                      (ekGelirRecords || []).forEach(record => {
                         const islemHacmi = parseFloat(hakediş.islemHacmiMap?.[record.id] || '0');
                         const pfYuzde = parseFloat(record.ekGelirDetay?.pfYuzde || '0');
                         const oxYuzde = parseFloat(record.ekGelirDetay?.oxYuzde || '0');

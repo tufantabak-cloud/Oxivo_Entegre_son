@@ -15,6 +15,7 @@
  */
 
 import { useState, useCallback, useRef } from 'react';
+import { logger } from './logger';
 
 export interface RetryOptions {
   maxAttempts?: number; // Default: 3
@@ -103,7 +104,7 @@ export async function retry<T>(
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      console.log(`🔄 Attempt ${attempt}/${maxAttempts}`);
+      logger.debug('Retry attempt', { attempt, maxAttempts });
 
       // Execute function (with optional timeout)
       const promise = fn();
@@ -112,29 +113,32 @@ export async function retry<T>(
         : await promise;
 
       // Success!
-      console.log(`✅ Success on attempt ${attempt}`);
+      logger.debug('Retry success', { attempt });
       return result;
     } catch (error) {
       lastError = error as Error;
 
       // Check if we should retry this error
       if (shouldRetry && !shouldRetry(lastError)) {
-        console.log(`❌ Error not retryable: ${lastError.message}`);
+        logger.warn('Error not retryable', { error: lastError.message });
         throw lastError;
       }
 
       // Last attempt - don't retry
       if (attempt >= maxAttempts) {
-        console.log(`❌ Max attempts (${maxAttempts}) reached`);
+        logger.error('Max retry attempts reached', { maxAttempts, error: lastError.message });
         throw lastError;
       }
 
       // Calculate delay
       const delay = calculateDelay(attempt, backoff, initialDelay, maxDelay);
 
-      console.log(
-        `⏳ Retry ${attempt}/${maxAttempts} after ${Math.round(delay)}ms (${lastError.message})`
-      );
+      logger.debug('Retrying after delay', { 
+        attempt, 
+        maxAttempts, 
+        delayMs: Math.round(delay), 
+        error: lastError.message 
+      });
 
       // Call onRetry callback
       onRetry?.(attempt, lastError);
@@ -342,7 +346,7 @@ export class CircuitBreaker {
         this.lastFailureTime &&
         Date.now() - this.lastFailureTime > this.resetTimeout
       ) {
-        console.log('🔄 Circuit breaker: half-open (testing)');
+        logger.debug('Circuit breaker half-open (testing)');
         this.state = 'half-open';
       } else {
         throw new Error('Circuit breaker is open - too many failures');
@@ -354,7 +358,7 @@ export class CircuitBreaker {
 
       // Success - reset
       if (this.state === 'half-open') {
-        console.log('✅ Circuit breaker: closed (recovered)');
+        logger.info('Circuit breaker closed (recovered)');
         this.state = 'closed';
         this.failureCount = 0;
         this.lastFailureTime = null;
@@ -366,7 +370,7 @@ export class CircuitBreaker {
       this.lastFailureTime = Date.now();
 
       if (this.failureCount >= this.threshold) {
-        console.log('❌ Circuit breaker: open (too many failures)');
+        logger.warn('Circuit breaker open (too many failures)', { failureCount: this.failureCount });
         this.state = 'open';
       }
 

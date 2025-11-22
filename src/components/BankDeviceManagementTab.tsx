@@ -161,9 +161,6 @@ export function BankDeviceManagementTab({
     return nameA.localeCompare(nameB, 'tr');
   });
 
-  // Sadece aktif bankaları göster (eski kod - artık kullanılmıyor)
-  const activeBanks = sortedList;
-
   // Zaten eklenmiş bankaları/PF'leri filtrele
   const availableBanks = sortedList.filter(
     item => !assignments.some(a => a.bankId === item.id)
@@ -254,31 +251,6 @@ export function BankDeviceManagementTab({
     setBankSearch('');
     setEpkSearch('');
     setOkSearch('');
-  };
-
-  // Eski tek seçim fonksiyonu (yedek olarak kalabilir)
-  const handleAddBank = () => {
-    if (!selectedBankId) {
-      toast.error('Lütfen bir banka/PF seçin!');
-      return;
-    }
-
-    const selectedItem = sortedList.find(b => b.id === selectedBankId);
-    if (!selectedItem) return;
-
-    const newAssignment: BankDeviceAssignment = {
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      bankId: selectedItem.id,
-      bankName: selectedItem.name,
-      bankCode: selectedItem.kod,
-      deviceIds: [],
-      createdAt: new Date().toISOString(),
-    };
-
-    onAssignmentsChange([...assignments, newAssignment]);
-    setSelectedBankId('');
-    // Otomatik kayıt aktif - uyarı kaldırıldı
-    // toast.success(`${selectedItem.name} kategorisi oluşturuldu!`);
   };
 
   // Banka kategorisini silme
@@ -511,7 +483,8 @@ export function BankDeviceManagementTab({
     const alreadyAssignedDevices: string[] = [];
     const assignedToOther: string[] = [];
 
-    payterProducts.forEach(device => {
+    // ✅ NULL SAFETY: payterProducts boş olabilir
+    (payterProducts || []).forEach(device => {
       if (!device.domain) return;
 
       const deviceDomain = device.domain.toUpperCase();
@@ -1248,7 +1221,7 @@ export function BankDeviceManagementTab({
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-blue-900">
-                            {isAllSelected ? '✓ Tümünü Kaldır' : '☐ Tümünü Seç'}
+                            {isAllSelected ? '✓ Tümünü Kald��r' : '☐ Tümünü Seç'}
                           </span>
                           <Badge variant="secondary" className="bg-blue-200 text-blue-900">
                             {availableDevices.length} cihaz

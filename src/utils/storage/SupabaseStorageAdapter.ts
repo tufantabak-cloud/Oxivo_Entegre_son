@@ -1,4 +1,9 @@
-/*COMMENT*/
+/**
+ * Supabase Storage Adapter
+ * Supabase Edge Functions (Hono API) kullanan implementation
+ * 
+ * Created: 2025-11-17
+ */
 
 import { StorageAdapter } from './StorageAdapter';
 import { logger } from '../logger';
@@ -73,7 +78,7 @@ export class SupabaseStorageAdapter implements StorageAdapter {
     try {
       const endpoint = this.getEndpointForKey(key);
       
-      // DELETE endpoint yoksa, bos array set et
+      // DELETE endpoint yoksa, boş array set et
       await this.set(key, [] as any);
       
       logger.info('SupabaseStorageAdapter: removed (set to empty)', { key });
@@ -85,7 +90,7 @@ export class SupabaseStorageAdapter implements StorageAdapter {
 
   async clear(): Promise<void> {
     try {
-      // T�m endpoint'leri temizle
+      // Tüm endpoint'leri temizle
       const endpoints = ['/customers', '/products', '/domains', '/bankpf'];
       
       await Promise.all(
@@ -109,7 +114,7 @@ export class SupabaseStorageAdapter implements StorageAdapter {
     try {
       const result: Record<string, T> = {};
       
-      // Prefix'e g�re endpoint belirle ve t�m veriyi �ek
+      // Prefix'e göre endpoint belirle ve tüm veriyi çek
       const mappings = this.getPrefixMappings();
       
       for (const [keyPrefix, endpoint] of Object.entries(mappings)) {
@@ -129,7 +134,7 @@ export class SupabaseStorageAdapter implements StorageAdapter {
   }
 
   async keys(): Promise<string[]> {
-    // Bilinen key'leri d�nd�r
+    // Bilinen key'leri döndür
     return Object.keys(this.getPrefixMappings());
   }
 
@@ -149,19 +154,23 @@ export class SupabaseStorageAdapter implements StorageAdapter {
     }
   }
 
-  /*COMMENT*/
+  /**
+   * Key'e göre doğru endpoint'i belirle
+   */
   private getEndpointForKey(key: string): string {
     if (key === 'customers') return '/customers';
     if (key === 'payterProducts') return '/products';
     if (key === 'domains') return '/domains';
     if (key === 'bankPFRecords') return '/bankpf';
     
-    // Definitions ve diger veriler i�in generic KV endpoint
-    // (Simdilik localStorage'da kalabilir)
+    // Definitions ve diğer veriler için generic KV endpoint
+    // (Şimdilik localStorage'da kalabilir)
     throw new Error(`No Supabase endpoint for key: ${key}`);
   }
 
-  /*COMMENT*/
+  /**
+   * Key'e göre request body'yi hazırla
+   */
   private prepareBody(key: string, value: any): any {
     if (key === 'customers') {
       return {
@@ -193,7 +202,9 @@ export class SupabaseStorageAdapter implements StorageAdapter {
     throw new Error(`Cannot prepare body for key: ${key}`);
   }
 
-  /*COMMENT*/
+  /**
+   * Prefix → Endpoint mapping
+   */
   private getPrefixMappings(): Record<string, string> {
     return {
       'customers': '/customers',
@@ -203,7 +214,3 @@ export class SupabaseStorageAdapter implements StorageAdapter {
     };
   }
 }
-
-
-
-

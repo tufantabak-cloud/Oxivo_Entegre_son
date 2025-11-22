@@ -207,7 +207,8 @@ export function ExcelDataManager({
       
       // 2b. BANKA/PF İLETİŞİM MATRİSİ (Detaylı)
       const contactData: any[] = [];
-      bankPFRecords.forEach(b => {
+      // ✅ NULL SAFETY: bankPFRecords boş olabilir
+      (bankPFRecords || []).forEach(b => {
         if (b.iletisimMatrisi && b.iletisimMatrisi.length > 0) {
           b.iletisimMatrisi.forEach(contact => {
             contactData.push({
@@ -232,7 +233,8 @@ export function ExcelDataManager({
       
       // 2c. BANKA/PF İŞBİRLİKLERİ (Detaylı)
       const collabData: any[] = [];
-      bankPFRecords.forEach(b => {
+      // ✅ NULL SAFETY: bankPFRecords boş olabilir
+      (bankPFRecords || []).forEach(b => {
         if (b.isbirlikleri && b.isbirlikleri.length > 0) {
           b.isbirlikleri.forEach(collab => {
             collabData.push({
@@ -801,7 +803,7 @@ export function ExcelDataManager({
   };
 
   // ============================================
-  // ŞABLON İND��RME FONKSİYONU
+  // ŞABLON İNDRME FONKSİYONU
   // ============================================
   const downloadTemplate = () => {
     try {

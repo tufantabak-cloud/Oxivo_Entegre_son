@@ -29,7 +29,8 @@ export function BankAssignedDevicesReport({ customers, payterProducts }: BankAss
   const bankAssignedDevices = useMemo((): BankAssignedDevice[] => {
     const devices: BankAssignedDevice[] = [];
 
-    customers.forEach(customer => {
+    // ✅ NULL SAFETY: customers boş olabilir
+    (customers || []).forEach(customer => {
       if (!customer.serviceFeeSettings) return;
 
       const serviceFee = customer.serviceFeeSettings;

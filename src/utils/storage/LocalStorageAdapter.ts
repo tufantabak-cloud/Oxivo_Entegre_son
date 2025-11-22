@@ -1,4 +1,9 @@
-/*COMMENT*/
+/**
+ * LocalStorage Adapter
+ * Browser localStorage kullanan implementation
+ * 
+ * Created: 2025-11-17
+ */
 
 import { StorageAdapter } from './StorageAdapter';
 import { logger } from '../logger';
@@ -104,7 +109,9 @@ export class LocalStorageAdapter implements StorageAdapter {
     }
   }
 
-  /*COMMENT*/
+  /**
+   * Cleanup old/temporary data to free space
+   */
   private cleanup(): void {
     const keysToClean = [
       'activityLogs',
@@ -113,12 +120,10 @@ export class LocalStorageAdapter implements StorageAdapter {
       '__health_check__',
     ];
 
-    keysToClean.map(key => {
+    keysToClean.forEach(key => {
       try {
         localStorage.removeItem(key);
       } catch {}
     });
   }
 }
-
-

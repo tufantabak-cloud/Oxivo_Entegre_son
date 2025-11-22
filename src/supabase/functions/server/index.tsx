@@ -1,8 +1,72 @@
 import { Hono } from "npm:hono";
 import { cors } from "npm:hono/cors";
 import { logger } from "npm:hono/logger";
+import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
 import * as kv from "./kv_store.tsx";
+
 const app = new Hono();
+
+// ========================================
+// DATABASE INITIALIZATION
+// ========================================
+const initDatabase = async () => {
+  try {
+    console.log("🔍 Checking database table...");
+    
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    // Tabloyu kontrol et - eğer yoksa oluştur
+    const { error: checkError } = await supabase
+      .from("kv_store_9ec5bbb3")
+      .select("key")
+      .limit(1);
+
+    if (checkError) {
+      // Tablo yok - oluştur
+      console.log("📦 Creating kv_store_9ec5bbb3 table...");
+      
+      const { error: createError } = await supabase.rpc("exec_sql", {
+        sql: `
+          CREATE TABLE IF NOT EXISTS kv_store_9ec5bbb3 (
+            key TEXT NOT NULL PRIMARY KEY,
+            value JSONB NOT NULL
+          );
+        `
+      });
+
+      if (createError) {
+        console.error("❌ Table creation failed:", createError.message);
+        console.log("⚠️ Please create table manually in Supabase SQL Editor:");
+        console.log(`
+          CREATE TABLE kv_store_9ec5bbb3 (
+            key TEXT NOT NULL PRIMARY KEY,
+            value JSONB NOT NULL
+          );
+        `);
+      } else {
+        console.log("✅ Table created successfully!");
+      }
+    } else {
+      console.log("✅ Table kv_store_9ec5bbb3 already exists");
+    }
+  } catch (error: any) {
+    console.error("❌ Database initialization error:", error.message);
+    console.log("⚠️ Server will continue but data operations may fail");
+    console.log("⚠️ Please create table manually in Supabase SQL Editor:");
+    console.log(`
+      CREATE TABLE kv_store_9ec5bbb3 (
+        key TEXT NOT NULL PRIMARY KEY,
+        value JSONB NOT NULL
+      );
+    `);
+  }
+};
+
+// Initialize database on startup
+await initDatabase();
 
 // Enable logger
 app.use('*', logger(console.log));

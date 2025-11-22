@@ -69,7 +69,8 @@ export function MCCDiversityWidget({ customers, payterProducts }: MCCDiversityWi
       
       // Cihaz sayısı hesapla (serial number + domain bazlı)
       let totalDevices = 0;
-      mccCustomers.forEach(customer => {
+      // ✅ NULL SAFETY: mccCustomers boş olabilir
+      (mccCustomers || []).forEach(customer => {
         const allDevices = customer.serviceFeeSettings?.deviceSubscriptions || [];
         const activeDevices = allDevices.filter(d => d.isActive);
         const deviceSerials = activeDevices.map(d => d.deviceSerialNumber).filter(Boolean);

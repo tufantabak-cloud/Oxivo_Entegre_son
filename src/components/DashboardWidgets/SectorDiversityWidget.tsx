@@ -36,7 +36,8 @@ export function SectorDiversityWidget({ customers, payterProducts }: SectorDiver
     // Sektör dağılımı hesapla
     const sectorMap = new Map<string, Customer[]>();
     
-    customers.forEach(customer => {
+    // ✅ NULL SAFETY: customers boş olabilir
+    (customers || []).forEach(customer => {
       const sector = customer.sektor || 'Belirtilmemiş';
       if (!sectorMap.has(sector)) {
         sectorMap.set(sector, []);
@@ -51,7 +52,8 @@ export function SectorDiversityWidget({ customers, payterProducts }: SectorDiver
       
       // Cihaz sayısı hesapla (serial number + domain bazlı)
       let totalDevices = 0;
-      sectorCustomers.forEach(customer => {
+      // ✅ NULL SAFETY: sectorCustomers boş olabilir
+      (sectorCustomers || []).forEach(customer => {
         const allDevices = customer.serviceFeeSettings?.deviceSubscriptions || [];
         const activeDevices = allDevices.filter(d => d.isActive);
         const deviceSerials = activeDevices.map(d => d.deviceSerialNumber).filter(Boolean);

@@ -21,6 +21,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
+import { logger } from '../utils/logger';
 
 interface DataSyncOptions {
   key: string;
@@ -107,7 +108,7 @@ async function retryWithBackoff<T>(
       if (attempt < maxRetries) {
         // Exponential backoff: 1s, 2s, 4s, 8s, ...
         const delay = baseDelay * Math.pow(2, attempt);
-        console.log(`⏳ Retry ${attempt + 1}/${maxRetries} after ${delay}ms...`);
+        logger.debug('Supabase sync retry', { attempt: attempt + 1, maxRetries, delayMs: delay });
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
@@ -196,7 +197,11 @@ export function useDataSync(options: DataSyncOptions | string): DataSyncReturn {
       const serialized = JSON.stringify(data);
       const sizeInBytes = new Blob([serialized]).size;
 
-      console.log(`💾 Syncing ${key} (${formatBytes(sizeInBytes)})`);
+      logger.debug('Syncing to Supabase', { 
+        key, 
+        sizeBytes: sizeInBytes,
+        sizeFormatted: formatBytes(sizeInBytes) 
+      });
 
       // Perform save with retry
       await retryWithBackoff(

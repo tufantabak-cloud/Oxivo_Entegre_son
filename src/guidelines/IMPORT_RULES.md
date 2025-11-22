@@ -60,12 +60,12 @@ import { Command as CommandPrimitive } from "cmdk";
 ```typescript
 // ❌ WRONG - Version suffixes are NOT allowed
 import * as DialogPrimitive from "@radix-ui/react-dialog@1.1.6";
-import { toast } from "sonner";
+import { toast } from "sonner@2.0.3";
 import { ChevronDown } from "lucide-react@0.487.0";
 import { cva } from "class-variance-authority@0.7.1";
 import { DayPicker } from "react-day-picker@8.10.1";
 import * as RechartsPrimitive from "recharts@2.15.2";
-import { Toaster } from "sonner";
+import { Toaster } from "sonner@2.0.3";
 import { useTheme } from "next-themes@0.4.6";
 import useEmblaCarousel from "embla-carousel-react@8.6.0";
 ```

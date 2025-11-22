@@ -1,25 +1,33 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App'
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 🛑 1. GLOBAL STYLES (En Üstte Olmalı)
-// Tüm stiller (Tailwind, Figma Düzeltmeleri, Resetler)
+// CSS IMPORT ORDER - CRITICAL FOR PERFORMANCE & CLS PREVENTION
+// DO NOT CHANGE ORDER! Each file builds on the previous one.
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-import './index.css';
+
+// 1. Tailwind base styles - Foundation (resets, utilities)
+import './styles/globals.css'
+
+// 2. Figma component styles - Component templates (minimized)
+import './styles/figma.css'
+
+// 3. Custom utilities - Scrollbars, animations
+import './styles/utilities.css'
+
+// 4. Figma pixel-perfect fixes - ALWAYS LAST (highest priority overrides)
+import './styles/figma-fixes.css'
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 2. ANA UYGULAMA VE PROVIDER'LAR
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-import App from './App';
-import { Toaster } from './components/ui/sonner';
-import { TooltipProvider } from './components/ui/tooltip';
-import { ConnectionStatus } from './components/ConnectionStatus';
-import { ErrorBoundary } from './components/ErrorBoundary';
-import { initStartupCheck } from './utils/startupCheck';
 
-// -----------------------------------------------------------------------------
+import { Toaster } from './components/ui/sonner'
+import { TooltipProvider } from './components/ui/tooltip'
+import { ConnectionStatus } from './components/ConnectionStatus'
+import { ErrorBoundary } from './components/ErrorBoundary'
+import { initStartupCheck } from './utils/startupCheck'
+
 // Service Worker cleanup (prevent caching issues)
-// -----------------------------------------------------------------------------
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then(function(registrations) {
     for(let registration of registrations) {
@@ -30,34 +38,53 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// -----------------------------------------------------------------------------
-// Uygulamayı Başlat (Startup Check)
-// -----------------------------------------------------------------------------
-// initStartupCheck(); // Eğer bu bir fonksiyonu hemen çalıştırıyorsa burada kalsın
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// PERFORMANCE OPTIMIZATION
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 🚀 3. UYGULAMAYI RENDER ET (ÇALIŞTIR)
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const rootElement = document.getElementById('root');
-if (!rootElement) {
-  throw new Error("Ana 'root' elementi HTML'de bulunamadı!");
+// Remove loading state after CSS is loaded
+const removeLoadingState = () => {
+  const root = document.getElementById('root');
+  if (root) {
+    // Force a reflow to ensure CSS is applied
+    void root.offsetHeight;
+    // Mark as ready for hydration
+    root.setAttribute('data-css-loaded', 'true');
+  }
+};
+
+// Wait for CSS to be parsed and applied
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', removeLoadingState);
+} else {
+  removeLoadingState();
 }
 
-const root = ReactDOM.createRoot(rootElement);
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// STARTUP HEALTH CHECK
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-root.render(
+// Run health check before rendering
+initStartupCheck().then((success) => {
+  if (success) {
+    console.log('✅ System health check passed');
+  } else {
+    console.warn('⚠️ System health check found issues');
+  }
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// REACT RENDER
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary>
       <TooltipProvider>
-        
-        {/* Ana Uygulama */}
         <App />
-        
-        {/* Global Bileşenler (Tüm sayfalarda görünsün) */}
-        <Toaster />
         <ConnectionStatus />
-        
+        <Toaster />
       </TooltipProvider>
     </ErrorBoundary>
-  </React.StrictMode>
-);
+  </React.StrictMode>,
+)

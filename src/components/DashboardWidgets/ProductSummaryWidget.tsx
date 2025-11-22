@@ -23,18 +23,22 @@ export function ProductSummaryWidget({ payterProducts, customers }: ProductSumma
   const totalProducts = payterProducts.length;
   
   // Online/Offline durumuna göre aktif/pasif hesaplama
-  const activeProducts = payterProducts.filter((p) => 
+  // ✅ NULL SAFETY: payterProducts boş olabilir
+  const activeProducts = (payterProducts || []).filter((p) => 
     p.onlineStatus?.toLowerCase() === 'online'
   ).length;
   
-  const inactiveProducts = payterProducts.filter((p) => 
+  // ✅ NULL SAFETY: payterProducts boş olabilir
+  const inactiveProducts = (payterProducts || []).filter((p) => 
     p.onlineStatus?.toLowerCase() === 'offline' || !p.onlineStatus
   ).length;
 
   // Müşteri-Ürün eşleştirmeleri (Ana Domain görmezden gelme desteği ile)
-  const productsWithCustomers = payterProducts.filter((p) => {
+  // ✅ NULL SAFETY: payterProducts boş olabilir
+  const productsWithCustomers = (payterProducts || []).filter((p) => {
     if (!p.domain) return false;
-    return customers.some((c) => {
+    // ✅ NULL SAFETY: customers boş olabilir
+    return (customers || []).some((c) => {
       const customerDomain = c.domain || c.guncelMyPayterDomain;
       if (!customerDomain) return false;
       return matchDomain(p.domain, customerDomain, c.ignoreMainDomain || false, c.domainHierarchy);
@@ -47,7 +51,8 @@ export function ProductSummaryWidget({ payterProducts, customers }: ProductSumma
   const productsByStatus = {
     aktif: activeProducts,
     pasif: inactiveProducts,
-    synced: payterProducts.filter((p) => 
+    // ✅ NULL SAFETY: payterProducts boş olabilir
+    synced: (payterProducts || []).filter((p) => 
       p.syncStatus?.toLowerCase().includes('sync') || 
       p.syncStatus?.toLowerCase() === 'synced'
     ).length,

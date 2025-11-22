@@ -566,7 +566,8 @@ export function HakedisTab({
     let ekGelirTotalOXTL = 0;
     let ekGelirTotalTutar = 0;
 
-    ekGelirRecords.forEach(record => {
+    // ✅ NULL SAFETY: ekGelirRecords boş olabilir
+    (ekGelirRecords || []).forEach(record => {
       const islemHacmi = parseFloat(islemHacmiMap[record.id] || '0');
       const calc = calculateEkGelirHakedis(record, islemHacmiMap);
       
@@ -662,7 +663,8 @@ export function HakedisTab({
       });
 
       // Ek gelir kayıtları
-      ekGelirRecords.forEach(record => {
+      // ✅ NULL SAFETY: ekGelirRecords boş olabilir
+      (ekGelirRecords || []).forEach(record => {
         const islemHacmi = parseFloat(hakedis.islemHacmiMap[record.id] || '0');
         const calc = calculateEkGelirHakedis(record, hakedis.islemHacmiMap);
         
@@ -720,7 +722,8 @@ export function HakedisTab({
         `${oxivoPayValue.toFixed(2)}${manualAnaTabelaOxivoValue ? ' (MANUEL)' : ''}`
       ].join(','));
 
-      if (ekGelirRecords.length > 0) {
+      // ✅ NULL SAFETY: ekGelirRecords undefined olabilir
+      if ((ekGelirRecords || []).length > 0) {
         const manualEkGelirOxivoValue = (hakedis as any).manualEkGelirOxivoTotal;
         const ekGelirOxivoValue = manualEkGelirOxivoValue 
           ? parseFloat(manualEkGelirOxivoValue) 
@@ -749,7 +752,8 @@ export function HakedisTab({
       
       // Genel toplam için manuel değerleri hesaba kat
       const genelToplamIslemHacmi = islemHacmiValue + totals.ekGelirTotals.totalIslemHacmi;
-      const genelToplamOxivoPay = oxivoPayValue + (ekGelirRecords.length > 0 ? (manualEkGelirOxivoValue ? parseFloat(manualEkGelirOxivoValue) : totals.ekGelirTotals.totalOXTL) : 0);
+      // ✅ NULL SAFETY: ekGelirRecords undefined olabilir
+      const genelToplamOxivoPay = oxivoPayValue + ((ekGelirRecords || []).length > 0 ? (manualEkGelirOxivoValue ? parseFloat(manualEkGelirOxivoValue) : totals.ekGelirTotals.totalOXTL) : 0);
       const hasManualValues = manualAnaTabelaIslemHacmiValue || manualAnaTabelaOxivoValue || manualEkGelirOxivoValue;
       
       rows.push([
@@ -1168,7 +1172,7 @@ export function HakedisTab({
             )}
           </CardContent>
           
-          {aktifTabelaGroups.length > 0 && (
+          {(aktifTabelaGroups || []).length > 0 && (
             <CardContent className="pt-0">
               <div className="flex justify-end gap-2 pt-4 border-t">
                 <Button 
@@ -1501,7 +1505,7 @@ export function HakedisTab({
       )}
 
       {/* Ana TABELA Tablosu */}
-      {normalRecords.length > 0 && (
+      {(normalRecords || []).length > 0 && (
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -1976,7 +1980,8 @@ export function HakedisTab({
                     const allRows = [];
                     
                     // Yurt İçi Grubu
-                    if (yurtIciRecords.length > 0) {
+                    // ✅ NULL SAFETY: yurtIciRecords undefined olabilir
+                    if ((yurtIciRecords || []).length > 0) {
                       allRows.push(
                         <TableRow key="yurtici-header" className="bg-gradient-to-r from-teal-100 to-teal-50 border-y border-teal-300">
                           <TableCell colSpan={totalColumns} className="py-3">
@@ -1995,7 +2000,8 @@ export function HakedisTab({
                     }
                     
                     // Yurt Dışı Grubu
-                    if (yurtDisiRecords.length > 0) {
+                    // ✅ NULL SAFETY: yurtDisiRecords undefined olabilir
+                    if ((yurtDisiRecords || []).length > 0) {
                       allRows.push(
                         <TableRow key="yurtdisi-header" className="bg-gradient-to-r from-amber-100 to-amber-50 border-y border-amber-300">
                           <TableCell colSpan={totalColumns} className="py-3">

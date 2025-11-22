@@ -292,7 +292,7 @@ Timestamp: ${new Date().toISOString()}
             <Bug className="h-4 w-4" />
             <AlertTitle>Hata Mesajı</AlertTitle>
             <AlertDescription className="font-mono text-sm">
-              {error.message}
+              {error?.message || 'Bilinmeyen hata'}
             </AlertDescription>
           </Alert>
 

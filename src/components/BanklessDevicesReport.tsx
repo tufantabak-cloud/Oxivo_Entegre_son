@@ -25,7 +25,8 @@ export function BanklessDevicesReport({ customers, payterProducts }: BanklessDev
   const banklessDevices = useMemo((): BanklessDevice[] => {
     const devices: BanklessDevice[] = [];
 
-    customers.forEach(customer => {
+    // ✅ NULL SAFETY: customers boş olabilir
+    (customers || []).forEach(customer => {
       if (!customer.serviceFeeSettings) return;
 
       const serviceFee = customer.serviceFeeSettings;
@@ -34,12 +35,14 @@ export function BanklessDevicesReport({ customers, payterProducts }: BanklessDev
       const customerDomain = customer.domain || customer.guncelMyPayterDomain;
       if (!customerDomain) return;
       
-      const matchedProducts = payterProducts.filter(product => {
+      // ✅ NULL SAFETY: payterProducts boş olabilir
+      const matchedProducts = (payterProducts || []).filter(product => {
         if (!product.domain) return false;
         return matchDomain(product.domain, customerDomain, customer.ignoreMainDomain || false, customer.domainHierarchy);
       });
 
-      matchedProducts.forEach(product => {
+      // ✅ NULL SAFETY: matchedProducts boş olabilir
+      (matchedProducts || []).forEach(product => {
         // Banka ataması kontrolü
         const hasBankAssignment = customer.bankDeviceAssignments?.some(
           ba => ba.deviceIds.includes(product.id)

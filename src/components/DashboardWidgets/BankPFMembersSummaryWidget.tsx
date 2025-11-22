@@ -36,7 +36,8 @@ export const BankPFMembersSummaryWidget = React.memo(function BankPFMembersSumma
   const bankPFSummaries = useMemo(() => {
     const summaries: BankPFSummary[] = [];
 
-    bankPFRecords.forEach(bankPF => {
+    // ✅ NULL SAFETY: bankPFRecords boş olabilir
+    (bankPFRecords || []).forEach(bankPF => {
       // Bu Banka/PF ile ilişkili müşterileri bul (2 yöntem)
       const relatedCustomers = customers.filter(customer => {
         // Yöntem 1: linkedBankPFIds kontrolü

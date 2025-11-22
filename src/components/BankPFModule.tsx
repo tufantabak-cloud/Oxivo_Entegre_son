@@ -193,7 +193,8 @@ export const BankPFModule = React.memo(function BankPFModule({
   // Müşteri detayından geldiğinde otomatik açma
   useEffect(() => {
     if (selectedBankPFId) {
-      const record = bankPFRecords.find(r => r.id === selectedBankPFId);
+      // ✅ NULL SAFETY: bankPFRecords boş olabilir
+      const record = (bankPFRecords || []).find(r => r.id === selectedBankPFId);
       if (record) {
         setSelectedRecord(record);
         setIsCreating(false);

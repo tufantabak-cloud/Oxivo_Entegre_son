@@ -204,7 +204,8 @@ export const ReportsModule = React.memo(function ReportsModule({
   // İletişim matrisi için tüm görev başlıklarını topla
   const getAllJobTitles = () => {
     const titles = new Set<string>();
-    bankPFRecords.forEach(record => {
+    // ✅ NULL SAFETY: bankPFRecords boş olabilir
+    (bankPFRecords || []).forEach(record => {
       record.iletisimMatrisi?.forEach(contact => {
         if (contact.gorevi) {
           titles.add(contact.gorevi);
@@ -248,7 +249,8 @@ export const ReportsModule = React.memo(function ReportsModule({
       const headerRow2: any[] = [''];
       
       // Her firma için 3 kolon ekle
-      bankPFRecords.forEach(firma => {
+      // ✅ NULL SAFETY: bankPFRecords boş olabilir
+      (bankPFRecords || []).forEach(firma => {
         const firmaTip = firma.bankaOrPF === 'PF' ? firma.odemeKurulusuTipi : 'Banka';
         const firmaBaslik = `${firma.firmaUnvan} (${firmaTip})`;
         
@@ -264,10 +266,12 @@ export const ReportsModule = React.memo(function ReportsModule({
       // Tablo verileri
       const tableData: any[] = [];
       
-      jobTitles.forEach(jobTitle => {
+      // ✅ NULL SAFETY: jobTitles boş olabilir
+      (jobTitles || []).forEach(jobTitle => {
         const row: any[] = [jobTitle];
         
-        bankPFRecords.forEach(firma => {
+        // ✅ NULL SAFETY: bankPFRecords boş olabilir
+        (bankPFRecords || []).forEach(firma => {
           const contacts = getContactsForFirmaAndJob(firma, jobTitle);
           
           if (contacts.length > 0) {
@@ -363,7 +367,8 @@ export const ReportsModule = React.memo(function ReportsModule({
           `Toplam Kisi: ${bankPFRecords.reduce((sum, f) => sum + (f.iletisimMatrisi?.length || 0), 0)}`
         ];
         
-        stats.forEach((stat, index) => {
+        // ✅ NULL SAFETY: stats boş olabilir
+        (stats || []).forEach((stat, index) => {
           doc.text(stat, 14, 22 + (index * 5));
         });
       } else {
@@ -380,7 +385,8 @@ export const ReportsModule = React.memo(function ReportsModule({
           `Toplam Kisi: ${bankPFRecords.reduce((sum, f) => sum + (f.iletisimMatrisi?.length || 0), 0)}`
         ];
         
-        stats.forEach((stat, index) => {
+        // ✅ NULL SAFETY: stats boş olabilir
+        (stats || []).forEach((stat, index) => {
           doc.text(stat, 14, finalY + 16 + (index * 5));
         });
       }
@@ -705,7 +711,8 @@ export const ReportsModule = React.memo(function ReportsModule({
                           `Aktif TABELA: ${allTabelaRecords.length}`,
                           `Firmalar: ${firmaCount}`
                         ];
-                        stats.forEach((stat, index) => {
+                        // ✅ NULL SAFETY: stats boş olabilir
+                        (stats || []).forEach((stat, index) => {
                           doc.text(stat, 14, 22 + (index * 5));
                         });
                       } else {
@@ -716,7 +723,8 @@ export const ReportsModule = React.memo(function ReportsModule({
                           `Aktif TABELA: ${allTabelaRecords.length}`,
                           `Firmalar: ${firmaCount}`
                         ];
-                        stats.forEach((stat, index) => {
+                        // ✅ NULL SAFETY: stats boş olabilir
+                        (stats || []).forEach((stat, index) => {
                           doc.text(stat, 14, finalY + 16 + (index * 5));
                         });
                       }
@@ -860,7 +868,7 @@ export const ReportsModule = React.memo(function ReportsModule({
                                       </Badge>
                                       {referansTabela.paylaşımOranları?.kurulusOrani && referansTabela.paylaşımOranları?.oxivoOrani && (
                                         <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                                          Payla  ım: {referansTabela.paylaşımOranları.kurulusOrani}% / {referansTabela.paylaşımOranları.oxivoOrani}%
+                                          Payla��ım: {referansTabela.paylaşımOranları.kurulusOrani}% / {referansTabela.paylaşımOranları.oxivoOrani}%
                                         </Badge>
                                       )}
                                     </div>
@@ -1365,7 +1373,8 @@ export const ReportsModule = React.memo(function ReportsModule({
                           `Toplam Uye Isyeri: ${totalUiyCount}`,
                           `Toplam Cihaz: ${totalDeviceCount}`
                         ];
-                        stats.forEach((stat, index) => {
+                        // ✅ NULL SAFETY: stats boş olabilir
+                        (stats || []).forEach((stat, index) => {
                           doc.text(stat, 14, 22 + (index * 5));
                         });
                       } else {
@@ -1382,7 +1391,8 @@ export const ReportsModule = React.memo(function ReportsModule({
                           `Toplam Uye Isyeri: ${totalUiyCount}`,
                           `Toplam Cihaz: ${totalDeviceCount}`
                         ];
-                        stats.forEach((stat, index) => {
+                        // ✅ NULL SAFETY: stats boş olabilir
+                        (stats || []).forEach((stat, index) => {
                           doc.text(stat, 14, finalY + 16 + (index * 5));
                         });
                       }
@@ -1880,7 +1890,8 @@ export const ReportsModule = React.memo(function ReportsModule({
                           // Excel verilerini hazırla
                           const excelData: any[] = [];
                           
-                          bankPFWithCustomers.forEach((item) => {
+                          // ✅ NULL SAFETY: bankPFWithCustomers boş olabilir
+                          (bankPFWithCustomers || []).forEach((item) => {
                             const firmaTip = item.bankPF.bankaOrPF === 'PF' 
                               ? item.bankPF.odemeKurulusuTipi 
                               : 'Banka';
@@ -2133,7 +2144,8 @@ export const ReportsModule = React.memo(function ReportsModule({
                         const filteredDefs = selectedBankPFId === 'ALL' ? allDefs : allDefs.filter(d => d.id === selectedBankPFId);
                         
                         const hasData = filteredDefs.some(def => 
-                          customers.some(customer => {
+                          // ✅ NULL SAFETY: customers boş olabilir
+                          (customers || []).some(customer => {
                             if (def.source === 'bankPF' && customer.linkedBankPFIds?.includes(def.id)) return true;
                             if (customer.bankDeviceAssignments && customer.bankDeviceAssignments.length > 0) {
                               return customer.bankDeviceAssignments.some(assignment => {
@@ -2246,7 +2258,8 @@ export const ReportsModule = React.memo(function ReportsModule({
 
                         let currentY = 30;
 
-                        bankPFWithCustomers.forEach((item, index) => {
+                        // ✅ NULL SAFETY: bankPFWithCustomers boş olabilir
+                        (bankPFWithCustomers || []).forEach((item, index) => {
                           if (index > 0 && currentY > 180) {
                             doc.addPage();
                             currentY = 15;
@@ -2401,7 +2414,8 @@ export const ReportsModule = React.memo(function ReportsModule({
                       const filteredDefs = selectedBankPFId === 'ALL' ? allDefs : allDefs.filter(d => d.id === selectedBankPFId);
                       
                       const hasData = filteredDefs.some(def => 
-                        customers.some(customer => {
+                        // ✅ NULL SAFETY: customers boş olabilir
+                        (customers || []).some(customer => {
                           if (def.source === 'bankPF' && customer.linkedBankPFIds?.includes(def.id)) return true;
                           if (customer.bankDeviceAssignments && customer.bankDeviceAssignments.length > 0) {
                             return customer.bankDeviceAssignments.some(assignment => {

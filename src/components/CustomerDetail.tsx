@@ -587,7 +587,8 @@ export function CustomerDetail({
     }
 
     // PayterProduct'ları filtrele ve say (Ana Domain görmezden gelme desteği ile)
-    payterProducts.forEach(product => {
+    // ✅ NULL SAFETY: payterProducts boş olabilir
+    (payterProducts || []).forEach(product => {
       const isMatch = matchDomain(product.domain, customerDomain, formData.ignoreMainDomain || false);
 
       if (isMatch) {
@@ -1639,7 +1640,8 @@ export function CustomerDetail({
                 // Domain'lere göre grupla
                 const domainGroups = new Map<string, number>();
                 const domainsWithoutValue: string[] = [];
-                payterProducts.forEach(p => {
+                // ✅ NULL SAFETY: payterProducts boş olabilir
+                (payterProducts || []).forEach(p => {
                   const domain = p.domain || 'Domain Yok';
                   if (!p.domain || !p.domain.trim()) {
                     domainsWithoutValue.push(p.serialNumber || p.name || 'Bilinmeyen');

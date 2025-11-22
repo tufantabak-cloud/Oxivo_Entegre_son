@@ -3,6 +3,8 @@
  * Tracks all data changes with user context
  */
 
+import { logger } from './logger';
+
 export type ActivityAction =
   | 'CREATE'
   | 'UPDATE'
@@ -73,9 +75,9 @@ export function logActivity(
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
     
-    console.log(`📝 Activity logged: ${action} ${category} - ${entityName}`);
+    logger.debug('Activity logged', { action, category, entityName });
   } catch (error) {
-    console.error('Failed to log activity:', error);
+    logger.error('Failed to log activity', { error });
   }
 
   return entry;
@@ -89,7 +91,7 @@ export function getAllActivities(): ActivityLogEntry[] {
     const json = localStorage.getItem(STORAGE_KEY);
     return json ? JSON.parse(json) : [];
   } catch (error) {
-    console.error('Failed to load activities:', error);
+    logger.error('Failed to load activities', { error });
     return [];
   }
 }
@@ -164,9 +166,9 @@ export function getEntityHistory(entityId: string): ActivityLogEntry[] {
 export function clearActivityLog(): void {
   try {
     localStorage.removeItem(STORAGE_KEY);
-    console.log('📝 Activity log cleared');
+    logger.debug('Activity log cleared');
   } catch (error) {
-    console.error('Failed to clear activity log:', error);
+    logger.error('Failed to clear activity log', { error });
   }
 }
 
@@ -183,10 +185,10 @@ export function clearOldActivities(daysToKeep: number = 90): number {
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
     
-    console.log(`📝 Removed ${removedCount} old activity entries (older than ${daysToKeep} days)`);
+    logger.debug('Cleared old activities', { removedCount, daysToKeep });
     return removedCount;
   } catch (error) {
-    console.error('Failed to clear old activities:', error);
+    logger.error('Failed to clear old activities', { error });
     return 0;
   }
 }

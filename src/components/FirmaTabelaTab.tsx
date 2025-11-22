@@ -727,9 +727,11 @@ export function FirmaTabelaTab({
 
   // Debug: TABELA kayıtlarını kontrol et
   useEffect(() => {
-    if (tabelaRecords.length > 0) {
+    // ✅ NULL SAFETY: tabelaRecords undefined olabilir
+    if ((tabelaRecords || []).length > 0) {
       console.log('📊 TABELA Kayıtları:', tabelaRecords.length);
-      tabelaRecords.forEach((record, idx) => {
+      // ✅ NULL SAFETY: tabelaRecords boş olabilir
+      (tabelaRecords || []).forEach((record, idx) => {
         console.log(`\n📝 TABELA ${idx + 1}:`, {
           id: record.id,
           gelirModeli: record.gelirModeli.ad,
@@ -789,7 +791,8 @@ export function FirmaTabelaTab({
               console.log('📊 Toplam kayıt:', tabelaRecords.length);
               console.log('✅ Gösterilen kayıt:', filteredRecords.length);
               
-              tabelaRecords.forEach((record, idx) => {
+              // ✅ NULL SAFETY: tabelaRecords boş olabilir
+              (tabelaRecords || []).forEach((record, idx) => {
                 console.log(`\n📝 TABELA ${idx + 1}:`, {
                   gelirModeli: record.gelirModeli.ad,
                   kurulusAd: record.kurulus.ad,
@@ -856,7 +859,7 @@ export function FirmaTabelaTab({
       </div>
 
       {/* Mevcut Gruplar */}
-      {tabelaGroups.length > 0 && (
+      {(tabelaGroups || []).length > 0 && (
         <div className="space-y-3">
           <h4 className="flex items-center gap-2">
             📁 TABELA Grupları
@@ -948,7 +951,7 @@ export function FirmaTabelaTab({
       )}
 
       {/* Filtre ve İstatistikler */}
-      {tabelaRecords.length > 0 && (
+      {(tabelaRecords || []).length > 0 && (
         <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg border">
           <span className="text-sm text-gray-600">Filtre:</span>
           <div className="flex gap-2">
@@ -2016,7 +2019,7 @@ export function FirmaTabelaTab({
                         </TableCell>
                       </TableRow>
                       
-                      {/* Gruplanmamı   Ek Gelir Kayıtları - Sadece açıksa göster */}
+                      {/* Gruplanmamı�� Ek Gelir Kayıtları - Sadece açıksa göster */}
                       {!isCollapsed && ungroupedEkGelirRecords.map((record) => {
                         const recordGroup = getRecordGroup(record.id);
                         return (
@@ -2289,7 +2292,7 @@ export function FirmaTabelaTab({
 
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                   <p className="text-sm text-blue-800">
-                    💡 Bu alan opsiyoneldir. TABELA kaydınız için kısa bir a  ıklama girebilirsiniz.
+                    💡 Bu alan opsiyoneldir. TABELA kaydınız için kısa bir a��ıklama girebilirsiniz.
                   </p>
                 </div>
               </div>

@@ -29,7 +29,8 @@ export function RiskDashboardWidget({ customers }: RiskDashboardWidgetProps) {
   // Risk analizi
   const riskCustomers: RiskCustomer[] = [];
 
-  customers.forEach((customer) => {
+  // ✅ NULL SAFETY: customers boş olabilir
+  (customers || []).forEach((customer) => {
     // Aktif cihaz sayısı
     const allDevices = customer.serviceFeeSettings?.deviceSubscriptions || [];
     const activeDevices = allDevices.filter(d => d.isActive);

@@ -30,7 +30,8 @@ export function CustomerGrowthWidget({ customers }: CustomerGrowthWidgetProps) {
     // Müşterileri kayıt tarihine göre grupla
     const customersByMonth = new Map<string, Customer[]>();
     
-    customers.forEach(customer => {
+    // ✅ NULL SAFETY: customers boş olabilir
+    (customers || []).forEach(customer => {
       if (customer.kayitTarihi) {
         const date = new Date(customer.kayitTarihi);
         const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;

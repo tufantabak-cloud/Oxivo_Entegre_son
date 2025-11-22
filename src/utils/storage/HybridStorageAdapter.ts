@@ -1,4 +1,15 @@
-/*COMMENT*/
+/**
+ * Hybrid Storage Adapter
+ * LocalStorage + Supabase'i birleştiren akıllı adapter
+ * 
+ * Created: 2025-11-17
+ * 
+ * Stratejiler:
+ * - localStorage-primary: localStorage'dan oku, Supabase'e de yaz (backup)
+ * - supabase-primary: Supabase'den oku, localStorage'a da yaz (cache)
+ * - localStorage-only: Sadece localStorage
+ * - supabase-only: Sadece Supabase
+ */
 
 import { StorageAdapter, StorageStrategy, StorageConfig } from './StorageAdapter';
 import { LocalStorageAdapter } from './LocalStorageAdapter';
@@ -73,7 +84,7 @@ export class HybridStorageAdapter implements StorageAdapter {
     } catch (error) {
       logger.error('HybridStorageAdapter: set error', { key, strategy: this.strategy, error });
       
-      // Fallback: En azindan localStorage'a yaz
+      // Fallback: En azından localStorage'a yaz
       try {
         await this.localStorage.set(key, value);
         logger.info('HybridStorageAdapter: fallback to localStorage successful', { key });
@@ -103,7 +114,7 @@ export class HybridStorageAdapter implements StorageAdapter {
     this.log('clear', 'all');
 
     try {
-      // Her iki storage'i da temizle
+      // Her iki storage'ı da temizle
       await Promise.allSettled([
         this.localStorage.clear(),
         this.supabaseStorage.clear(),
@@ -118,7 +129,7 @@ export class HybridStorageAdapter implements StorageAdapter {
     this.log('getByPrefix', prefix);
 
     try {
-      // Her iki storage'dan da �ek ve merge et
+      // Her iki storage'dan da çek ve merge et
       const [localData, supabaseData] = await Promise.allSettled([
         this.localStorage.getByPrefix<T>(prefix),
         this.supabaseStorage.getByPrefix<T>(prefix),
@@ -127,7 +138,7 @@ export class HybridStorageAdapter implements StorageAdapter {
       const local = localData.status === 'fulfilled' ? localData.value : {};
       const supabase = supabaseData.status === 'fulfilled' ? supabaseData.value : {};
 
-      // Strategy'ye g�re merge
+      // Strategy'ye göre merge
       if (this.strategy === 'supabase-primary') {
         return { ...local, ...supabase };
       } else {
@@ -161,25 +172,31 @@ export class HybridStorageAdapter implements StorageAdapter {
         this.supabaseStorage.isHealthy(),
       ]);
 
-      // En az biri healthy olmali
+      // En az biri healthy olmalı
       return localHealthy || supabaseHealthy;
     } catch {
       return false;
     }
   }
 
-  /*COMMENT*/
+  /**
+   * Strategy değiştir (runtime'da)
+   */
   setStrategy(strategy: StorageStrategy): void {
     this.log('setStrategy', strategy);
     this.strategy = strategy;
   }
 
-  /*COMMENT*/
+  /**
+   * Mevcut strategy'yi döndür
+   */
   getStrategy(): StorageStrategy {
     return this.strategy;
   }
 
-  /*COMMENT*/
+  /**
+   * localStorage → Supabase migration
+   */
   async migrateToSupabase(): Promise<{ success: boolean; migrated: number; errors: string[] }> {
     this.log('migrateToSupabase', 'starting');
 
@@ -188,7 +205,7 @@ export class HybridStorageAdapter implements StorageAdapter {
 
     try {
       const keys = await this.localStorage.keys();
-      const migrateableKeys = keys.map(key => 
+      const migrateableKeys = keys.filter(key => 
         key === 'customers' || 
         key === 'payterProducts' || 
         key === 'domains' || 
@@ -204,7 +221,7 @@ export class HybridStorageAdapter implements StorageAdapter {
             logger.info('HybridStorageAdapter: migrated key', { key });
           }
         } catch (error: any) {
-          const errorMsg = `Failed to migrate ${key}: ${error?.message}`;
+          const errorMsg = `Failed to migrate ${key}: ${error.message}`;
           errors.push(errorMsg);
           logger.error('HybridStorageAdapter: migration error', { key, error });
         }
@@ -219,12 +236,14 @@ export class HybridStorageAdapter implements StorageAdapter {
       return {
         success: false,
         migrated,
-        errors: [`Migration failed: ${error?.message}`],
+        errors: [`Migration failed: ${error.message}`],
       };
     }
   }
 
-  /*COMMENT*/
+  /**
+   * Supabase → localStorage sync (cache güncelleme)
+   */
   async syncFromSupabase(): Promise<{ success: boolean; synced: number; errors: string[] }> {
     this.log('syncFromSupabase', 'starting');
 
@@ -243,7 +262,7 @@ export class HybridStorageAdapter implements StorageAdapter {
             logger.info('HybridStorageAdapter: synced key', { key });
           }
         } catch (error: any) {
-          const errorMsg = `Failed to sync ${key}: ${error?.message}`;
+          const errorMsg = `Failed to sync ${key}: ${error.message}`;
           errors.push(errorMsg);
           logger.error('HybridStorageAdapter: sync error', { key, error });
         }
@@ -258,7 +277,7 @@ export class HybridStorageAdapter implements StorageAdapter {
       return {
         success: false,
         synced,
-        errors: [`Sync failed: ${error?.message}`],
+        errors: [`Sync failed: ${error.message}`],
       };
     }
   }
@@ -268,14 +287,14 @@ export class HybridStorageAdapter implements StorageAdapter {
   // ========================================
 
   private async getLocalStoragePrimary<T>(key: string): Promise<T | null> {
-    // Ilk �nce localStorage'dan oku
+    // İlk önce localStorage'dan oku
     const localValue = await this.localStorage.get<T>(key);
     
     if (localValue !== null) {
       return localValue;
     }
 
-    // localStorage'da yoksa Supabase'den �ek
+    // localStorage'da yoksa Supabase'den çek
     const supabaseValue = await this.supabaseStorage.get<T>(key);
     
     // Supabase'de varsa localStorage'a cache'le
@@ -283,7 +302,7 @@ export class HybridStorageAdapter implements StorageAdapter {
       try {
         await this.localStorage.set(key, supabaseValue);
       } catch {
-        // Cache hatasi �nemli degil
+        // Cache hatası önemli değil
       }
     }
 
@@ -291,7 +310,7 @@ export class HybridStorageAdapter implements StorageAdapter {
   }
 
   private async getSupabasePrimary<T>(key: string): Promise<T | null> {
-    // Ilk �nce Supabase'den oku
+    // İlk önce Supabase'den oku
     const supabaseValue = await this.supabaseStorage.get<T>(key);
     
     if (supabaseValue !== null) {
@@ -299,7 +318,7 @@ export class HybridStorageAdapter implements StorageAdapter {
       try {
         await this.localStorage.set(key, supabaseValue);
       } catch {
-        // Cache hatasi �nemli degil
+        // Cache hatası önemli değil
       }
       return supabaseValue;
     }
@@ -309,7 +328,7 @@ export class HybridStorageAdapter implements StorageAdapter {
   }
 
   private async setLocalStoragePrimary<T>(key: string, value: T): Promise<void> {
-    // Ilk �nce localStorage'a yaz
+    // İlk önce localStorage'a yaz
     await this.localStorage.set(key, value);
     
     // Sonra Supabase'e de yaz (background, hata olsa da devam et)
@@ -319,7 +338,7 @@ export class HybridStorageAdapter implements StorageAdapter {
   }
 
   private async setSupabasePrimary<T>(key: string, value: T): Promise<void> {
-    // Ilk �nce Supabase'e yaz
+    // İlk önce Supabase'e yaz
     await this.supabaseStorage.set(key, value);
     
     // Sonra localStorage'a da cache'le (background)
@@ -334,7 +353,3 @@ export class HybridStorageAdapter implements StorageAdapter {
     }
   }
 }
-
-
-
-

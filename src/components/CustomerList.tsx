@@ -14,6 +14,7 @@ import { Checkbox } from './ui/checkbox';
 import { BatchOperationsDialog, BatchOperation, BatchOperationResult } from './BatchOperationsDialog';
 import { PaginationControls } from './PaginationControls';
 import { usePagination } from '../hooks/usePagination';
+// XLSX import - ES6 module format (v3.0.8 - fixed require issue)
 import * as XLSX from 'xlsx';
 import { matchDomain } from '../utils/domainMatching';
 import {
@@ -371,7 +372,8 @@ export const CustomerList = React.memo(function CustomerList({ customers, onSele
       '10+': 0,
     };
 
-    customers.forEach(customer => {
+    // ✅ NULL SAFETY: customers boş olabilir
+    (customers || []).forEach(customer => {
       const count = getDeviceCount(customer);
       if (count === 0) counts['0']++;
       else if (count >= 1 && count <= 4) counts['1-4']++;

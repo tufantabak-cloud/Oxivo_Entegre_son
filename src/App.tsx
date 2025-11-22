@@ -32,10 +32,8 @@ import { BankPF } from './components/BankPFModule';
 import { TabelaRecord, TabelaGroup } from './components/TabelaTab';
 import { PayterProduct } from './components/PayterProductTab';
 import { logger, createTimer } from './utils/logger';
-import { getStoredData, setStoredData } from './utils/storage';
+import { getStoredData, setStoredData } from './utils/storage/index';
 import { migrateData, validateImportData } from './utils/dataMigration';
-import { diagnosticAndRepair as sharingsAutoDiagnostic } from './utils/sharingsRecovery';
-import { extractVersionHistory as revenueModelsVersionCheck } from './utils/revenueModelsRecovery';
 
 // ⚡ PHASE 3: Code Splitting - Lazy load heavy modules
 const CustomerModule = lazy(() => import('./components/CustomerModule').then(m => ({ default: m.CustomerModule })));
@@ -46,7 +44,6 @@ const RevenueModule = lazy(() => import('./components/RevenueModule').then(m => 
 const DefinitionsModule = lazy(() => import('./components/DefinitionsModule').then(m => ({ default: m.DefinitionsModule })));
 // ⚡ CRITICAL FIX: Dashboard lazy load (14 widget components inside!)
 const DashboardHome = lazy(() => import('./components/DashboardHome').then(m => ({ default: m.DashboardHome })));
-const DebugModule = lazy(() => import('./components/DebugModule').then(m => ({ default: m.DebugModule })));
 
 // Type imports (not lazy loaded)
 import type { 
@@ -220,7 +217,8 @@ export default function App() {
     // Use requestIdleCallback for better performance
     const loadDataAsync = () => {
       const storedCustomers = getStoredData<Customer[]>('customers', []);
-      const processedCustomers = storedCustomers.map(c => ({
+      // ✅ CRITICAL FIX: Extra null/undefined check before .map()
+      const processedCustomers = (Array.isArray(storedCustomers) ? storedCustomers : []).map(c => ({
         ...c,
         linkedBankPFIds: c.linkedBankPFIds || []
       }));
@@ -238,17 +236,25 @@ export default function App() {
       const records = getStoredData<BankPF[]>('bankPFRecords', []);
       const oldTabelaRecords = getStoredData<TabelaRecord[]>('tabelaRecords', []);
     
+    // ✅ SAFETY: Ensure arrays before processing
+    const safeRecords = Array.isArray(records) ? records : [];
+    const safeOldTabelaRecords = Array.isArray(oldTabelaRecords) ? oldTabelaRecords : [];
+    
     // Eski TABELA verilerini firmalara migrate et
-    if (oldTabelaRecords.length > 0) {
-      const updatedRecords = records.map(record => {
+    if (safeOldTabelaRecords.length > 0) {
+      const updatedRecords = safeRecords.map(record => {
         // Bu firmaya ait TABELA kayıtlarını bul
         const firmaTabelaRecords = oldTabelaRecords.filter(
           tr => tr.kurulus.id === record.id
         );
         
+        // ✅ SAFETY: Ensure firmaTabelaRecords is array
+        const safeFirmaTabelaRecords = Array.isArray(firmaTabelaRecords) ? firmaTabelaRecords : [];
+        const recordTabelaRecords = Array.isArray(record.tabelaRecords) ? record.tabelaRecords : [];
+        
         return {
           ...record,
-          tabelaRecords: (firmaTabelaRecords.length > 0 ? firmaTabelaRecords : (record.tabelaRecords || [])).map(tr => ({
+          tabelaRecords: (safeFirmaTabelaRecords.length > 0 ? safeFirmaTabelaRecords : recordTabelaRecords).map(tr => ({
             ...tr,
             bankIds: tr.bankIds || [], // Eski kayıtlara bankIds ekle
             aciklama: tr.aciklama || undefined,
@@ -275,17 +281,18 @@ export default function App() {
       }
       
       // Eğer tabelaRecords yoksa, varolan kayıtların tabelaRecords ve agreementBanks alanını kontrol et
-      const processedRecords = records.map(r => ({ 
+      // ✅ SAFETY: Use safeRecords instead of records
+      const processedRecords = safeRecords.map(r => ({ 
         ...r, 
-        tabelaRecords: (r.tabelaRecords || []).map(tr => ({
+        tabelaRecords: (Array.isArray(r.tabelaRecords) ? r.tabelaRecords : []).map(tr => ({
           ...tr,
           bankIds: tr.bankIds || [], // Eski kayıtlara bankIds ekle
           aciklama: tr.aciklama || undefined,
           fotograf: tr.fotograf || undefined,
           kapanmaTarihi: tr.kapanmaTarihi || undefined
         })),
-        agreementBanks: r.agreementBanks || [],
-        tabelaGroups: (r.tabelaGroups || []).map((g: TabelaGroup) => ({
+        agreementBanks: Array.isArray(r.agreementBanks) ? r.agreementBanks : [],
+        tabelaGroups: (Array.isArray(r.tabelaGroups) ? r.tabelaGroups : []).map((g: TabelaGroup) => ({
           ...g,
           aktif: g.aktif !== undefined ? g.aktif : true
         })),
@@ -301,35 +308,7 @@ export default function App() {
       
       setBankPFRecords(processedRecords);
       
-      // 🩹 AUTO-FIX: Check and repair sharings data if corrupted
-      // This runs silently on app startup
-      const sharingsStatus = sharingsAutoDiagnostic(false);
-      if (sharingsStatus.repaired) {
-        logger.info('✅ Sharings data auto-repaired on startup', sharingsStatus);
-      } else if (!sharingsStatus.status.isValid) {
-        logger.warn('⚠️ Sharings data may need attention', sharingsStatus);
-      }
-      
-      // 🔍 DIAGNOSTIC: Check revenue models version history (hesapKalemleri, sabitKomisyonlar, ekGelirler)
-      // This runs silently on app startup - only logs to console
-      try {
-        const revenueHistory = revenueModelsVersionCheck();
-        const totalRevenue = revenueHistory.hesapKalemleri.length + 
-                            revenueHistory.sabitKomisyonlar.length + 
-                            revenueHistory.ekGelirler.length;
-        
-        if (totalRevenue === 0) {
-          logger.debug('ℹ️ Revenue Models: Henüz veri yok (ilk kurulum)');
-        } else {
-          logger.debug('✅ Revenue Models: Versiyon kontrolü tamamlandı', {
-            hesapKalemleri: revenueHistory.hesapKalemleri?.map(h => `v${h.version} (${h.size} kayıt)`) || [],
-            sabitKomisyonlar: revenueHistory.sabitKomisyonlar?.map(s => `v${s.version} (${s.size} kayıt)`) || [],
-            ekGelirler: revenueHistory.ekGelirler?.map(e => `v${e.version} (${e.size} kayıt)`) || []
-          });
-        }
-      } catch (error) {
-        logger.warn('⚠️ Revenue Models: Versiyon kontrolü hatası (kritik değil)', error);
-      }
+      // Auto-fix removed - Legacy recovery utils deleted
       
       setDataLoaded(true);
     };
@@ -695,7 +674,8 @@ export default function App() {
   const sektorStats = useMemo(() => {
     const sektorMap = new Map<string, number>();
     
-    customers.forEach(customer => {
+    // ✅ NULL SAFETY: customers boş olabilir
+    (customers || []).forEach(customer => {
       const sektor = customer.sektor?.trim() || 'Belirtilmemiş';
       sektorMap.set(sektor, (sektorMap.get(sektor) || 0) + 1);
     });
@@ -707,8 +687,9 @@ export default function App() {
 
   // Durum bazlı istatistikler
   const durumStats = useMemo(() => {
-    const aktifCount = customers.filter(c => c.durum === 'Aktif').length;
-    const pasifCount = customers.filter(c => c.durum === 'Pasif').length;
+    // ✅ NULL SAFETY: customers boş olabilir
+    const aktifCount = (customers || []).filter(c => c.durum === 'Aktif').length;
+    const pasifCount = (customers || []).filter(c => c.durum === 'Pasif').length;
     
     return [
       { durum: 'Aktif', count: aktifCount },
@@ -723,7 +704,8 @@ export default function App() {
     const stats = new Map<string, { repName: string; count: number; customers: Customer[] }>();
     
     // Her satış temsilcisi için başlangıç değerleri
-    salesReps.forEach(rep => {
+    // ✅ NULL SAFETY: salesReps boş olabilir
+    (salesReps || []).forEach(rep => {
       stats.set(rep.id, { repName: rep.adSoyad, count: 0, customers: [] });
     });
     
@@ -731,7 +713,8 @@ export default function App() {
     stats.set('unassigned', { repName: 'Atanmamış', count: 0, customers: [] });
     
     // Müşterileri temsilcilere göre grupla
-    customers.forEach(customer => {
+    // ✅ NULL SAFETY: customers boş olabilir
+    (customers || []).forEach(customer => {
       if (customer.salesRepId && stats.has(customer.salesRepId)) {
         const stat = stats.get(customer.salesRepId)!;
         stat.count++;
@@ -756,7 +739,8 @@ export default function App() {
     const customerDevices = new Map<string, { p6x: number; apollo: number; total: number }>();
     
     // Tüm ürünleri say ve müşterilere göre grupla
-    payterProducts.forEach(product => {
+    // ✅ NULL SAFETY: payterProducts boş olabilir
+    (payterProducts || []).forEach(product => {
       const model = product.terminalModel?.toUpperCase() || '';
       const isP6X = model.includes('P6X') || model.includes('P6-X') || model.includes('P 6 X');
       const isApollo = model.includes('APOLLO');
@@ -767,7 +751,8 @@ export default function App() {
       // Domain bazlı müşteri eşleştirmesi
       const productDomain = product.domain?.toLowerCase().trim() || '';
       if (productDomain) {
-        customers.forEach(customer => {
+        // ✅ NULL SAFETY: customers boş olabilir
+        (customers || []).forEach(customer => {
           const customerDomains = customer.domainHiyerarsisi?.map(d => d.domain.toLowerCase().trim()) || [];
           if (customerDomains.some(cd => productDomain.includes(cd) || cd.includes(productDomain))) {
             if (!customerDevices.has(customer.id)) {
@@ -802,7 +787,8 @@ export default function App() {
       { label: '501-10000', min: 501, max: 10000, count: 0, musteriler: [] as Customer[] },
     ];
     
-    customers.forEach(customer => {
+    // ✅ NULL SAFETY: customers boş olabilir
+    (customers || []).forEach(customer => {
       const deviceData = deviceCountByCustomer.get(customer.id);
       const toplamCihaz = deviceData?.total || 0;
       
@@ -869,7 +855,8 @@ export default function App() {
     const yearlyFeeList: FeeListItem[] = [];
     const noFeeList: FeeListItem[] = [];
 
-    customers.forEach(customer => {
+    // ✅ NULL SAFETY: customers boş olabilir
+    (customers || []).forEach(customer => {
       const deviceData = deviceCountByCustomer.get(customer.id);
       const customerDeviceCount = deviceData?.total || 0;
       
@@ -1178,17 +1165,6 @@ export default function App() {
                 <Settings size={16} />
                 <span>Tanımlar</span>
               </button>
-              <button
-                onClick={() => setActiveModule('debug')}
-                className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-[13px] ${
-                  activeModule === 'debug'
-                    ? 'bg-orange-600 text-white shadow-md shadow-orange-200'
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
-                }`}
-              >
-                <Search size={16} />
-                <span>Debug</span>
-              </button>
             </nav>
           </div>
         </div>
@@ -1245,7 +1221,8 @@ export default function App() {
           ];
           
           // Müşteri segmentlerini hesapla (global deviceCountByCustomer kullanılıyor)
-          customers.forEach(customer => {
+          // ✅ NULL SAFETY: customers boş olabilir
+          (customers || []).forEach(customer => {
             const deviceData = deviceCountByCustomer.get(customer.id);
             const deviceCount = deviceData?.total || 0;
             
@@ -1270,7 +1247,8 @@ export default function App() {
           const yearlyFeeCustomers: Customer[] = [];
           const noFeeCustomers: Customer[] = [];
           
-          customers.forEach(customer => {
+          // ✅ NULL SAFETY: customers boş olabilir
+          (customers || []).forEach(customer => {
             const deviceData = deviceCountByCustomer.get(customer.id);
             const customerDeviceCount = deviceData?.total || 0;
             
@@ -1323,7 +1301,8 @@ export default function App() {
             
             // Toplam cihaz sayısını hesapla (global deviceCountByCustomer kullanılıyor)
             let totalDevices = 0;
-            assignedCustomers.forEach(c => {
+            // ✅ NULL SAFETY: assignedCustomers boş olabilir
+            (assignedCustomers || []).forEach(c => {
               const deviceData = deviceCountByCustomer.get(c.id);
               if (deviceData) {
                 totalDevices += deviceData.total;
@@ -1425,7 +1404,8 @@ export default function App() {
             const activeCustomers = assignedCustomers.filter(c => c.durum === 'Aktif');
             
             let totalDevices = 0;
-            assignedCustomers.forEach(c => {
+            // ✅ NULL SAFETY: assignedCustomers boş olabilir
+            (assignedCustomers || []).forEach(c => {
               const deviceData = deviceCountByCustomer.get(c.id);
               if (deviceData) {
                 totalDevices += deviceData.total;
@@ -1533,10 +1513,12 @@ export default function App() {
                 
                 // Detaylı TABELA bilgisi
                 console.log('📋 TABELA Detayları:');
-                bankPFRecords.forEach(record => {
+                // ✅ NULL SAFETY: bankPFRecords boş olabilir (Fix 1/3)
+                (bankPFRecords || []).forEach(record => {
                   if (record.tabelaRecords && record.tabelaRecords.length > 0) {
                     console.log(`  ${record.firmaUnvan}: ${record.tabelaRecords.length} TABELA kaydı`);
-                    record.tabelaRecords.forEach(t => {
+                    // ✅ NULL SAFETY: tabelaRecords boş olabilir
+                    (record.tabelaRecords || []).forEach(t => {
                       console.log(`    - ${t.gelirModeli.ad} (${t.kartTipi})`);
                     });
                   }
@@ -1803,10 +1785,12 @@ export default function App() {
                     
                     // Detaylı TABELA bilgisi
                     console.log('📋 TABELA Detayları:');
-                    bankPFRecords.forEach(record => {
+                    // ✅ NULL SAFETY: bankPFRecords boş olabilir (Fix 2/3)
+                    (bankPFRecords || []).forEach(record => {
                       if (record.tabelaRecords && record.tabelaRecords.length > 0) {
                         console.log(`  ${record.firmaUnvan}: ${record.tabelaRecords.length} TABELA kaydı`);
-                        record.tabelaRecords.forEach(t => {
+                        // ✅ NULL SAFETY: tabelaRecords boş olabilir
+                        (record.tabelaRecords || []).forEach(t => {
                           console.log(`    - ${t.gelirModeli.ad} (${t.kartTipi})`);
                         });
                       }
@@ -1949,10 +1933,12 @@ export default function App() {
                 
                 // Detaylı TABELA bilgisi
                 console.log('📋 TABELA Detayları:');
-                bankPFRecords.forEach(record => {
+                // ✅ NULL SAFETY: bankPFRecords boş olabilir (Fix 3/3)
+                (bankPFRecords || []).forEach(record => {
                   if (record.tabelaRecords && record.tabelaRecords.length > 0) {
                     console.log(`  ${record.firmaUnvan}: ${record.tabelaRecords.length} TABELA kaydı`);
-                    record.tabelaRecords.forEach(t => {
+                    // ✅ NULL SAFETY: tabelaRecords boş olabilir
+                    (record.tabelaRecords || []).forEach(t => {
                       console.log(`    - ${t.gelirModeli.ad} (${t.kartTipi})`);
                     });
                   }
@@ -2116,14 +2102,6 @@ export default function App() {
               onSalesRepsChange={setSalesReps}
               suspensionReasons={suspensionReasons}
               onSuspensionReasonsChange={setSuspensionReasons}
-            />
-          </Suspense>
-        )}
-        {dataLoaded && activeModule === 'debug' && (
-          <Suspense fallback={<ModuleLoadingFallback />}>
-            <DebugModule 
-              customers={customers}
-              payterProducts={payterProducts}
             />
           </Suspense>
         )}

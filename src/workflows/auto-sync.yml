@@ -1,0 +1,66 @@
+name: Scheduled Auto-Sync Check
+
+# Bu workflow zamanlanmış otomatik kontrol yapar
+# Not: Sadece GitHub'daki değişiklikleri kontrol eder, 
+# Figma Make'ten otomatik sync yapamaz (manuel export gerekir)
+
+on:
+  schedule:
+    # Her 4 saatte bir çalışır (UTC timezone)
+    - cron: '0 */4 * * *'
+  
+  # Manuel tetikleme
+  workflow_dispatch:
+
+jobs:
+  check-and-notify:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        
+    - name: Check for updates
+      run: |
+        echo "🔍 Repository durumu kontrol ediliyor..."
+        git fetch origin
+        
+        BEHIND=$(git rev-list --count HEAD..origin/main)
+        
+        if [ "$BEHIND" -gt 0 ]; then
+          echo "⚠️  Local branch $BEHIND commit geride!"
+          echo "🔄 Pull gerekiyor..."
+        else
+          echo "✅ Repository güncel!"
+        fi
+        
+    - name: Build and test
+      run: |
+        echo "🏗️  Build testi yapılıyor..."
+        npm ci
+        npm run build
+      env:
+        VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+        VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        
+    - name: Repository stats
+      run: |
+        echo "📊 Repository İstatistikleri:"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "Son commit: $(git log -1 --pretty=format:'%h - %s (%ar)')"
+        echo "Toplam commit: $(git rev-list --count HEAD)"
+        echo "Branch: $(git branch --show-current)"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        
+    # Uncomment to send notification (requires setup)
+    # - name: Send notification
+    #   if: failure()
+    #   uses: 8398a7/action-slack@v3
+    #   with:
+    #     status: ${{ job.status }}
+    #     webhook_url: ${{ secrets.SLACK_WEBHOOK }}

@@ -960,7 +960,8 @@ ${notMatchedDomains.length > 0 ? `\n⚠️ Eşleşmeyen domainler konsola yazdı
         
         // Müşteri normalleştirme map'i oluştur (sistemdeki müşteriler için)
         const customerNormalizedMap = new Map<string, Customer>();
-        customers.forEach(customer => {
+        // ✅ NULL SAFETY: customers boş olabilir
+        (customers || []).forEach(customer => {
           const normalizedName = normalizeCustomerName(customer.cariAdi);
           customerNormalizedMap.set(normalizedName, customer);
         });
@@ -1229,7 +1230,8 @@ ${notMatchedDomains.length > 0 ? `\n⚠️ Eşleşmeyen domainler konsola yazdı
       const templateData: any[] = [];
       
       if (customers.length > 0) {
-        customers.forEach(customer => {
+        // ✅ NULL SAFETY: customers boş olabilir
+        (customers || []).forEach(customer => {
           // Otomatik eşleşen veya manuel bağlı Banka/PF kayıtlarını bul
           const linkedRecords = bankPFRecords.filter(record => {
             // Manuel bağlantı kontrolü
@@ -1418,14 +1420,16 @@ ${notMatchedDomains.length > 0 ? `\n⚠️ Eşleşmeyen domainler konsola yazdı
         
         // Müşteri eşleştirme map'i
         const customerNormalizedMap = new Map<string, Customer>();
-        customers.forEach(customer => {
+        // ✅ NULL SAFETY: customers boş olabilir
+        (customers || []).forEach(customer => {
           const normalizedName = normalizeCustomerName(customer.cariAdi);
           customerNormalizedMap.set(normalizedName, customer);
         });
         
         // Banka/PF eşleştirme map'i
         const bankPFNormalizedMap = new Map<string, any>();
-        bankPFRecords.forEach(record => {
+        // ✅ NULL SAFETY: bankPFRecords boş olabilir
+        (bankPFRecords || []).forEach(record => {
           const normalizedName = normalizeCustomerName(record.firmaUnvan);
           bankPFNormalizedMap.set(normalizedName, record);
         });
@@ -1541,7 +1545,8 @@ ${notMatchedDomains.length > 0 ? `\n⚠️ Eşleşmeyen domainler konsola yazdı
       const templateData: any[] = [];
       
       if (customers.length > 0) {
-        customers.forEach(customer => {
+        // ✅ NULL SAFETY: customers boş olabilir
+        (customers || []).forEach(customer => {
           if (customer.domainHierarchy && customer.domainHierarchy.length > 0) {
             // Mevcut domain hiyerarşisini düzleştir
             flattenDomainHierarchy(customer.domainHierarchy, [], customer).forEach(row => {

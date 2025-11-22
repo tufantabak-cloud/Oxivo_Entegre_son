@@ -2,7 +2,7 @@
 // Custom hook for widget configuration and management
 // Compatible with existing useState/useEffect pattern
 import { useState, useEffect, useCallback } from 'react';
-import { getStoredData, setStoredData } from '../utils/storage';
+import { getStoredData, setStoredData } from '../utils/storage/index';
 
 export type WidgetType = 'customers' | 'bankpf' | 'bankPFMembers' | 'bankPFUiySummary' | 'products' | 'revenue' | 'customerGrowth' | 'sectorDiversity' | 'mccDiversity' | 'bankPerformance' | 'revenueTrend' | 'salesRepPerformance' | 'riskDashboard' | 'topCustomers' | 'systemStatus' | 'subscriptionRevenue' | 'deviceRevenueRatio';
 

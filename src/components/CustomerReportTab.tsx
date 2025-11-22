@@ -69,7 +69,8 @@ export function CustomerReportTab({ customers, bankPFRecords }: CustomerReportTa
   // Sektör filter options
   const sektorFilterOptions = useMemo<FilterOption[]>(() => {
     const sektors = new Set<string>();
-    customers.forEach(c => {
+    // ✅ NULL SAFETY: customers boş olabilir
+    (customers || []).forEach(c => {
       if (c.sektor && c.sektor.trim() !== '') {
         sektors.add(c.sektor);
       }

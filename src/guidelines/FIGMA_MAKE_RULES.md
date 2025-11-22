@@ -204,7 +204,7 @@ Library Usage Rule — use these packages:
 
 UI Components:     @radix-ui/* (all primitives)
 Icons:             lucide-react
-Toast:             sonner (import from "sonner" NOT "sonner")
+Toast:             sonner (import from "sonner" NOT "sonner@2.0.3")
 Forms:             react-hook-form@7.55.0 (ONLY exception with version)
 Charts:            recharts
 Date Picker:       react-day-picker
