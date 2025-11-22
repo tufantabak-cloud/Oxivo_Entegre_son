@@ -18,6 +18,7 @@ export default defineConfig({
     include: ['react', 'react-dom', 'xlsx', 'recharts'],
   },
   build: {
+    outDir: 'dist', // Vercel 'dist' klasörünü bekliyor
     chunkSizeWarningLimit: 2000, // Uyarı limitini yükselttik
     commonjsOptions: {
       transformMixedEsModules: true, // CJS/ESM uyumsuzluklarını çözer
@@ -28,13 +29,8 @@ export default defineConfig({
         // Vite artık yükleme sırasını kendisi yönetecek.
       },
     },
-    // Production'da console.log'ları kaldır (logger kullan)
+    // Production build - minified & optimized
     minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true, // Remove console.* calls
-        drop_debugger: true, // Remove debugger statements
-      },
-    },
+    sourcemap: false,
   },
 })

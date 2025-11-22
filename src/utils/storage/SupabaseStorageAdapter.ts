@@ -7,7 +7,7 @@
 
 import { StorageAdapter } from './StorageAdapter';
 import { logger } from '../logger';
-import { projectId, publicAnonKey } from '../../lib/supabase/info';
+import { projectId, publicAnonKey } from '../supabase/info'; // ✅ FIX: Correct path
 
 export class SupabaseStorageAdapter implements StorageAdapter {
   private baseUrl: string;
