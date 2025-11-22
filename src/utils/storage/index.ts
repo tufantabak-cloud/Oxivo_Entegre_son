@@ -23,7 +23,7 @@ import { StorageAdapter, StorageStrategy, StorageConfig } from './StorageAdapter
 
 // Default config
 const defaultConfig: StorageConfig = {
-  strategy: 'localStorage-primary', // Güvenli başlangıç: localStorage öncelikli
+  strategy: 'supabase-primary', // ✅ FIX: Supabase'i primary yap
   enableLogging: import.meta.env?.DEV ?? false, // Development'ta log aç (SSR-safe)
 };
 
