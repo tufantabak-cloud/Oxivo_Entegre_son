@@ -156,7 +156,9 @@ export function DashboardHome({
   }, []);
 
   // Sıralı ve aktif widget'ları filtrele
-  const sortedWidgets = [...widgets].sort((a, b) => a.order - b.order);
+  // ✅ CRITICAL FIX: Ensure widgets is array before spreading
+  const safeWidgets = Array.isArray(widgets) ? widgets : [];
+  const sortedWidgets = [...safeWidgets].sort((a, b) => a.order - b.order);
   const activeWidgets = sortedWidgets.filter((w) => w.enabled);
 
   // Widget'ları kategorilere ayır
@@ -244,24 +246,25 @@ export function DashboardHome({
   };
 
   // Widget sayaçları
+  // ✅ CRITICAL FIX: Use safeWidgets for counts
   const widgetTypeCounts = {
-    customers: widgets.filter((w) => w.type === 'customers').length,
-    bankpf: widgets.filter((w) => w.type === 'bankpf').length,
-    bankPFMembers: widgets.filter((w) => w.type === 'bankPFMembers').length,
-    bankPFUiySummary: widgets.filter((w) => w.type === 'bankPFUiySummary').length,
-    products: widgets.filter((w) => w.type === 'products').length,
-    revenue: widgets.filter((w) => w.type === 'revenue').length,
-    customerGrowth: widgets.filter((w) => w.type === 'customerGrowth').length,
-    sectorDiversity: widgets.filter((w) => w.type === 'sectorDiversity').length,
-    mccDiversity: widgets.filter((w) => w.type === 'mccDiversity').length,
-    bankPerformance: widgets.filter((w) => w.type === 'bankPerformance').length,
-    revenueTrend: widgets.filter((w) => w.type === 'revenueTrend').length,
-    salesRepPerformance: widgets.filter((w) => w.type === 'salesRepPerformance').length,
-    riskDashboard: widgets.filter((w) => w.type === 'riskDashboard').length,
-    topCustomers: widgets.filter((w) => w.type === 'topCustomers').length,
-    systemStatus: widgets.filter((w) => w.type === 'systemStatus').length,
-    subscriptionRevenue: widgets.filter((w) => w.type === 'subscriptionRevenue').length,
-    deviceRevenueRatio: widgets.filter((w) => w.type === 'deviceRevenueRatio').length,
+    customers: safeWidgets.filter((w) => w.type === 'customers').length,
+    bankpf: safeWidgets.filter((w) => w.type === 'bankpf').length,
+    bankPFMembers: safeWidgets.filter((w) => w.type === 'bankPFMembers').length,
+    bankPFUiySummary: safeWidgets.filter((w) => w.type === 'bankPFUiySummary').length,
+    products: safeWidgets.filter((w) => w.type === 'products').length,
+    revenue: safeWidgets.filter((w) => w.type === 'revenue').length,
+    customerGrowth: safeWidgets.filter((w) => w.type === 'customerGrowth').length,
+    sectorDiversity: safeWidgets.filter((w) => w.type === 'sectorDiversity').length,
+    mccDiversity: safeWidgets.filter((w) => w.type === 'mccDiversity').length,
+    bankPerformance: safeWidgets.filter((w) => w.type === 'bankPerformance').length,
+    revenueTrend: safeWidgets.filter((w) => w.type === 'revenueTrend').length,
+    salesRepPerformance: safeWidgets.filter((w) => w.type === 'salesRepPerformance').length,
+    riskDashboard: safeWidgets.filter((w) => w.type === 'riskDashboard').length,
+    topCustomers: safeWidgets.filter((w) => w.type === 'topCustomers').length,
+    systemStatus: safeWidgets.filter((w) => w.type === 'systemStatus').length,
+    subscriptionRevenue: safeWidgets.filter((w) => w.type === 'subscriptionRevenue').length,
+    deviceRevenueRatio: safeWidgets.filter((w) => w.type === 'deviceRevenueRatio').length,
   };
 
   return (

@@ -146,6 +146,12 @@ function getWidgetTitle(type: WidgetType): string {
 
 // Migration: Widget'ları güncelle ve yeni widget'ları ekle
 function migrateWidgets(widgets: WidgetConfig[]): WidgetConfig[] {
+  // ✅ CRITICAL FIX: Ensure widgets is array before .map()
+  if (!Array.isArray(widgets)) {
+    console.warn('[useDashboardWidgets] migrateWidgets received non-array, using defaultWidgets');
+    return defaultWidgets;
+  }
+
   let migratedWidgets = widgets.map((widget) => {
     // topCustomers widget'ı 'large' değilse, güncelle
     if (widget.type === 'topCustomers' && widget.size !== 'large') {

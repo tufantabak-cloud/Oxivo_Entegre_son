@@ -29,13 +29,8 @@ export default defineConfig({
         // Vite artık yükleme sırasını kendisi yönetecek.
       },
     },
-    // Production'da console.log'ları kaldır (logger kullan)
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true, // Remove console.* calls
-        drop_debugger: true, // Remove debugger statements
-      },
-    },
+    // GEÇİCİ: Minification kapatıldı - debug için
+    minify: false,
+    sourcemap: true, // Source map ekle - hata bulma için
   },
 })
