@@ -32,7 +32,7 @@ import { BankPF } from './components/BankPFModule';
 import { TabelaRecord, TabelaGroup } from './components/TabelaTab';
 import { PayterProduct } from './components/PayterProductTab';
 import { logger, createTimer } from './utils/logger';
-import { getStoredData, setStoredData } from './utils/storage/index';
+import { getStoredData, setStoredData } from './utils/storage';
 import { migrateData, validateImportData } from './utils/dataMigration';
 
 // ⚡ PHASE 3: Code Splitting - Lazy load heavy modules
