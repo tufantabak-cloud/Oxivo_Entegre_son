@@ -1,19 +1,94 @@
 /**
  * Supabase Client ve API Helpers
  * Direct Supabase Client mode - Frontend'den direkt Postgres erişimi
+ * 
+ * IMPORTANT: Supabase uses snake_case, Frontend uses camelCase
+ * All data is converted automatically via caseConverter
+ * 
+ * SINGLETON: Uses global window cache to prevent multiple instances
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { objectToSnakeCase, objectToCamelCase } from './caseConverter';
 
-// Correct project info
-export const PROJECT_ID = "tveqpmzgqtoyagtpapev";
-export const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2ZXFwbXpncXRveWFndHBhcGV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMxNDk1NzMsImV4cCI6MjA3ODcyNTU3M30.Lk5-tJOzPp3cvqQjGcK6utBx69CcAla2AKyBmqFPlm0";
+// Correct project info - Updated to okgeyuhmumlkkcpoholh
+export const PROJECT_ID = "okgeyuhmumlkkcpoholh";
+export const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9rZ2V5dWhtdW1sa2tjcG9ob2xoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg0MDAyMjAsImV4cCI6MjA3Mzk3NjIyMH0.wICqJoMc9a2-S7OwW6VMwcs1-ApPjpnS2QMZ4BVZFpI";
 
-// Supabase Client (singleton)
-export const supabase = createClient(
-  `https://${PROJECT_ID}.supabase.co`,
-  ANON_KEY
-);
+// Global singleton cache key
+const SUPABASE_SINGLETON_KEY = '__oxivo_supabase_client__';
+
+// Declare global type
+declare global {
+  interface Window {
+    [SUPABASE_SINGLETON_KEY]?: SupabaseClient;
+  }
+}
+
+/**
+ * Get or create Supabase client (singleton)
+ * CRITICAL: This ensures only ONE instance exists globally
+ */
+function getSupabaseClient(): SupabaseClient {
+  // Server-side: create new client (no window)
+  if (typeof window === 'undefined') {
+    return createClient(`https://${PROJECT_ID}.supabase.co`, ANON_KEY);
+  }
+
+  // Client-side: check if already exists in window
+  if (!window[SUPABASE_SINGLETON_KEY]) {
+    console.log('🔧 Creating new Supabase client singleton...');
+    
+    window[SUPABASE_SINGLETON_KEY] = createClient(
+      `https://${PROJECT_ID}.supabase.co`,
+      ANON_KEY,
+      {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: false, // Disable to prevent conflicts
+          storage: window.localStorage,
+          storageKey: 'sb-okgeyuhmumlkkcpoholh-auth-token',
+        },
+        global: {
+          headers: {
+            'X-Client-Info': 'oxivo-app-v1',
+          },
+        },
+        db: {
+          schema: 'public',
+        },
+      }
+    );
+    
+    console.log('✅ Supabase client singleton created');
+  } else {
+    console.log('♻️ Reusing existing Supabase client singleton');
+  }
+
+  return window[SUPABASE_SINGLETON_KEY]!;
+}
+
+// Export singleton client
+export const supabase = getSupabaseClient();
+
+// Debug: Expose client to window for inspection
+if (typeof window !== 'undefined') {
+  (window as any).__OXIVO_SUPABASE__ = supabase;
+  console.log('🔍 Debug: Supabase client available at window.__OXIVO_SUPABASE__');
+}
+
+// HMR (Hot Module Replacement) cleanup
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    // Clean up on HMR reload to prevent stale instances
+    console.log('🧹 Cleaning up Supabase client on HMR...');
+    if (typeof window !== 'undefined' && window[SUPABASE_SINGLETON_KEY]) {
+      // Note: We keep the singleton for consistent auth state
+      // but log the cleanup for debugging
+    }
+  });
+}
 
 // ========================================
 // CUSTOMER API
@@ -24,6 +99,8 @@ export const customerApi = {
    * Tüm müşterileri getirir
    */
   async getAll() {
+    console.log('🔍 Fetching customers from Supabase...');
+    
     const { data, error } = await supabase
       .from('customers')
       .select('*')
@@ -31,11 +108,17 @@ export const customerApi = {
 
     if (error) {
       console.error('❌ Error fetching customers:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+      });
       return { success: false, error: error.message, data: [] };
     }
 
     console.log(`✅ Fetched ${data.length} customers from Supabase`);
-    return { success: true, data: data || [] };
+    return { success: true, data: data.map(objectToCamelCase) || [] };
   },
 
   /**
@@ -53,14 +136,23 @@ export const customerApi = {
       return { success: false, error: error.message };
     }
 
-    return { success: true, data };
+    return { success: true, data: objectToCamelCase(data) };
   },
 
   /**
    * Müşteri ekler (tek veya toplu)
    */
   async create(customers: any | any[]) {
-    const records = Array.isArray(customers) ? customers : [customers];
+    console.log('📤 Creating customers in Supabase...');
+    
+    const records = Array.isArray(customers) ? customers.map(objectToSnakeCase) : [objectToSnakeCase(customers)];
+    
+    console.log(`📤 Converting ${records.length} customers to snake_case...`);
+    
+    // Debug: Log first record's keys to verify conversion
+    if (records.length > 0) {
+      console.log('🔍 Sample record keys (snake_case):', Object.keys(records[0]).slice(0, 10).join(', '));
+    }
     
     const { data, error } = await supabase
       .from('customers')
@@ -69,11 +161,27 @@ export const customerApi = {
 
     if (error) {
       console.error('❌ Error creating customers:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+      });
+      
+      // Extra debugging for common errors
+      if (error.code === 'PGRST204') {
+        console.error('💡 Table not found! Run /SUPABASE_CUSTOMERS_FIX.sql in Supabase Dashboard');
+      } else if (error.code === '42703') {
+        console.error('💡 Column mismatch! Check that table schema matches Customer interface');
+      } else if (error.code === '23505') {
+        console.error('💡 Duplicate key! Some records may already exist');
+      }
+      
       return { success: false, error: error.message };
     }
 
     console.log(`✅ Created ${data.length} customers in Supabase`);
-    return { success: true, data, count: data.length };
+    return { success: true, data: data.map(objectToCamelCase), count: data.length };
   },
 
   /**
@@ -82,7 +190,7 @@ export const customerApi = {
   async update(id: string, updates: any) {
     const { data, error } = await supabase
       .from('customers')
-      .update(updates)
+      .update(objectToSnakeCase(updates))
       .eq('id', id)
       .select()
       .single();
@@ -93,7 +201,7 @@ export const customerApi = {
     }
 
     console.log(`✅ Updated customer ${id} in Supabase`);
-    return { success: true, data };
+    return { success: true, data: objectToCamelCase(data) };
   },
 
   /**
@@ -135,7 +243,7 @@ export const productApi = {
     }
 
     console.log(`✅ Fetched ${data.length} products from Supabase`);
-    return { success: true, data: data || [] };
+    return { success: true, data: data.map(objectToCamelCase) || [] };
   },
 
   /**
@@ -150,7 +258,7 @@ export const productApi = {
     // Upsert ile ekle/güncelle
     const { data, error } = await supabase
       .from('products')
-      .upsert(products, { onConflict: 'serialNumber' })
+      .upsert(products.map(objectToSnakeCase), { onConflict: 'serialNumber' })
       .select();
 
     if (error) {
@@ -161,7 +269,7 @@ export const productApi = {
     console.log(`✅ Synced ${data.length} products to Supabase`);
     return {
       success: true,
-      data,
+      data: data.map(objectToCamelCase),
       stats: {
         total: data.length,
         added: products.length,
@@ -191,14 +299,14 @@ export const bankPFApi = {
     }
 
     console.log(`✅ Fetched ${data.length} bankPF records from Supabase`);
-    return { success: true, data: data || [] };
+    return { success: true, data: data.map(objectToCamelCase) || [] };
   },
 
   /**
    * Bank/PF kayıtları ekler
    */
   async create(records: any | any[]) {
-    const items = Array.isArray(records) ? records : [records];
+    const items = Array.isArray(records) ? records.map(objectToSnakeCase) : [objectToSnakeCase(records)];
     
     const { data, error } = await supabase
       .from('bank_accounts')
@@ -211,6 +319,6 @@ export const bankPFApi = {
     }
 
     console.log(`✅ Created ${data.length} bankPF records in Supabase`);
-    return { success: true, data, count: data.length };
+    return { success: true, data: data.map(objectToCamelCase), count: data.length };
   },
 };
