@@ -1,6 +1,15 @@
+import { useState } from 'react';
 import { Calculator, TrendingUp, TrendingDown, ChevronDown, ChevronRight } from 'lucide-react';
 import { BankPF } from './BankPFModule';
 import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
+import { Card, CardContent } from './ui/card';
+import { Label } from './ui/label';
+import { Input } from './ui/input';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './ui/table';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from './ui/collapsible';
 
 interface TabelaSimulationDialogProps {
   open: boolean;
