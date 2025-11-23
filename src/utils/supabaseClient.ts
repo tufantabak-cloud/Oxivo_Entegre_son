@@ -9,7 +9,64 @@
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { objectToSnakeCase, objectToCamelCase } from './caseConverter';
+
+// ========================================
+// CASE CONVERTER UTILITIES (Inline to avoid import issues)
+// ========================================
+
+/**
+ * camelCase → snake_case dönüşümü
+ */
+function toSnakeCase(str: string): string {
+  return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+}
+
+/**
+ * snake_case → camelCase dönüşümü
+ */
+function toCamelCase(str: string): string {
+  return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+}
+
+/**
+ * Object'in tüm key'lerini camelCase'den snake_case'e çevirir
+ */
+export function objectToSnakeCase(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
+  if (Array.isArray(obj)) return obj.map(item => objectToSnakeCase(item));
+  if (typeof obj !== 'object') return obj;
+  
+  const converted: any = {};
+  for (const [key, value] of Object.entries(obj)) {
+    const snakeKey = toSnakeCase(key);
+    converted[snakeKey] = (value && typeof value === 'object') 
+      ? objectToSnakeCase(value) 
+      : value;
+  }
+  return converted;
+}
+
+/**
+ * Object'in tüm key'lerini snake_case'den camelCase'e çevirir
+ */
+export function objectToCamelCase(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
+  if (Array.isArray(obj)) return obj.map(item => objectToCamelCase(item));
+  if (typeof obj !== 'object') return obj;
+  
+  const converted: any = {};
+  for (const [key, value] of Object.entries(obj)) {
+    const camelKey = toCamelCase(key);
+    converted[camelKey] = (value && typeof value === 'object') 
+      ? objectToCamelCase(value) 
+      : value;
+  }
+  return converted;
+}
+
+// ========================================
+// SUPABASE CLIENT CONFIGURATION
+// ========================================
 
 // Correct project info - Updated to okgeyuhmumlkkcpoholh
 export const PROJECT_ID = "okgeyuhmumlkkcpoholh";
