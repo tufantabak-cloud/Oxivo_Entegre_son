@@ -25,7 +25,7 @@ export const customerApi = {
    */
   async getAll() {
     const { data, error } = await supabase
-      .from('musteri_cari_kartlari')
+      .from('customers')
       .select('*')
       .order('created_at', { ascending: false });
 
@@ -43,7 +43,7 @@ export const customerApi = {
    */
   async getById(id: string) {
     const { data, error } = await supabase
-      .from('musteri_cari_kartlari')
+      .from('customers')
       .select('*')
       .eq('id', id)
       .single();
@@ -63,7 +63,7 @@ export const customerApi = {
     const records = Array.isArray(customers) ? customers : [customers];
     
     const { data, error } = await supabase
-      .from('musteri_cari_kartlari')
+      .from('customers')
       .insert(records)
       .select();
 
@@ -81,7 +81,7 @@ export const customerApi = {
    */
   async update(id: string, updates: any) {
     const { data, error } = await supabase
-      .from('musteri_cari_kartlari')
+      .from('customers')
       .update(updates)
       .eq('id', id)
       .select()
@@ -101,7 +101,7 @@ export const customerApi = {
    */
   async delete(id: string) {
     const { error } = await supabase
-      .from('musteri_cari_kartlari')
+      .from('customers')
       .delete()
       .eq('id', id);
 
@@ -125,7 +125,7 @@ export const productApi = {
    */
   async getAll() {
     const { data, error } = await supabase
-      .from('payterProducts')
+      .from('products')
       .select('*')
       .order('created_at', { ascending: false });
 
@@ -144,12 +144,12 @@ export const productApi = {
   async sync(products: any[], strategy: 'merge' | 'replace' = 'merge') {
     if (strategy === 'replace') {
       // Önce tümünü sil
-      await supabase.from('payterProducts').delete().neq('id', '');
+      await supabase.from('products').delete().neq('id', '');
     }
 
     // Upsert ile ekle/güncelle
     const { data, error } = await supabase
-      .from('payterProducts')
+      .from('products')
       .upsert(products, { onConflict: 'serialNumber' })
       .select();
 
@@ -181,7 +181,7 @@ export const bankPFApi = {
    */
   async getAll() {
     const { data, error } = await supabase
-      .from('bankPFRecords')
+      .from('bank_accounts')
       .select('*')
       .order('created_at', { ascending: false });
 
@@ -201,7 +201,7 @@ export const bankPFApi = {
     const items = Array.isArray(records) ? records : [records];
     
     const { data, error } = await supabase
-      .from('bankPFRecords')
+      .from('bank_accounts')
       .insert(items)
       .select();
 
@@ -212,134 +212,5 @@ export const bankPFApi = {
 
     console.log(`✅ Created ${data.length} bankPF records in Supabase`);
     return { success: true, data, count: data.length };
-  },
-};
-
-// ========================================
-// INCOME API
-// ========================================
-
-export const incomeApi = {
-  /**
-   * Tüm gelir kayıtlarını getirir
-   */
-  async getAll() {
-    const { data, error } = await supabase
-      .from('income_records')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('❌ Error fetching income records:', error);
-      return { success: false, error: error.message, data: [] };
-    }
-
-    console.log(`✅ Fetched ${data.length} income records from Supabase`);
-    return { success: true, data: data || [] };
-  },
-
-  /**
-   * Gelir kaydı ekler
-   */
-  async create(records: any | any[]) {
-    const items = Array.isArray(records) ? records : [records];
-    
-    const { data, error } = await supabase
-      .from('income_records')
-      .insert(items)
-      .select();
-
-    if (error) {
-      console.error('❌ Error creating income records:', error);
-      return { success: false, error: error.message };
-    }
-
-    console.log(`✅ Created ${data.length} income records in Supabase`);
-    return { success: true, data, count: data.length };
-  },
-};
-
-// ========================================
-// SIGNS API
-// ========================================
-
-export const signsApi = {
-  /**
-   * Tüm tabela kayıtlarını getirir
-   */
-  async getAll() {
-    const { data, error } = await supabase
-      .from('signs')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('❌ Error fetching sign records:', error);
-      return { success: false, error: error.message, data: [] };
-    }
-
-    console.log(`✅ Fetched ${data.length} sign records from Supabase`);
-    return { success: true, data: data || [] };
-  },
-
-  /**
-   * Tabela kaydı ekler
-   */
-  async create(records: any | any[]) {
-    const items = Array.isArray(records) ? records : [records];
-    
-    const { data, error } = await supabase
-      .from('signs')
-      .insert(items)
-      .select();
-
-    if (error) {
-      console.error('❌ Error creating sign records:', error);
-      return { success: false, error: error.message };
-    }
-
-    console.log(`✅ Created ${data.length} sign records in Supabase`);
-    return { success: true, data, count: data.length };
-  },
-};
-
-// ========================================
-// DOMAINS API (KV Store için eski endpoint)
-// ========================================
-
-export const domainsApi = {
-  /**
-   * Domain listesini getirir (KV store)
-   */
-  async getAll() {
-    const { data, error } = await supabase
-      .from('kv_store_9ec5bbb3')
-      .select('value')
-      .eq('key', 'domains')
-      .single();
-
-    if (error) {
-      console.error('❌ Error fetching domains:', error);
-      return { success: false, error: error.message, data: [] };
-    }
-
-    return { success: true, data: data?.value || [] };
-  },
-
-  /**
-   * Domain listesini günceller (KV store)
-   */
-  async sync(domains: any[]) {
-    const { error } = await supabase
-      .from('kv_store_9ec5bbb3')
-      .upsert({ key: 'domains', value: domains });
-
-    if (error) {
-      console.error('❌ Error syncing domains:', error);
-      return { success: false, error: error.message };
-    }
-
-    console.log(`✅ Synced ${domains.length} domains to KV store`);
-    return { success: true, data: domains, count: domains.length };
   },
 };
