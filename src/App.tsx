@@ -230,7 +230,17 @@ export default function App() {
       });
       
       setCustomers(processedCustomers);
-      setPayterProducts(getStoredData('payterProducts', []));
+      
+      // Load Payter Products with safety check
+      const storedProducts = getStoredData('payterProducts', []);
+      const safeProducts = Array.isArray(storedProducts) ? storedProducts : [];
+      setPayterProducts(safeProducts);
+      
+      logger.debug('Payter Products yüklendi', {
+        total: safeProducts.length,
+        raw: typeof storedProducts,
+        isArray: Array.isArray(storedProducts)
+      });
       
       // Load BankPF records with migration
       const records = getStoredData<BankPF[]>('bankPFRecords', []);
@@ -674,8 +684,9 @@ export default function App() {
   const sektorStats = useMemo(() => {
     const sektorMap = new Map<string, number>();
     
-    // ✅ NULL SAFETY: customers boş olabilir
-    (customers || []).forEach(customer => {
+    // ✅ ARRAY SAFETY: Ensure customers is a valid array
+    const safeCustomers = Array.isArray(customers) ? customers : [];
+    safeCustomers.forEach(customer => {
       const sektor = customer.sektor?.trim() || 'Belirtilmemiş';
       sektorMap.set(sektor, (sektorMap.get(sektor) || 0) + 1);
     });
@@ -687,9 +698,10 @@ export default function App() {
 
   // Durum bazlı istatistikler
   const durumStats = useMemo(() => {
-    // ✅ NULL SAFETY: customers boş olabilir
-    const aktifCount = (customers || []).filter(c => c.durum === 'Aktif').length;
-    const pasifCount = (customers || []).filter(c => c.durum === 'Pasif').length;
+    // ✅ ARRAY SAFETY: Ensure customers is a valid array
+    const safeCustomers = Array.isArray(customers) ? customers : [];
+    const aktifCount = safeCustomers.filter(c => c.durum === 'Aktif').length;
+    const pasifCount = safeCustomers.filter(c => c.durum === 'Pasif').length;
     
     return [
       { durum: 'Aktif', count: aktifCount },
@@ -704,8 +716,9 @@ export default function App() {
     const stats = new Map<string, { repName: string; count: number; customers: Customer[] }>();
     
     // Her satış temsilcisi için başlangıç değerleri
-    // ✅ NULL SAFETY: salesReps boş olabilir
-    (salesReps || []).forEach(rep => {
+    // ✅ ARRAY SAFETY: Ensure salesReps is a valid array
+    const safeSalesReps = Array.isArray(salesReps) ? salesReps : [];
+    safeSalesReps.forEach(rep => {
       stats.set(rep.id, { repName: rep.adSoyad, count: 0, customers: [] });
     });
     
@@ -713,8 +726,9 @@ export default function App() {
     stats.set('unassigned', { repName: 'Atanmamış', count: 0, customers: [] });
     
     // Müşterileri temsilcilere göre grupla
-    // ✅ NULL SAFETY: customers boş olabilir
-    (customers || []).forEach(customer => {
+    // ✅ ARRAY SAFETY: Ensure customers is a valid array
+    const safeCustomers2 = Array.isArray(customers) ? customers : [];
+    safeCustomers2.forEach(customer => {
       if (customer.salesRepId && stats.has(customer.salesRepId)) {
         const stat = stats.get(customer.salesRepId)!;
         stat.count++;
@@ -739,8 +753,9 @@ export default function App() {
     const customerDevices = new Map<string, { p6x: number; apollo: number; total: number }>();
     
     // Tüm ürünleri say ve müşterilere göre grupla
-    // ✅ NULL SAFETY: payterProducts boş olabilir
-    (payterProducts || []).forEach(product => {
+    // ✅ ARRAY SAFETY: Ensure payterProducts is a valid array
+    const safePayterProducts = Array.isArray(payterProducts) ? payterProducts : [];
+    safePayterProducts.forEach(product => {
       const model = product.terminalModel?.toUpperCase() || '';
       const isP6X = model.includes('P6X') || model.includes('P6-X') || model.includes('P 6 X');
       const isApollo = model.includes('APOLLO');
@@ -751,8 +766,9 @@ export default function App() {
       // Domain bazlı müşteri eşleştirmesi
       const productDomain = product.domain?.toLowerCase().trim() || '';
       if (productDomain) {
-        // ✅ NULL SAFETY: customers boş olabilir
-        (customers || []).forEach(customer => {
+        // ✅ ARRAY SAFETY: Ensure customers is a valid array
+        const safeCustomers3 = Array.isArray(customers) ? customers : [];
+        safeCustomers3.forEach(customer => {
           const customerDomains = customer.domainHiyerarsisi?.map(d => d.domain.toLowerCase().trim()) || [];
           if (customerDomains.some(cd => productDomain.includes(cd) || cd.includes(productDomain))) {
             if (!customerDevices.has(customer.id)) {
@@ -787,8 +803,9 @@ export default function App() {
       { label: '501-10000', min: 501, max: 10000, count: 0, musteriler: [] as Customer[] },
     ];
     
-    // ✅ NULL SAFETY: customers boş olabilir
-    (customers || []).forEach(customer => {
+    // ✅ ARRAY SAFETY: Ensure customers is a valid array
+    const safeCustomers4 = Array.isArray(customers) ? customers : [];
+    safeCustomers4.forEach(customer => {
       const deviceData = deviceCountByCustomer.get(customer.id);
       const toplamCihaz = deviceData?.total || 0;
       
@@ -855,8 +872,9 @@ export default function App() {
     const yearlyFeeList: FeeListItem[] = [];
     const noFeeList: FeeListItem[] = [];
 
-    // ✅ NULL SAFETY: customers boş olabilir
-    (customers || []).forEach(customer => {
+    // ✅ ARRAY SAFETY: Ensure customers is a valid array
+    const safeCustomers5 = Array.isArray(customers) ? customers : [];
+    safeCustomers5.forEach(customer => {
       const deviceData = deviceCountByCustomer.get(customer.id);
       const customerDeviceCount = deviceData?.total || 0;
       
@@ -1221,8 +1239,9 @@ export default function App() {
           ];
           
           // Müşteri segmentlerini hesapla (global deviceCountByCustomer kullanılıyor)
-          // ✅ NULL SAFETY: customers boş olabilir
-          (customers || []).forEach(customer => {
+          // ✅ ARRAY SAFETY: Ensure customers is a valid array
+          const safeCustomers6 = Array.isArray(customers) ? customers : [];
+          safeCustomers6.forEach(customer => {
             const deviceData = deviceCountByCustomer.get(customer.id);
             const deviceCount = deviceData?.total || 0;
             
@@ -1247,8 +1266,9 @@ export default function App() {
           const yearlyFeeCustomers: Customer[] = [];
           const noFeeCustomers: Customer[] = [];
           
-          // ✅ NULL SAFETY: customers boş olabilir
-          (customers || []).forEach(customer => {
+          // ✅ ARRAY SAFETY: Ensure customers is a valid array
+          const safeCustomers7 = Array.isArray(customers) ? customers : [];
+          safeCustomers7.forEach(customer => {
             const deviceData = deviceCountByCustomer.get(customer.id);
             const customerDeviceCount = deviceData?.total || 0;
             
@@ -1301,8 +1321,9 @@ export default function App() {
             
             // Toplam cihaz sayısını hesapla (global deviceCountByCustomer kullanılıyor)
             let totalDevices = 0;
-            // ✅ NULL SAFETY: assignedCustomers boş olabilir
-            (assignedCustomers || []).forEach(c => {
+            // ✅ ARRAY SAFETY: Ensure assignedCustomers is a valid array
+            const safeAssignedCustomers1 = Array.isArray(assignedCustomers) ? assignedCustomers : [];
+            safeAssignedCustomers1.forEach(c => {
               const deviceData = deviceCountByCustomer.get(c.id);
               if (deviceData) {
                 totalDevices += deviceData.total;
@@ -1310,7 +1331,7 @@ export default function App() {
             });
             
             // Customer listesini hazırla
-            const customerItems = assignedCustomers.map(c => ({
+            const customerItems = safeAssignedCustomers1.map(c => ({
               id: c.id,
               name: c.cariAdi,
               subtitle: c.cariHesapKodu,
@@ -1404,8 +1425,9 @@ export default function App() {
             const activeCustomers = assignedCustomers.filter(c => c.durum === 'Aktif');
             
             let totalDevices = 0;
-            // ✅ NULL SAFETY: assignedCustomers boş olabilir
-            (assignedCustomers || []).forEach(c => {
+            // ✅ ARRAY SAFETY: Ensure assignedCustomers is a valid array
+            const safeAssignedCustomers2 = Array.isArray(assignedCustomers) ? assignedCustomers : [];
+            safeAssignedCustomers2.forEach(c => {
               const deviceData = deviceCountByCustomer.get(c.id);
               if (deviceData) {
                 totalDevices += deviceData.total;
@@ -1414,7 +1436,7 @@ export default function App() {
             
             return {
               rep: rep.adSoyad,
-              totalCustomers: assignedCustomers.length,
+              totalCustomers: safeAssignedCustomers2.length,
               activeCustomers: activeCustomers.length,
               totalDevices: totalDevices
             };
@@ -1513,12 +1535,14 @@ export default function App() {
                 
                 // Detaylı TABELA bilgisi
                 console.log('📋 TABELA Detayları:');
-                // ✅ NULL SAFETY: bankPFRecords boş olabilir (Fix 1/3)
-                (bankPFRecords || []).forEach(record => {
+                // ✅ ARRAY SAFETY: Ensure bankPFRecords is a valid array (Fix 1/3)
+                const safeBankPFRecords1 = Array.isArray(bankPFRecords) ? bankPFRecords : [];
+                safeBankPFRecords1.forEach(record => {
                   if (record.tabelaRecords && record.tabelaRecords.length > 0) {
                     console.log(`  ${record.firmaUnvan}: ${record.tabelaRecords.length} TABELA kaydı`);
-                    // ✅ NULL SAFETY: tabelaRecords boş olabilir
-                    (record.tabelaRecords || []).forEach(t => {
+                    // ✅ ARRAY SAFETY: Ensure tabelaRecords is a valid array
+                    const safeTabelaRecords1 = Array.isArray(record.tabelaRecords) ? record.tabelaRecords : [];
+                    safeTabelaRecords1.forEach(t => {
                       console.log(`    - ${t.gelirModeli.ad} (${t.kartTipi})`);
                     });
                   }
@@ -1785,12 +1809,14 @@ export default function App() {
                     
                     // Detaylı TABELA bilgisi
                     console.log('📋 TABELA Detayları:');
-                    // ✅ NULL SAFETY: bankPFRecords boş olabilir (Fix 2/3)
-                    (bankPFRecords || []).forEach(record => {
+                    // ✅ ARRAY SAFETY: Ensure bankPFRecords is a valid array (Fix 2/3)
+                    const safeBankPFRecords2 = Array.isArray(bankPFRecords) ? bankPFRecords : [];
+                    safeBankPFRecords2.forEach(record => {
                       if (record.tabelaRecords && record.tabelaRecords.length > 0) {
                         console.log(`  ${record.firmaUnvan}: ${record.tabelaRecords.length} TABELA kaydı`);
-                        // ✅ NULL SAFETY: tabelaRecords boş olabilir
-                        (record.tabelaRecords || []).forEach(t => {
+                        // ✅ ARRAY SAFETY: Ensure tabelaRecords is a valid array
+                        const safeTabelaRecords2 = Array.isArray(record.tabelaRecords) ? record.tabelaRecords : [];
+                        safeTabelaRecords2.forEach(t => {
                           console.log(`    - ${t.gelirModeli.ad} (${t.kartTipi})`);
                         });
                       }
@@ -1933,12 +1959,14 @@ export default function App() {
                 
                 // Detaylı TABELA bilgisi
                 console.log('📋 TABELA Detayları:');
-                // ✅ NULL SAFETY: bankPFRecords boş olabilir (Fix 3/3)
-                (bankPFRecords || []).forEach(record => {
+                // ✅ ARRAY SAFETY: Ensure bankPFRecords is a valid array (Fix 3/3)
+                const safeBankPFRecords3 = Array.isArray(bankPFRecords) ? bankPFRecords : [];
+                safeBankPFRecords3.forEach(record => {
                   if (record.tabelaRecords && record.tabelaRecords.length > 0) {
                     console.log(`  ${record.firmaUnvan}: ${record.tabelaRecords.length} TABELA kaydı`);
-                    // ✅ NULL SAFETY: tabelaRecords boş olabilir
-                    (record.tabelaRecords || []).forEach(t => {
+                    // ✅ ARRAY SAFETY: Ensure tabelaRecords is a valid array
+                    const safeTabelaRecords3 = Array.isArray(record.tabelaRecords) ? record.tabelaRecords : [];
+                    safeTabelaRecords3.forEach(t => {
                       console.log(`    - ${t.gelirModeli.ad} (${t.kartTipi})`);
                     });
                   }

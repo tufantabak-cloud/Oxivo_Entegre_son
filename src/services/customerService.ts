@@ -26,8 +26,9 @@ export async function getAllCustomers(): Promise<Customer[]> {
 
     if (error) throw error;
 
-    // Convert database rows to app types
-    return (data || []).map(row => {
+    // ✅ ARRAY SAFETY: Ensure data is a valid array
+    const safeData2 = Array.isArray(data) ? data : [];
+    return safeData2.map(row => {
       const mapped = rowToCustomer(row);
       // Merge with additional fields not in database
       return {
