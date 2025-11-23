@@ -34,6 +34,8 @@ import { PayterProduct } from './components/PayterProductTab';
 import { logger, createTimer } from './utils/logger';
 import { getStoredData, setStoredData } from './utils/storage';
 import { migrateData, validateImportData } from './utils/dataMigration';
+import { syncToSupabase } from './utils/supabaseSync';
+import { startAutoSync } from './utils/autoSync';
 
 // ⚡ PHASE 3: Code Splitting - Lazy load heavy modules
 const CustomerModule = lazy(() => import('./components/CustomerModule').then(m => ({ default: m.CustomerModule })));
@@ -335,7 +337,11 @@ export default function App() {
   }, [payterProducts, dataLoaded]);
   
   useEffect(() => { 
-    if (dataLoaded) setStoredData('customers', customers); 
+    if (dataLoaded) {
+      setStoredData('customers', customers);
+      // Auto-sync to Supabase
+      startAutoSync(customers);
+    }
   }, [customers, dataLoaded]);
   
   useEffect(() => { 
