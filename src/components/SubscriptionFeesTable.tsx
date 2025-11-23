@@ -1,6 +1,12 @@
 import { useState, useMemo, useEffect } from 'react';
 import * as XLSX from 'xlsx';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Badge } from './ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
+import { Checkbox } from './ui/checkbox';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -23,6 +29,21 @@ import { ReminderSettingsPanel } from './ReminderSettingsPanel';
 import { BatchApprovalConfirmation } from './BatchApprovalConfirmation';
 import { OverdueSuspensionWarningPanel } from './OverdueSuspensionWarningPanel';
 import { Switch } from './ui/switch';
+import { ColumnVisibilityDropdown, ColumnConfig } from './ColumnVisibilityDropdown';
+import { 
+  Download, 
+  Search, 
+  Filter, 
+  Calendar, 
+  CheckCircle2, 
+  XCircle, 
+  AlertCircle, 
+  Clock, 
+  Snowflake, 
+  Play,
+  ChevronDown,
+  ChevronUp 
+} from 'lucide-react';
 
 interface DeviceRowData {
   customer: Customer;
