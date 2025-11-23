@@ -1,48 +1,25 @@
-import { useState, useMemo, useEffect } from 'react';
-import * as XLSX from 'xlsx';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Badge } from './ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
-import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
-import { Checkbox } from './ui/checkbox';
-import { toast } from 'sonner';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from './ui/dialog';
-import { Textarea } from './ui/textarea';
-import { Label } from './ui/label';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from './ui/accordion';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { ReminderSettingsPanel } from './ReminderSettingsPanel';
-import { BatchApprovalConfirmation } from './BatchApprovalConfirmation';
-import { OverdueSuspensionWarningPanel } from './OverdueSuspensionWarningPanel';
-import { Switch } from './ui/switch';
-import { ColumnVisibilityDropdown, ColumnConfig } from './ColumnVisibilityDropdown';
 import { 
   Download, 
   Search, 
   Filter, 
   Calendar, 
+  CheckCircle,
   CheckCircle2, 
   XCircle, 
-  AlertCircle, 
+  AlertCircle,
+  AlertTriangle, 
   Clock, 
   Snowflake, 
   Play,
   ChevronDown,
-  ChevronUp 
+  ChevronUp,
+  Ban,
+  Bell,
+  BellOff,
+  Pause,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown
 } from 'lucide-react';
 
 interface DeviceRowData {
