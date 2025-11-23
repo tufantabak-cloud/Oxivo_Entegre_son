@@ -26,6 +26,10 @@ import { TooltipProvider } from './components/ui/tooltip'
 import { ConnectionStatus } from './components/ConnectionStatus'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { initStartupCheck } from './utils/startupCheck'
+import { cleanupSupabaseSession } from './utils/supabaseCleanup'
+
+// Supabase Session Cleanup (prevent multiple client instances)
+cleanupSupabaseSession();
 
 // Service Worker cleanup (prevent caching issues)
 if ('serviceWorker' in navigator) {

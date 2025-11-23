@@ -4,7 +4,7 @@
  * Created: 2025-11-22
  */
 
-import { supabase } from '../lib/supabase/client';
+import { supabase } from '../utils/supabaseClient';
 import { logger } from '../utils/logger';
 import type { PayterProduct } from '../components/PayterProductTab';
 import type { ProductsRow, ProductsInsert, ProductsUpdate } from '../types/database';

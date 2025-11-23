@@ -4,7 +4,7 @@
  * Created: 2025-11-22
  */
 
-import { supabase } from '../lib/supabase/client';
+import { supabase } from '../utils/supabaseClient';
 import { logger } from '../utils/logger';
 import type { Customer } from '../components/CustomerModule';
 import type { CustomersRow, CustomersInsert, CustomersUpdate } from '../types/database';

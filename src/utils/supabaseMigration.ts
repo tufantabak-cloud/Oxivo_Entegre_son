@@ -16,7 +16,7 @@
  * ```
  */
 
-import { supabase } from '../lib/supabase/client';
+import { supabase } from './supabaseClient';
 import { logger } from './logger';
 import { getStoredData } from './storage/legacy';
 import type { Customer } from '../components/CustomerModule';

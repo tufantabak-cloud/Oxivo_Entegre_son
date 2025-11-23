@@ -6,7 +6,7 @@
  * Bu service, bank_accounts tablosunu BankPF entity'si olarak kullanır
  */
 
-import { supabase } from '../lib/supabase/client';
+import { supabase } from '../utils/supabaseClient';
 import { logger } from '../utils/logger';
 import type { BankPF } from '../components/BankPFModule';
 import type { BankAccountsRow, BankAccountsInsert, BankAccountsUpdate } from '../types/database';

@@ -6,7 +6,7 @@
  * Updated: 2025-01-12 - Added connection resilience
  */
 
-import { projectId, publicAnonKey } from '../lib/supabase/info';
+import { PROJECT_ID as projectId, ANON_KEY as publicAnonKey } from './supabaseClient';
 import { connectionManager } from './connectionManager';
 
 const BASE_URL = `https://${projectId}.supabase.co/functions/v1`;

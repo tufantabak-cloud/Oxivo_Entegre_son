@@ -15,7 +15,7 @@ import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { Progress } from './ui/progress';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
-import { supabase } from '../lib/supabase/client';
+import { supabase } from '../utils/supabaseClient';
 
 interface ImportStats {
   total: number;
