@@ -1033,7 +1033,7 @@ export function ExcelDataManager({
 
       {/* Import Dialog */}
       <Dialog open={isImportOpen} onOpenChange={handleClose}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Excel'den Toplu Veri Yükleme</DialogTitle>
             <DialogDescription>
@@ -1041,7 +1041,7 @@ export function ExcelDataManager({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-4 overflow-y-auto flex-1">
             {/* Template Download */}
             <Alert>
               <FileSpreadsheet className="h-4 w-4" />
@@ -1171,7 +1171,7 @@ export function ExcelDataManager({
             )}
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="flex-shrink-0">
             <Button onClick={handleClose} variant="outline">
               Kapat
             </Button>
