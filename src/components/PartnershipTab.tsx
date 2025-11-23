@@ -23,7 +23,7 @@ import {
   AlertDialogTitle,
 } from './ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 export interface PartnershipCalculationRow {
   id: string;

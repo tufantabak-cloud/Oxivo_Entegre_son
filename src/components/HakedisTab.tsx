@@ -14,7 +14,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { TabelaRecord, TabelaGroup } from './TabelaTab';
 import { HakedisRecord } from './BankPFModule';
 import { Calendar, Download, Printer, Calculator, Plus, Eye, Edit, Trash2, Save, Archive, FileText, Columns3, Info, HelpCircle } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { kisaltUrunAdi } from '../utils/formatters';
 
 interface HakedisTabProps {

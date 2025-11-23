@@ -14,7 +14,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { Plus, Pencil, Trash2, AlertCircle, Upload, X, Image as ImageIcon, XCircle, ChevronDown, ChevronRight, Info, HelpCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { TabelaRecord, TabelaGroup } from './TabelaTab';
-import { EkGelir } from './RevenueModelsTab_NEW';
+import { EkGelir } from './RevenueModelsTab';
 import { kisaltUrunAdi } from '../utils/formatters';
 
 // Vade listesi

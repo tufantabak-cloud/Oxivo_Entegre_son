@@ -13,7 +13,7 @@ import {
 } from './ui/dialog';
 import { Alert, AlertDescription } from './ui/alert';
 import { Progress } from './ui/progress';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 // XLSX import - ES6 module format (v3.0.8 - fixed require issue)
 import * as XLSX from 'xlsx';
 

@@ -26,7 +26,7 @@ import {
   AlertDialogTitle,
 } from './ui/alert-dialog';
 import { Plus, Edit2, Trash2, Ban, Search } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface SuspensionReasonsTabProps {
   suspensionReasons: SuspensionReason[];

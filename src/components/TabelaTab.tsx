@@ -1,15 +1,6 @@
-import { useState } from 'react';
-import { Button } from './ui/button';
-import { Card, CardContent } from './ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
-import { Label } from './ui/label';
-import { Input } from './ui/input';
-import { ModernFormSelect, FormSelectOption } from './ModernFormSelect';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
-import { Badge } from './ui/badge';
 import { Switch } from './ui/switch';
 import { Plus, Pencil, Trash2, CreditCard } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 export type TabelaRecord = {
   id: string;

@@ -1,12 +1,6 @@
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Checkbox } from './ui/checkbox';
-import { Label } from './ui/label';
-import { Input } from './ui/input';
-import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Search, Building2, AlertCircle, Save, Banknote, CreditCard, Wallet } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface Bank {
   id: string;

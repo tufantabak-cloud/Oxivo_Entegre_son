@@ -16,7 +16,7 @@ import {
 } from './ui/dialog';
 import { Alert, AlertDescription } from './ui/alert';
 import { Progress } from './ui/progress';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 
 interface ExcelDataManagerProps {

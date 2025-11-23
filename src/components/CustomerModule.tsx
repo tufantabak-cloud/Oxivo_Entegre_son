@@ -4,7 +4,7 @@ import { CustomerDetail } from './CustomerDetail';
 import { ExcelImport } from './ExcelImport';
 import { Plus } from 'lucide-react';
 import { Button } from './ui/button';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { customerApi } from '../utils/supabaseClient';
 // XLSX import - ES6 module format (v3.0.8 - fixed require issue)
 import * as XLSX from 'xlsx';

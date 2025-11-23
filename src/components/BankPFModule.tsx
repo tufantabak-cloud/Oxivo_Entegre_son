@@ -10,7 +10,7 @@ import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { ModernFormSelect, FormSelectOption } from './ModernFormSelect';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 export interface ContactPerson {
   id: string;

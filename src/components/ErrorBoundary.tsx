@@ -17,7 +17,7 @@ import { AlertTriangle, RefreshCw, Home, Bug, Copy, Check } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { logger, isDevelopmentMode } from '../utils/logger';
 
 interface ErrorBoundaryProps {

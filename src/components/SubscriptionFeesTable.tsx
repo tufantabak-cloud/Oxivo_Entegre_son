@@ -1,37 +1,6 @@
-import { useState, useMemo } from 'react';
-import { Customer, DeviceSubscription, ServiceFeeInvoice } from './CustomerModule';
-import { PayterProduct } from './PayterProductTab';
-import { SuspensionReason } from './DefinitionsModule';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Badge } from './ui/badge';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Checkbox } from './ui/checkbox';
-import { 
-  Search, 
-  Filter, 
-  CheckCircle, 
-  Clock, 
-  AlertTriangle,
-  Ban,
-  Calendar,
-  Euro,
-  Bell,
-  Play,
-  Pause,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-  Download,
-  ChevronDown,
-  ChevronUp,
-  BellOff
-} from 'lucide-react';
-import { ColumnVisibilityDropdown, ColumnConfig } from './ColumnVisibilityDropdown';
-import { FilterDropdown, FilterOption } from './FilterDropdown';
 import * as XLSX from 'xlsx';
 import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,

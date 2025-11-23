@@ -1,19 +1,6 @@
-import { useState } from 'react';
-import { Customer, ServiceFeeInvoice } from './CustomerModule';
-import { Button } from './ui/button';
-import { CheckCircle, X, AlertCircle, FileText } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from './ui/dialog';
-import { Alert, AlertDescription } from './ui/alert';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { Checkbox } from './ui/checkbox';
 import { Label } from './ui/label';
 

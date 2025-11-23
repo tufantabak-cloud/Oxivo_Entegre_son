@@ -1,16 +1,6 @@
-import { useState, useMemo } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { FilterDropdown, FilterOption } from './FilterDropdown';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { FileDown, Calculator, TrendingUp, DollarSign, Calendar, Building2, Filter, PieChart, X } from 'lucide-react';
 import { BankPF, HakedisRecord } from './BankPFModule';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface HakedisReportTabProps {
   bankPFRecords: BankPF[];
@@ -472,14 +462,6 @@ export function HakedisReportTab({ bankPFRecords }: HakedisReportTabProps) {
 
   // Grafik renkleri
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
-
-  // Dönem formatla (YYYY-MM -> Ocak 2025)
-  const formatDonem = (donem: string) => {
-    const [year, month] = donem.split('-');
-    const aylar = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 
-                   'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
-    return `${aylar[parseInt(month) - 1]} ${year}`;
-  };
 
   return (
     <div className="space-y-6">

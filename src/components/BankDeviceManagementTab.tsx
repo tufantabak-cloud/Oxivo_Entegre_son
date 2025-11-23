@@ -37,7 +37,7 @@ import {
   CreditCard,
   Wallet
 } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { BankDeviceAssignment } from './CustomerModule';
 import { PayterProduct } from './PayterProductTab';
 
@@ -1221,7 +1221,7 @@ export function BankDeviceManagementTab({
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-blue-900">
-                            {isAllSelected ? '✓ Tümünü Kald��r' : '☐ Tümünü Seç'}
+                            {isAllSelected ? '✓ Tümünü Kaldr' : '☐ Tümünü Seç'}
                           </span>
                           <Badge variant="secondary" className="bg-blue-200 text-blue-900">
                             {availableDevices.length} cihaz
