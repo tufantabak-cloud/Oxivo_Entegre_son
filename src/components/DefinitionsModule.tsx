@@ -8,9 +8,10 @@ import { RevenueModelsTab, HesapKalemi, SabitKomisyon, EkGelir } from './Revenue
 import { Partnership } from './PartnershipTab';
 import { SharingTab, Sharing } from './SharingTab';
 import { KartProgramTab, KartProgram } from './KartProgramTab';
-import { SalesRepresentativesTab, SalesRepresentative, defaultSalesRepresentatives } from './SalesRepresentativesTab';
+import { SalesRepresentativesTab, SalesRepresentative } from './SalesRepresentativesTab';
 import { SuspensionReasonsTab } from './SuspensionReasonsTab';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { SupabaseDataImporter } from './SupabaseDataImporter';
 
 export interface JobTitle {
   id: string;
@@ -38,7 +39,8 @@ export interface SuspensionReason {
 }
 
 export type { Bank, EPK, OK, Partnership, Sharing, KartProgram, HesapKalemi, SabitKomisyon, EkGelir, SalesRepresentative };
-export { defaultSalesRepresentatives };
+// Note: defaultSalesRepresentatives is defined in SalesRepresentativesTab.tsx and re-exported here for convenience
+export { defaultSalesRepresentatives } from './SalesRepresentativesTab';
 
 // Global cihaz pasifleştirme sebepleri listesi
 export const defaultSuspensionReasons: SuspensionReason[] = [
@@ -662,6 +664,7 @@ export const DefinitionsModule = React.memo(function DefinitionsModule({
 
       <Tabs defaultValue="gorevler" className="space-y-6">
         <TabsList>
+          <TabsTrigger value="dataImport">📥 Veri İçe Aktar</TabsTrigger>
           <TabsTrigger value="gorevler">Görev Tanımları</TabsTrigger>
           <TabsTrigger value="salesreps">Satış Temsilcileri</TabsTrigger>
           <TabsTrigger value="suspensionreasons">Pasifleştirme Sebepleri</TabsTrigger>
@@ -673,6 +676,10 @@ export const DefinitionsModule = React.memo(function DefinitionsModule({
           <TabsTrigger value="gelirmodelleri">Hesap Kalemleri</TabsTrigger>
           <TabsTrigger value="kartprogram">Kart Program</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="dataImport">
+          <SupabaseDataImporter />
+        </TabsContent>
 
         <TabsContent value="gorevler">
           <JobTitlesTab jobTitles={jobTitles} onJobTitlesChange={handleJobTitlesChange} />
