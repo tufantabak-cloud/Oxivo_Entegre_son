@@ -213,7 +213,7 @@ export const customerApi = {
     
     const { data, error } = await supabase
       .from('customers')
-      .insert(records)
+      .upsert(records, { onConflict: 'id' })
       .select();
 
     if (error) {
