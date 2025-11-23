@@ -200,7 +200,7 @@ export const customerApi = {
    * Müşteri ekler (tek veya toplu)
    */
   async create(customers: any | any[]) {
-    console.log('📤 Creating customers in Supabase...');
+    console.log('📤 Upserting customers to Supabase...');
     
     const records = Array.isArray(customers) ? customers.map(objectToSnakeCase) : [objectToSnakeCase(customers)];
     
@@ -237,7 +237,7 @@ export const customerApi = {
       return { success: false, error: error.message };
     }
 
-    console.log(`✅ Created ${data.length} customers in Supabase`);
+    console.log(`✅ Upserted ${data.length} customers in Supabase`);
     return { success: true, data: data.map(objectToCamelCase), count: data.length };
   },
 
@@ -367,7 +367,7 @@ export const bankPFApi = {
     
     const { data, error } = await supabase
       .from('bank_accounts')
-      .insert(items)
+      .upsert(items, { onConflict: 'id' })
       .select();
 
     if (error) {
@@ -376,6 +376,220 @@ export const bankPFApi = {
     }
 
     console.log(`✅ Created ${data.length} bankPF records in Supabase`);
+    return { success: true, data: data.map(objectToCamelCase), count: data.length };
+  },
+};
+/**
+💰 PETTY CASH API
+ */
+export const pettyCashApi = {
+  /**
+Tüm Petty Cash kayıtlarını getirir
+   */
+  async getAll() {
+    const { data, error } = await supabase
+      .from('petty_cash')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('❌ Error fetching petty cash records:', error);
+      return { success: false, error: error.message, data: [] };
+    }
+
+    console.log(`✅ Fetched ${data.length} petty cash records from Supabase`);
+    return { success: true, data: data.map(objectToCamelCase) || [] };
+  },
+
+  /**
+Petty Cash kayıtları ekler/günceller (upsert)
+   */
+  async create(records: any | any[]) {
+    const items = Array.isArray(records) ? records.map(objectToSnakeCase) : [objectToSnakeCase(records)];
+
+    const { data, error } = await supabase
+      .from('petty_cash')
+      .upsert(items, { onConflict: 'id' })
+      .select();
+
+    if (error) {
+      console.error('❌ Error upserting petty cash records:', error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`✅ Upserted ${data.length} petty cash records to Supabase`);
+    return { success: true, data: data.map(objectToCamelCase), count: data.length };
+  },
+};
+
+/**
+📂 CATEGORIES API
+ */
+export const categoryApi = {
+  /**
+Tüm kategori kayıtlarını getirir
+   */
+  async getAll() {
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('❌ Error fetching categories:', error);
+      return { success: false, error: error.message, data: [] };
+    }
+
+    console.log(`✅ Fetched ${data.length} categories from Supabase`);
+    return { success: true, data: data.map(objectToCamelCase) || [] };
+  },
+
+  /**
+Kategori kayıtları ekler/günceller (upsert)
+   */
+  async create(records: any | any[]) {
+    const items = Array.isArray(records) ? records.map(objectToSnakeCase) : [objectToSnakeCase(records)];
+
+    const { data, error } = await supabase
+      .from('categories')
+      .upsert(items, { onConflict: 'id' })
+      .select();
+
+    if (error) {
+      console.error('❌ Error upserting categories:', error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`✅ Upserted ${data.length} categories to Supabase`);
+    return { success: true, data: data.map(objectToCamelCase), count: data.length };
+  },
+};
+
+/**
+💳 TRANSACTIONS API
+ */
+export const transactionApi = {
+  /**
+Tüm işlem kayıtlarını getirir
+   */
+  async getAll() {
+    const { data, error } = await supabase
+      .from('transactions')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('❌ Error fetching transactions:', error);
+      return { success: false, error: error.message, data: [] };
+    }
+
+    console.log(`✅ Fetched ${data.length} transactions from Supabase`);
+    return { success: true, data: data.map(objectToCamelCase) || [] };
+  },
+
+  /**
+İşlem kayıtları ekler/günceller (upsert)
+   */
+  async create(records: any | any[]) {
+    const items = Array.isArray(records) ? records.map(objectToSnakeCase) : [objectToSnakeCase(records)];
+
+    const { data, error } = await supabase
+      .from('transactions')
+      .upsert(items, { onConflict: 'id' })
+      .select();
+
+    if (error) {
+      console.error('❌ Error upserting transactions:', error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`✅ Upserted ${data.length} transactions to Supabase`);
+    return { success: true, data: data.map(objectToCamelCase), count: data.length };
+  },
+};
+
+/**
+🪧 SIGNS (TABELA) API
+ */
+export const signApi = {
+  /**
+Tüm tabela kayıtlarını getirir
+   */
+  async getAll() {
+    const { data, error } = await supabase
+      .from('signs')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('❌ Error fetching signs:', error);
+      return { success: false, error: error.message, data: [] };
+    }
+
+    console.log(`✅ Fetched ${data.length} signs from Supabase`);
+    return { success: true, data: data.map(objectToCamelCase) || [] };
+  },
+
+  /**
+Tabela kayıtları ekler/günceller (upsert)
+   */
+  async create(records: any | any[]) {
+    const items = Array.isArray(records) ? records.map(objectToSnakeCase) : [objectToSnakeCase(records)];
+
+    const { data, error } = await supabase
+      .from('signs')
+      .upsert(items, { onConflict: 'id' })
+      .select();
+
+    if (error) {
+      console.error('❌ Error upserting signs:', error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`✅ Upserted ${data.length} signs to Supabase`);
+    return { success: true, data: data.map(objectToCamelCase), count: data.length };
+  },
+};
+
+/**
+💰 INCOME RECORDS API
+ */
+export const incomeApi = {
+  /**
+Tüm gelir kayıtlarını getirir
+   */
+  async getAll() {
+    const { data, error } = await supabase
+      .from('income_records')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('❌ Error fetching income records:', error);
+      return { success: false, error: error.message, data: [] };
+    }
+
+    console.log(`✅ Fetched ${data.length} income records from Supabase`);
+    return { success: true, data: data.map(objectToCamelCase) || [] };
+  },
+
+  /**
+Gelir kayıtları ekler/günceller (upsert)
+   */
+  async create(records: any | any[]) {
+    const items = Array.isArray(records) ? records.map(objectToSnakeCase) : [objectToSnakeCase(records)];
+
+    const { data, error } = await supabase
+      .from('income_records')
+      .upsert(items, { onConflict: 'id' })
+      .select();
+
+    if (error) {
+      console.error('❌ Error upserting income records:', error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`✅ Upserted ${data.length} income records to Supabase`);
     return { success: true, data: data.map(objectToCamelCase), count: data.length };
   },
 };
