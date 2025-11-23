@@ -1,5 +1,15 @@
+import { useState, useEffect } from 'react';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
 import { Switch } from './ui/switch';
 import { Textarea } from './ui/textarea';
+import { Badge } from './ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
+import { Search, Plus, Edit2, Trash2, CheckCircle, AlertTriangle, RefreshCw, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { 
   checkSharingsStatus, 
