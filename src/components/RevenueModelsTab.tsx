@@ -16,7 +16,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from './ui/dialog';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 
 export interface HesapKalemi {
   id: string;

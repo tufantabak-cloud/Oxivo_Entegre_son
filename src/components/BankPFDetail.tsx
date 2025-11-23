@@ -8,7 +8,7 @@ import { HakedisTab } from './HakedisTab';
 import { TabelaRecord, TabelaGroup } from './TabelaTab';
 import { BankPFCategorySelector } from './BankPFCategorySelector';
 import { ArrowLeft, Save, Trash2, X, Plus, Building2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';

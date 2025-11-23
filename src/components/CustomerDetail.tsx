@@ -36,7 +36,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Switch } from './ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 import { matchDomain as utilMatchDomain, normalizeDomain as utilNormalizeDomain } from '../utils/domainMatching';
 
 interface Bank {
@@ -96,6 +96,9 @@ interface CustomerDetailProps {
   allCustomers?: Customer[];
   onNavigateToCustomer?: (customer: Customer) => void;
 }
+
+// DisplayDevice type for device subscription with new device flag
+type DisplayDevice = DeviceSubscription & { _isNew?: boolean };
 
 // Domain Tree Node Component - Recursive yapı
 interface DomainTreeNodeProps {
@@ -1341,8 +1344,8 @@ export function CustomerDetail({
         }
       });
       
-      // @ts-ignore
-      currentY = doc.lastAutoTable.finalY + 15;
+      // Get last table position (jsPDF autoTable adds finalY to doc object)
+      currentY = (doc as any).lastAutoTable.finalY + 15;
       
       levels.forEach((levelKey, index) => {
         const level = Number(levelKey);
@@ -1396,8 +1399,8 @@ export function CustomerDetail({
           }
         });
         
-        // @ts-ignore
-        currentY = doc.lastAutoTable.finalY + 15;
+        // Get last table position (jsPDF autoTable adds finalY to doc object)
+        currentY = (doc as any).lastAutoTable.finalY + 15;
       });
       
       const fileName = `${formData.cariAdi || 'musteri'}_domain_hiyerarsi_${new Date().toISOString().split('T')[0]}.pdf`;
@@ -1597,7 +1600,10 @@ export function CustomerDetail({
                   email: formData.email,
                   mcc: formData.mcc
                 });
-                handleSubmit(e as any);
+                // Create a synthetic form event for handleSubmit
+                const formEvent = new Event('submit', { bubbles: true, cancelable: true }) as unknown as React.FormEvent;
+                Object.defineProperty(formEvent, 'target', { writable: false, value: e.currentTarget.form });
+                handleSubmit(formEvent);
               }}
             >
               <Save size={18} />
@@ -2820,11 +2826,11 @@ export function CustomerDetail({
                     // Otomatik eşleşen kayıtları da ekle
                     const normalizedCariAdi = prevFormData.cariAdi.trim().toLowerCase();
                     const autoMatchedIds = bankPFRecords
-                      .filter((record: any) => {
+                      .filter((record: BankPF) => {
                         const normalizedFirmaUnvan = record.firmaUnvan?.trim().toLowerCase() || '';
                         return normalizedCariAdi === normalizedFirmaUnvan;
                       })
-                      .map((record: any) => record.id);
+                      .map((record: BankPF) => record.id);
                     
                     // Manuel bağlantıları koru (linkedBankPFIds'te olan ama assignment veya auto-match'ten gelmeyen)
                     const currentManualIds = (prevFormData.linkedBankPFIds || []).filter(id => 
@@ -3270,7 +3276,7 @@ export function CustomerDetail({
                       <CardContent>
                         {(() => {
                           // Payter'dan otomatik gelen cihazları göster
-                          const displayDevices = matchedProducts.map(product => {
+                          const displayDevices: DisplayDevice[] = matchedProducts.map(product => {
                             // Mevcut abonelik ayarlarını kontrol et
                             const existingSubscription = serviceFee.deviceSubscriptions.find(
                               d => d.deviceId === product.id
@@ -3332,7 +3338,7 @@ export function CustomerDetail({
                                       Her cihazın <strong>"Durum"</strong> sütunundaki switch ile <strong>Aktif/Pasif</strong> durumunu değiştirebilirsiniz.
                                       Pasif cihazlar gelir raporlarına ve aidat hesaplamalarına <strong>dahil edilmez</strong>.
                                     </p>
-                                    {displayDevices.some((d: any) => d._isNew) && (
+                                    {displayDevices.some((d: DisplayDevice) => d._isNew) && (
                                       <p className="text-yellow-700 text-xs bg-yellow-100 p-2 rounded border border-yellow-300">
                                         ⚠️ <strong>"Yeni"</strong> işaretli cihazların ayarlarını değiştirmek için önce <strong>"Kaydet"</strong> butonuyla kaydedin.
                                       </p>
@@ -3343,13 +3349,13 @@ export function CustomerDetail({
                             )}
 
                             {/* Toplu İşlemler Paneli */}
-                            {displayDevices.some((d: any) => d._isNew) && (
+                            {displayDevices.some((d: DisplayDevice) => d._isNew) && (
                               <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-2">
                                     <AlertTriangle className="text-blue-600" size={20} />
                                     <span className="text-sm">
-                                      <strong>{displayDevices.filter((d: any) => d._isNew).length}</strong> yeni cihaz tespit edildi
+                                      <strong>{displayDevices.filter((d: DisplayDevice) => d._isNew).length}</strong> yeni cihaz tespit edildi
                                     </span>
                                   </div>
                                   <Button
@@ -3361,14 +3367,14 @@ export function CustomerDetail({
                                       e.stopPropagation();
                                       
                                       // Tüm yeni cihazları toplu kaydet
-                                      const newDevices = displayDevices.filter((d: any) => d._isNew);
+                                      const newDevices = displayDevices.filter((d: DisplayDevice) => d._isNew);
                                       
                                       if (newDevices.length === 0) {
                                         toast.info('Kaydedilecek yeni cihaz bulunamadı');
                                         return;
                                       }
 
-                                      const devicesToAdd = newDevices.map((device: any) => ({
+                                      const devicesToAdd = newDevices.map((device: DisplayDevice) => ({
                                         deviceId: device.deviceId,
                                         deviceSerialNumber: device.deviceSerialNumber,
                                         deviceName: device.deviceName,
@@ -3390,7 +3396,7 @@ export function CustomerDetail({
                                     }}
                                   >
                                     <CheckCircle size={16} className="mr-2" />
-                                    Tüm Yeni Cihazları Kaydet ({displayDevices.filter((d: any) => d._isNew).length})
+                                    Tüm Yeni Cihazları Kaydet ({displayDevices.filter((d: DisplayDevice) => d._isNew).length})
                                   </Button>
                                 </div>
                               </div>
@@ -3416,7 +3422,7 @@ export function CustomerDetail({
                                 </tr>
                               </thead>
                               <tbody>
-                                {displayDevices.map((device: any, index: number) => {
+                                {displayDevices.map((device: DisplayDevice, index: number) => {
                                   const isNew = device._isNew;
                                   const deviceIndex = serviceFee.deviceSubscriptions.findIndex(d => d.deviceId === device.deviceId);
                                   
@@ -3608,9 +3614,9 @@ export function CustomerDetail({
                                   <td colSpan={3} className="py-3 px-3 text-right">
                                     <div className="flex flex-col gap-1 items-end">
                                       <strong>
-                                        Toplam ({displayDevices.filter((d: any) => d.isActive).length} aktif / {displayDevices.filter((d: any) => !d.isActive).length} pasif):
+                                        Toplam ({displayDevices.filter((d: DisplayDevice) => d.isActive).length} aktif / {displayDevices.filter((d: DisplayDevice) => !d.isActive).length} pasif):
                                       </strong>
-                                      {displayDevices.filter((d: any) => !d.isActive).length > 0 && (
+                                      {displayDevices.filter((d: DisplayDevice) => !d.isActive).length > 0 && (
                                         <span className="text-xs text-orange-600">
                                           Pasif cihazlar gelir hesaplamalarına dahil edilmez
                                         </span>
@@ -3620,8 +3626,8 @@ export function CustomerDetail({
                                   <td className="py-3 px-3">
                                     <strong className="text-green-600">
                                       {displayDevices
-                                        .filter((d: any) => d.isActive)
-                                        .reduce((sum: number, d: any) => sum + d.monthlyFee, 0)
+                                        .filter((d: DisplayDevice) => d.isActive)
+                                        .reduce((sum: number, d: DisplayDevice) => sum + d.monthlyFee, 0)
                                         .toFixed(2)} €
                                     </strong>
                                   </td>

@@ -33,7 +33,7 @@ import {
 } from './ui/alert-dialog';
 import { Switch } from './ui/switch';
 import { Textarea } from './ui/textarea';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 import { 
   checkSharingsStatus, 
   restoreSharingsData, 

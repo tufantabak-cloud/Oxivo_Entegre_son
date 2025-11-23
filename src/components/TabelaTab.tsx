@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Badge } from './ui/badge';
 import { Switch } from './ui/switch';
 import { Plus, Pencil, Trash2, CreditCard } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 
 export type TabelaRecord = {
   id: string;

@@ -35,7 +35,7 @@ import {
   getActivityActionIcon,
   getActivityActionColor,
 } from '../utils/activityLog';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 
 interface ActivityLogViewerProps {
   isOpen: boolean;

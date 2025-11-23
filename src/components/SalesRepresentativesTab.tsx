@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Badge } from './ui/badge';
 import { Switch } from './ui/switch';
 import { Plus, Pencil, Trash2, UserPlus } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 
 export interface SalesRepresentative {
   id: string;

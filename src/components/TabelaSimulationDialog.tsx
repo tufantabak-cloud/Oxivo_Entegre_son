@@ -9,7 +9,7 @@ import { Card, CardContent } from './ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 import { Calculator, TrendingUp, TrendingDown, ChevronDown, ChevronRight } from 'lucide-react';
 import { BankPF } from './BankPFModule';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 
 interface TabelaSimulationDialogProps {
   open: boolean;

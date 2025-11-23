@@ -14,7 +14,7 @@ import {
   DialogDescription,
 } from './ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 import { Badge } from './ui/badge';
 
 interface ReminderSettingsPanelProps {

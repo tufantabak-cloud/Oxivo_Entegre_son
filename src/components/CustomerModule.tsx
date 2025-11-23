@@ -4,7 +4,8 @@ import { CustomerDetail } from './CustomerDetail';
 import { ExcelImport } from './ExcelImport';
 import { Plus } from 'lucide-react';
 import { Button } from './ui/button';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
+import { customerApi } from '../utils/supabaseClient';
 // XLSX import - ES6 module format (v3.0.8 - fixed require issue)
 import * as XLSX from 'xlsx';
 
@@ -391,11 +392,48 @@ export const CustomerModule = React.memo(function CustomerModule({
     }
   };
 
-  const handleImportCustomers = (importedCustomers: Customer[]) => {
+  const handleImportCustomers = async (importedCustomers: Customer[]) => {
     console.log('\n🔄 CustomerModule - Import İşlemi Başlıyor...');
     console.log(`📊 Excel'den gelen kayıt sayısı: ${importedCustomers.length}`);
     console.log(`📊 Sistemdeki mevcut kayıt sayısı: ${customers.length}`);
     
+    try {
+      // ✅ SUPABASE'E KAYDET
+      toast.info('📤 Veriler Supabase\'e kaydediliyor...');
+      
+      const response = await customerApi.create(importedCustomers);
+      
+      if (!response.success) {
+        throw new Error(response.error || 'Supabase kaydetme hatası');
+      }
+      
+      console.log(`✅ ${response.count} müşteri Supabase'e kaydedildi`);
+      
+      // ✅ LOCAL STATE'İ GÜNCELLEdocument (Backward compatibility)
+      const updatedCustomers = [...customers, ...importedCustomers];
+      onCustomersChange?.(updatedCustomers);
+      
+      toast.success(
+        `✅ ${response.count} müşteri başarıyla kaydedildi!\n🌐 Supabase'e yüklendi\n📊 Toplam: ${updatedCustomers.length}`,
+        { duration: 5000 }
+      );
+    } catch (error: any) {
+      console.error('❌ Supabase import hatası:', error);
+      toast.error(
+        `❌ Import Hatası!\n${error.message}\n\nLütfen bağlantınızı kontrol edin.`,
+        { duration: 7000 }
+      );
+      
+      // Fallback: Local'e kaydet
+      console.log('⚠️ Fallback: Local storage\'a kaydediliyor...');
+      const updatedCustomers = [...customers, ...importedCustomers];
+      onCustomersChange?.(updatedCustomers);
+      toast.info(`⚠️ Offline mode: ${importedCustomers.length} müşteri local'e kaydedildi`);
+    }
+  };
+
+  // REMOVED OLD DUPLICATE LOGIC - Now handled directly by Supabase
+  const handleImportCustomers_OLD_BACKUP = (importedCustomers: Customer[]) => {
     // Excel içi duplicate kontrol
     const seenInFile = new Set<string>();
     const excelDuplicates: string[] = [];

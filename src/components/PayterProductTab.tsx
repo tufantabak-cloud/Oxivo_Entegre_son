@@ -9,7 +9,7 @@ import { Alert, AlertDescription } from './ui/alert';
 import { Progress } from './ui/progress';
 import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
 import { Upload, FileSpreadsheet, Download, Search, Trash2, CheckCircle, XCircle, AlertCircle, Monitor } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 import * as XLSX from 'xlsx';
 import { ColumnVisibilityDropdown, ColumnConfig } from './ColumnVisibilityDropdown';
 import { Customer } from './CustomerModule';

@@ -10,7 +10,7 @@ import { BankPF } from './BankPFModule';
 import { Search, ArrowUpDown, Filter, Download, Users, Package, DollarSign, Euro, Briefcase, CheckCircle } from 'lucide-react';
 import { ColumnVisibilityDropdown, ColumnConfig } from './ColumnVisibilityDropdown';
 import { FilterDropdown, FilterOption } from './FilterDropdown';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 import * as XLSX from 'xlsx';
 
 interface CustomerReportTabProps {

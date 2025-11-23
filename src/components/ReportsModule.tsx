@@ -16,7 +16,7 @@ import { DomainReportTab } from './DomainReportTab';
 import { TabelaSimulationDialog } from './TabelaSimulationDialog';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 // XLSX import - ES6 module format (v3.0.8 - fixed require issue)
 import * as XLSX from 'xlsx';
 

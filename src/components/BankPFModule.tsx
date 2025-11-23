@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BankPFList } from './BankPFList';
 import { BankPFDetail } from './BankPFDetail';
 import { TabelaRecord, TabelaGroup } from './TabelaTab';
-import { EkGelir } from './RevenueModelsTab_NEW';
+import { EkGelir } from './RevenueModelsTab';
 import { Plus } from 'lucide-react';
 import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from './ui/dialog';
@@ -10,7 +10,7 @@ import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { ModernFormSelect, FormSelectOption } from './ModernFormSelect';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 
 export interface ContactPerson {
   id: string;

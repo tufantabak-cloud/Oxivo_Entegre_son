@@ -16,7 +16,7 @@ import {
 } from './ui/dialog';
 import { Alert, AlertDescription } from './ui/alert';
 import { Progress } from './ui/progress';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 import * as XLSX from 'xlsx';
 
 interface ExcelDataManagerProps {
@@ -112,64 +112,64 @@ export function ExcelDataManager({
     try {
       const wb = XLSX.utils.book_new();
       
-      // 1. MÜŞTERİLER SAYFASI - TÜM ALANLAR
-      const customerData = customers.map(c => {
-        // Bağlı Banka/PF adlarını al
-        const linkedBankPFNames = c.linkedBankPFIds?.map(id => {
-          const bankPF = bankPFRecords.find(b => b.id === id);
-          return bankPF ? bankPF.firmaUnvan : '';
-        }).filter(name => name).join(', ') || '';
+      // ❌ MÜŞTERİLER SAYFASI KALDIRILDI - Müşteri modülünden export edin
+      // const customerData = customers.map(c => {
+      //   // Bağlı Banka/PF adlarını al
+      //   const linkedBankPFNames = c.linkedBankPFIds?.map(id => {
+      //     const bankPF = bankPFRecords.find(b => b.id === id);
+      //     return bankPF ? bankPF.firmaUnvan : '';
+      //   }).filter(name => name).join(', ') || '';
 
-        return {
-          'Cari Hesap Kodu': c.cariHesapKodu,
-          'Sektör': c.sektor,
-          'MCC': c.mcc,
-          'Cari Adı': c.cariAdi,
-          'Güncel MyPayter Domain': c.guncelMyPayterDomain,
-          'Vergi Dairesi': c.vergiDairesi,
-          'Vergi No': c.vergiNo,
-          'Adres': c.adres,
-          'İlçe': c.ilce,
-          'Posta Kodu': c.postaKodu,
-          'Email': c.email,
-          'Yetkili': c.yetkili,
-          'Telefon': c.tel,
-          'P6X': c.p6x || '',
-          'APOLLO': c.apollo || '',
-          'Durum': c.durum,
-          'Satış Temsilcisi': c.salesRepName || '',
-          'Bağlı Banka/PF Sayısı': c.linkedBankPFIds?.length || 0,
-          'Bağlı Banka/PF Adları': linkedBankPFNames,
-          // Toplu işlem alanları
-          'Bloke Durumu': c.blokeDurumu ? 'Evet' : 'Hayır',
-          'Sorumlu Kişi': c.sorumluKisi || '',
-          'Cari Grubu': c.cariGrubu || '',
-          // Hizmet bedeli ayarları
-          'Abonelik Tipi': c.serviceFeeSettings?.paymentType === 'monthly' ? 'Aylık' : c.serviceFeeSettings?.paymentType === 'yearly' ? 'Yıllık' : '',
-          'Standart Ücret (€)': c.serviceFeeSettings?.standardFeePerDevice || '',
-          'Özel Ücret (€)': c.serviceFeeSettings?.customFeePerDevice || '',
-          'Sözleşme Başlangıç': c.serviceFeeSettings?.contractStartDate || '',
-          'Hizmet Aktif': c.serviceFeeSettings?.isActive ? 'Evet' : 'Hayır',
-          'Dondurma Tarihi': c.serviceFeeSettings?.suspensionStartDate || '',
-          'Dondurma Sebebi': c.serviceFeeSettings?.suspensionReason || '',
-          'Cihaz Abonelikleri Sayısı': c.serviceFeeSettings?.deviceSubscriptions?.length || 0,
-          'Fatura Sayısı': c.serviceFeeSettings?.invoices?.length || 0,
-        };
-      });
+      //   return {
+      //     'Cari Hesap Kodu': c.cariHesapKodu,
+      //     'Sektör': c.sektor,
+      //     'MCC': c.mcc,
+      //     'Cari Adı': c.cariAdi,
+      //     'Güncel MyPayter Domain': c.guncelMyPayterDomain,
+      //     'Vergi Dairesi': c.vergiDairesi,
+      //     'Vergi No': c.vergiNo,
+      //     'Adres': c.adres,
+      //     'İlçe': c.ilce,
+      //     'Posta Kodu': c.postaKodu,
+      //     'Email': c.email,
+      //     'Yetkili': c.yetkili,
+      //     'Telefon': c.tel,
+      //     'P6X': c.p6x || '',
+      //     'APOLLO': c.apollo || '',
+      //     'Durum': c.durum,
+      //     'Satış Temsilcisi': c.salesRepName || '',
+      //     'Bağlı Banka/PF Sayısı': c.linkedBankPFIds?.length || 0,
+      //     'Bağlı Banka/PF Adları': linkedBankPFNames,
+      //     // Toplu işlem alanları
+      //     'Bloke Durumu': c.blokeDurumu ? 'Evet' : 'Hayır',
+      //     'Sorumlu Kişi': c.sorumluKisi || '',
+      //     'Cari Grubu': c.cariGrubu || '',
+      //     // Hizmet bedeli ayarları
+      //     'Abonelik Tipi': c.serviceFeeSettings?.paymentType === 'monthly' ? 'Aylık' : c.serviceFeeSettings?.paymentType === 'yearly' ? 'Yıllık' : '',
+      //     'Standart Ücret (€)': c.serviceFeeSettings?.standardFeePerDevice || '',
+      //     'Özel Ücret (€)': c.serviceFeeSettings?.customFeePerDevice || '',
+      //     'Sözleşme Başlangıç': c.serviceFeeSettings?.contractStartDate || '',
+      //     'Hizmet Aktif': c.serviceFeeSettings?.isActive ? 'Evet' : 'Hayır',
+      //     'Dondurma Tarihi': c.serviceFeeSettings?.suspensionStartDate || '',
+      //     'Dondurma Sebebi': c.serviceFeeSettings?.suspensionReason || '',
+      //     'Cihaz Abonelikleri Sayısı': c.serviceFeeSettings?.deviceSubscriptions?.length || 0,
+      //     'Fatura Sayısı': c.serviceFeeSettings?.invoices?.length || 0,
+      //   };
+      // });
       
-      const wsCustomers = XLSX.utils.json_to_sheet(customerData);
-      wsCustomers['!cols'] = [
-        { wch: 18 }, { wch: 15 }, { wch: 8 }, { wch: 30 }, { wch: 30 },
-        { wch: 15 }, { wch: 12 }, { wch: 40 }, { wch: 15 }, { wch: 12 },
-        { wch: 25 }, { wch: 20 }, { wch: 15 }, { wch: 10 }, { wch: 10 },
-        { wch: 10 }, { wch: 20 }, { wch: 22 }, { wch: 50 }, // Bağlı Banka/PF Adları sütunu
-        // Toplu işlem alanları
-        { wch: 14 }, { wch: 20 }, { wch: 15 },
-        // Hizmet bedeli alanları
-        { wch: 15 }, { wch: 16 }, { wch: 14 }, { wch: 20 }, { wch: 12 },
-        { wch: 16 }, { wch: 20 }, { wch: 24 }, { wch: 14 }
-      ];
-      XLSX.utils.book_append_sheet(wb, wsCustomers, 'Müşteriler');
+      // const wsCustomers = XLSX.utils.json_to_sheet(customerData);
+      // wsCustomers['!cols'] = [
+      //   { wch: 18 }, { wch: 15 }, { wch: 8 }, { wch: 30 }, { wch: 30 },
+      //   { wch: 15 }, { wch: 12 }, { wch: 40 }, { wch: 15 }, { wch: 12 },
+      //   { wch: 25 }, { wch: 20 }, { wch: 15 }, { wch: 10 }, { wch: 10 },
+      //   { wch: 10 }, { wch: 20 }, { wch: 22 }, { wch: 50 }, // Bağlı Banka/PF Adları sütunu
+      //   // Toplu işlem alanları
+      //   { wch: 14 }, { wch: 20 }, { wch: 15 },
+      //   // Hizmet bedeli alanları
+      //   { wch: 15 }, { wch: 16 }, { wch: 14 }, { wch: 20 }, { wch: 12 },
+      //   { wch: 16 }, { wch: 20 }, { wch: 24 }, { wch: 14 }
+      // ];
+      // XLSX.utils.book_append_sheet(wb, wsCustomers, 'Müşteriler');
 
       // 2. BANKA/PF ANA BİLGİLER SAYFASI
       const bankPFData = bankPFRecords.map(b => ({
@@ -475,53 +475,54 @@ export function ExcelDataManager({
         try {
           // Sheet adına göre uygun import fonksiyonunu çağır
           switch (sheetName) {
-            case 'Müşteriler':
-              {
-                const importedCustomers: Customer[] = jsonData.map((row: any) => {
-                  // Satış temsilcisi ID'sini bul
-                  const salesRep = salesReps.find(s => s.adSoyad === row['Satış Temsilcisi']);
-                  
-                  return {
-                    id: `customer-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                    cariHesapKodu: row['Cari Hesap Kodu'] || '',
-                    sektor: row['Sektör'] || '',
-                    mcc: row['MCC'] || '',
-                    cariAdi: row['Cari Adı'] || '',
-                    guncelMyPayterDomain: row['Güncel MyPayter Domain'] || '',
-                    vergiDairesi: row['Vergi Dairesi'] || '',
-                    vergiNo: row['Vergi No'] || '',
-                    adres: row['Adres'] || '',
-                    ilce: row['İlçe'] || '',
-                    postaKodu: row['Posta Kodu'] || '',
-                    email: row['Email'] || '',
-                    yetkili: row['Yetkili'] || '',
-                    tel: row['Telefon'] || '',
-                    p6x: row['P6X'] || '',
-                    apollo: row['APOLLO'] || '',
-                    durum: row['Durum'] || 'Aktif',
-                    salesRepId: salesRep?.id || '',
-                    salesRepName: salesRep?.adSoyad || '',
-                    linkedBankPFIds: [],
-                    blokeDurumu: row['Bloke Durumu'] === 'Evet',
-                    sorumluKisi: row['Sorumlu Kişi'] || '',
-                    cariGrubu: row['Cari Grubu'] || '',
-                    serviceFeeSettings: {
-                      paymentType: row['Abonelik Tipi'] === 'Aylık' ? 'monthly' : row['Abonelik Tipi'] === 'Yıllık' ? 'yearly' : 'monthly',
-                      standardFeePerDevice: Number(row['Standart Ücret (€)']) || 0,
-                      customFeePerDevice: row['Özel Ücret (€)'] ? Number(row['Özel Ücret (€)']) : undefined,
-                      contractStartDate: row['Sözleşme Başlangıç'] || '',
-                      isActive: row['Hizmet Aktif'] === 'Evet',
-                      suspensionStartDate: row['Dondurma Tarihi'] || undefined,
-                      suspensionReason: row['Dondurma Sebebi'] || undefined,
-                      deviceSubscriptions: [],
-                      invoices: [],
-                    },
-                  };
-                });
-                onCustomersChange(importedCustomers);
-                sheetResult.success = importedCustomers.length;
-              }
-              break;
+            // ❌ MÜŞTERİLER IMPORT KALDIRILDI - Müşteri modülünden import edin
+            // case 'Müşteriler':
+            //   {
+            //     const importedCustomers: Customer[] = jsonData.map((row: any) => {
+            //       // Satış temsilcisi ID'sini bul
+            //       const salesRep = salesReps.find(s => s.adSoyad === row['Satış Temsilcisi']);
+            //       
+            //       return {
+            //         id: `customer-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            //         cariHesapKodu: row['Cari Hesap Kodu'] || '',
+            //         sektor: row['Sektör'] || '',
+            //         mcc: row['MCC'] || '',
+            //         cariAdi: row['Cari Adı'] || '',
+            //         guncelMyPayterDomain: row['Güncel MyPayter Domain'] || '',
+            //         vergiDairesi: row['Vergi Dairesi'] || '',
+            //         vergiNo: row['Vergi No'] || '',
+            //         adres: row['Adres'] || '',
+            //         ilce: row['İlçe'] || '',
+            //         postaKodu: row['Posta Kodu'] || '',
+            //         email: row['Email'] || '',
+            //         yetkili: row['Yetkili'] || '',
+            //         tel: row['Telefon'] || '',
+            //         p6x: row['P6X'] || '',
+            //         apollo: row['APOLLO'] || '',
+            //         durum: row['Durum'] || 'Aktif',
+            //         salesRepId: salesRep?.id || '',
+            //         salesRepName: salesRep?.adSoyad || '',
+            //         linkedBankPFIds: [],
+            //         blokeDurumu: row['Bloke Durumu'] === 'Evet',
+            //         sorumluKisi: row['Sorumlu Kişi'] || '',
+            //         cariGrubu: row['Cari Grubu'] || '',
+            //         serviceFeeSettings: {
+            //           paymentType: row['Abonelik Tipi'] === 'Aylık' ? 'monthly' : row['Abonelik Tipi'] === 'Yıllık' ? 'yearly' : 'monthly',
+            //           standardFeePerDevice: Number(row['Standart Ücret (€)']) || 0,
+            //           customFeePerDevice: row['Özel Ücret (€)'] ? Number(row['Özel Ücret (€)']) : undefined,
+            //           contractStartDate: row['Sözleşme Başlangıç'] || '',
+            //           isActive: row['Hizmet Aktif'] === 'Evet',
+            //           suspensionStartDate: row['Dondurma Tarihi'] || undefined,
+            //           suspensionReason: row['Dondurma Sebebi'] || undefined,
+            //           deviceSubscriptions: [],
+            //           invoices: [],
+            //         },
+            //       };
+            //     });
+            //     onCustomersChange(importedCustomers);
+            //     sheetResult.success = importedCustomers.length;
+            //   }
+            //   break;
 
             case 'Banka-PF Ana Bilgiler':
               {
@@ -809,47 +810,47 @@ export function ExcelDataManager({
     try {
       const wb = XLSX.utils.book_new();
       
-      // Boş şablon sayfalar oluştur - TÜM ALANLAR
-      const emptyCustomer = [
-        {
-          'Cari Hesap Kodu': '120.01.001',
-          'Sektör': 'Teknoloji',
-          'MCC': '5411',
-          'Cari Adı': 'Örnek Firma A.Ş.',
-          'Güncel MyPayter Domain': 'ornek-firma.mypayter.com',
-          'Vergi Dairesi': 'Maslak',
-          'Vergi No': '1234567890',
-          'Adres': 'Örnek Mahallesi, No:123',
-          'İlçe': 'Sarıyer',
-          'Posta Kodu': '34398',
-          'Email': 'info@ornekfirma.com',
-          'Yetkili': 'Ahmet Yılmaz',
-          'Telefon': '0532 111 2233',
-          'P6X': '10',
-          'APOLLO': '5',
-          'Durum': 'Aktif',
-          'Satış Temsilcisi': 'Ali Veli',
-          'Bağlı Banka/PF Sayısı': '0',
-          'Bağlı Banka/PF Adları': '',
-          // Toplu işlem alanları
-          'Bloke Durumu': 'Hayır',
-          'Sorumlu Kişi': 'Mehmet Demir',
-          'Cari Grubu': 'A Grubu',
-          // Hizmet bedeli ayarları
-          'Abonelik Tipi': 'Aylık',
-          'Standart Ücret (€)': '10',
-          'Özel Ücret (€)': '',
-          'Sözleşme Başlangıç': '2025-01-01',
-          'Hizmet Aktif': 'Evet',
-          'Dondurma Tarihi': '',
-          'Dondurma Sebebi': '',
-          'Cihaz Abonelikleri Sayısı': '0',
-          'Fatura Sayısı': '0',
-        }
-      ];
+      // ❌ MÜŞTERİLER SAYFASI KALDIRILDI - Müşteri modülünden şablon indirin
+      // const emptyCustomer = [
+      //   {
+      //     'Cari Hesap Kodu': '120.01.001',
+      //     'Sektör': 'Teknoloji',
+      //     'MCC': '5411',
+      //     'Cari Adı': 'Örnek Firma A.Ş.',
+      //     'Güncel MyPayter Domain': 'ornek-firma.mypayter.com',
+      //     'Vergi Dairesi': 'Maslak',
+      //     'Vergi No': '1234567890',
+      //     'Adres': 'Örnek Mahallesi, No:123',
+      //     'İlçe': 'Sarıyer',
+      //     'Posta Kodu': '34398',
+      //     'Email': 'info@ornekfirma.com',
+      //     'Yetkili': 'Ahmet Yılmaz',
+      //     'Telefon': '0532 111 2233',
+      //     'P6X': '10',
+      //     'APOLLO': '5',
+      //     'Durum': 'Aktif',
+      //     'Satış Temsilcisi': 'Ali Veli',
+      //     'Bağlı Banka/PF Sayısı': '0',
+      //     'Bağlı Banka/PF Adları': '',
+      //     // Toplu işlem alanları
+      //     'Bloke Durumu': 'Hayır',
+      //     'Sorumlu Kişi': 'Mehmet Demir',
+      //     'Cari Grubu': 'A Grubu',
+      //     // Hizmet bedeli ayarları
+      //     'Abonelik Tipi': 'Aylık',
+      //     'Standart Ücret (€)': '10',
+      //     'Özel Ücret (€)': '',
+      //     'Sözleşme Başlangıç': '2025-01-01',
+      //     'Hizmet Aktif': 'Evet',
+      //     'Dondurma Tarihi': '',
+      //     'Dondurma Sebebi': '',
+      //     'Cihaz Abonelikleri Sayısı': '0',
+      //     'Fatura Sayısı': '0',
+      //   }
+      // ];
       
-      const wsCustomers = XLSX.utils.json_to_sheet(emptyCustomer);
-      XLSX.utils.book_append_sheet(wb, wsCustomers, 'Müşteriler');
+      // const wsCustomers = XLSX.utils.json_to_sheet(emptyCustomer);
+      // XLSX.utils.book_append_sheet(wb, wsCustomers, 'Müşteriler');
 
       // Diğer boş sayfalar...
       const emptyBankPF = [{
@@ -1059,11 +1060,10 @@ export function ExcelDataManager({
             {/* Format Info */}
             <div className="bg-blue-50 p-4 rounded-lg space-y-2">
               <p className="text-sm">
-                <strong>Excel Dosyası Sayfaları (17 sayfa):</strong>
+                <strong>Excel Dosyası Sayfaları (16 sayfa - Müşteriler kaldırıldı):</strong>
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <ul className="text-sm space-y-1 ml-4 list-disc">
-                  <li><strong>Müşteriler</strong> - Tüm alanlar</li>
                   <li><strong>Banka-PF Ana Bilgiler</strong></li>
                   <li><strong>İletişim Matrisi</strong></li>
                   <li><strong>İşbirlikleri</strong></li>
@@ -1071,9 +1071,9 @@ export function ExcelDataManager({
                   <li><strong>MCC Tanımları</strong></li>
                   <li><strong>Bankalar</strong></li>
                   <li><strong>EPK</strong></li>
+                  <li><strong>ÖK</strong></li>
                 </ul>
                 <ul className="text-sm space-y-1 ml-4 list-disc">
-                  <li><strong>ÖK</strong></li>
                   <li><strong>Satış Temsilcileri</strong></li>
                   <li><strong>Ünvanlar</strong></li>
                   <li><strong>Partnerlik Anlaşmaları</strong></li>
@@ -1083,6 +1083,9 @@ export function ExcelDataManager({
                   <li><strong>Gelir Modelleri</strong></li>
                   <li><strong>Kart Programları</strong></li>
                 </ul>
+              </div>
+              <div className="mt-2 text-xs text-gray-600">
+                ℹ️ Müşteri import için <strong>Müşteriler modülü</strong> içindeki Excel import butonunu kullanın.
               </div>
             </div>
 

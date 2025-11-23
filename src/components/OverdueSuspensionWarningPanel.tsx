@@ -16,7 +16,7 @@ import {
   TableRow,
 } from './ui/table';
 import { Input } from './ui/input';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 
 interface DeviceRowData {
   customer: Customer;

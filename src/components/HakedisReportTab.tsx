@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { FileDown, Calculator, TrendingUp, DollarSign, Calendar, Building2, Filter, PieChart, X } from 'lucide-react';
 import { BankPF, HakedisRecord } from './BankPFModule';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 
 interface HakedisReportTabProps {
   bankPFRecords: BankPF[];
