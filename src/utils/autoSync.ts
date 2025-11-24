@@ -1,42 +1,47 @@
 /**
- * Auto Sync to Supabase - EXPANDED VERSION
- * Automatically syncs ALL data types to Supabase backend
+ * Auto Sync to Supabase
+ * Tüm veri tiplerini otomatik olarak Supabase'e senkronize eder
  * 
- * SUPPORTED DATA TYPES:
- * 1. Customers → customers table
- * 2. Products → products table  
- * 3. BankPF Records → bank_accounts table
- * 4. Definitions (13 types) → stored in localStorage only (not synced to Supabase)
- * 
- * USAGE IN APP.TSX:
- * ```
- * // Old: startAutoSync(customers);
- * // New:
- * syncAllData({
- *   customers,
- *   products: payterProducts,
- *   bankPF: bankPFRecords
- * });
- * ```
+ * Supported Data Types:
+ * - Customers (352 records)
+ * - Bank/PF Accounts
+ * - Petty Cash
+ * - Categories
+ * - Transactions
+ * - Signs (Tabela)
+ * - Income Records
+ * - Products
  */
 
-import { customerApi, productApi, bankPFApi } from './supabaseClient';
+import {
+  customerApi,
+  productApi,
+  bankPFApi,
+  pettyCashApi,
+  categoryApi,
+  transactionApi,
+  signApi,
+  incomeApi,
+} from './supabaseClient';
 
 // ========================================
-// TYPE DEFINITIONS
+// TYPES
 // ========================================
-
-export interface SyncDataOptions {
-  customers?: any[];
-  products?: any[];
-  bankPF?: any[];
-}
 
 export interface SyncResult {
   success: boolean;
-  type: string;
   count?: number;
   error?: string;
+}
+
+export interface SyncStats {
+  total: number;
+  successful: number;
+  failed: number;
+  skipped: number;
+  startTime: Date;
+  endTime?: Date;
+  duration?: number;
 }
 
 // ========================================
@@ -44,83 +49,218 @@ export interface SyncResult {
 // ========================================
 
 /**
- * Sync customers to Supabase
+ * Müşterileri Supabase'e sync eder
  */
 export async function syncCustomers(customers: any[]): Promise<SyncResult> {
   if (!customers || customers.length === 0) {
-    console.log('⏭️ Skipping customers sync: No data');
-    return { success: true, type: 'customers', count: 0 };
+    console.log('⏭️ Skipping customers sync - no data');
+    return { success: true, count: 0 };
   }
 
-  console.log(`☁️ Syncing ${customers.length} customers to Supabase...`);
+  console.log(`☁️ Auto-syncing ${customers.length} customers to Supabase...`);
 
   try {
     const result = await customerApi.create(customers);
     
     if (result.success) {
-      console.log(`✅ Customers synced: ${result.count} records`);
-      return { success: true, type: 'customers', count: result.count };
+      console.log(`✅ Customers sync successful: ${result.count} records`);
+      return { success: true, count: result.count };
     } else {
       console.error(`❌ Customers sync failed:`, result.error);
-      return { success: false, type: 'customers', error: result.error };
+      return { success: false, error: result.error };
     }
   } catch (err: any) {
     console.error(`❌ Customers sync error:`, err);
-    return { success: false, type: 'customers', error: err.message || 'Unknown error' };
+    return { success: false, error: err.message || String(err) };
   }
 }
 
 /**
- * Sync products to Supabase
+ * Ürünleri Supabase'e sync eder
  */
 export async function syncProducts(products: any[]): Promise<SyncResult> {
   if (!products || products.length === 0) {
-    console.log('⏭️ Skipping products sync: No data');
-    return { success: true, type: 'products', count: 0 };
+    console.log('⏭️ Skipping products sync - no data');
+    return { success: true, count: 0 };
   }
 
-  console.log(`☁️ Syncing ${products.length} products to Supabase...`);
+  console.log(`☁️ Auto-syncing ${products.length} products to Supabase...`);
 
   try {
-    const result = await productApi.create(products);
+    const result = await productApi.sync(products, 'merge');
     
     if (result.success) {
-      console.log(`✅ Products synced: ${result.count} records`);
-      return { success: true, type: 'products', count: result.count };
+      console.log(`✅ Products sync successful: ${result.data.length} records`);
+      return { success: true, count: result.data.length };
     } else {
       console.error(`❌ Products sync failed:`, result.error);
-      return { success: false, type: 'products', error: result.error };
+      return { success: false, error: result.error };
     }
   } catch (err: any) {
     console.error(`❌ Products sync error:`, err);
-    return { success: false, type: 'products', error: err.message || 'Unknown error' };
+    return { success: false, error: err.message || String(err) };
   }
 }
 
 /**
- * Sync BankPF records to Supabase
+ * Bank/PF kayıtlarını Supabase'e sync eder
  */
-export async function syncBankPF(bankPF: any[]): Promise<SyncResult> {
-  if (!bankPF || bankPF.length === 0) {
-    console.log('⏭️ Skipping BankPF sync: No data');
-    return { success: true, type: 'bankPF', count: 0 };
+export async function syncBankPF(records: any[]): Promise<SyncResult> {
+  if (!records || records.length === 0) {
+    console.log('⏭️ Skipping bankPF sync - no data');
+    return { success: true, count: 0 };
   }
 
-  console.log(`☁️ Syncing ${bankPF.length} BankPF records to Supabase...`);
+  console.log(`☁️ Auto-syncing ${records.length} bankPF records to Supabase...`);
 
   try {
-    const result = await bankPFApi.create(bankPF);
+    const result = await bankPFApi.create(records);
     
     if (result.success) {
-      console.log(`✅ BankPF records synced: ${result.count} records`);
-      return { success: true, type: 'bankPF', count: result.count };
+      console.log(`✅ BankPF sync successful: ${result.count} records`);
+      return { success: true, count: result.count };
     } else {
       console.error(`❌ BankPF sync failed:`, result.error);
-      return { success: false, type: 'bankPF', error: result.error };
+      return { success: false, error: result.error };
     }
   } catch (err: any) {
     console.error(`❌ BankPF sync error:`, err);
-    return { success: false, type: 'bankPF', error: err.message || 'Unknown error' };
+    return { success: false, error: err.message || String(err) };
+  }
+}
+
+/**
+ * Petty Cash kayıtlarını Supabase'e sync eder
+ */
+export async function syncPettyCash(records: any[]): Promise<SyncResult> {
+  if (!records || records.length === 0) {
+    console.log('⏭️ Skipping petty cash sync - no data');
+    return { success: true, count: 0 };
+  }
+
+  console.log(`☁️ Auto-syncing ${records.length} petty cash records to Supabase...`);
+
+  try {
+    const result = await pettyCashApi.create(records);
+    
+    if (result.success) {
+      console.log(`✅ Petty cash sync successful: ${result.count} records`);
+      return { success: true, count: result.count };
+    } else {
+      console.error(`❌ Petty cash sync failed:`, result.error);
+      return { success: false, error: result.error };
+    }
+  } catch (err: any) {
+    console.error(`❌ Petty cash sync error:`, err);
+    return { success: false, error: err.message || String(err) };
+  }
+}
+
+/**
+ * Kategorileri Supabase'e sync eder
+ */
+export async function syncCategories(records: any[]): Promise<SyncResult> {
+  if (!records || records.length === 0) {
+    console.log('⏭️ Skipping categories sync - no data');
+    return { success: true, count: 0 };
+  }
+
+  console.log(`☁️ Auto-syncing ${records.length} categories to Supabase...`);
+
+  try {
+    const result = await categoryApi.create(records);
+    
+    if (result.success) {
+      console.log(`✅ Categories sync successful: ${result.count} records`);
+      return { success: true, count: result.count };
+    } else {
+      console.error(`❌ Categories sync failed:`, result.error);
+      return { success: false, error: result.error };
+    }
+  } catch (err: any) {
+    console.error(`❌ Categories sync error:`, err);
+    return { success: false, error: err.message || String(err) };
+  }
+}
+
+/**
+ * İşlemleri Supabase'e sync eder
+ */
+export async function syncTransactions(records: any[]): Promise<SyncResult> {
+  if (!records || records.length === 0) {
+    console.log('⏭️ Skipping transactions sync - no data');
+    return { success: true, count: 0 };
+  }
+
+  console.log(`☁️ Auto-syncing ${records.length} transactions to Supabase...`);
+
+  try {
+    const result = await transactionApi.create(records);
+    
+    if (result.success) {
+      console.log(`✅ Transactions sync successful: ${result.count} records`);
+      return { success: true, count: result.count };
+    } else {
+      console.error(`❌ Transactions sync failed:`, result.error);
+      return { success: false, error: result.error };
+    }
+  } catch (err: any) {
+    console.error(`❌ Transactions sync error:`, err);
+    return { success: false, error: err.message || String(err) };
+  }
+}
+
+/**
+ * Tabelaları Supabase'e sync eder
+ */
+export async function syncSigns(records: any[]): Promise<SyncResult> {
+  if (!records || records.length === 0) {
+    console.log('⏭️ Skipping signs sync - no data');
+    return { success: true, count: 0 };
+  }
+
+  console.log(`☁️ Auto-syncing ${records.length} signs to Supabase...`);
+
+  try {
+    const result = await signApi.create(records);
+    
+    if (result.success) {
+      console.log(`✅ Signs sync successful: ${result.count} records`);
+      return { success: true, count: result.count };
+    } else {
+      console.error(`❌ Signs sync failed:`, result.error);
+      return { success: false, error: result.error };
+    }
+  } catch (err: any) {
+    console.error(`❌ Signs sync error:`, err);
+    return { success: false, error: err.message || String(err) };
+  }
+}
+
+/**
+ * Gelir kayıtlarını Supabase'e sync eder
+ */
+export async function syncIncome(records: any[]): Promise<SyncResult> {
+  if (!records || records.length === 0) {
+    console.log('⏭️ Skipping income sync - no data');
+    return { success: true, count: 0 };
+  }
+
+  console.log(`☁️ Auto-syncing ${records.length} income records to Supabase...`);
+
+  try {
+    const result = await incomeApi.create(records);
+    
+    if (result.success) {
+      console.log(`✅ Income sync successful: ${result.count} records`);
+      return { success: true, count: result.count };
+    } else {
+      console.error(`❌ Income sync failed:`, result.error);
+      return { success: false, error: result.error };
+    }
+  } catch (err: any) {
+    console.error(`❌ Income sync error:`, err);
+    return { success: false, error: err.message || String(err) };
   }
 }
 
@@ -129,151 +269,84 @@ export async function syncBankPF(bankPF: any[]): Promise<SyncResult> {
 // ========================================
 
 /**
- * Sync ALL data types to Supabase (batch operation)
- * 
- * @param options - Object containing all data arrays to sync
- * @returns Promise with array of sync results
- * 
- * @example
- * ```typescript
- * const results = await syncAllData({
- *   customers: customersArray,
- *   products: productsArray,
- *   bankPF: bankPFArray
- * });
- * 
- * console.log('Sync summary:', results);
- * ```
+ * Tüm veri tiplerini tek seferde Supabase'e sync eder
  */
-export async function syncAllData(options: SyncDataOptions): Promise<SyncResult[]> {
-  console.log('🚀 Starting batch sync to Supabase...');
-  console.log('📊 Data summary:', {
-    customers: options.customers?.length || 0,
-    products: options.products?.length || 0,
-    bankPF: options.bankPF?.length || 0
+export async function syncAllData(data: {
+  customers?: any[];
+  products?: any[];
+  bankPF?: any[];
+  pettyCash?: any[];
+  categories?: any[];
+  transactions?: any[];
+  signs?: any[];
+  income?: any[];
+}): Promise<SyncStats> {
+  const stats: SyncStats = {
+    total: 0,
+    successful: 0,
+    failed: 0,
+    skipped: 0,
+    startTime: new Date(),
+  };
+
+  console.log('🚀 Starting full data sync to Supabase...');
+
+  // Sync her veri tipi için
+  const syncTasks = [
+    { name: 'Customers', fn: () => syncCustomers(data.customers || []) },
+    { name: 'Products', fn: () => syncProducts(data.products || []) },
+    { name: 'BankPF', fn: () => syncBankPF(data.bankPF || []) },
+    { name: 'PettyCash', fn: () => syncPettyCash(data.pettyCash || []) },
+    { name: 'Categories', fn: () => syncCategories(data.categories || []) },
+    { name: 'Transactions', fn: () => syncTransactions(data.transactions || []) },
+    { name: 'Signs', fn: () => syncSigns(data.signs || []) },
+    { name: 'Income', fn: () => syncIncome(data.income || []) },
+  ];
+
+  // Sırayla sync (paralel değil - rate limit için)
+  for (const task of syncTasks) {
+    try {
+      const result = await task.fn();
+      stats.total++;
+      
+      if (result.success) {
+        if (result.count === 0) {
+          stats.skipped++;
+        } else {
+          stats.successful++;
+        }
+      } else {
+        stats.failed++;
+        console.error(`❌ ${task.name} sync failed:`, result.error);
+      }
+    } catch (err) {
+      stats.total++;
+      stats.failed++;
+      console.error(`❌ ${task.name} sync error:`, err);
+    }
+  }
+
+  stats.endTime = new Date();
+  stats.duration = stats.endTime.getTime() - stats.startTime.getTime();
+
+  console.log('✅ Full sync completed:', {
+    total: stats.total,
+    successful: stats.successful,
+    failed: stats.failed,
+    skipped: stats.skipped,
+    duration: `${(stats.duration / 1000).toFixed(2)}s`,
   });
 
-  const results: SyncResult[] = [];
-
-  // Sync customers
-  if (options.customers) {
-    results.push(await syncCustomers(options.customers));
-  }
-
-  // Sync products
-  if (options.products) {
-    results.push(await syncProducts(options.products));
-  }
-
-  // Sync BankPF records
-  if (options.bankPF) {
-    results.push(await syncBankPF(options.bankPF));
-  }
-
-  // Summary
-  const successCount = results.filter(r => r.success).length;
-  const failCount = results.filter(r => !r.success).length;
-  const totalRecords = results.reduce((sum, r) => sum + (r.count || 0), 0);
-
-  console.log('✅ Batch sync complete!');
-  console.log('📊 Summary:', {
-    operations: results.length,
-    successful: successCount,
-    failed: failCount,
-    totalRecords
-  });
-
-  if (failCount > 0) {
-    console.warn('⚠️ Some operations failed:');
-    results.filter(r => !r.success).forEach(r => {
-      console.warn(`   - ${r.type}: ${r.error}`);
-    });
-  }
-
-  return results;
+  return stats;
 }
 
 // ========================================
-// LEGACY SUPPORT (DEPRECATED)
+// LEGACY EXPORT (backwards compatibility)
 // ========================================
 
 /**
- * @deprecated Use syncAllData() instead
- * Legacy function for backwards compatibility
+ * @deprecated Use syncCustomers() instead
  */
 export function startAutoSync(customers: any[]) {
-  console.warn('⚠️ startAutoSync() is deprecated! Use syncAllData() instead');
-  
-  if (!customers || customers.length === 0) {
-    console.log('⏭️ Auto-sync skipped: No customers to sync');
-    return;
-  }
-  
-  console.log(`☁️ Auto-syncing ${customers.length} customers to Supabase...`);
-  
-  customerApi.create(customers)
-    .then(result => {
-      if (result.success) {
-        console.log(`✅ Auto-sync successful: ${result.count} customers synced to Supabase`);
-        console.log('💡 Tip: Check Supabase Dashboard > Table Editor > customers to verify data');
-      } else {
-        console.error(`❌ Auto-sync failed:`, result.error);
-        console.error('💡 Troubleshooting steps:');
-        console.error('   1. Check if /SUPABASE_CUSTOMERS_FIX.sql was run in Supabase Dashboard');
-        console.error('   2. Verify table exists: Go to Table Editor > public > customers');
-        console.error('   3. Check RLS policies: Go to Authentication > Policies');
-        console.error('   4. See /SUPABASE_CUSTOMERS_FIX_README.md for detailed guide');
-      }
-    })
-    .catch(err => {
-      console.error(`❌ Auto-sync error:`, err);
-      console.error('💡 This is likely a network error or Supabase is unreachable');
-    });
-}
-
-// ========================================
-// HELPER FUNCTIONS
-// ========================================
-
-/**
- * Check if data needs sync (compares localStorage with last sync timestamp)
- * @returns true if sync is needed, false otherwise
- */
-export function needsSync(dataType: string): boolean {
-  const lastSync = localStorage.getItem(`${dataType}_last_sync`);
-  if (!lastSync) return true;
-
-  const lastSyncTime = new Date(lastSync).getTime();
-  const now = Date.now();
-  const hoursSinceSync = (now - lastSyncTime) / (1000 * 60 * 60);
-
-  // Sync if more than 1 hour has passed
-  return hoursSinceSync > 1;
-}
-
-/**
- * Update last sync timestamp
- */
-export function updateSyncTimestamp(dataType: string): void {
-  localStorage.setItem(`${dataType}_last_sync`, new Date().toISOString());
-}
-
-/**
- * Get sync status for all data types
- */
-export function getSyncStatus(): Record<string, { lastSync: string | null; needsSync: boolean }> {
-  return {
-    customers: {
-      lastSync: localStorage.getItem('customers_last_sync'),
-      needsSync: needsSync('customers')
-    },
-    products: {
-      lastSync: localStorage.getItem('products_last_sync'),
-      needsSync: needsSync('products')
-    },
-    bankPF: {
-      lastSync: localStorage.getItem('bankPF_last_sync'),
-      needsSync: needsSync('bankPF')
-    }
-  };
+  syncCustomers(customers);
 }

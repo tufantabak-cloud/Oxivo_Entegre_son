@@ -37,6 +37,27 @@ import { migrateData, validateImportData } from './utils/dataMigration';
 import { syncToSupabase } from './utils/supabaseSync';
 import { syncAllData } from './utils/autoSync';
 
+// ✅ CRITICAL: Import Supabase API helpers
+import { 
+  customerApi, 
+  productApi, 
+  bankPFApi,
+  mccCodesApi,
+  banksApi,
+  epkListApi,
+  okListApi,
+  salesRepsApi,
+  jobTitlesApi,
+  partnershipsApi,
+  // ❌ DISABLED: These tables don't exist in Supabase
+  // accountItemsApi,
+  // fixedCommissionsApi,
+  // additionalRevenuesApi,
+  sharingApi,
+  kartProgramApi,
+  suspensionReasonApi
+} from './utils/supabaseClient';
+
 // ⚡ PHASE 3: Code Splitting - Lazy load heavy modules
 const CustomerModule = lazy(() => import('./components/CustomerModule').then(m => ({ default: m.CustomerModule })));
 const BankPFModule = lazy(() => import('./components/BankPFModule').then(m => ({ default: m.BankPFModule })));
@@ -84,13 +105,14 @@ const GlobalSearch = lazy(() => import('./components/GlobalSearch').then(m => ({
 const ActivityLogViewer = lazy(() => import('./components/ActivityLogViewer').then(m => ({ default: m.ActivityLogViewer })));
 import { useGlobalSearch } from './hooks/useGlobalSearch';
 import { logActivity } from './utils/activityLog';
-import { Home, Users, Building2, Settings, Package, FileText, CheckCircle, XCircle, Filter, Euro, Download, Upload, Search, Trash2, CreditCard, TrendingUp, BarChart3, PieChart, DollarSign, Target, Award, Activity } from 'lucide-react';
+import { Home, Users, Building2, Settings, Package, FileText, CheckCircle, XCircle, Filter, Euro, Download, Upload, Search, Trash2, CreditCard, TrendingUp, BarChart3, PieChart, DollarSign, Target, Award, Activity, Menu, X } from 'lucide-react';
 import { Toaster } from './components/ui/sonner';
 import { Button } from './components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './components/ui/sheet';
 import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card';
 import { Badge } from './components/ui/badge';
 import { Tooltip, TooltipTrigger, TooltipContent } from './components/ui/tooltip';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './components/ui/table';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
 import { Skeleton } from './components/ui/skeleton';
@@ -186,6 +208,7 @@ export default function App() {
   const [selectedBankPFId, setSelectedBankPFId] = useState<string | null>(null);
   const [isGlobalSearchOpen, setIsGlobalSearchOpen] = useState(false);
   const [isActivityLogOpen, setIsActivityLogOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // PHASE 2 OPTIMIZATION: useDefinitionStore hook
   // Consolidates 12 definition states into a single hook (reduces state declarations from 12 to 1)
@@ -213,11 +236,149 @@ export default function App() {
   const [payterProducts, setPayterProducts] = useState<PayterProduct[]>([]);
   const [bankPFRecords, setBankPFRecords] = useState<BankPF[]>([]);
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [supabaseDataLoaded, setSupabaseDataLoaded] = useState(false);
+  
+  // ✅ NEW: Fetch ALL data from Supabase on mount
+  useEffect(() => {
+    const fetchAllDataFromSupabase = async () => {
+      try {
+        logger.info('🔄 Fetching all data from Supabase...');
+        
+        // Fetch all entities in parallel
+        const [
+          customersResult,
+          productsResult,
+          bankPFResult,
+          mccCodesResult,
+          banksResult,
+          epkListResult,
+          okListResult,
+          salesRepsResult,
+          jobTitlesResult,
+          partnershipsResult,
+          // ❌ REMOVED: accountItemsResult, fixedCommissionsResult, additionalRevenuesResult
+          sharingResult,
+          kartProgramResult,
+          suspensionReasonResult
+        ] = await Promise.all([
+          customerApi.getAll(),
+          productApi.getAll(),
+          bankPFApi.getAll(),
+          mccCodesApi.getAll(),
+          banksApi.getAll(),
+          epkListApi.getAll(),
+          okListApi.getAll(),
+          salesRepsApi.getAll(),
+          jobTitlesApi.getAll(),
+          partnershipsApi.getAll(),
+          // ❌ REMOVED: accountItemsApi.getAll(), fixedCommissionsApi.getAll(), additionalRevenuesApi.getAll()
+          sharingApi.getAll(),
+          kartProgramApi.getAll(),
+          suspensionReasonApi.getAll()
+        ]);
+        
+        // Update state with fetched data
+        if (customersResult.success && customersResult.data) {
+          setCustomers(customersResult.data);
+          logger.info(`✅ Loaded ${customersResult.data.length} customers from Supabase`);
+        }
+        
+        if (productsResult.success && productsResult.data) {
+          setPayterProducts(productsResult.data);
+          logger.info(`✅ Loaded ${productsResult.data.length} products from Supabase`);
+        }
+        
+        if (bankPFResult.success && bankPFResult.data) {
+          setBankPFRecords(bankPFResult.data);
+          logger.info(`✅ Loaded ${bankPFResult.data.length} bankPF records from Supabase`);
+        }
+        
+        if (mccCodesResult.success && mccCodesResult.data) {
+          setMCCList(mccCodesResult.data);
+          logger.info(`✅ Loaded ${mccCodesResult.data.length} MCC codes from Supabase`);
+        }
+        
+        if (banksResult.success && banksResult.data) {
+          setBanks(banksResult.data);
+          logger.info(`✅ Loaded ${banksResult.data.length} banks from Supabase`);
+        }
+        
+        if (epkListResult.success && epkListResult.data) {
+          setEPKList(epkListResult.data);
+          logger.info(`✅ Loaded ${epkListResult.data.length} EPK entries from Supabase`);
+        }
+        
+        if (okListResult.success && okListResult.data) {
+          setOKList(okListResult.data);
+          logger.info(`✅ Loaded ${okListResult.data.length} OK entries from Supabase`);
+        }
+        
+        if (salesRepsResult.success && salesRepsResult.data) {
+          setSalesReps(salesRepsResult.data);
+          logger.info(`✅ Loaded ${salesRepsResult.data.length} sales reps from Supabase`);
+        }
+        
+        if (jobTitlesResult.success && jobTitlesResult.data) {
+          setJobTitles(jobTitlesResult.data);
+          logger.info(`✅ Loaded ${jobTitlesResult.data.length} job titles from Supabase`);
+        }
+        
+        if (partnershipsResult.success && partnershipsResult.data) {
+          setPartnerships(partnershipsResult.data);
+          logger.info(`✅ Loaded ${partnershipsResult.data.length} partnerships from Supabase`);
+        }
+        
+        // ❌ REMOVED: accountItemsResult, fixedCommissionsResult, additionalRevenuesResult handling
+        // These tables don't exist in Supabase
+        
+        if (sharingResult.success && sharingResult.data) {
+          setSharings(sharingResult.data);
+          logger.info(`✅ Loaded ${sharingResult.data.length} sharing records from Supabase`);
+        }
+        
+        if (kartProgramResult.success && kartProgramResult.data) {
+          setKartProgramlar(kartProgramResult.data);
+          logger.info(`✅ Loaded ${kartProgramResult.data.length} kart program records from Supabase`);
+        }
+        
+        if (suspensionReasonResult.success && suspensionReasonResult.data) {
+          setSuspensionReasons(suspensionReasonResult.data);
+          logger.info(`✅ Loaded ${suspensionReasonResult.data.length} suspension reason records from Supabase`);
+        }
+        
+        setSupabaseDataLoaded(true);
+        logger.info('✅ All Supabase data loaded successfully');
+        
+      } catch (error) {
+        logger.error('❌ Error fetching data from Supabase:', error);
+        // Fallback to localStorage if Supabase fails
+        setSupabaseDataLoaded(true);
+      }
+    };
+    
+    fetchAllDataFromSupabase();
+  }, []);
   
   // ⚡ Load data AFTER first paint (defer heavy localStorage reads)
+  // NOTE: This now serves as a FALLBACK if Supabase has no data
   useEffect(() => {
+    // Only load from localStorage if Supabase data is loaded but empty
+    if (!supabaseDataLoaded) return;
+    
     // Use requestIdleCallback for better performance
     const loadDataAsync = () => {
+      // ✅ SKIP LOCALSTORAGE IF SUPABASE HAS DATA
+      const hasSupabaseData = customers.length > 0 || payterProducts.length > 0 || bankPFRecords.length > 0;
+      
+      if (hasSupabaseData) {
+        logger.info('✅ Supabase data already loaded, skipping localStorage');
+        setDataLoaded(true);
+        return;
+      }
+      
+      // ⚠️ FALLBACK: Only load from localStorage if Supabase returned no data
+      logger.warn('⚠️ No Supabase data found, loading from localStorage as fallback');
+      
       const storedCustomers = getStoredData<Customer[]>('customers', []);
       // ✅ CRITICAL FIX: Extra null/undefined check before .map()
       const processedCustomers = (Array.isArray(storedCustomers) ? storedCustomers : []).map(c => ({
@@ -225,7 +386,7 @@ export default function App() {
         linkedBankPFIds: c.linkedBankPFIds || []
       }));
       
-      logger.debug('Customers yüklendi', {
+      logger.debug('Customers yüklendi (localStorage fallback)', {
         total: processedCustomers.length,
         withBankPF: processedCustomers.filter(c => c.linkedBankPFIds && c.linkedBankPFIds.length > 0).length,
         withoutBankPF: processedCustomers.filter(c => !c.linkedBankPFIds || c.linkedBankPFIds.length === 0).length
@@ -327,7 +488,7 @@ export default function App() {
     
     // Use setTimeout to defer execution (requestIdleCallback alternative)
     setTimeout(loadDataAsync, 0);
-  }, []);
+  }, [supabaseDataLoaded, customers, payterProducts, bankPFRecords]);
 
   // Save to localStorage whenever state changes (only after initial load)
   // Note: Definition states (jobTitles, mccList, etc.) are auto-saved by useDefinitionStore hook
@@ -361,18 +522,62 @@ export default function App() {
       logger.debug('🔄 Auto-syncing all data to Supabase...', {
         customers: customers.length,
         products: payterProducts.length,
-        bankPF: bankPFRecords.length
+        bankPF: bankPFRecords.length,
+        mccCodes: mccList.length,
+        banks: banks.length,
+        epkList: epkList.length,
+        okList: okList.length,
+        salesReps: salesReps.length,
+        jobTitles: jobTitles.length,
+        partnerships: partnerships.length,
+        accountItems: hesapKalemleri.length,
+        fixedCommissions: sabitKomisyonlar.length,
+        additionalRevenues: ekGelirler.length,
+        sharing: sharings.length,
+        kartProgram: kartProgramlar.length,
+        suspensionReason: suspensionReasons.length
       });
       
       syncAllData({
         customers,
         products: payterProducts,
-        bankPF: bankPFRecords
+        bankPF: bankPFRecords,
+        mccCodes: mccList,
+        banks: banks,
+        epkList: epkList,
+        okList: okList,
+        salesReps: salesReps,
+        jobTitles: jobTitles,
+        partnerships: partnerships,
+        accountItems: hesapKalemleri,
+        fixedCommissions: sabitKomisyonlar,
+        additionalRevenues: ekGelirler,
+        sharing: sharings,
+        kartProgram: kartProgramlar,
+        suspensionReason: suspensionReasons
       });
     }, 2000);
 
     return () => clearTimeout(syncTimer);
-  }, [customers, payterProducts, bankPFRecords, dataLoaded]);
+  }, [
+    customers, 
+    payterProducts, 
+    bankPFRecords, 
+    mccList,
+    banks,
+    epkList,
+    okList,
+    salesReps,
+    jobTitles,
+    partnerships,
+    hesapKalemleri,
+    sabitKomisyonlar,
+    ekGelirler,
+    sharings,
+    kartProgramlar,
+    suspensionReasons,
+    dataLoaded
+  ]);
 
   // Debug: Veri durumu izleme (Ana Sayfa analizi için)
   useEffect(() => {
@@ -1096,42 +1301,154 @@ export default function App() {
     <div className="min-h-screen bg-gray-50">
       {/* Header - Single Row */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
-        <div className="max-w-[1400px] mx-auto px-6 lg:px-8">
+        <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
           <div className="flex items-center justify-between h-14 gap-4">
-            <div className="flex items-center gap-3 flex-shrink-0">
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {/* Mobile Menu Button */}
+              <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="lg:hidden p-2 h-9 w-9 border-blue-200 hover:bg-blue-50 hover:border-blue-300"
+                    aria-label="Menüyü Aç"
+                  >
+                    <Menu size={20} className="text-blue-600" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[280px] sm:w-[320px]">
+                  <SheetHeader>
+                    <SheetTitle className="flex items-center gap-2">
+                      <span className="font-bold text-blue-600">Oxivo</span>
+                      <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-1 rounded-md">
+                        v{CURRENT_APP_VERSION}
+                      </span>
+                    </SheetTitle>
+                  </SheetHeader>
+                  <nav className="flex flex-col gap-2 mt-6">
+                    <button
+                      onClick={() => {
+                        setActiveModule('home');
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all text-[14px] ${
+                        activeModule === 'home'
+                          ? 'bg-blue-600 text-white shadow-md'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Home size={18} />
+                      <span>Ana Sayfa</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActiveModule('reports');
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all text-[14px] ${
+                        activeModule === 'reports'
+                          ? 'bg-blue-600 text-white shadow-md'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <FileText size={18} />
+                      <span>Rapor</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActiveModule('customers');
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all text-[14px] ${
+                        activeModule === 'customers'
+                          ? 'bg-blue-600 text-white shadow-md'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Users size={18} />
+                      <span>Müşteriler</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActiveModule('bankpf');
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all text-[14px] ${
+                        activeModule === 'bankpf'
+                          ? 'bg-blue-600 text-white shadow-md'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Building2 size={18} />
+                      <span>Banka/PF</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActiveModule('products');
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all text-[14px] ${
+                        activeModule === 'products'
+                          ? 'bg-blue-600 text-white shadow-md'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Package size={18} />
+                      <span>Ürün</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActiveModule('revenue');
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all text-[14px] ${
+                        activeModule === 'revenue'
+                          ? 'bg-blue-600 text-white shadow-md'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Euro size={18} />
+                      <span>Gelir</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActiveModule('definitions');
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all text-[14px] ${
+                        activeModule === 'definitions'
+                          ? 'bg-blue-600 text-white shadow-md'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Settings size={18} />
+                      <span>Tanımlar</span>
+                    </button>
+                  </nav>
+                </SheetContent>
+              </Sheet>
+
               <div className="flex items-center gap-2">
                 <h1 className="font-bold text-blue-600 text-[15px]">Oxivo</h1>
-                <span className="text-[8px] bg-blue-100 text-blue-700 px-2 py-1.5 rounded-md font-medium">
+                <span className="text-[8px] bg-blue-100 text-blue-700 px-2 py-1.5 rounded-md font-medium hidden sm:block">
                   v{CURRENT_APP_VERSION}
                 </span>
               </div>
               
-              {/* Global Search Button - Hidden */}
-              {false && <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsGlobalSearchOpen(true)}
-                className="gap-2 h-8 text-xs hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
-              >
-                <Search size={14} />
-                <span>Ara</span>
-                <kbd className="hidden sm:inline-block px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded text-[10px]">
-                  Ctrl+K
-                </kbd>
-              </Button>}
-
-              {/* Activity Log Button */}
+              {/* Activity Log Button - Desktop Only */}
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setIsActivityLogOpen(true)}
-                className="gap-2 h-8 text-xs hover:bg-purple-50 hover:text-purple-600 hover:border-purple-300"
+                className="gap-2 h-8 text-xs hover:bg-purple-50 hover:text-purple-600 hover:border-purple-300 hidden sm:flex"
               >
                 <Activity size={14} />
-                <span className="hidden sm:inline">Aktivite</span>
+                <span className="hidden md:inline">Aktivite</span>
               </Button>
             </div>
-            <nav className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
+            
+            {/* Desktop Navigation - Hidden on Mobile */}
+            <nav className="hidden lg:flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
               <button
                 onClick={() => setActiveModule('home')}
                 className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-[13px] ${
@@ -1215,7 +1532,7 @@ export default function App() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-[1400px] mx-auto px-6 lg:px-8 py-10">
+      <main className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
         {dataLoaded && activeModule === 'home' && (() => {
           // MÜŞTERİ ANALİZİ
           const sektorStats = customers.reduce((acc, customer) => {
