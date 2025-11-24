@@ -887,6 +887,7 @@ export function BankPFDetail({
                       value={formData.bankaOrPF}
                       onValueChange={(value: 'Banka' | 'PF') => {
                         handleChange('bankaOrPF', value);
+                        setIsBankaOrPFDropdownOpen(false);
                         // Reset related fields when changing type
                         if (value === 'Banka') {
                           handleChange('odemeKurulusuTipi', '');
@@ -897,7 +898,15 @@ export function BankPFDetail({
                       open={isBankaOrPFDropdownOpen}
                       onOpenChange={setIsBankaOrPFDropdownOpen}
                     >
-                      <SelectTrigger id="bankaOrPF" className={!isEditing ? 'bg-gray-100' : ''}>
+                      <SelectTrigger 
+                        id="bankaOrPF" 
+                        onClick={() => isEditing && setIsBankaOrPFDropdownOpen(!isBankaOrPFDropdownOpen)}
+                        className={`${!isEditing ? 'bg-gray-100' : ''} ${
+                          isEditing && isBankaOrPFDropdownOpen 
+                            ? 'ring-2 ring-blue-500 border-blue-500' 
+                            : ''
+                        }`}
+                      >
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -911,12 +920,23 @@ export function BankPFDetail({
                     <Label htmlFor="bankaPFAd" className="text-xs sm:text-sm">Banka / PF Adı *</Label>
                     <Select
                       value={formData.bankaPFAd}
-                      onValueChange={(value) => handleChange('bankaPFAd', value)}
+                      onValueChange={(value) => {
+                        handleChange('bankaPFAd', value);
+                        setIsBankaPFAdDropdownOpen(false);
+                      }}
                       disabled={!isEditing}
                       open={isBankaPFAdDropdownOpen}
                       onOpenChange={setIsBankaPFAdDropdownOpen}
                     >
-                      <SelectTrigger id="bankaPFAd" className={!isEditing ? 'bg-gray-100' : ''}>
+                      <SelectTrigger 
+                        id="bankaPFAd" 
+                        onClick={() => isEditing && setIsBankaPFAdDropdownOpen(!isBankaPFAdDropdownOpen)}
+                        className={`${!isEditing ? 'bg-gray-100' : ''} ${
+                          isEditing && isBankaPFAdDropdownOpen 
+                            ? 'ring-2 ring-blue-500 border-blue-500' 
+                            : ''
+                        }`}
+                      >
                         <SelectValue placeholder="Seçiniz..." />
                       </SelectTrigger>
                       <SelectContent>
@@ -938,12 +958,21 @@ export function BankPFDetail({
                           onValueChange={(value) => {
                             handleChange('odemeKurulusuTipi', value);
                             handleChange('odemeKurulusuAd', '');
+                            setIsOdemeKurulusuTipiDropdownOpen(false);
                           }}
                           disabled={!isEditing}
                           open={isOdemeKurulusuTipiDropdownOpen}
                           onOpenChange={setIsOdemeKurulusuTipiDropdownOpen}
                         >
-                          <SelectTrigger id="odemeKurulusuTipi" className={!isEditing ? 'bg-gray-100' : ''}>
+                          <SelectTrigger 
+                            id="odemeKurulusuTipi" 
+                            onClick={() => isEditing && setIsOdemeKurulusuTipiDropdownOpen(!isOdemeKurulusuTipiDropdownOpen)}
+                            className={`${!isEditing ? 'bg-gray-100' : ''} ${
+                              isEditing && isOdemeKurulusuTipiDropdownOpen 
+                                ? 'ring-2 ring-blue-500 border-blue-500' 
+                                : ''
+                            }`}
+                          >
                             <SelectValue placeholder="Seçiniz..." />
                           </SelectTrigger>
                           <SelectContent>
@@ -960,12 +989,23 @@ export function BankPFDetail({
                           </Label>
                           <Select
                             value={formData.odemeKurulusuAd}
-                            onValueChange={(value) => handleChange('odemeKurulusuAd', value)}
+                            onValueChange={(value) => {
+                              handleChange('odemeKurulusuAd', value);
+                              setIsOdemeKurulusuAdDropdownOpen(false);
+                            }}
                             disabled={!isEditing}
                             open={isOdemeKurulusuAdDropdownOpen}
                             onOpenChange={setIsOdemeKurulusuAdDropdownOpen}
                           >
-                            <SelectTrigger id="odemeKurulusuAd" className={!isEditing ? 'bg-gray-100' : ''}>
+                            <SelectTrigger 
+                              id="odemeKurulusuAd" 
+                              onClick={() => isEditing && setIsOdemeKurulusuAdDropdownOpen(!isOdemeKurulusuAdDropdownOpen)}
+                              className={`${!isEditing ? 'bg-gray-100' : ''} ${
+                                isEditing && isOdemeKurulusuAdDropdownOpen 
+                                  ? 'ring-2 ring-blue-500 border-blue-500' 
+                                  : ''
+                              }`}
+                            >
                               <SelectValue placeholder="Seçiniz..." />
                             </SelectTrigger>
                             <SelectContent>

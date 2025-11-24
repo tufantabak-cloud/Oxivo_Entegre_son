@@ -104,6 +104,11 @@ export const PriceListTab = React.memo(function PriceListTab({
     applyToAll: false,
     selectedCustomerIds: []
   });
+  
+  // Dropdown states for controlled components
+  const [isChangeReasonDropdownOpen, setIsChangeReasonDropdownOpen] = useState(false);
+  const [isPaymentTypeDropdownOpen, setIsPaymentTypeDropdownOpen] = useState(false);
+  const [isBulkUpdateTypeDropdownOpen, setIsBulkUpdateTypeDropdownOpen] = useState(false);
 
   // Müşteri fiyat verilerini hazırla
   const customerPriceData = useMemo(() => {
@@ -604,9 +609,21 @@ export const PriceListTab = React.memo(function PriceListTab({
               <Label>Değişiklik Sebebi *</Label>
               <Select
                 value={priceUpdateForm.changeReason}
-                onValueChange={(value) => setPriceUpdateForm({ ...priceUpdateForm, changeReason: value })}
+                onValueChange={(value) => {
+                  setPriceUpdateForm({ ...priceUpdateForm, changeReason: value });
+                  setIsChangeReasonDropdownOpen(false);
+                }}
+                open={isChangeReasonDropdownOpen}
+                onOpenChange={setIsChangeReasonDropdownOpen}
               >
-                <SelectTrigger>
+                <SelectTrigger
+                  onClick={() => setIsChangeReasonDropdownOpen(!isChangeReasonDropdownOpen)}
+                  className={`bg-white transition-all ${
+                    isChangeReasonDropdownOpen 
+                      ? 'ring-2 ring-blue-500 border-blue-500' 
+                      : 'hover:border-gray-400'
+                  }`}
+                >
                   <SelectValue placeholder="Sebep seçin" />
                 </SelectTrigger>
                 <SelectContent>
@@ -642,9 +659,21 @@ export const PriceListTab = React.memo(function PriceListTab({
                 <Label>Yeni Ödeme Tipi</Label>
                 <Select
                   value={priceUpdateForm.newPaymentType}
-                  onValueChange={(value: 'monthly' | 'yearly') => setPriceUpdateForm({ ...priceUpdateForm, newPaymentType: value })}
+                  onValueChange={(value: 'monthly' | 'yearly') => {
+                    setPriceUpdateForm({ ...priceUpdateForm, newPaymentType: value });
+                    setIsPaymentTypeDropdownOpen(false);
+                  }}
+                  open={isPaymentTypeDropdownOpen}
+                  onOpenChange={setIsPaymentTypeDropdownOpen}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger
+                    onClick={() => setIsPaymentTypeDropdownOpen(!isPaymentTypeDropdownOpen)}
+                    className={`bg-white transition-all ${
+                      isPaymentTypeDropdownOpen 
+                        ? 'ring-2 ring-blue-500 border-blue-500' 
+                        : 'hover:border-gray-400'
+                    }`}
+                  >
                     <SelectValue placeholder="Ödeme tipi seçin" />
                   </SelectTrigger>
                   <SelectContent>
@@ -703,9 +732,21 @@ export const PriceListTab = React.memo(function PriceListTab({
               <Label>Güncelleme Tipi</Label>
               <Select
                 value={bulkUpdateForm.updateType}
-                onValueChange={(value: 'percentage' | 'fixed') => setBulkUpdateForm({ ...bulkUpdateForm, updateType: value })}
+                onValueChange={(value: 'percentage' | 'fixed') => {
+                  setBulkUpdateForm({ ...bulkUpdateForm, updateType: value });
+                  setIsBulkUpdateTypeDropdownOpen(false);
+                }}
+                open={isBulkUpdateTypeDropdownOpen}
+                onOpenChange={setIsBulkUpdateTypeDropdownOpen}
               >
-                <SelectTrigger>
+                <SelectTrigger
+                  onClick={() => setIsBulkUpdateTypeDropdownOpen(!isBulkUpdateTypeDropdownOpen)}
+                  className={`bg-white transition-all ${
+                    isBulkUpdateTypeDropdownOpen 
+                      ? 'ring-2 ring-blue-500 border-blue-500' 
+                      : 'hover:border-gray-400'
+                  }`}
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

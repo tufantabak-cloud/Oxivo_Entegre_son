@@ -59,6 +59,10 @@ export function PartnershipTab({ partnerships, onPartnershipsChange }: Partnersh
   const [isRowFormOpen, setIsRowFormOpen] = useState(false);
   const [deletingPartnership, setDeletingPartnership] = useState<Partnership | null>(null);
   const [currentRow, setCurrentRow] = useState<PartnershipCalculationRow | null>(null);
+  
+  // Dropdown states for controlled components
+  const [isKullanimDropdownOpen, setIsKullanimDropdownOpen] = useState(false);
+  const [isKartTipiDropdownOpen, setIsKartTipiDropdownOpen] = useState(false);
 
   const filteredPartnerships = partnerships.filter(
     (p) =>
@@ -265,9 +269,21 @@ export function PartnershipTab({ partnerships, onPartnershipsChange }: Partnersh
                   <Label>Kullanım</Label>
                   <Select
                     value={currentRow.kullanim}
-                    onValueChange={(value) => handleRowFieldChange('kullanim', value)}
+                    onValueChange={(value) => {
+                      handleRowFieldChange('kullanim', value);
+                      setIsKullanimDropdownOpen(false);
+                    }}
+                    open={isKullanimDropdownOpen}
+                    onOpenChange={setIsKullanimDropdownOpen}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger
+                      onClick={() => setIsKullanimDropdownOpen(!isKullanimDropdownOpen)}
+                      className={`bg-white transition-all ${
+                        isKullanimDropdownOpen 
+                          ? 'ring-2 ring-blue-500 border-blue-500' 
+                          : 'hover:border-gray-400'
+                      }`}
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -282,9 +298,21 @@ export function PartnershipTab({ partnerships, onPartnershipsChange }: Partnersh
                   <Label>Kart Tipi</Label>
                   <Select
                     value={currentRow.kartTipi}
-                    onValueChange={(value) => handleRowFieldChange('kartTipi', value)}
+                    onValueChange={(value) => {
+                      handleRowFieldChange('kartTipi', value);
+                      setIsKartTipiDropdownOpen(false);
+                    }}
+                    open={isKartTipiDropdownOpen}
+                    onOpenChange={setIsKartTipiDropdownOpen}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger
+                      onClick={() => setIsKartTipiDropdownOpen(!isKartTipiDropdownOpen)}
+                      className={`bg-white transition-all ${
+                        isKartTipiDropdownOpen 
+                          ? 'ring-2 ring-blue-500 border-blue-500' 
+                          : 'hover:border-gray-400'
+                      }`}
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

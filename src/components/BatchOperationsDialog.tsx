@@ -136,6 +136,10 @@ export function BatchOperationsDialog({
   const [assignedUser, setAssignedUser] = useState('');
   const [groupName, setGroupName] = useState('');
   
+  // Dropdown states for controlled components
+  const [isSalesRepDropdownOpen, setIsSalesRepDropdownOpen] = useState(false);
+  const [isPaymentTypeDropdownOpen, setIsPaymentTypeDropdownOpen] = useState(false);
+  
   // Hizmet Bedeli state'leri
   const [paymentType, setPaymentType] = useState<'monthly' | 'yearly'>('monthly');
   const [standardFee, setStandardFee] = useState<number>(10);
@@ -715,10 +719,22 @@ export function BatchOperationsDialog({
                       <Label htmlFor="salesrep">Satış Temsilcisi</Label>
                       <Select
                         value={selectedSalesRepId}
-                        onValueChange={setSelectedSalesRepId}
+                        onValueChange={(value) => {
+                          setSelectedSalesRepId(value);
+                          setIsSalesRepDropdownOpen(false);
+                        }}
                         disabled={isProcessing}
+                        open={isSalesRepDropdownOpen}
+                        onOpenChange={setIsSalesRepDropdownOpen}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger
+                          onClick={() => !isProcessing && setIsSalesRepDropdownOpen(!isSalesRepDropdownOpen)}
+                          className={`bg-white transition-all ${
+                            !isProcessing && isSalesRepDropdownOpen 
+                              ? 'ring-2 ring-blue-500 border-blue-500' 
+                              : 'hover:border-gray-400'
+                          }`}
+                        >
                           <SelectValue placeholder="Satış temsilcisi seçin" />
                         </SelectTrigger>
                         <SelectContent>
@@ -989,10 +1005,22 @@ export function BatchOperationsDialog({
                       <Label htmlFor="paymentType">Ödeme Tipi</Label>
                       <Select
                         value={paymentType}
-                        onValueChange={(v: 'monthly' | 'yearly') => setPaymentType(v)}
+                        onValueChange={(v: 'monthly' | 'yearly') => {
+                          setPaymentType(v);
+                          setIsPaymentTypeDropdownOpen(false);
+                        }}
                         disabled={isProcessing}
+                        open={isPaymentTypeDropdownOpen}
+                        onOpenChange={setIsPaymentTypeDropdownOpen}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger
+                          onClick={() => !isProcessing && setIsPaymentTypeDropdownOpen(!isPaymentTypeDropdownOpen)}
+                          className={`bg-white transition-all ${
+                            !isProcessing && isPaymentTypeDropdownOpen 
+                              ? 'ring-2 ring-blue-500 border-blue-500' 
+                              : 'hover:border-gray-400'
+                          }`}
+                        >
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>

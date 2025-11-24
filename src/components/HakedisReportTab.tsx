@@ -1,6 +1,15 @@
+import { useState, useMemo } from 'react';
 import { BankPF, HakedisRecord } from './BankPFModule';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { toast } from 'sonner';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './ui/table';
+import { Input } from './ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { FilterDropdown, FilterOption } from './FilterDropdown';
+import { Calendar, Calculator, Building2, DollarSign, TrendingUp, PieChart, Filter, FileDown, X } from 'lucide-react';
 
 interface HakedisReportTabProps {
   bankPFRecords: BankPF[];
@@ -32,6 +41,9 @@ export function HakedisReportTab({ bankPFRecords }: HakedisReportTabProps) {
   const [tableDurumFilter, setTableDurumFilter] = useState<string>('all');
   const [tableTarihBaslangic, setTableTarihBaslangic] = useState<string>('');
   const [tableTarihBitis, setTableTarihBitis] = useState<string>('');
+  
+  // Dropdown state for controlled component
+  const [isDurumDropdownOpen, setIsDurumDropdownOpen] = useState(false);
 
   // Tüm hakediş kayıtlarını topla ve PF bilgisiyle birleştir
   const allHakedisRecords = useMemo(() => {
@@ -860,8 +872,23 @@ export function HakedisReportTab({ bankPFRecords }: HakedisReportTabProps) {
                       </div>
                     </TableHead>
                     <TableHead className="p-2">
-                      <Select value={tableDurumFilter} onValueChange={setTableDurumFilter}>
-                        <SelectTrigger className="h-8 text-xs">
+                      <Select 
+                        value={tableDurumFilter} 
+                        onValueChange={(value) => {
+                          setTableDurumFilter(value);
+                          setIsDurumDropdownOpen(false);
+                        }}
+                        open={isDurumDropdownOpen}
+                        onOpenChange={setIsDurumDropdownOpen}
+                      >
+                        <SelectTrigger 
+                          className={`h-8 text-xs bg-white transition-all ${
+                            isDurumDropdownOpen 
+                              ? 'ring-2 ring-blue-500 border-blue-500' 
+                              : 'hover:border-gray-400'
+                          }`}
+                          onClick={() => setIsDurumDropdownOpen(!isDurumDropdownOpen)}
+                        >
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
