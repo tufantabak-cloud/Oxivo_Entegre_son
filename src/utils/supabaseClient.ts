@@ -51,6 +51,7 @@ function toCamelCase(str: string): string {
 
 /**
  * Object'in tüm key'lerini camelCase'den snake_case'e çevirir
+ * JSONB fields: Arrays and nested objects are properly handled
  */
 export function objectToSnakeCase(obj: any): any {
   if (obj === null || obj === undefined) return obj;
@@ -60,9 +61,13 @@ export function objectToSnakeCase(obj: any): any {
   const converted: any = {};
   for (const [key, value] of Object.entries(obj)) {
     const snakeKey = toSnakeCase(key);
-    converted[snakeKey] = (value && typeof value === 'object') 
-      ? objectToSnakeCase(value) 
-      : value;
+    
+    // ✅ FIX: Handle arrays and nested objects recursively
+    if (value && typeof value === 'object') {
+      converted[snakeKey] = objectToSnakeCase(value);
+    } else {
+      converted[snakeKey] = value;
+    }
   }
   return converted;
 }
@@ -232,16 +237,33 @@ export const customerApi = {
   async create(customers: any | any[]) {
     console.log('📤 Creating customers in Supabase...');
     
-    // Convert to array and snake_case
-    const records = Array.isArray(customers) 
-      ? customers.map(objectToSnakeCase) 
-      : [objectToSnakeCase(customers)];
+    // Convert to array
+    const customerArray = Array.isArray(customers) ? customers : [customers];
+    
+    // ✅ ADD TIMESTAMPS: Enrich each customer with createdAt/updatedAt if missing
+    const enrichedCustomers = customerArray.map(customer => {
+      const now = new Date().toISOString();
+      return {
+        ...customer,
+        createdAt: customer.createdAt || now,
+        updatedAt: now,
+      };
+    });
+    
+    // Convert to snake_case
+    const records = enrichedCustomers.map(objectToSnakeCase);
     
     console.log(`📤 Converting ${records.length} customers to snake_case...`);
     
     // Debug: Log first record's keys to verify conversion
     if (records.length > 0) {
       console.log('🔍 Sample record keys (snake_case):', Object.keys(records[0]).slice(0, 10).join(', '));
+      
+      // 🔍 DEBUG: Log a sample record with device subscriptions (if exists)
+      const sampleWithDevices = records.find(r => r.service_fee_settings?.device_subscriptions?.length > 0);
+      if (sampleWithDevices) {
+        console.log('🔍 Sample deviceSubscription:', JSON.stringify(sampleWithDevices.service_fee_settings?.device_subscriptions?.[0], null, 2));
+      }
     }
     
     // ✅ UPSERT: Insert new records or update existing ones (based on 'id')
@@ -259,11 +281,18 @@ export const customerApi = {
         hint: error.hint,
       });
       
+      // 🔍 DEBUG: Log problematic record
+      if (records.length > 0) {
+        console.error('🔍 First record causing error:', JSON.stringify(records[0], null, 2));
+      }
+      
       // Extra debugging for common errors
       if (error.code === 'PGRST204') {
         console.error('💡 Table not found! Run /SUPABASE_CUSTOMERS_FIX.sql in Supabase Dashboard');
       } else if (error.code === '42703') {
         console.error('💡 Column mismatch! Check that table schema matches Customer interface');
+      } else if (error.code === '22P02') {
+        console.error('💡 Invalid JSON syntax! Check JSONB fields (bankDeviceAssignments, serviceFeeSettings, etc.)');
       }
       
       return { success: false, error: error.message };
@@ -341,10 +370,21 @@ export const productApi = {
   async create(products: any | any[]) {
     console.log('📤 Creating products in Supabase...');
     
-    // Convert to array and snake_case
-    const records = Array.isArray(products) 
-      ? products.map(objectToSnakeCase) 
-      : [objectToSnakeCase(products)];
+    // Convert to array
+    const productArray = Array.isArray(products) ? products : [products];
+    
+    // ✅ ADD TIMESTAMPS: Enrich each product with createdAt/updatedAt if missing
+    const enrichedProducts = productArray.map(product => {
+      const now = new Date().toISOString();
+      return {
+        ...product,
+        createdAt: product.createdAt || now,
+        updatedAt: now,
+      };
+    });
+    
+    // Convert to snake_case
+    const records = enrichedProducts.map(objectToSnakeCase);
     
     console.log(`📤 Converting ${records.length} products to snake_case...`);
     
@@ -406,10 +446,21 @@ export const bankPFApi = {
   async create(records: any | any[]) {
     console.log('📤 Creating bankPF records in Supabase...');
     
-    // Convert to array and snake_case
-    const items = Array.isArray(records) 
-      ? records.map(objectToSnakeCase)
-      : [objectToSnakeCase(records)];
+    // Convert to array
+    const recordArray = Array.isArray(records) ? records : [records];
+    
+    // ✅ ADD TIMESTAMPS: Enrich each record with createdAt/updatedAt if missing
+    const enrichedRecords = recordArray.map(record => {
+      const now = new Date().toISOString();
+      return {
+        ...record,
+        createdAt: record.createdAt || now,
+        updatedAt: now,
+      };
+    });
+    
+    // Convert to snake_case
+    const items = enrichedRecords.map(objectToSnakeCase);
     
     console.log(`📤 Converting ${items.length} bankPF records to snake_case...`);
     
