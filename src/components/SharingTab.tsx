@@ -17,6 +17,7 @@ import {
   diagnosticAndRepair,
   getSharingsReport 
 } from '../utils/sharingsRecovery';
+import { sharingApi } from '../utils/supabaseClient';
 
 export interface Sharing {
   id: string;
@@ -150,12 +151,20 @@ export function SharingTab({ sharings, onSharingsChange }: SharingTabProps) {
     setEditingSharing(null);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (deletingSharing) {
-      // ✅ SAFETY: Use safeSharings
-      const updatedList = safeSharings.filter((s) => s.id !== deletingSharing.id);
-      onSharingsChange(updatedList);
-      toast.success('Paylaşım modeli başarıyla silindi');
+      // ✅ Supabase'den sil
+      const result = await sharingApi.delete(deletingSharing.id);
+      
+      if (result.success) {
+        // Frontend state'ini güncelle
+        const updatedList = safeSharings.filter((s) => s.id !== deletingSharing.id);
+        onSharingsChange(updatedList);
+        toast.success('Paylaşım modeli başarıyla silindi');
+      } else {
+        toast.error(`Silme hatası: ${result.error}`);
+      }
+      
       setIsDeleteDialogOpen(false);
       setDeletingSharing(null);
     }

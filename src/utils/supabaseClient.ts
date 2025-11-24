@@ -675,6 +675,23 @@ export const mccCodesApi = {
     console.log(`✅ Upserted ${data.length} MCC codes in Supabase`);
     return { success: true, data: data.map(objectToCamelCase), count: data.length };
   },
+
+  async delete(id: string) {
+    console.log(`🗑️ Deleting MCC code ${id} from Supabase...`);
+    
+    const { error } = await supabase
+      .from('mcc_codes')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('❌ Error deleting MCC code:', error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`✅ Deleted MCC code ${id} from Supabase`);
+    return { success: true };
+  },
 };
 
 // ========================================
@@ -753,6 +770,23 @@ export const banksApi = {
       return camelItem;
     });
     return { success: true, data: mappedData, count: data.length };
+  },
+
+  async delete(id: string) {
+    console.log(`🗑️ Deleting bank ${id} from Supabase...`);
+    
+    const { error } = await supabase
+      .from('banks')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('❌ Error deleting bank:', error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`✅ Deleted bank ${id} from Supabase`);
+    return { success: true };
   },
 };
 
@@ -833,6 +867,23 @@ export const epkListApi = {
     });
     return { success: true, data: mappedData, count: data.length };
   },
+
+  async delete(id: string) {
+    console.log(`🗑️ Deleting EPK entry ${id} from Supabase...`);
+    
+    const { error } = await supabase
+      .from('epk_institutions')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('❌ Error deleting EPK entry:', error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`✅ Deleted EPK entry ${id} from Supabase`);
+    return { success: true };
+  },
 };
 
 // ========================================
@@ -911,6 +962,23 @@ export const okListApi = {
       return camelItem;
     });
     return { success: true, data: mappedData, count: data.length };
+  },
+
+  async delete(id: string) {
+    console.log(`🗑️ Deleting OK entry ${id} from Supabase...`);
+    
+    const { error } = await supabase
+      .from('ok_institutions')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('❌ Error deleting OK entry:', error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`✅ Deleted OK entry ${id} from Supabase`);
+    return { success: true };
   },
 };
 
@@ -1062,6 +1130,23 @@ export const partnershipsApi = {
 
     console.log(`✅ Upserted ${data.length} partnerships in Supabase`);
     return { success: true, data: data.map(objectToCamelCase), count: data.length };
+  },
+
+  async delete(id: string) {
+    console.log(`🗑️ Deleting partnership ${id} from Supabase...`);
+    
+    const { error } = await supabase
+      .from('partnerships')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('❌ Error deleting partnership:', error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`✅ Deleted partnership ${id} from Supabase`);
+    return { success: true };
   },
 };
 
@@ -1258,6 +1343,23 @@ export const sharingApi = {
     console.log(`✅ Upserted ${data.length} sharing records in Supabase`);
     return { success: true, data: data.map(objectToCamelCase), count: data.length };
   },
+
+  async delete(id: string) {
+    console.log(`🗑️ Deleting sharing record ${id} from Supabase...`);
+    
+    const { error } = await supabase
+      .from('sharings')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('❌ Error deleting sharing record:', error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`✅ Deleted sharing record ${id} from Supabase`);
+    return { success: true };
+  },
 };
 
 // ========================================
@@ -1320,6 +1422,23 @@ export const kartProgramApi = {
 
     console.log(`✅ Upserted ${data.length} kart program records in Supabase`);
     return { success: true, data: data.map(objectToCamelCase), count: data.length };
+  },
+
+  async delete(id: string) {
+    console.log(`🗑️ Deleting kart program ${id} from Supabase...`);
+    
+    const { error } = await supabase
+      .from('card_programs')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('❌ Error deleting kart program:', error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`✅ Deleted kart program ${id} from Supabase`);
+    return { success: true };
   },
 };
 
@@ -1384,4 +1503,133 @@ export const suspensionReasonApi = {
     console.log(`✅ Upserted ${data.length} suspension reason records in Supabase`);
     return { success: true, data: data.map(objectToCamelCase), count: data.length };
   },
+
+  async delete(id: string) {
+    console.log(`🗑️ Deleting suspension reason ${id} from Supabase...`);
+    
+    const { error } = await supabase
+      .from('suspension_reasons')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('❌ Error deleting suspension reason:', error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`✅ Deleted suspension reason ${id} from Supabase`);
+    return { success: true };
+  },
 };
+
+// ========================================
+// DUPLICATE CLEANUP API (SQL Functions)
+// ========================================
+
+export interface DuplicateCleanupResult {
+  table_name: string;
+  unique_field: string;
+  deleted_count: number;
+  kept_count: number;
+  status: string;
+}
+
+/**
+ * Calls Supabase cleanup_all_duplicates() function
+ * This runs server-side duplicate cleanup for all tables
+ */
+export async function cleanupAllDuplicatesSQL(): Promise<{
+  success: boolean;
+  results?: DuplicateCleanupResult[];
+  error?: string;
+}> {
+  try {
+    console.log('🧹 Calling Supabase cleanup_all_duplicates() function...');
+    
+    const { data, error } = await supabase.rpc('cleanup_all_duplicates');
+    
+    if (error) {
+      console.error('❌ SQL cleanup error:', error);
+      return { success: false, error: error.message };
+    }
+    
+    console.log('✅ SQL cleanup complete:', data);
+    return { success: true, results: data };
+  } catch (error: any) {
+    console.error('❌ Exception in cleanupAllDuplicatesSQL:', error);
+    return { success: false, error: error.message || 'Unknown error' };
+  }
+}
+
+/**
+ * Calls Supabase cleanup_duplicates() function for a specific table
+ */
+export async function cleanupTableDuplicatesSQL(
+  tableName: string,
+  uniqueColumn: string,
+  keepStrategy: 'latest' | 'earliest' = 'latest'
+): Promise<{
+  success: boolean;
+  deleted_count?: number;
+  kept_count?: number;
+  error?: string;
+}> {
+  try {
+    console.log(`🧹 Cleaning duplicates in ${tableName}.${uniqueColumn}...`);
+    
+    const { data, error } = await supabase.rpc('cleanup_duplicates', {
+      table_name: tableName,
+      unique_column: uniqueColumn,
+      keep_strategy: keepStrategy
+    });
+    
+    if (error) {
+      console.error(`❌ SQL cleanup error for ${tableName}:`, error);
+      return { success: false, error: error.message };
+    }
+    
+    console.log(`✅ Cleaned ${tableName}:`, data);
+    return { 
+      success: true, 
+      deleted_count: data[0]?.deleted_count || 0,
+      kept_count: data[0]?.kept_count || 0
+    };
+  } catch (error: any) {
+    console.error(`❌ Exception in cleanupTableDuplicatesSQL for ${tableName}:`, error);
+    return { success: false, error: error.message || 'Unknown error' };
+  }
+}
+
+/**
+ * Checks for existing duplicates using duplicate_monitoring view
+ */
+export async function checkDuplicatesSQL(): Promise<{
+  success: boolean;
+  duplicates?: Array<{
+    table_name: string;
+    unique_field: string;
+    duplicate_value: string;
+    duplicate_count: number;
+    duplicate_ids: string[];
+  }>;
+  error?: string;
+}> {
+  try {
+    console.log('🔍 Checking for duplicates...');
+    
+    const { data, error } = await supabase
+      .from('duplicate_monitoring')
+      .select('*');
+    
+    if (error) {
+      console.error('❌ Error checking duplicates:', error);
+      return { success: false, error: error.message };
+    }
+    
+    console.log(`📊 Found ${data?.length || 0} duplicate groups`);
+    return { success: true, duplicates: data || [] };
+  } catch (error: any) {
+    console.error('❌ Exception in checkDuplicatesSQL:', error);
+    return { success: false, error: error.message || 'Unknown error' };
+  }
+}

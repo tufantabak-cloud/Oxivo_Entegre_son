@@ -27,6 +27,7 @@ import {
 } from './ui/alert-dialog';
 import { Plus, Edit2, Trash2, Ban, Search } from 'lucide-react';
 import { toast } from 'sonner';
+import { suspensionReasonApi } from '../utils/supabaseClient';
 
 interface SuspensionReasonsTabProps {
   suspensionReasons: SuspensionReason[];
@@ -126,10 +127,19 @@ export const SuspensionReasonsTab = React.memo(function SuspensionReasonsTab({
     handleCloseDialog();
   }, [editingReason, formData, suspensionReasons, onSuspensionReasonsChange, handleCloseDialog]);
 
-  const handleDelete = useCallback((id: string) => {
-    const updatedReasons = suspensionReasons.filter((r) => r.id !== id);
-    onSuspensionReasonsChange(updatedReasons);
-    toast.success('Pasifleştirme sebebi silindi');
+  const handleDelete = useCallback(async (id: string) => {
+    // ✅ Supabase'den sil
+    const result = await suspensionReasonApi.delete(id);
+    
+    if (result.success) {
+      // Frontend state'ini güncelle
+      const updatedReasons = suspensionReasons.filter((r) => r.id !== id);
+      onSuspensionReasonsChange(updatedReasons);
+      toast.success('Pasifleştirme sebebi silindi');
+    } else {
+      toast.error(`Silme hatası: ${result.error}`);
+    }
+    
     setDeleteConfirmId(null);
   }, [suspensionReasons, onSuspensionReasonsChange]);
 

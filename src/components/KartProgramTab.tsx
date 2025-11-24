@@ -10,6 +10,7 @@ import { Switch } from './ui/switch';
 import { Textarea } from './ui/textarea';
 import { Plus, Search, Edit2, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { kartProgramApi } from '../utils/supabaseClient';
 
 export interface KartProgram {
   id: string;
@@ -98,11 +99,20 @@ export function KartProgramTab({ kartProgramlar, onKartProgramlarChange }: KartP
     setEditingKart(null);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (deletingKart) {
-      const updatedKartlar = kartProgramlar.filter((kart) => kart.id !== deletingKart.id);
-      onKartProgramlarChange(updatedKartlar);
-      toast.success('Kart başarıyla silindi');
+      // ✅ Supabase'den sil
+      const result = await kartProgramApi.delete(deletingKart.id);
+      
+      if (result.success) {
+        // Frontend state'ini güncelle
+        const updatedKartlar = kartProgramlar.filter((kart) => kart.id !== deletingKart.id);
+        onKartProgramlarChange(updatedKartlar);
+        toast.success('Kart başarıyla silindi');
+      } else {
+        toast.error(`Silme hatası: ${result.error}`);
+      }
+      
       setIsDeleteDialogOpen(false);
       setDeletingKart(null);
     }

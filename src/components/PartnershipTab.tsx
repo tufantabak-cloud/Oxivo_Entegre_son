@@ -24,6 +24,7 @@ import {
 } from './ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { toast } from 'sonner';
+import { partnershipsApi } from '../utils/supabaseClient';
 
 export interface PartnershipCalculationRow {
   id: string;
@@ -142,11 +143,20 @@ export function PartnershipTab({ partnerships, onPartnershipsChange }: Partnersh
     setCurrentRow(updatedRow);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (deletingPartnership) {
-      const updatedList = partnerships.filter((p) => p.id !== deletingPartnership.id);
-      onPartnershipsChange(updatedList);
-      toast.success('Ortaklık modeli başarıyla silindi');
+      // ✅ Supabase'den sil
+      const result = await partnershipsApi.delete(deletingPartnership.id);
+      
+      if (result.success) {
+        // Frontend state'ini güncelle
+        const updatedList = partnerships.filter((p) => p.id !== deletingPartnership.id);
+        onPartnershipsChange(updatedList);
+        toast.success('Ortaklık modeli başarıyla silindi');
+      } else {
+        toast.error(`Silme hatası: ${result.error}`);
+      }
+      
       setIsDeleteDialogOpen(false);
       setDeletingPartnership(null);
     }
