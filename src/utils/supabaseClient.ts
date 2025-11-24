@@ -210,7 +210,38 @@ export const customerApi = {
     }
 
     console.log(`✅ Fetched ${data.length} customers from Supabase`);
-    return { success: true, data: data.map(objectToCamelCase) || [] };
+    
+    // ✅ FIX: Parse JSONB strings back to objects when reading
+    const parsedData = data.map(record => {
+      const parsed = { ...record };
+      
+      // Parse JSONB string fields back to objects
+      const jsonbFields = [
+        'bank_device_assignments',
+        'service_fee_settings',
+        'device_subscriptions',
+        'service_fee_invoices',
+        'payment_reminders',
+        'reminder_settings',
+        'suspension_history',
+        'linked_bank_pf_ids',
+        'domain_hierarchy'
+      ];
+      
+      jsonbFields.forEach(field => {
+        if (typeof parsed[field] === 'string') {
+          try {
+            parsed[field] = JSON.parse(parsed[field]);
+          } catch (e) {
+            console.warn(`⚠️ Failed to parse ${field}:`, e);
+          }
+        }
+      });
+      
+      return parsed;
+    });
+    
+    return { success: true, data: parsedData.map(objectToCamelCase) || [] };
   },
 
   /**
@@ -255,21 +286,53 @@ export const customerApi = {
     
     console.log(`📤 Converting ${records.length} customers to snake_case...`);
     
-    // Debug: Log first record's keys to verify conversion
-    if (records.length > 0) {
-      console.log('🔍 Sample record keys (snake_case):', Object.keys(records[0]).slice(0, 10).join(', '));
+    // ✅ FIX: Convert JSONB fields to JSON strings (Supabase requirement)
+    const sanitizedRecords = records.map(record => {
+      const sanitized = { ...record };
       
-      // 🔍 DEBUG: Log a sample record with device subscriptions (if exists)
-      const sampleWithDevices = records.find(r => r.service_fee_settings?.device_subscriptions?.length > 0);
-      if (sampleWithDevices) {
-        console.log('🔍 Sample deviceSubscription:', JSON.stringify(sampleWithDevices.service_fee_settings?.device_subscriptions?.[0], null, 2));
-      }
+      // List of JSONB fields that need stringification
+      const jsonbFields = [
+        'bank_device_assignments',
+        'service_fee_settings',
+        'device_subscriptions',
+        'service_fee_invoices',
+        'payment_reminders',
+        'reminder_settings',
+        'suspension_history',
+        'linked_bank_pf_ids',
+        'domain_hierarchy'
+      ];
+      
+      // Convert each JSONB field to JSON string (or null)
+      jsonbFields.forEach(field => {
+        if (sanitized[field] !== undefined && sanitized[field] !== null) {
+          // Only stringify if it's an object/array
+          if (typeof sanitized[field] === 'object') {
+            sanitized[field] = JSON.stringify(sanitized[field]);
+          }
+        } else {
+          // Convert undefined to null for Postgres
+          sanitized[field] = null;
+        }
+      });
+      
+      return sanitized;
+    });
+    
+    // Debug: Log first record's keys to verify conversion
+    if (sanitizedRecords.length > 0) {
+      console.log('🔍 Sample record keys (snake_case):', Object.keys(sanitizedRecords[0]).slice(0, 10).join(', '));
+      console.log('🔍 JSONB field sample (service_fee_settings):', 
+        typeof sanitizedRecords[0].service_fee_settings === 'string' 
+          ? 'STRING ✅' 
+          : `OBJECT ❌ (${typeof sanitizedRecords[0].service_fee_settings})`
+      );
     }
     
     // ✅ UPSERT: Insert new records or update existing ones (based on 'id')
     const { data, error } = await supabase
       .from('customers')
-      .upsert(records, { onConflict: 'id' })
+      .upsert(sanitizedRecords, { onConflict: 'id' })
       .select();
 
     if (error) {
@@ -282,8 +345,8 @@ export const customerApi = {
       });
       
       // 🔍 DEBUG: Log problematic record
-      if (records.length > 0) {
-        console.error('🔍 First record causing error:', JSON.stringify(records[0], null, 2));
+      if (sanitizedRecords.length > 0) {
+        console.error('🔍 First record causing error:', JSON.stringify(sanitizedRecords[0], null, 2));
       }
       
       // Extra debugging for common errors
@@ -299,7 +362,38 @@ export const customerApi = {
     }
 
     console.log(`✅ Upserted ${data.length} customers in Supabase`);
-    return { success: true, data: data.map(objectToCamelCase), count: data.length };
+    
+    // ✅ FIX: Parse JSONB strings back to objects when reading
+    const parsedData = data.map(record => {
+      const parsed = { ...record };
+      
+      // Parse JSONB string fields back to objects
+      const jsonbFields = [
+        'bank_device_assignments',
+        'service_fee_settings',
+        'device_subscriptions',
+        'service_fee_invoices',
+        'payment_reminders',
+        'reminder_settings',
+        'suspension_history',
+        'linked_bank_pf_ids',
+        'domain_hierarchy'
+      ];
+      
+      jsonbFields.forEach(field => {
+        if (typeof parsed[field] === 'string') {
+          try {
+            parsed[field] = JSON.parse(parsed[field]);
+          } catch (e) {
+            console.warn(`⚠️ Failed to parse ${field}:`, e);
+          }
+        }
+      });
+      
+      return parsed;
+    });
+    
+    return { success: true, data: parsedData.map(objectToCamelCase), count: data.length };
   },
 
   /**
@@ -503,15 +597,34 @@ export const mccCodesApi = {
   async create(records: any | any[]) {
     console.log('📤 Creating MCC codes in Supabase...');
     
-    const items = Array.isArray(records) 
-      ? records.map(objectToSnakeCase).map(sanitizeMCCCode)
-      : [sanitizeMCCCode(objectToSnakeCase(records))];
+    const recordsArray = Array.isArray(records) ? records : [records];
     
-    console.log(`📤 Converting & sanitizing ${items.length} MCC codes to snake_case...`);
+    // ✅ Step 1: Remove duplicates by 'kod' before processing
+    const uniqueRecords = Array.from(
+      new Map(recordsArray.map(r => [r.kod, r])).values()
+    );
+    
+    if (uniqueRecords.length < recordsArray.length) {
+      console.warn(`⚠️ Step 1: Removed ${recordsArray.length - uniqueRecords.length} duplicate MCC codes (by kod)`);
+    }
+    
+    // ✅ Step 2: Apply transformations
+    const transformedItems = uniqueRecords.map(objectToSnakeCase).map(sanitizeMCCCode);
+    
+    // ✅ Step 3: CRITICAL FIX - Remove duplicates AFTER sanitization
+    const finalItems = Array.from(
+      new Map(transformedItems.map(item => [item.kod, item])).values()
+    );
+    
+    if (finalItems.length < transformedItems.length) {
+      console.warn(`⚠️ Step 3: Removed ${transformedItems.length - finalItems.length} duplicate MCC codes AFTER sanitization`);
+    }
+    
+    console.log(`📤 Final: Sending ${finalItems.length} unique MCC codes to Supabase...`);
     
     const { data, error } = await supabase
       .from('mcc_codes')
-      .upsert(items, { onConflict: 'kod' })
+      .upsert(finalItems, { onConflict: 'kod' })
       .select();
 
     if (error) {
@@ -555,15 +668,34 @@ export const banksApi = {
   async create(records: any | any[]) {
     console.log('📤 Creating banks in Supabase...');
     
-    const items = Array.isArray(records) 
-      ? records.map(objectToSnakeCase).map(sanitizeBank)
-      : [sanitizeBank(objectToSnakeCase(records))];
+    const recordsArray = Array.isArray(records) ? records : [records];
     
-    console.log(`📤 Converting & sanitizing ${items.length} banks to snake_case...`);
+    // ✅ Step 1: Remove duplicates by 'kod' before processing
+    const uniqueRecords = Array.from(
+      new Map(recordsArray.map(r => [r.kod, r])).values()
+    );
+    
+    if (uniqueRecords.length < recordsArray.length) {
+      console.warn(`⚠️ Step 1: Removed ${recordsArray.length - uniqueRecords.length} duplicate banks (by kod)`);
+    }
+    
+    // ✅ Step 2: Apply transformations
+    const transformedItems = uniqueRecords.map(objectToSnakeCase).map(sanitizeBank);
+    
+    // ✅ Step 3: CRITICAL FIX - Remove duplicates AFTER sanitization
+    const finalItems = Array.from(
+      new Map(transformedItems.map(item => [item.kod, item])).values()
+    );
+    
+    if (finalItems.length < transformedItems.length) {
+      console.warn(`⚠️ Step 3: Removed ${transformedItems.length - finalItems.length} duplicate banks AFTER sanitization`);
+    }
+    
+    console.log(`📤 Final: Sending ${finalItems.length} unique banks to Supabase...`);
     
     const { data, error } = await supabase
       .from('banks')
-      .upsert(items, { onConflict: 'kod' })
+      .upsert(finalItems, { onConflict: 'kod' })
       .select();
 
     if (error) {
@@ -615,15 +747,34 @@ export const epkListApi = {
   async create(records: any | any[]) {
     console.log('📤 Creating EPK entries in Supabase...');
     
-    const items = Array.isArray(records) 
-      ? records.map(objectToSnakeCase).map(sanitizeEPK)
-      : [sanitizeEPK(objectToSnakeCase(records))];
+    const recordsArray = Array.isArray(records) ? records : [records];
     
-    console.log(`📤 Converting & sanitizing ${items.length} EPK entries to snake_case...`);
+    // ✅ Step 1: Remove duplicates by 'kod' before processing
+    const uniqueRecords = Array.from(
+      new Map(recordsArray.map(r => [r.kod, r])).values()
+    );
+    
+    if (uniqueRecords.length < recordsArray.length) {
+      console.warn(`⚠️ Step 1: Removed ${recordsArray.length - uniqueRecords.length} duplicate EPK (by kod)`);
+    }
+    
+    // ✅ Step 2: Apply transformations
+    const transformedItems = uniqueRecords.map(objectToSnakeCase).map(sanitizeEPK);
+    
+    // ✅ Step 3: CRITICAL FIX - Remove duplicates AFTER sanitization
+    const finalItems = Array.from(
+      new Map(transformedItems.map(item => [item.kod, item])).values()
+    );
+    
+    if (finalItems.length < transformedItems.length) {
+      console.warn(`⚠️ Step 3: Removed ${transformedItems.length - finalItems.length} duplicate EPK AFTER sanitization`);
+    }
+    
+    console.log(`📤 Final: Sending ${finalItems.length} unique EPK entries to Supabase...`);
     
     const { data, error } = await supabase
       .from('epk_institutions')
-      .upsert(items, { onConflict: 'kod' })
+      .upsert(finalItems, { onConflict: 'kod' })
       .select();
 
     if (error) {
@@ -675,15 +826,34 @@ export const okListApi = {
   async create(records: any | any[]) {
     console.log('📤 Creating OK entries in Supabase...');
     
-    const items = Array.isArray(records) 
-      ? records.map(objectToSnakeCase).map(sanitizeOK)
-      : [sanitizeOK(objectToSnakeCase(records))];
+    const recordsArray = Array.isArray(records) ? records : [records];
     
-    console.log(`📤 Converting & sanitizing ${items.length} OK entries to snake_case...`);
+    // ✅ Step 1: Remove duplicates by 'kod' before processing
+    const uniqueRecords = Array.from(
+      new Map(recordsArray.map(r => [r.kod, r])).values()
+    );
+    
+    if (uniqueRecords.length < recordsArray.length) {
+      console.warn(`⚠️ Step 1: Removed ${recordsArray.length - uniqueRecords.length} duplicate OK (by kod)`);
+    }
+    
+    // ✅ Step 2: Apply transformations
+    const transformedItems = uniqueRecords.map(objectToSnakeCase).map(sanitizeOK);
+    
+    // ✅ Step 3: CRITICAL FIX - Remove duplicates AFTER sanitization
+    const finalItems = Array.from(
+      new Map(transformedItems.map(item => [item.kod, item])).values()
+    );
+    
+    if (finalItems.length < transformedItems.length) {
+      console.warn(`⚠️ Step 3: Removed ${transformedItems.length - finalItems.length} duplicate OK AFTER sanitization`);
+    }
+    
+    console.log(`📤 Final: Sending ${finalItems.length} unique OK entries to Supabase...`);
     
     const { data, error } = await supabase
       .from('ok_institutions')
-      .upsert(items, { onConflict: 'kod' })
+      .upsert(finalItems, { onConflict: 'kod' })
       .select();
 
     if (error) {
@@ -815,15 +985,34 @@ export const partnershipsApi = {
   async create(records: any | any[]) {
     console.log('📤 Creating partnerships in Supabase...');
     
-    const items = Array.isArray(records) 
-      ? records.map(objectToSnakeCase).map(sanitizePartnership)
-      : [sanitizePartnership(objectToSnakeCase(records))];
+    const recordsArray = Array.isArray(records) ? records : [records];
     
-    console.log(`📤 Converting & sanitizing ${items.length} partnerships to snake_case...`);
+    // ✅ Step 1: Remove duplicates by 'id' before processing
+    const uniqueRecords = Array.from(
+      new Map(recordsArray.map(r => [r.id, r])).values()
+    );
+    
+    if (uniqueRecords.length < recordsArray.length) {
+      console.warn(`⚠️ Step 1: Removed ${recordsArray.length - uniqueRecords.length} duplicate partnerships (by id)`);
+    }
+    
+    // ✅ Step 2: Apply transformations
+    const transformedItems = uniqueRecords.map(objectToSnakeCase).map(sanitizePartnership);
+    
+    // ✅ Step 3: CRITICAL FIX - Remove duplicates AFTER sanitization
+    const finalItems = Array.from(
+      new Map(transformedItems.map(item => [item.id, item])).values()
+    );
+    
+    if (finalItems.length < transformedItems.length) {
+      console.warn(`⚠️ Step 3: Removed ${transformedItems.length - finalItems.length} duplicate partnerships AFTER sanitization`);
+    }
+    
+    console.log(`📤 Final: Sending ${finalItems.length} unique partnerships to Supabase...`);
     
     const { data, error } = await supabase
       .from('partnerships')
-      .upsert(items, { onConflict: 'id' })
+      .upsert(finalItems, { onConflict: 'id' })
       .select();
 
     if (error) {
@@ -991,15 +1180,34 @@ export const sharingApi = {
   async create(records: any | any[]) {
     console.log('📤 Creating sharing records in Supabase...');
     
-    const items = Array.isArray(records) 
-      ? records.map(objectToSnakeCase).map(sanitizeSharing)
-      : [sanitizeSharing(objectToSnakeCase(records))];
+    const recordsArray = Array.isArray(records) ? records : [records];
     
-    console.log(`📤 Converting & sanitizing ${items.length} sharing records to snake_case...`);
+    // ✅ Step 1: Remove duplicates by 'id' before processing
+    const uniqueRecords = Array.from(
+      new Map(recordsArray.map(r => [r.id, r])).values()
+    );
+    
+    if (uniqueRecords.length < recordsArray.length) {
+      console.warn(`⚠️ Step 1: Removed ${recordsArray.length - uniqueRecords.length} duplicate sharings (by id)`);
+    }
+    
+    // ✅ Step 2: Apply transformations
+    const transformedItems = uniqueRecords.map(objectToSnakeCase).map(sanitizeSharing);
+    
+    // ✅ Step 3: CRITICAL FIX - Remove duplicates AFTER sanitization
+    const finalItems = Array.from(
+      new Map(transformedItems.map(item => [item.id, item])).values()
+    );
+    
+    if (finalItems.length < transformedItems.length) {
+      console.warn(`⚠️ Step 3: Removed ${transformedItems.length - finalItems.length} duplicate sharings AFTER sanitization`);
+    }
+    
+    console.log(`📤 Final: Sending ${finalItems.length} unique sharing records to Supabase...`);
     
     const { data, error } = await supabase
       .from('sharings') // ✅ FIXED: 'sharing' → 'sharings' (plural)
-      .upsert(items, { onConflict: 'id' })
+      .upsert(finalItems, { onConflict: 'id' })
       .select();
 
     if (error) {
@@ -1035,15 +1243,34 @@ export const kartProgramApi = {
   async create(records: any | any[]) {
     console.log('📤 Creating kart program records in Supabase...');
     
-    const items = Array.isArray(records) 
-      ? records.map(objectToSnakeCase).map(sanitizeKartProgram)
-      : [sanitizeKartProgram(objectToSnakeCase(records))];
+    const recordsArray = Array.isArray(records) ? records : [records];
     
-    console.log(`📤 Converting & sanitizing ${items.length} kart program records to snake_case...`);
+    // ✅ Step 1: Remove duplicates by 'id' before processing
+    const uniqueRecords = Array.from(
+      new Map(recordsArray.map(r => [r.id, r])).values()
+    );
+    
+    if (uniqueRecords.length < recordsArray.length) {
+      console.warn(`⚠️ Step 1: Removed ${recordsArray.length - uniqueRecords.length} duplicate card programs (by id)`);
+    }
+    
+    // ✅ Step 2: Apply transformations
+    const transformedItems = uniqueRecords.map(objectToSnakeCase).map(sanitizeKartProgram);
+    
+    // ✅ Step 3: CRITICAL FIX - Remove duplicates AFTER sanitization
+    const finalItems = Array.from(
+      new Map(transformedItems.map(item => [item.id, item])).values()
+    );
+    
+    if (finalItems.length < transformedItems.length) {
+      console.warn(`⚠️ Step 3: Removed ${transformedItems.length - finalItems.length} duplicate card programs AFTER sanitization`);
+    }
+    
+    console.log(`📤 Final: Sending ${finalItems.length} unique kart program records to Supabase...`);
     
     const { data, error } = await supabase
       .from('card_programs') // ✅ FIXED: 'kart_program' → 'card_programs' (English + plural)
-      .upsert(items, { onConflict: 'id' })
+      .upsert(finalItems, { onConflict: 'id' })
       .select();
 
     if (error) {
@@ -1079,15 +1306,34 @@ export const suspensionReasonApi = {
   async create(records: any | any[]) {
     console.log('📤 Creating suspension reason records in Supabase...');
     
-    const items = Array.isArray(records) 
-      ? records.map(objectToSnakeCase).map(sanitizeSuspensionReason)
-      : [sanitizeSuspensionReason(objectToSnakeCase(records))];
+    const recordsArray = Array.isArray(records) ? records : [records];
     
-    console.log(`📤 Converting & sanitizing ${items.length} suspension reason records to snake_case...`);
+    // ✅ Step 1: Remove duplicates by 'id' before processing
+    const uniqueRecords = Array.from(
+      new Map(recordsArray.map(r => [r.id, r])).values()
+    );
+    
+    if (uniqueRecords.length < recordsArray.length) {
+      console.warn(`⚠️ Step 1: Removed ${recordsArray.length - uniqueRecords.length} duplicate suspension reasons (by id)`);
+    }
+    
+    // ✅ Step 2: Apply transformations
+    const transformedItems = uniqueRecords.map(objectToSnakeCase).map(sanitizeSuspensionReason);
+    
+    // ✅ Step 3: CRITICAL FIX - Remove duplicates AFTER sanitization
+    const finalItems = Array.from(
+      new Map(transformedItems.map(item => [item.id, item])).values()
+    );
+    
+    if (finalItems.length < transformedItems.length) {
+      console.warn(`⚠️ Step 3: Removed ${transformedItems.length - finalItems.length} duplicate suspension reasons AFTER sanitization`);
+    }
+    
+    console.log(`📤 Final: Sending ${finalItems.length} unique suspension reason records to Supabase...`);
     
     const { data, error } = await supabase
       .from('suspension_reasons') // ✅ FIXED: 'suspension_reason' → 'suspension_reasons' (plural)
-      .upsert(items, { onConflict: 'id' })
+      .upsert(finalItems, { onConflict: 'id' })
       .select();
 
     if (error) {
