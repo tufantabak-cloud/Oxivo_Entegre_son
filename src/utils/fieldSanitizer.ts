@@ -76,7 +76,7 @@ export function sanitizeOK(item: any): any {
  *    ALTER TABLE sales_representatives ALTER COLUMN id TYPE TEXT;
  */
 export function sanitizeSalesRep(item: any): any {
-  const { id, ad_soyad, ad, email, telefon, aktif } = item;
+  const { id, ad_soyad, ad, email, telefon, aktif, bolge } = item;
   
   // ⚠️ Warning: If ID is not UUID format, Supabase will reject it
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -101,7 +101,16 @@ export function sanitizeSalesRep(item: any): any {
   // ✅ CRITICAL: Ensure kod is never empty (fallback to ID)
   const finalKod = kod || id?.substring(0, 50) || 'UNKNOWN';
   
-  return { id, kod: finalKod, ad: ad_soyad || ad, email, telefon, aktif };
+  // ✅ FIX: Map to correct Supabase columns
+  return { 
+    id, 
+    kod: finalKod, 
+    ad_soyad: ad_soyad || ad, // ✅ Supabase column is 'ad_soyad', not 'ad'
+    email, 
+    telefon, 
+    bolge,
+    aktif 
+  };
 }
 
 /**
@@ -133,21 +142,20 @@ export function sanitizeJobTitle(item: any): any {
  * Frontend: { id, kod, modelAdi, oran, aciklama, aktif, olusturmaTarihi, calculationRows }
  * Snake_case: { id, kod, model_adi, oran, aciklama, aktif, olusturma_tarihi, calculation_rows }
  * 
- * ⚠️ CRITICAL FIX: Gerçek field'lar kod, model_adi, oran (firma_adi, anlasma_tarihi değil!)
- * Mevcut DB kolonlar: id, kod, model_adi, oran, aktif, calculation_rows (JSONB), created_at, updated_at
- * Eksik DB kolonlar: aciklama, olusturma_tarihi
+ * ⚠️ CRITICAL FIX: Supabase kolonları: id, partner_name, partner_type, contact_person, phone, email, notes, aktif
+ * Bu tablo "İş Ortaklıkları" değil "Partnership (İşbirliği)" için - field mapping gerekli!
  */
 export function sanitizePartnership(item: any): any {
-  const { id, kod, model_adi, oran, aktif, calculation_rows } = item;
+  const { id, partner_name, partner_type, contact_person, phone, email, notes, aktif } = item;
   return { 
     id, 
-    kod, 
-    model_adi, 
-    oran, 
-    aktif,
-    // ✅ JSONB field: calculation_rows (Array of calculation rows)
-    // Keep the array as-is, Supabase will handle JSONB conversion
-    calculation_rows: calculation_rows || []
+    partner_name, 
+    partner_type, 
+    contact_person,
+    phone,
+    email,
+    notes,
+    aktif
   };
 }
 
@@ -192,13 +200,20 @@ export function sanitizeAdditionalRevenue(item: any): any {
  * Frontend: { id, kod, modelAdi, oran, aciklama, aktif, olusturmaTarihi }
  * Snake_case: { id, kod, model_adi, oran, aciklama, aktif, olusturma_tarihi }
  * 
- * ⚠️ CRITICAL FIX: Gerçek field'lar kod, model_adi, oran (firma_adi, paylasim_orani değil!)
- * Mevcut DB kolonlar: id, kod, model_adi, oran, aktif, created_at, updated_at
- * Eksik DB kolonlar: aciklama, olusturma_tarihi
+ * ⚠️ CRITICAL FIX: Supabase kolonları: id, kod, ad, tip, sira, aktif, paydaslar
+ * model_adi → ad (gerçek kolon adı)
  */
 export function sanitizeSharing(item: any): any {
-  const { id, kod, model_adi, oran, aktif } = item;
-  return { id, kod, model_adi, oran, aktif };
+  const { id, kod, model_adi, ad, tip, sira, aktif, paydaslar } = item;
+  return { 
+    id, 
+    kod, 
+    ad: model_adi || ad, // ✅ Supabase column is 'ad', not 'model_adi'
+    tip,
+    sira,
+    aktif,
+    paydaslar: paydaslar || [] // JSONB field
+  };
 }
 
 /**
@@ -206,13 +221,20 @@ export function sanitizeSharing(item: any): any {
  * Frontend: { id, kartAdi, aciklama, aktif, olusturmaTarihi }
  * Snake_case: { id, kart_adi, aciklama, aktif, olusturma_tarihi }
  * 
- * ⚠️ CRITICAL FIX: Gerçek field kart_adi (program_adi, program_kodu değil!)
- * Mevcut DB kolonlar: id, kart_adi, aktif, created_at, updated_at
- * Eksik DB kolonlar: aciklama, olusturma_tarihi
+ * ⚠️ CRITICAL FIX: Supabase kolonları: id, kod, ad, banka_kodu, kart_tipi, komisyon_orani, aktif
+ * kart_adi → ad (gerçek kolon adı)
  */
 export function sanitizeKartProgram(item: any): any {
-  const { id, kart_adi, aktif } = item;
-  return { id, kart_adi, aktif };
+  const { id, kod, kart_adi, ad, banka_kodu, kart_tipi, komisyon_orani, aktif } = item;
+  return { 
+    id,
+    kod,
+    ad: kart_adi || ad, // ✅ Supabase column is 'ad', not 'kart_adi'
+    banka_kodu,
+    kart_tipi,
+    komisyon_orani,
+    aktif 
+  };
 }
 
 /**
