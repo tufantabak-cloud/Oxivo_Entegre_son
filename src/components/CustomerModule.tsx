@@ -534,11 +534,21 @@ Mevcut kayıtları güncellemek ister misiniz?
     }
   };
 
-  const handleDeleteCustomer = (id: string) => {
-    const filteredCustomers = customers.filter((c) => c.id !== id);
-    onCustomersChange?.(filteredCustomers);
-    setSelectedCustomer(null);
-    toast.success('Müşteri başarıyla silindi');
+  const handleDeleteCustomer = async (id: string) => {
+    // ✅ Delete from Supabase
+    const result = await customerApi.delete(id);
+    
+    if (result.success) {
+      // ✅ Update local state
+      const filteredCustomers = customers.filter((c) => c.id !== id);
+      onCustomersChange?.(filteredCustomers);
+      setSelectedCustomer(null);
+      toast.success('Müşteri başarıyla silindi');
+      console.log(`✅ Customer ${id} deleted successfully`);
+    } else {
+      console.error(`❌ Failed to delete customer:`, result.error);
+      toast.error(`Silme işlemi başarısız: ${result.error}`);
+    }
   };
 
   const handleCreateNew = () => {
