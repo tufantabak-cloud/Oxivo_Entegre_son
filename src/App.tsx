@@ -383,7 +383,20 @@ export default function App() {
       // ✅ CRITICAL FIX: Extra null/undefined check before .map()
       const processedCustomers = (Array.isArray(storedCustomers) ? storedCustomers : []).map(c => ({
         ...c,
-        linkedBankPFIds: c.linkedBankPFIds || []
+        // ✅ CRITICAL FIX: Parse linkedBankPFIds if it's a JSON string
+        linkedBankPFIds: (() => {
+          if (!c.linkedBankPFIds) return [];
+          if (Array.isArray(c.linkedBankPFIds)) return c.linkedBankPFIds;
+          if (typeof c.linkedBankPFIds === 'string') {
+            try {
+              const parsed = JSON.parse(c.linkedBankPFIds);
+              return Array.isArray(parsed) ? parsed : [];
+            } catch {
+              return [];
+            }
+          }
+          return [];
+        })()
       }));
       
       logger.debug('Customers yüklendi (localStorage fallback)', {

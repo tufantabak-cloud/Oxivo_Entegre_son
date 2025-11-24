@@ -215,7 +215,10 @@ export const customerApi = {
     const parsedData = data.map(record => {
       const parsed = { ...record };
       
-      // Parse JSONB string fields back to objects
+      // ✅ CRITICAL: linked_bank_pf_ids is TEXT[], not JSONB - already comes as array from Supabase
+      // Don't try to parse it!
+      
+      // Parse JSONB string fields back to objects (NOT including linked_bank_pf_ids!)
       const jsonbFields = [
         'bank_device_assignments',
         'service_fee_settings',
@@ -224,7 +227,6 @@ export const customerApi = {
         'payment_reminders',
         'reminder_settings',
         'suspension_history',
-        'linked_bank_pf_ids',
         'domain_hierarchy'
       ];
       
@@ -290,7 +292,45 @@ export const customerApi = {
     const sanitizedRecords = records.map(record => {
       const sanitized = { ...record };
       
-      // List of JSONB fields that need stringification
+      // ✅ CRITICAL FIX: linked_bank_pf_ids is TEXT[] NOT JSONB!
+      // Convert JSON string "[]" to actual PostgreSQL array format
+      if (sanitized.linked_bank_pf_ids !== undefined && sanitized.linked_bank_pf_ids !== null) {
+        // If it's a string like "[]" or "[...]", parse it first
+        if (typeof sanitized.linked_bank_pf_ids === 'string') {
+          try {
+            sanitized.linked_bank_pf_ids = JSON.parse(sanitized.linked_bank_pf_ids);
+          } catch (e) {
+            console.warn('⚠️ Failed to parse linked_bank_pf_ids, using empty array');
+            sanitized.linked_bank_pf_ids = [];
+          }
+        }
+        // Now it should be an array - ensure it is
+        if (!Array.isArray(sanitized.linked_bank_pf_ids)) {
+          sanitized.linked_bank_pf_ids = [];
+        }
+      } else {
+        // Default to empty array (not null!)
+        sanitized.linked_bank_pf_ids = [];
+      }
+      
+      // ✅ CRITICAL FIX: domain_hierarchy is also TEXT[] NOT JSONB!
+      if (sanitized.domain_hierarchy !== undefined && sanitized.domain_hierarchy !== null) {
+        if (typeof sanitized.domain_hierarchy === 'string') {
+          try {
+            sanitized.domain_hierarchy = JSON.parse(sanitized.domain_hierarchy);
+          } catch (e) {
+            console.warn('⚠️ Failed to parse domain_hierarchy, using empty array');
+            sanitized.domain_hierarchy = [];
+          }
+        }
+        if (!Array.isArray(sanitized.domain_hierarchy)) {
+          sanitized.domain_hierarchy = [];
+        }
+      } else {
+        sanitized.domain_hierarchy = [];
+      }
+      
+      // List of JSONB fields that need stringification (NOT including linked_bank_pf_ids or domain_hierarchy!)
       const jsonbFields = [
         'bank_device_assignments',
         'service_fee_settings',
@@ -298,9 +338,7 @@ export const customerApi = {
         'service_fee_invoices',
         'payment_reminders',
         'reminder_settings',
-        'suspension_history',
-        'linked_bank_pf_ids',
-        'domain_hierarchy'
+        'suspension_history'
       ];
       
       // Convert each JSONB field to JSON string (or null)
@@ -367,7 +405,10 @@ export const customerApi = {
     const parsedData = data.map(record => {
       const parsed = { ...record };
       
-      // Parse JSONB string fields back to objects
+      // ✅ CRITICAL: linked_bank_pf_ids is TEXT[], not JSONB - already comes as array from Supabase
+      // Don't try to parse it!
+      
+      // Parse JSONB string fields back to objects (NOT including linked_bank_pf_ids!)
       const jsonbFields = [
         'bank_device_assignments',
         'service_fee_settings',
@@ -376,7 +417,6 @@ export const customerApi = {
         'payment_reminders',
         'reminder_settings',
         'suspension_history',
-        'linked_bank_pf_ids',
         'domain_hierarchy'
       ];
       
