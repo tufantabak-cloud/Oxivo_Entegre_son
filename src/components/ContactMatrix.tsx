@@ -261,7 +261,7 @@ export function ContactMatrix({ contacts, onContactsChange, gorevListesi }: Cont
                   <SelectTrigger id="gorev">
                     <SelectValue placeholder="Görev seçiniz..." />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent position="popper" className="z-[9999] max-h-[300px]">
                     {effectiveGorevListesi.map((gorev) => (
                       <SelectItem key={gorev} value={gorev}>
                         {gorev}
