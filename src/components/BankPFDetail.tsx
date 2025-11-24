@@ -95,7 +95,13 @@ export function BankPFDetail({
   // Otomatik kayıt için state ve ref'ler
   const [originalData, setOriginalData] = useState<BankPF | null>(record);
   const autoSaveTimeoutRef = useRef<number | null>(null);
-  const isSavingRef = useRef(false);
+  
+  // Dropdown states for controlled components
+  const [isDurumDropdownOpen, setIsDurumDropdownOpen] = useState(false);
+  const [isBankaOrPFDropdownOpen, setIsBankaOrPFDropdownOpen] = useState(false);
+  const [isBankaPFAdDropdownOpen, setIsBankaPFAdDropdownOpen] = useState(false);
+  const [isOdemeKurulusuTipiDropdownOpen, setIsOdemeKurulusuTipiDropdownOpen] = useState(false);
+  const [isOdemeKurulusuAdDropdownOpen, setIsOdemeKurulusuAdDropdownOpen] = useState(false);
   
   // Düzenleme modu state'i
   const [isEditing, setIsEditing] = useState(isCreating);
@@ -111,7 +117,7 @@ export function BankPFDetail({
     const hasChanges = JSON.stringify(formData) !== JSON.stringify(originalData);
 
     // Eğer değişiklik varsa ve kayıt işlemi devam etmiyorsa, otomatik kaydet
-    if (hasChanges && !isSavingRef.current) {
+    if (hasChanges) {
       // Önceki timeout varsa iptal et
       if (autoSaveTimeoutRef.current) {
         clearTimeout(autoSaveTimeoutRef.current);
@@ -119,13 +125,9 @@ export function BankPFDetail({
 
       // 1.5 saniye sonra otomatik kaydet (debounce)
       autoSaveTimeoutRef.current = window.setTimeout(() => {
-        if (isSavingRef.current) return; // Zaten kayıt işlemi varsa atla
-        
-        isSavingRef.current = true;
         onSave(formData);
         setOriginalData(formData);
         console.log('✅ BankPF otomatik kayıt yapıldı:', new Date().toLocaleTimeString('tr-TR'));
-        isSavingRef.current = false;
       }, 1500);
     }
 
@@ -845,10 +847,23 @@ export function BankPFDetail({
                     <Label htmlFor="durum" className="text-xs sm:text-sm">Durum</Label>
                     <Select
                       value={formData.durum}
-                      onValueChange={(value) => handleChange('durum', value)}
+                      onValueChange={(value) => {
+                        handleChange('durum', value);
+                        setIsDurumDropdownOpen(false);
+                      }}
                       disabled={!isEditing}
+                      open={isDurumDropdownOpen}
+                      onOpenChange={setIsDurumDropdownOpen}
                     >
-                      <SelectTrigger id="durum" className={!isEditing ? 'bg-gray-100' : ''}>
+                      <SelectTrigger 
+                        id="durum" 
+                        onClick={() => isEditing && setIsDurumDropdownOpen(!isDurumDropdownOpen)}
+                        className={`${!isEditing ? 'bg-gray-100' : ''} ${
+                          isEditing && isDurumDropdownOpen 
+                            ? 'ring-2 ring-blue-500 border-blue-500' 
+                            : ''
+                        }`}
+                      >
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -879,6 +894,8 @@ export function BankPFDetail({
                         }
                       }}
                       disabled={!isEditing}
+                      open={isBankaOrPFDropdownOpen}
+                      onOpenChange={setIsBankaOrPFDropdownOpen}
                     >
                       <SelectTrigger id="bankaOrPF" className={!isEditing ? 'bg-gray-100' : ''}>
                         <SelectValue />
@@ -896,6 +913,8 @@ export function BankPFDetail({
                       value={formData.bankaPFAd}
                       onValueChange={(value) => handleChange('bankaPFAd', value)}
                       disabled={!isEditing}
+                      open={isBankaPFAdDropdownOpen}
+                      onOpenChange={setIsBankaPFAdDropdownOpen}
                     >
                       <SelectTrigger id="bankaPFAd" className={!isEditing ? 'bg-gray-100' : ''}>
                         <SelectValue placeholder="Seçiniz..." />
@@ -921,6 +940,8 @@ export function BankPFDetail({
                             handleChange('odemeKurulusuAd', '');
                           }}
                           disabled={!isEditing}
+                          open={isOdemeKurulusuTipiDropdownOpen}
+                          onOpenChange={setIsOdemeKurulusuTipiDropdownOpen}
                         >
                           <SelectTrigger id="odemeKurulusuTipi" className={!isEditing ? 'bg-gray-100' : ''}>
                             <SelectValue placeholder="Seçiniz..." />
@@ -941,6 +962,8 @@ export function BankPFDetail({
                             value={formData.odemeKurulusuAd}
                             onValueChange={(value) => handleChange('odemeKurulusuAd', value)}
                             disabled={!isEditing}
+                            open={isOdemeKurulusuAdDropdownOpen}
+                            onOpenChange={setIsOdemeKurulusuAdDropdownOpen}
                           >
                             <SelectTrigger id="odemeKurulusuAd" className={!isEditing ? 'bg-gray-100' : ''}>
                               <SelectValue placeholder="Seçiniz..." />

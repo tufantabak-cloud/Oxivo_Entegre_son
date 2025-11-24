@@ -47,6 +47,10 @@ export function ActivityLogViewer({ isOpen, onClose }: ActivityLogViewerProps) {
   const [filterAction, setFilterAction] = useState<ActivityAction | 'ALL'>('ALL');
   const [filterCategory, setFilterCategory] = useState<ActivityCategory | 'ALL'>('ALL');
   const [dateFilter, setDateFilter] = useState<'ALL' | 'TODAY' | 'WEEK' | 'MONTH'>('ALL');
+  
+  // Dropdown states for controlled components
+  const [isActionDropdownOpen, setIsActionDropdownOpen] = useState(false);
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
 
   // Get filtered activities
   const filteredActivities = useMemo(() => {
@@ -214,9 +218,21 @@ export function ActivityLogViewer({ isOpen, onClose }: ActivityLogViewerProps) {
               <div>
                 <Select
                   value={filterAction}
-                  onValueChange={v => setFilterAction(v as ActivityAction | 'ALL')}
+                  onValueChange={(v) => {
+                    setFilterAction(v as ActivityAction | 'ALL');
+                    setIsActionDropdownOpen(false);
+                  }}
+                  open={isActionDropdownOpen}
+                  onOpenChange={setIsActionDropdownOpen}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger
+                    onClick={() => setIsActionDropdownOpen(!isActionDropdownOpen)}
+                    className={`bg-white transition-all ${
+                      isActionDropdownOpen 
+                        ? 'ring-2 ring-blue-500 border-blue-500' 
+                        : 'hover:border-gray-400'
+                    }`}
+                  >
                     <SelectValue placeholder="İşlem Türü" />
                   </SelectTrigger>
                   <SelectContent>
@@ -236,9 +252,21 @@ export function ActivityLogViewer({ isOpen, onClose }: ActivityLogViewerProps) {
               <div>
                 <Select
                   value={filterCategory}
-                  onValueChange={v => setFilterCategory(v as ActivityCategory | 'ALL')}
+                  onValueChange={(v) => {
+                    setFilterCategory(v as ActivityCategory | 'ALL');
+                    setIsCategoryDropdownOpen(false);
+                  }}
+                  open={isCategoryDropdownOpen}
+                  onOpenChange={setIsCategoryDropdownOpen}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger
+                    onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+                    className={`bg-white transition-all ${
+                      isCategoryDropdownOpen 
+                        ? 'ring-2 ring-blue-500 border-blue-500' 
+                        : 'hover:border-gray-400'
+                    }`}
+                  >
                     <SelectValue placeholder="Kategori" />
                   </SelectTrigger>
                   <SelectContent>

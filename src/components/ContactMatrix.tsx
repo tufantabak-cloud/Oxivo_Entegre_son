@@ -251,14 +251,16 @@ export function ContactMatrix({ contacts, onContactsChange, gorevListesi }: Cont
                 <Label htmlFor="gorev">Görevi *</Label>
                 <Select
                   value={formData.gorev}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, gorev: value })
-                  }
+                  onValueChange={(value) => {
+                    setFormData({ ...formData, gorev: value });
+                    setIsGorevDropdownOpen(false);
+                  }}
                   open={isGorevDropdownOpen}
                   onOpenChange={setIsGorevDropdownOpen}
                 >
                   <SelectTrigger 
                     id="gorev" 
+                    onClick={() => setIsGorevDropdownOpen(!isGorevDropdownOpen)}
                     className={`bg-white transition-all ${
                       isGorevDropdownOpen 
                         ? 'ring-2 ring-blue-500 border-blue-500' 
