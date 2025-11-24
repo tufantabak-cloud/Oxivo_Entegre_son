@@ -43,6 +43,7 @@ export function ContactMatrix({ contacts, onContactsChange, gorevListesi }: Cont
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<ContactPerson | null>(null);
   const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
+  const [isGorevDropdownOpen, setIsGorevDropdownOpen] = useState(false);
   const [formData, setFormData] = useState<ContactPerson>({
     id: '',
     ad: '',
@@ -253,8 +254,17 @@ export function ContactMatrix({ contacts, onContactsChange, gorevListesi }: Cont
                   onValueChange={(value) =>
                     setFormData({ ...formData, gorev: value })
                   }
+                  open={isGorevDropdownOpen}
+                  onOpenChange={setIsGorevDropdownOpen}
                 >
-                  <SelectTrigger id="gorev" className="bg-white">
+                  <SelectTrigger 
+                    id="gorev" 
+                    className={`bg-white transition-all ${
+                      isGorevDropdownOpen 
+                        ? 'ring-2 ring-blue-500 border-blue-500' 
+                        : 'hover:border-gray-400'
+                    }`}
+                  >
                     <SelectValue placeholder="Görev seçiniz..." />
                   </SelectTrigger>
                   <SelectContent 
