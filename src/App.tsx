@@ -35,7 +35,7 @@ import { logger, createTimer } from './utils/logger';
 import { getStoredData, setStoredData } from './utils/storage';
 import { migrateData, validateImportData } from './utils/dataMigration';
 import { syncToSupabase } from './utils/supabaseSync';
-import { startAutoSync } from './utils/autoSync';
+import { syncAllData } from './utils/autoSync';
 
 // ⚡ PHASE 3: Code Splitting - Lazy load heavy modules
 const CustomerModule = lazy(() => import('./components/CustomerModule').then(m => ({ default: m.CustomerModule })));
@@ -339,8 +339,6 @@ export default function App() {
   useEffect(() => { 
     if (dataLoaded) {
       setStoredData('customers', customers);
-      // Auto-sync to Supabase
-      startAutoSync(customers);
     }
   }, [customers, dataLoaded]);
   
@@ -353,6 +351,28 @@ export default function App() {
     });
     setStoredData('bankPFRecords', bankPFRecords); 
   }, [bankPFRecords, dataLoaded]);
+
+  // ✅ NEW: Auto-sync ALL data types to Supabase (runs when ANY data changes)
+  useEffect(() => {
+    if (!dataLoaded) return;
+    
+    // Debounce sync to avoid too many requests (wait 2 seconds after last change)
+    const syncTimer = setTimeout(() => {
+      logger.debug('🔄 Auto-syncing all data to Supabase...', {
+        customers: customers.length,
+        products: payterProducts.length,
+        bankPF: bankPFRecords.length
+      });
+      
+      syncAllData({
+        customers,
+        products: payterProducts,
+        bankPF: bankPFRecords
+      });
+    }, 2000);
+
+    return () => clearTimeout(syncTimer);
+  }, [customers, payterProducts, bankPFRecords, dataLoaded]);
 
   // Debug: Veri durumu izleme (Ana Sayfa analizi için)
   useEffect(() => {
@@ -915,7 +935,7 @@ export default function App() {
       id: h.id,
       name: h.ad,
       subtitle: h.aciklama || 'Açıklama belirtilmemiş',
-      value: h.kodNo ? `Kod: ${h.kodNo}` : undefined
+      value: h.kodNo ? `Kod: ${h.kodONo}` : undefined
     }));
 
     // Sabit komisyon listesi
