@@ -45,22 +45,27 @@ export function ContactMatrix({ contacts, onContactsChange, gorevListesi }: Cont
   const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
   const [formData, setFormData] = useState<ContactPerson>({
     id: '',
-    adiSoyadi: '',
-    gorevi: '',
-    tel: '',
+    ad: '',
+    soyad: '',
+    gorev: '',
+    telefon: '',
     gsm: '',
-    mail: '',
+    email: '',
   });
+
+  // Debug: gorevListesi kontrolü
+  console.log('📋 ContactMatrix gorevListesi:', gorevListesi, 'length:', gorevListesi?.length || 0);
 
   const handleAdd = () => {
     setEditingContact(null);
     setFormData({
       id: '',
-      adiSoyadi: '',
-      gorevi: '',
-      tel: '',
+      ad: '',
+      soyad: '',
+      gorev: '',
+      telefon: '',
       gsm: '',
-      mail: '',
+      email: '',
     });
     setIsDialogOpen(true);
   };
@@ -140,23 +145,23 @@ export function ContactMatrix({ contacts, onContactsChange, gorevListesi }: Cont
                 {contacts.map((contact) => (
                   <TableRow key={contact.id}>
                     {columnVisibility['adiSoyadi'] !== false && (
-                      <TableCell>{contact.adiSoyadi}</TableCell>
+                      <TableCell>{contact.ad} {contact.soyad}</TableCell>
                     )}
                     {columnVisibility['gorevi'] !== false && (
                       <TableCell>
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm bg-blue-100 text-blue-800">
-                          {contact.gorevi}
+                          {contact.gorev}
                         </span>
                       </TableCell>
                     )}
                     {columnVisibility['tel'] !== false && (
-                      <TableCell>{contact.tel || '-'}</TableCell>
+                      <TableCell>{contact.telefon || '-'}</TableCell>
                     )}
                     {columnVisibility['gsm'] !== false && (
                       <TableCell>{contact.gsm || '-'}</TableCell>
                     )}
                     {columnVisibility['mail'] !== false && (
-                      <TableCell>{contact.mail}</TableCell>
+                      <TableCell>{contact.email}</TableCell>
                     )}
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end space-x-2">
@@ -185,7 +190,7 @@ export function ContactMatrix({ contacts, onContactsChange, gorevListesi }: Cont
 
         {/* Add/Edit Dialog */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {editingContact ? 'Kişiyi Düzenle' : 'Yeni Kişi Ekle'}
@@ -196,27 +201,39 @@ export function ContactMatrix({ contacts, onContactsChange, gorevListesi }: Cont
             </DialogHeader>
 
             <div className="grid grid-cols-2 gap-4 py-4">
-              <div className="col-span-2 space-y-2">
-                <Label htmlFor="adiSoyadi">Adı Soyadı *</Label>
+              <div className="space-y-2">
+                <Label htmlFor="ad">Adı *</Label>
                 <Input
-                  id="adiSoyadi"
-                  value={formData.adiSoyadi}
+                  id="ad"
+                  value={formData.ad}
                   onChange={(e) =>
-                    setFormData({ ...formData, adiSoyadi: e.target.value })
+                    setFormData({ ...formData, ad: e.target.value })
                   }
-                  placeholder="Örn: Ahmet Yılmaz"
+                  placeholder="Örn: Cihan"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="soyad">Soyadı *</Label>
+                <Input
+                  id="soyad"
+                  value={formData.soyad}
+                  onChange={(e) =>
+                    setFormData({ ...formData, soyad: e.target.value })
+                  }
+                  placeholder="Örn: GÜNEŞ"
                 />
               </div>
 
               <div className="col-span-2 space-y-2">
-                <Label htmlFor="gorevi">Görevi *</Label>
+                <Label htmlFor="gorev">Görevi *</Label>
                 <Select
-                  value={formData.gorevi}
+                  value={formData.gorev}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, gorevi: value })
+                    setFormData({ ...formData, gorev: value })
                   }
                 >
-                  <SelectTrigger id="gorevi">
+                  <SelectTrigger id="gorev">
                     <SelectValue placeholder="Görev seçiniz..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -230,11 +247,11 @@ export function ContactMatrix({ contacts, onContactsChange, gorevListesi }: Cont
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="tel">Telefon</Label>
+                <Label htmlFor="telefon">Telefon</Label>
                 <Input
-                  id="tel"
-                  value={formData.tel}
-                  onChange={(e) => setFormData({ ...formData, tel: e.target.value })}
+                  id="telefon"
+                  value={formData.telefon}
+                  onChange={(e) => setFormData({ ...formData, telefon: e.target.value })}
                   placeholder="0212 123 4567"
                 />
               </div>
@@ -250,12 +267,12 @@ export function ContactMatrix({ contacts, onContactsChange, gorevListesi }: Cont
               </div>
 
               <div className="col-span-2 space-y-2">
-                <Label htmlFor="mail">E-posta *</Label>
+                <Label htmlFor="email">E-posta *</Label>
                 <Input
-                  id="mail"
+                  id="email"
                   type="email"
-                  value={formData.mail}
-                  onChange={(e) => setFormData({ ...formData, mail: e.target.value })}
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="ornek@firma.com"
                 />
               </div>
@@ -268,7 +285,7 @@ export function ContactMatrix({ contacts, onContactsChange, gorevListesi }: Cont
               </Button>
               <Button
                 onClick={handleSave}
-                disabled={!formData.adiSoyadi || !formData.gorevi || !formData.mail}
+                disabled={!formData.ad || !formData.soyad || !formData.gorev || !formData.email}
               >
                 <Check size={18} className="mr-2" />
                 {editingContact ? 'Güncelle' : 'Ekle'}

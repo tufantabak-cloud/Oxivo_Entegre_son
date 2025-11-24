@@ -14,11 +14,12 @@ import { toast } from 'sonner';
 
 export interface ContactPerson {
   id: string;
-  adiSoyadi: string;
-  gorevi: string;
-  tel: string;
+  ad: string;
+  soyad: string;
+  gorev: string;
+  telefon: string;
   gsm: string;
-  mail: string;
+  email: string;
 }
 
 export interface Document {
