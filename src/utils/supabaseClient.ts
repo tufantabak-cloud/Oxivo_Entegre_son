@@ -1,11 +1,11 @@
 /**
- * Supabase Client ve API Helpers
- * Direct Supabase Client mode - Frontend'den direkt Postgres erişimi
- * 
- * IMPORTANT: Supabase uses snake_case, Frontend uses camelCase
- * All data is converted automatically via caseConverter
- * 
- * SINGLETON: Uses global window cache to prevent multiple instances
+Supabase Client ve API Helpers
+Direct Supabase Client mode - Frontend'den direkt Postgres erişimi
+
+IMPORTANT: Supabase uses snake_case, Frontend uses camelCase
+All data is converted automatically via caseConverter
+
+SINGLETON: Uses global window cache to prevent multiple instances
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
@@ -15,21 +15,21 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 // ========================================
 
 /**
- * camelCase → snake_case dönüşümü
+camelCase → snake_case dönüşümü
  */
 function toSnakeCase(str: string): string {
   return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
 }
 
 /**
- * snake_case → camelCase dönüşümü
+snake_case → camelCase dönüşümü
  */
 function toCamelCase(str: string): string {
-  return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+  return str.replace(/([a-z])/g, (, letter) => letter.toUpperCase());
 }
 
 /**
- * Object'in tüm key'lerini camelCase'den snake_case'e çevirir
+Object'in tüm key'lerini camelCase'den snake_case'e çevirir
  */
 export function objectToSnakeCase(obj: any): any {
   if (obj === null || obj === undefined) return obj;
@@ -47,7 +47,7 @@ export function objectToSnakeCase(obj: any): any {
 }
 
 /**
- * Object'in tüm key'lerini snake_case'den camelCase'e çevirir
+Object'in tüm key'lerini snake_case'den camelCase'e çevirir
  */
 export function objectToCamelCase(obj: any): any {
   if (obj === null || obj === undefined) return obj;
@@ -73,7 +73,7 @@ export const PROJECT_ID = "okgeyuhmumlkkcpoholh";
 export const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9rZ2V5dWhtdW1sa2tjcG9ob2xoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg0MDAyMjAsImV4cCI6MjA3Mzk3NjIyMH0.wICqJoMc9a2-S7OwW6VMwcs1-ApPjpnS2QMZ4BVZFpI";
 
 // Global singleton cache key
-const SUPABASE_SINGLETON_KEY = '__oxivo_supabase_client__';
+const SUPABASE_SINGLETON_KEY = 'oxivo_supabase_client';
 
 // Declare global type
 declare global {
@@ -83,8 +83,8 @@ declare global {
 }
 
 /**
- * Get or create Supabase client (singleton)
- * CRITICAL: This ensures only ONE instance exists globally
+Get or create Supabase client (singleton)
+CRITICAL: This ensures only ONE instance exists globally
  */
 function getSupabaseClient(): SupabaseClient {
   // Server-side: create new client (no window)
@@ -131,8 +131,8 @@ export const supabase = getSupabaseClient();
 
 // Debug: Expose client to window for inspection
 if (typeof window !== 'undefined') {
-  (window as any).__OXIVO_SUPABASE__ = supabase;
-  console.log('🔍 Debug: Supabase client available at window.__OXIVO_SUPABASE__');
+  (window as any).OXIVO_SUPABASE = supabase;
+  console.log('🔍 Debug: Supabase client available at window.OXIVO_SUPABASE');
 }
 
 // HMR (Hot Module Replacement) cleanup
@@ -153,7 +153,7 @@ if (import.meta.hot) {
 
 export const customerApi = {
   /**
-   * Tüm müşterileri getirir
+Tüm müşterileri getirir
    */
   async getAll() {
     console.log('🔍 Fetching customers from Supabase...');
@@ -179,7 +179,7 @@ export const customerApi = {
   },
 
   /**
-   * Tek müşteri getirir
+Tek müşteri getirir
    */
   async getById(id: string) {
     const { data, error } = await supabase
@@ -197,7 +197,7 @@ export const customerApi = {
   },
 
   /**
-   * Müşteri ekler (tek veya toplu)
+Müşteri ekler (tek veya toplu)
    */
   async create(customers: any | any[]) {
     console.log('📤 Upserting customers to Supabase...');
@@ -237,12 +237,12 @@ export const customerApi = {
       return { success: false, error: error.message };
     }
 
-    console.log(`✅ Upserted ${data.length} customers in Supabase`);
+    console.log(`✅ Upserted ${data.length} customers to Supabase`);
     return { success: true, data: data.map(objectToCamelCase), count: data.length };
   },
 
   /**
-   * Müşteri günceller
+Müşteri günceller
    */
   async update(id: string, updates: any) {
     const { data, error } = await supabase
@@ -262,7 +262,7 @@ export const customerApi = {
   },
 
   /**
-   * Müşteri siler
+Müşteri siler
    */
   async delete(id: string) {
     const { error } = await supabase
@@ -286,7 +286,7 @@ export const customerApi = {
 
 export const productApi = {
   /**
-   * Tüm ürünleri getirir
+Tüm ürünleri getirir
    */
   async getAll() {
     const { data, error } = await supabase
@@ -304,7 +304,7 @@ export const productApi = {
   },
 
   /**
-   * Ürün sync (upsert)
+Ürün sync (upsert)
    */
   async sync(products: any[], strategy: 'merge' | 'replace' = 'merge') {
     if (strategy === 'replace') {
@@ -342,7 +342,7 @@ export const productApi = {
 
 export const bankPFApi = {
   /**
-   * Tüm Bank/PF kayıtlarını getirir
+Tüm Bank/PF kayıtlarını getirir
    */
   async getAll() {
     const { data, error } = await supabase
@@ -360,7 +360,7 @@ export const bankPFApi = {
   },
 
   /**
-   * Bank/PF kayıtları ekler
+Bank/PF kayıtları ekler/günceller (upsert)
    */
   async create(records: any | any[]) {
     const items = Array.isArray(records) ? records.map(objectToSnakeCase) : [objectToSnakeCase(records)];
@@ -371,17 +371,19 @@ export const bankPFApi = {
       .select();
 
     if (error) {
-      console.error('❌ Error creating bankPF records:', error);
+      console.error('❌ Error upserting bankPF records:', error);
       return { success: false, error: error.message };
     }
 
-    console.log(`✅ Created ${data.length} bankPF records in Supabase`);
+    console.log(`✅ Upserted ${data.length} bankPF records to Supabase`);
     return { success: true, data: data.map(objectToCamelCase), count: data.length };
   },
 };
-/**
-💰 PETTY CASH API
- */
+
+// ========================================
+// PETTY CASH API
+// ========================================
+
 export const pettyCashApi = {
   /**
 Tüm Petty Cash kayıtlarını getirir
@@ -422,9 +424,10 @@ Petty Cash kayıtları ekler/günceller (upsert)
   },
 };
 
-/**
-📂 CATEGORIES API
- */
+// ========================================
+// CATEGORIES API
+// ========================================
+
 export const categoryApi = {
   /**
 Tüm kategori kayıtlarını getirir
@@ -465,9 +468,10 @@ Kategori kayıtları ekler/günceller (upsert)
   },
 };
 
-/**
-💳 TRANSACTIONS API
- */
+// ========================================
+// TRANSACTIONS API
+// ========================================
+
 export const transactionApi = {
   /**
 Tüm işlem kayıtlarını getirir
@@ -508,9 +512,10 @@ Tüm işlem kayıtlarını getirir
   },
 };
 
-/**
-🪧 SIGNS (TABELA) API
- */
+// ========================================
+// SIGNS (TABELA) API
+// ========================================
+
 export const signApi = {
   /**
 Tüm tabela kayıtlarını getirir
@@ -551,9 +556,10 @@ Tabela kayıtları ekler/günceller (upsert)
   },
 };
 
-/**
-💰 INCOME RECORDS API
- */
+// ========================================
+// INCOME RECORDS API
+// ========================================
+
 export const incomeApi = {
   /**
 Tüm gelir kayıtlarını getirir
