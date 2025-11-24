@@ -1316,113 +1316,113 @@ export default function App() {
                     <Menu size={20} className="text-blue-600" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="w-[280px] sm:w-[320px]">
-                  <SheetHeader>
-                    <SheetTitle className="flex items-center gap-2">
+                <SheetContent side="left" className="w-[260px] p-4">
+                  <SheetHeader className="pb-4 border-b">
+                    <SheetTitle className="flex items-center gap-2 text-base">
                       <span className="font-bold text-blue-600">Oxivo</span>
-                      <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-1 rounded-md">
+                      <span className="text-[9px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
                         v{CURRENT_APP_VERSION}
                       </span>
                     </SheetTitle>
                   </SheetHeader>
-                  <nav className="flex flex-col gap-2 mt-6">
+                  <nav className="flex flex-col gap-1.5 mt-4">
                     <button
                       onClick={() => {
                         setActiveModule('home');
                         setIsMobileMenuOpen(false);
                       }}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all text-[14px] ${
+                      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium transition-all text-[13px] ${
                         activeModule === 'home'
                           ? 'bg-blue-600 text-white shadow-md'
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
-                      <Home size={18} />
-                      <span>Ana Sayfa</span>
+                      <Home size={16} className="flex-shrink-0" />
+                      <span className="truncate">Ana Sayfa</span>
                     </button>
                     <button
                       onClick={() => {
                         setActiveModule('reports');
                         setIsMobileMenuOpen(false);
                       }}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all text-[14px] ${
+                      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium transition-all text-[13px] ${
                         activeModule === 'reports'
                           ? 'bg-blue-600 text-white shadow-md'
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
-                      <FileText size={18} />
-                      <span>Rapor</span>
+                      <FileText size={16} className="flex-shrink-0" />
+                      <span className="truncate">Rapor</span>
                     </button>
                     <button
                       onClick={() => {
                         setActiveModule('customers');
                         setIsMobileMenuOpen(false);
                       }}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all text-[14px] ${
+                      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium transition-all text-[13px] ${
                         activeModule === 'customers'
                           ? 'bg-blue-600 text-white shadow-md'
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
-                      <Users size={18} />
-                      <span>Müşteriler</span>
+                      <Users size={16} className="flex-shrink-0" />
+                      <span className="truncate">Müşteriler</span>
                     </button>
                     <button
                       onClick={() => {
                         setActiveModule('bankpf');
                         setIsMobileMenuOpen(false);
                       }}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all text-[14px] ${
+                      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium transition-all text-[13px] ${
                         activeModule === 'bankpf'
                           ? 'bg-blue-600 text-white shadow-md'
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
-                      <Building2 size={18} />
-                      <span>Banka/PF</span>
+                      <Building2 size={16} className="flex-shrink-0" />
+                      <span className="truncate">Banka/PF</span>
                     </button>
                     <button
                       onClick={() => {
                         setActiveModule('products');
                         setIsMobileMenuOpen(false);
                       }}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all text-[14px] ${
+                      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium transition-all text-[13px] ${
                         activeModule === 'products'
                           ? 'bg-blue-600 text-white shadow-md'
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
-                      <Package size={18} />
-                      <span>Ürün</span>
+                      <Package size={16} className="flex-shrink-0" />
+                      <span className="truncate">Ürün</span>
                     </button>
                     <button
                       onClick={() => {
                         setActiveModule('revenue');
                         setIsMobileMenuOpen(false);
                       }}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all text-[14px] ${
+                      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium transition-all text-[13px] ${
                         activeModule === 'revenue'
                           ? 'bg-blue-600 text-white shadow-md'
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
-                      <Euro size={18} />
-                      <span>Gelir</span>
+                      <Euro size={16} className="flex-shrink-0" />
+                      <span className="truncate">Gelir</span>
                     </button>
                     <button
                       onClick={() => {
                         setActiveModule('definitions');
                         setIsMobileMenuOpen(false);
                       }}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all text-[14px] ${
+                      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium transition-all text-[13px] ${
                         activeModule === 'definitions'
                           ? 'bg-blue-600 text-white shadow-md'
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
-                      <Settings size={18} />
-                      <span>Tanımlar</span>
+                      <Settings size={16} className="flex-shrink-0" />
+                      <span className="truncate">Tanımlar</span>
                     </button>
                   </nav>
                 </SheetContent>

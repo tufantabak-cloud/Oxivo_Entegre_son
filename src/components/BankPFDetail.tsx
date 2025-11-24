@@ -176,31 +176,35 @@ export function BankPFDetail({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Button variant="outline" onClick={onCancel} size="icon">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto">
+          <Button variant="outline" onClick={onCancel} size="icon" className="flex-shrink-0">
             <ArrowLeft size={20} />
           </Button>
-          <div>
-            <h2>
-              {isCreating ? 'Yeni Banka/PF Kaydı' : `${formData.muhasebeKodu} - ${formData.firmaUnvan}`}
+          <div className="min-w-0 flex-1">
+            <h2 className="text-base sm:text-lg truncate">
+              {isCreating ? 'Yeni Banka/PF' : `${formData.muhasebeKodu}`}
             </h2>
+            {!isCreating && (
+              <p className="text-xs sm:text-sm text-gray-600 truncate">{formData.firmaUnvan}</p>
+            )}
           </div>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 w-full sm:w-auto">
           {!isCreating && !isEditing && (
             <Button 
               onClick={() => setIsEditing(true)}
-              className="flex items-center space-x-2"
+              className="flex items-center space-x-1 sm:space-x-2 flex-1 sm:flex-none text-sm"
             >
-              <span>Güncelleme</span>
+              <span className="hidden sm:inline">Güncelleme</span>
+              <span className="sm:hidden">Güncelle</span>
             </Button>
           )}
           {!isCreating && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <button className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-                  <Trash2 size={18} />
+                <button className="flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm flex-1 sm:flex-none">
+                  <Trash2 size={16} />
                   <span>Sil</span>
                 </button>
               </AlertDialogTrigger>
@@ -244,32 +248,32 @@ export function BankPFDetail({
 
       {/* Tabs */}
       <Tabs defaultValue="onizleme" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="onizleme">🔍 Ön İzleme</TabsTrigger>
-          <TabsTrigger value="kategoriler">🏦 Kategoriler</TabsTrigger>
-          <TabsTrigger value="isbirligi">İş Birliği</TabsTrigger>
-          <TabsTrigger value="hakedis">Hakediş</TabsTrigger>
-          <TabsTrigger value="tabela">TABELA</TabsTrigger>
-          <TabsTrigger value="bankalar">Bankalar</TabsTrigger>
-          <TabsTrigger value="bilgiler">Cari Bilgileri</TabsTrigger>
-          <TabsTrigger value="iletisim">İletişim Matrisi</TabsTrigger>
-          <TabsTrigger value="dokumanlar">Doküman Yönetimi</TabsTrigger>
-          <TabsTrigger value="uiy">ÜİY</TabsTrigger>
+        <TabsList className="flex-wrap h-auto">
+          <TabsTrigger value="onizleme" className="text-xs sm:text-sm">🔍 <span className="hidden sm:inline">Ön İzleme</span><span className="sm:hidden">Özet</span></TabsTrigger>
+          <TabsTrigger value="kategoriler" className="text-xs sm:text-sm">🏦 <span className="hidden sm:inline">Kategoriler</span><span className="sm:hidden">Kat.</span></TabsTrigger>
+          <TabsTrigger value="isbirligi" className="text-xs sm:text-sm"><span className="hidden sm:inline">İş Birliği</span><span className="sm:hidden">İşbir.</span></TabsTrigger>
+          <TabsTrigger value="hakedis" className="text-xs sm:text-sm">Hakediş</TabsTrigger>
+          <TabsTrigger value="tabela" className="text-xs sm:text-sm">TABELA</TabsTrigger>
+          <TabsTrigger value="bankalar" className="text-xs sm:text-sm">Bankalar</TabsTrigger>
+          <TabsTrigger value="bilgiler" className="text-xs sm:text-sm"><span className="hidden sm:inline">Cari Bilgileri</span><span className="sm:hidden">Bilgiler</span></TabsTrigger>
+          <TabsTrigger value="iletisim" className="text-xs sm:text-sm"><span className="hidden sm:inline">İletişim Matrisi</span><span className="sm:hidden">İletişim</span></TabsTrigger>
+          <TabsTrigger value="dokumanlar" className="text-xs sm:text-sm"><span className="hidden sm:inline">Doküman Yönetimi</span><span className="sm:hidden">Döküman</span></TabsTrigger>
+          <TabsTrigger value="uiy" className="text-xs sm:text-sm">ÜİY</TabsTrigger>
         </TabsList>
 
         {/* Ön İzleme Tab */}
         <TabsContent value="onizleme">
           <div className="space-y-6">
             {/* Özet Kartlar */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
               <Card>
-                <CardContent className="pt-6">
+                <CardContent className="pt-4 sm:pt-6">
                   <div className="text-center">
-                    <div className="text-3xl mb-2">
+                    <div className="text-2xl sm:text-3xl mb-1 sm:mb-2">
                       {(formData.isbirlikleri || []).length}
                     </div>
-                    <div className="text-sm text-gray-600">İşbirliği</div>
-                    <Badge variant={(formData.isbirlikleri || []).length > 0 ? "default" : "secondary"} className="mt-2">
+                    <div className="text-xs sm:text-sm text-gray-600">İşbirliği</div>
+                    <Badge variant={(formData.isbirlikleri || []).length > 0 ? "default" : "secondary"} className="mt-1 sm:mt-2 text-xs">
                       {(formData.isbirlikleri || []).length > 0 ? 'Var' : 'Yok'}
                     </Badge>
                   </div>
@@ -277,13 +281,13 @@ export function BankPFDetail({
               </Card>
               
               <Card>
-                <CardContent className="pt-6">
+                <CardContent className="pt-4 sm:pt-6">
                   <div className="text-center">
-                    <div className="text-3xl mb-2">
+                    <div className="text-2xl sm:text-3xl mb-1 sm:mb-2">
                       {(formData.tabelaRecords || []).length}
                     </div>
-                    <div className="text-sm text-gray-600">TABELA</div>
-                    <Badge variant={(formData.tabelaRecords || []).length > 0 ? "default" : "secondary"} className="mt-2">
+                    <div className="text-xs sm:text-sm text-gray-600">TABELA</div>
+                    <Badge variant={(formData.tabelaRecords || []).length > 0 ? "default" : "secondary"} className="mt-1 sm:mt-2 text-xs">
                       {(formData.tabelaRecords || []).length > 0 ? 'Var' : 'Yok'}
                     </Badge>
                   </div>
@@ -291,13 +295,13 @@ export function BankPFDetail({
               </Card>
               
               <Card>
-                <CardContent className="pt-6">
+                <CardContent className="pt-4 sm:pt-6">
                   <div className="text-center">
-                    <div className="text-3xl mb-2">
+                    <div className="text-2xl sm:text-3xl mb-1 sm:mb-2">
                       {(formData.agreementBanks || []).length}
                     </div>
-                    <div className="text-sm text-gray-600">Anlaşmalı Banka</div>
-                    <Badge variant={(formData.agreementBanks || []).length > 0 ? "default" : "secondary"} className="mt-2">
+                    <div className="text-xs sm:text-sm text-gray-600">Anlaşmalı Banka</div>
+                    <Badge variant={(formData.agreementBanks || []).length > 0 ? "default" : "secondary"} className="mt-1 sm:mt-2 text-xs">
                       {(formData.agreementBanks || []).length > 0 ? 'Var' : 'Yok'}
                     </Badge>
                   </div>
@@ -305,13 +309,13 @@ export function BankPFDetail({
               </Card>
               
               <Card>
-                <CardContent className="pt-6">
+                <CardContent className="pt-4 sm:pt-6">
                   <div className="text-center">
-                    <div className="text-3xl mb-2">
+                    <div className="text-2xl sm:text-3xl mb-1 sm:mb-2">
                       {(formData.iletisimMatrisi || []).length}
                     </div>
-                    <div className="text-sm text-gray-600">İletişim</div>
-                    <Badge variant={(formData.iletisimMatrisi || []).length > 0 ? "default" : "secondary"} className="mt-2">
+                    <div className="text-xs sm:text-sm text-gray-600">İletişim</div>
+                    <Badge variant={(formData.iletisimMatrisi || []).length > 0 ? "default" : "secondary"} className="mt-1 sm:mt-2 text-xs">
                       {(formData.iletisimMatrisi || []).length > 0 ? 'Var' : 'Yok'}
                     </Badge>
                   </div>
@@ -459,7 +463,7 @@ export function BankPFDetail({
                               {new Date(tabela.olusturmaTarihi).toLocaleDateString('tr-TR')}
                             </span>
                           </div>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 text-xs sm:text-sm">
                             <div>
                               <p className="text-gray-600">Kart Tipi</p>
                               <p>{tabela.kartTipi}</p>
@@ -766,11 +770,11 @@ export function BankPFDetail({
               {/* Sol Kolon */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Firma Bilgileri</CardTitle>
+                  <CardTitle className="text-base sm:text-lg">Firma Bilgileri</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="firmaUnvan">Firma Ünvanı *</Label>
+                    <Label htmlFor="firmaUnvan" className="text-xs sm:text-sm">Firma Ünvanı *</Label>
                     <Input
                       id="firmaUnvan"
                       value={formData.firmaUnvan}
@@ -778,12 +782,12 @@ export function BankPFDetail({
                       required
                       placeholder="Örn: Türkiye İş Bankası A.Ş."
                       disabled={!isEditing}
-                      className={!isEditing ? 'bg-gray-100' : ''}
+                      className={`text-sm ${!isEditing ? 'bg-gray-100' : ''}`}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="muhasebeKodu">Muhasebe Kodu *</Label>
+                    <Label htmlFor="muhasebeKodu" className="text-xs sm:text-sm">Muhasebe Kodu *</Label>
                     <Input
                       id="muhasebeKodu"
                       value={formData.muhasebeKodu}
@@ -791,37 +795,37 @@ export function BankPFDetail({
                       required
                       placeholder="Örn: 320.01.001"
                       disabled={!isEditing}
-                      className={!isEditing ? 'bg-gray-100' : ''}
+                      className={`text-sm ${!isEditing ? 'bg-gray-100' : ''}`}
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="vergiDairesi">Vergi Dairesi</Label>
+                      <Label htmlFor="vergiDairesi" className="text-xs sm:text-sm">Vergi Dairesi</Label>
                       <Input
                         id="vergiDairesi"
                         value={formData.vergiDairesi}
                         onChange={(e) => handleChange('vergiDairesi', e.target.value)}
                         placeholder="Vergi dairesi"
                         disabled={!isEditing}
-                        className={!isEditing ? 'bg-gray-100' : ''}
+                        className={`text-sm ${!isEditing ? 'bg-gray-100' : ''}`}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="vergiNo">Vergi No</Label>
+                      <Label htmlFor="vergiNo" className="text-xs sm:text-sm">Vergi No</Label>
                       <Input
                         id="vergiNo"
                         value={formData.vergiNo}
                         onChange={(e) => handleChange('vergiNo', e.target.value)}
                         placeholder="1234567890"
                         disabled={!isEditing}
-                        className={!isEditing ? 'bg-gray-100' : ''}
+                        className={`text-sm ${!isEditing ? 'bg-gray-100' : ''}`}
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="adres">Adres</Label>
+                    <Label htmlFor="adres" className="text-xs sm:text-sm">Adres</Label>
                     <Textarea
                       id="adres"
                       value={formData.adres}
@@ -829,24 +833,24 @@ export function BankPFDetail({
                       placeholder="Tam adres"
                       rows={3}
                       disabled={!isEditing}
-                      className={!isEditing ? 'bg-gray-100' : ''}
+                      className={`text-sm ${!isEditing ? 'bg-gray-100' : ''}`}
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="telefon">Telefon</Label>
+                      <Label htmlFor="telefon" className="text-xs sm:text-sm">Telefon</Label>
                       <Input
                         id="telefon"
                         value={formData.telefon}
                         onChange={(e) => handleChange('telefon', e.target.value)}
                         placeholder="0212 123 4567"
                         disabled={!isEditing}
-                        className={!isEditing ? 'bg-gray-100' : ''}
+                        className={`text-sm ${!isEditing ? 'bg-gray-100' : ''}`}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="email">E-posta</Label>
+                      <Label htmlFor="email" className="text-xs sm:text-sm">E-posta</Label>
                       <Input
                         id="email"
                         type="email"
@@ -854,13 +858,13 @@ export function BankPFDetail({
                         onChange={(e) => handleChange('email', e.target.value)}
                         placeholder="info@ornek.com"
                         disabled={!isEditing}
-                        className={!isEditing ? 'bg-gray-100' : ''}
+                        className={`text-sm ${!isEditing ? 'bg-gray-100' : ''}`}
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="durum">Durum</Label>
+                    <Label htmlFor="durum" className="text-xs sm:text-sm">Durum</Label>
                     <Select
                       value={formData.durum}
                       onValueChange={(value) => handleChange('durum', value)}
@@ -881,11 +885,11 @@ export function BankPFDetail({
               {/* Sağ Kolon */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Banka / Ödeme Kuruluşu Bilgileri</CardTitle>
+                  <CardTitle className="text-base sm:text-lg">Banka / ÖK Bilgileri</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="bankaOrPF">Banka / PF *</Label>
+                    <Label htmlFor="bankaOrPF" className="text-xs sm:text-sm">Banka / PF *</Label>
                     <Select
                       value={formData.bankaOrPF}
                       onValueChange={(value: 'Banka' | 'PF') => {
@@ -909,7 +913,7 @@ export function BankPFDetail({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="bankaPFAd">Banka / PF Adı *</Label>
+                    <Label htmlFor="bankaPFAd" className="text-xs sm:text-sm">Banka / PF Adı *</Label>
                     <Select
                       value={formData.bankaPFAd}
                       onValueChange={(value) => handleChange('bankaPFAd', value)}
@@ -931,7 +935,7 @@ export function BankPFDetail({
                   {formData.bankaOrPF === 'PF' && (
                     <>
                       <div className="space-y-2">
-                        <Label htmlFor="odemeKurulusuTipi">ÖK / EPK Seçimi</Label>
+                        <Label htmlFor="odemeKurulusuTipi" className="text-xs sm:text-sm">ÖK / EPK Seçimi</Label>
                         <Select
                           value={formData.odemeKurulusuTipi}
                           onValueChange={(value) => {
@@ -952,7 +956,7 @@ export function BankPFDetail({
 
                       {formData.odemeKurulusuTipi && (
                         <div className="space-y-2">
-                          <Label htmlFor="odemeKurulusuAd">
+                          <Label htmlFor="odemeKurulusuAd" className="text-xs sm:text-sm">
                             {formData.odemeKurulusuTipi} Adı
                           </Label>
                           <Select
@@ -977,8 +981,8 @@ export function BankPFDetail({
                   )}
 
                   <div className="pt-4 border-t border-gray-200">
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                      <p className="text-sm text-blue-800">
+                    <div className="bg-blue-50 p-3 sm:p-4 rounded-lg">
+                      <p className="text-xs sm:text-sm text-blue-800">
                         <strong>Bilgi:</strong> Banka seçildiğinde sadece banka bilgileri,
                         PF seçildiğinde ise ödeme kuruluşu bilgileri de girilecektir.
                       </p>
