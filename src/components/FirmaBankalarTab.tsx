@@ -1,4 +1,9 @@
+import { useState } from 'react';
 import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Checkbox } from './ui/checkbox';
+import { Badge } from './ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Search, Building2, AlertCircle, Save, Banknote, CreditCard, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
 

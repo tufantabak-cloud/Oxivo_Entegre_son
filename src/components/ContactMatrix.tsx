@@ -53,8 +53,33 @@ export function ContactMatrix({ contacts, onContactsChange, gorevListesi }: Cont
     email: '',
   });
 
+  // Fallback görev listesi - Tanımlar modülünde veri yoksa kullanılır
+  const defaultGorevListesi = [
+    'Genel Müdür',
+    'Genel Müdür Yardımcısı',
+    'Finans Direktörü',
+    'Satış Direktörü',
+    'Pazarlama Direktörü',
+    'İK Direktörü',
+    'Muhasebe Müdürü',
+    'Satış Müdürü',
+    'Finans Müdürü',
+    'İdari İşler Müdürü',
+    'Proje Yöneticisi',
+    'Ürün Müdürü',
+    'Satış Temsilcisi',
+    'Muhasebe Sorumlusu',
+    'Finans Sorumlusu',
+  ];
+
+  // gorevListesi boşsa fallback kullan
+  const effectiveGorevListesi = gorevListesi && gorevListesi.length > 0 
+    ? gorevListesi 
+    : defaultGorevListesi;
+
   // Debug: gorevListesi kontrolü
   console.log('📋 ContactMatrix gorevListesi:', gorevListesi, 'length:', gorevListesi?.length || 0);
+  console.log('📋 Effective gorevListesi:', effectiveGorevListesi, 'length:', effectiveGorevListesi.length);
 
   const handleAdd = () => {
     setEditingContact(null);
@@ -237,7 +262,7 @@ export function ContactMatrix({ contacts, onContactsChange, gorevListesi }: Cont
                     <SelectValue placeholder="Görev seçiniz..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {gorevListesi.map((gorev) => (
+                    {effectiveGorevListesi.map((gorev) => (
                       <SelectItem key={gorev} value={gorev}>
                         {gorev}
                       </SelectItem>
