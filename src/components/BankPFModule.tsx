@@ -400,12 +400,12 @@ export const BankPFModule = React.memo(function BankPFModule({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Banka / PF - Ödeme Kuruluşları</h2>
-          <p className="text-sm font-medium text-gray-600">Banka ve ödeme kuruluşu kayıtlarını yönetin</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Banka / PF - Ödeme Kuruluşları</h2>
+          <p className="text-xs sm:text-sm font-medium text-gray-600">Banka ve ödeme kuruluşu kayıtlarını yönetin</p>
         </div>
-        <Button onClick={handleCreateNew} className="flex items-center gap-2 shadow-md hover:shadow-lg transition-shadow">
+        <Button onClick={handleCreateNew} className="flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-shadow w-full sm:w-auto">
           <Plus size={18} />
           <span>Yeni Kayıt</span>
         </Button>

@@ -1737,73 +1737,62 @@ ${notMatchedDomains.length > 0 ? `\n⚠️ Eşleşmeyen domainler konsola yazdı
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4">
+        {/* Title Section */}
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Müşteri Cari Kart Listesi</h2>
-          <p className="text-sm font-medium text-gray-600">Tüm cari bilgilerini görüntüleyin ve yönetin</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Müşteri Cari Kart Listesi</h2>
+          <p className="text-xs sm:text-sm font-medium text-gray-600">Tüm cari bilgilerini görüntüleyin ve yönetin</p>
         </div>
-        <div className="flex items-center gap-2">
+        
+        {/* Action Buttons - Responsive Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
           {/* Banka/PF Eşleştirme Butonları */}
-          <div className="flex gap-2 border-r pr-2 mr-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDownloadBankPFTemplate}
-              className="group relative"
-              title="Müşteri-Banka/PF eşleştirme şablonunu indir"
-            >
-              🏦📥 Banka/PF Şablon
-              <span className="absolute hidden group-hover:block bg-gray-900 text-white text-xs rounded px-2 py-1 -bottom-16 left-0 w-52 z-10">
-                Mevcut müşteri-Banka/PF eşleştirmelerini Excel'e aktar
-              </span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleBankPFImport}
-              className="group relative"
-              title="Excel'den müşteri-Banka/PF eşleştirmelerini yükle"
-            >
-              🏦📤 Banka/PF Yükle
-              <span className="absolute hidden group-hover:block bg-gray-900 text-white text-xs rounded px-2 py-1 -bottom-20 left-0 w-56 z-10">
-                Excel'deki "Cari Adı" ve "Banka/PF Firma Ünvanı" ile eşleştirme
-              </span>
-            </Button>
+          <Button
+            onClick={handleDownloadBankPFTemplate}
+            className="group relative text-xs sm:text-sm"
+            title="Müşteri-Banka/PF eşleştirme şablonunu indir"
+          >
+            <span className="hidden lg:inline">🏦📥 Banka/PF Şablon</span>
+            <span className="lg:hidden">🏦📥</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleBankPFImport}
+            className="group relative text-xs sm:text-sm"
+            title="Excel'den müşteri-Banka/PF eşleştirmelerini yükle"
+          >
+            <span className="hidden lg:inline">🏦📤 Banka/PF Yükle</span>
+            <span className="lg:hidden">🏦📤</span>
+          </Button>
 
-          </div>
-          
           {/* Domain Hiyerarşisi Butonları */}
-          <div className="flex gap-2 border-r pr-2 mr-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDownloadDomainTemplate}
-              className="group relative"
-              title="Tüm müşterilerin mevcut domain hiyerarşisini Excel'e aktar"
-            >
-              🌐📥 Domain Şablon
-              <span className="absolute hidden group-hover:block bg-gray-900 text-white text-xs rounded px-2 py-1 -bottom-16 left-0 w-48 z-10">
-                Mevcut müşteri domain verilerini Excel'e aktar
-              </span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDomainImport}
-              className="group relative"
-              title="Excel'den tüm müşteriler için domain hiyerarşisini yükle (Cari Adı bazlı)"
-            >
-              🌐📤 Domain Yükle
-              <span className="absolute hidden group-hover:block bg-gray-900 text-white text-xs rounded px-2 py-1 -bottom-20 left-0 w-56 z-10">
-                Excel'deki "Cari Adı" sütununa göre her müşteriye domain seviyeleri atanır
-              </span>
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownloadDomainTemplate}
+            className="group relative text-xs sm:text-sm"
+            title="Tüm müşterilerin mevcut domain hiyerarşisini Excel'e aktar"
+          >
+            <span className="hidden lg:inline">🌐📥 Domain Şablon</span>
+            <span className="lg:hidden">🌐📥</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDomainImport}
+            className="group relative text-xs sm:text-sm"
+            title="Excel'den tüm müşteriler için domain hiyerarşisini yükle (Cari Adı bazlı)"
+          >
+            <span className="hidden lg:inline">🌐📤 Domain Yükle</span>
+            <span className="lg:hidden">🌐📤</span>
+          </Button>
           
           <ExcelImport onImport={handleImportCustomers} bankPFRecords={bankPFRecords} />
-          <Button onClick={handleCreateNew} className="flex items-center gap-2 shadow-md hover:shadow-lg transition-shadow">
+          <Button onClick={handleCreateNew} className="flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-shadow text-xs sm:text-sm col-span-2 sm:col-span-1">
             <Plus size={18} />
-            <span>Yeni Cari Kart</span>
+            <span className="hidden sm:inline">Yeni Cari Kart</span>
+            <span className="sm:hidden">Yeni</span>
           </Button>
         </div>
       </div>

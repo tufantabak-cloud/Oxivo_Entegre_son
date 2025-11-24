@@ -18,8 +18,8 @@ export const ProductModule = React.memo(function ProductModule({ payterProducts 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Ürün Yönetimi</h2>
-        <p className="text-sm font-medium text-gray-600">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Ürün Yönetimi</h2>
+        <p className="text-xs sm:text-sm font-medium text-gray-600">
           Ürün modülleri ve yönetim araçları
         </p>
       </div>

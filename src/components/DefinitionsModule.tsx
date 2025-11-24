@@ -656,25 +656,25 @@ export const DefinitionsModule = React.memo(function DefinitionsModule({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Tanımlar</h2>
-        <p className="text-sm font-medium text-gray-600">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Tanımlar</h2>
+        <p className="text-xs sm:text-sm font-medium text-gray-600">
           Sistemde kullanılan tanımları yönetin
         </p>
       </div>
 
       <Tabs defaultValue="gorevler" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="dataImport">📥 Veri İçe Aktar</TabsTrigger>
-          <TabsTrigger value="gorevler">Görev Tanımları</TabsTrigger>
-          <TabsTrigger value="salesreps">Satış Temsilcileri</TabsTrigger>
-          <TabsTrigger value="suspensionreasons">Pasifleştirme Sebepleri</TabsTrigger>
-          <TabsTrigger value="mcc">MCC Tanımları</TabsTrigger>
-          <TabsTrigger value="bankalar">Bankalar</TabsTrigger>
-          <TabsTrigger value="epk">EPK</TabsTrigger>
-          <TabsTrigger value="ok">ÖK</TabsTrigger>
-          <TabsTrigger value="paylasimmodelleri">Paylaşım Modelleri</TabsTrigger>
-          <TabsTrigger value="gelirmodelleri">Hesap Kalemleri</TabsTrigger>
-          <TabsTrigger value="kartprogram">Kart Program</TabsTrigger>
+        <TabsList className="flex-wrap gap-1">
+          <TabsTrigger value="dataImport" className="text-xs sm:text-sm">📥 Veri İçe Aktar</TabsTrigger>
+          <TabsTrigger value="gorevler" className="text-xs sm:text-sm">Görev Tanımları</TabsTrigger>
+          <TabsTrigger value="salesreps" className="text-xs sm:text-sm">Satış Temsilcileri</TabsTrigger>
+          <TabsTrigger value="suspensionreasons" className="text-xs sm:text-sm">Pasifleştirme Sebepleri</TabsTrigger>
+          <TabsTrigger value="mcc" className="text-xs sm:text-sm">MCC Tanımları</TabsTrigger>
+          <TabsTrigger value="bankalar" className="text-xs sm:text-sm">Bankalar</TabsTrigger>
+          <TabsTrigger value="epk" className="text-xs sm:text-sm">EPK</TabsTrigger>
+          <TabsTrigger value="ok" className="text-xs sm:text-sm">ÖK</TabsTrigger>
+          <TabsTrigger value="paylasimmodelleri" className="text-xs sm:text-sm">Paylaşım Modelleri</TabsTrigger>
+          <TabsTrigger value="gelirmodelleri" className="text-xs sm:text-sm">Hesap Kalemleri</TabsTrigger>
+          <TabsTrigger value="kartprogram" className="text-xs sm:text-sm">Kart Program</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dataImport">

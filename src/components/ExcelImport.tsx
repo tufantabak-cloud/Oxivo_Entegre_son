@@ -476,10 +476,12 @@ export function ExcelImport({ onImport, bankPFRecords = [] }: ExcelImportProps) 
       <Button
         onClick={() => setIsOpen(true)}
         variant="outline"
-        className="flex items-center space-x-2"
+        size="sm"
+        className="flex items-center justify-center space-x-2 text-xs sm:text-sm"
       >
         <Upload size={18} />
-        <span>Excel'den Yükle</span>
+        <span className="hidden lg:inline">Excel'den Yükle</span>
+        <span className="lg:hidden">📤</span>
       </Button>
 
       <Dialog open={isOpen} onOpenChange={handleClose}>

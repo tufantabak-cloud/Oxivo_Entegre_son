@@ -845,19 +845,19 @@ export const CustomerList = React.memo(function CustomerList({ customers, onSele
       )}
       
       {/* Müşteri İstatistikleri */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <Badge variant="secondary" className="text-sm px-3 py-1">
-          Toplam: {customers.length} müşteri
+      <div className="flex items-center gap-2 flex-wrap">
+        <Badge variant="secondary" className="text-xs sm:text-sm px-2 sm:px-3 py-1">
+          Toplam: {customers.length}
         </Badge>
-        <Badge variant="default" className="text-sm px-3 py-1 bg-green-600 hover:bg-green-700">
+        <Badge variant="default" className="text-xs sm:text-sm px-2 sm:px-3 py-1 bg-green-600 hover:bg-green-700">
           Aktif: {customers.filter(c => c.durum === 'Aktif').length}
         </Badge>
-        <Badge variant="outline" className="text-sm px-3 py-1 border-orange-300 text-orange-700">
+        <Badge variant="outline" className="text-xs sm:text-sm px-2 sm:px-3 py-1 border-orange-300 text-orange-700">
           Pasif: {customers.filter(c => c.durum === 'Pasif').length}
         </Badge>
         {filteredCustomers.length !== customers.length && (
-          <Badge variant="outline" className="text-sm px-3 py-1 border-blue-300 text-blue-700">
-            Filtrelenmiş: {filteredCustomers.length} müşteri
+          <Badge variant="outline" className="text-xs sm:text-sm px-2 sm:px-3 py-1 border-blue-300 text-blue-700">
+            Filtrelenmiş: {filteredCustomers.length}
           </Badge>
         )}
       </div>
@@ -866,8 +866,9 @@ export const CustomerList = React.memo(function CustomerList({ customers, onSele
       <div className="bg-white rounded-lg border border-gray-200">
         {/* Filters */}
         <div className="p-4 border-b border-gray-200">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
+        <div className="flex flex-col gap-4">
+          {/* Search - Full Width */}
+          <div className="w-full relative">
             <Search
               className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
               size={20}
@@ -881,67 +882,74 @@ export const CustomerList = React.memo(function CustomerList({ customers, onSele
               className="pl-10"
             />
           </div>
-          {selectedCustomerIds.length > 0 && (
+          
+          {/* Action Buttons - Responsive Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+            {selectedCustomerIds.length > 0 && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => setIsBatchDialogOpen(true)}
+                className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 col-span-2 sm:col-span-3 lg:col-span-2"
+              >
+                <ListChecks size={16} />
+                <span className="hidden sm:inline">Toplu İşlemler ({selectedCustomerIds.length})</span>
+                <span className="sm:hidden">Toplu ({selectedCustomerIds.length})</span>
+              </Button>
+            )}
             <Button
-              variant="default"
+              variant={showAnalyzer ? "default" : "outline"}
               size="sm"
-              onClick={() => setIsBatchDialogOpen(true)}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+              onClick={() => setShowAnalyzer(!showAnalyzer)}
+              className="flex items-center justify-center gap-2"
+              title="Cihaz Adedi tutarlılık analizi - Domain eşleştirme vs Manuel atama karşılaştırması"
             >
-              <ListChecks size={16} />
-              <span>Toplu İşlemler ({selectedCustomerIds.length})</span>
+              <Bug size={16} />
+              <span className="hidden md:inline">{showAnalyzer ? 'Analizi Kapat' : 'Cihaz Analizi'}</span>
+              <span className="md:hidden">Analiz</span>
             </Button>
-          )}
-          <Button
-            variant={showAnalyzer ? "default" : "outline"}
-            size="sm"
-            onClick={() => setShowAnalyzer(!showAnalyzer)}
-            className="flex items-center gap-2"
-            title="Cihaz Adedi tutarlılık analizi - Domain eşleştirme vs Manuel atama karşılaştırması"
-          >
-            <Bug size={16} />
-            <span>{showAnalyzer ? 'Analizi Kapat' : 'Cihaz Analizi'}</span>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExportToExcel}
-            className="flex items-center gap-2"
-            title="Müşteri listesini Excel'e aktar (Cihaz Adedi ve Banka/PF dahil)"
-          >
-            <Download size={16} />
-            <span>Excel İndir</span>
-          </Button>
-          <ColumnVisibilityDropdown
-            columns={CUSTOMER_COLUMN_CONFIGS}
-            storageKey="customerList"
-            onVisibilityChange={handleVisibilityChange}
-          />
-          <FilterDropdown
-            label="Durum"
-            options={statusFilterOptions}
-            value={statusFilter}
-            onChange={setStatusFilter}
-            allLabel="Tüm Durumlar"
-            showCount={true}
-          />
-          <FilterDropdown
-            label="Cihaz Sayısı"
-            options={cihazFilterOptions}
-            value={cihazFilter}
-            onChange={setCihazFilter}
-            allLabel="Tüm Cihazlar"
-            showCount={true}
-          />
-          <FilterDropdown
-            label="Satış Temsilcisi"
-            options={salesRepFilterOptions}
-            value={salesRepFilter}
-            onChange={setSalesRepFilter}
-            allLabel="Tüm Temsilciler"
-            showCount={true}
-            className="min-w-[160px]"
-          />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportToExcel}
+              className="flex items-center justify-center gap-2"
+              title="Müşteri listesini Excel'e aktar (Cihaz Adedi ve Banka/PF dahil)"
+            >
+              <Download size={16} />
+              <span className="hidden md:inline">Excel İndir</span>
+              <span className="md:hidden">Excel</span>
+            </Button>
+            <ColumnVisibilityDropdown
+              columns={CUSTOMER_COLUMN_CONFIGS}
+              storageKey="customerList"
+              onVisibilityChange={handleVisibilityChange}
+            />
+            <FilterDropdown
+              label="Durum"
+              options={statusFilterOptions}
+              value={statusFilter}
+              onChange={setStatusFilter}
+              allLabel="Tüm Durumlar"
+              showCount={true}
+            />
+            <FilterDropdown
+              label="Cihaz Sayısı"
+              options={cihazFilterOptions}
+              value={cihazFilter}
+              onChange={setCihazFilter}
+              allLabel="Tüm Cihazlar"
+              showCount={true}
+            />
+            <FilterDropdown
+              label="Satış Temsilcisi"
+              options={salesRepFilterOptions}
+              value={salesRepFilter}
+              onChange={setSalesRepFilter}
+              allLabel="Tüm Temsilciler"
+              showCount={true}
+              className="min-w-[120px]"
+            />
+          </div>
         </div>
       </div>
 

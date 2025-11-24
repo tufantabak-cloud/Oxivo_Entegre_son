@@ -249,17 +249,17 @@ export const RevenueModule = React.memo(function RevenueModule({ customers, payt
   return (
     <div className="space-y-6">
       {/* Başlık */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl text-gray-900">💰 Gelir Yönetimi</h2>
-          <p className="text-sm text-gray-600 mt-1">
+          <h2 className="text-xl sm:text-2xl text-gray-900">💰 Gelir Yönetimi</h2>
+          <p className="text-xs sm:text-sm text-gray-600 mt-1">
             Müşteri aidat bedelleri, ödeme takibi ve gelir raporları
           </p>
         </div>
         
         {/* Dönem Seçici */}
         <div className="flex items-center gap-3">
-          <Label className="flex items-center gap-2">
+          <Label className="flex items-center gap-2 text-xs sm:text-sm">
             <Calendar size={16} />
             Dönem:
           </Label>

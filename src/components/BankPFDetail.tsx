@@ -1,4 +1,11 @@
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { BankPF, bankaPFListesi, okListesi, epkListesi } from './BankPFModule';
 import { BankPFCategorySelector } from './BankPFCategorySelector';
+import { ContactMatrix } from './ContactMatrix';
+import { DocumentManagement } from './DocumentManagement';
+import { FirmaTabelaTab } from './FirmaTabelaTab';
+import { FirmaBankalarTab } from './FirmaBankalarTab';
+import { HakedisTab } from './HakedisTab';
 import { ArrowLeft, Save, Trash2, X, Plus, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from './ui/button';

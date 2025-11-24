@@ -1532,7 +1532,7 @@ export default function App() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+      <main className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-10">
         {dataLoaded && activeModule === 'home' && (() => {
           // MÜŞTERİ ANALİZİ
           const sektorStats = customers.reduce((acc, customer) => {
