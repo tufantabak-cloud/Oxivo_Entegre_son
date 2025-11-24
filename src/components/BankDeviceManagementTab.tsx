@@ -92,16 +92,6 @@ export function BankDeviceManagementTab({
   payterProducts = [],
 }: BankDeviceManagementTabProps) {
   
-  // Debug: Prop'ları logla
-  useEffect(() => {
-    console.log('🎯 BankDeviceManagementTab Props:', {
-      assignmentsCount: assignments?.length || 0,
-      banksCount: banks?.length || 0,
-      epkListCount: epkList?.length || 0,
-      okListCount: okList?.length || 0,
-      payterProductsCount: payterProducts?.length || 0
-    });
-  }, [assignments, banks, epkList, okList, payterProducts]);
   const [selectedBankId, setSelectedBankId] = useState<string>('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [currentAssignmentId, setCurrentAssignmentId] = useState<string>('');
@@ -116,16 +106,6 @@ export function BankDeviceManagementTab({
   const [selectedBanks, setSelectedBanks] = useState<string[]>([]);
   const [selectedEPKs, setSelectedEPKs] = useState<string[]>([]);
   const [selectedOKs, setSelectedOKs] = useState<string[]>([]);
-
-  // Debug: Dialog state değişikliklerini takip et
-  useEffect(() => {
-    console.log('📊 Dialog State Değişti:', {
-      isAddDialogOpen,
-      currentAssignmentId,
-      selectedDeviceIdsCount: selectedDeviceIds.length,
-      payterProductsCount: payterProducts?.length || 0
-    });
-  }, [isAddDialogOpen, currentAssignmentId, selectedDeviceIds, payterProducts]);
 
   // Bankaları, EPK ve Ödeme Kuruluşlarını birleştir (unique key için prefix ekle)
   const combinedList: BankOrOK[] = [
@@ -267,22 +247,10 @@ export function BankDeviceManagementTab({
 
   // Cihaz ekleme dialog'unu aç
   const handleOpenAddDeviceDialog = (assignmentId: string) => {
-    console.log('🔧 handleOpenAddDeviceDialog çağrıldı:', {
-      assignmentId,
-      payterProductsCount: payterProducts?.length || 0,
-      currentState: {
-        isAddDialogOpen,
-        currentAssignmentId,
-        selectedDeviceIds: selectedDeviceIds.length
-      }
-    });
-    
     setCurrentAssignmentId(assignmentId);
     setSelectedDeviceIds([]);
     setSearchTerm('');
     setIsAddDialogOpen(true);
-    
-    console.log('✅ Dialog açıldı - isAddDialogOpen:', true);
   };
 
   // Cihazları atama
@@ -373,21 +341,12 @@ export function BankDeviceManagementTab({
 
   // Dialog'da gösterilecek cihazları filtrele
   const getAvailableDevices = () => {
-    console.log('🔍 getAvailableDevices çağrıldı:', {
-      currentAssignmentId,
-      payterProductsTotal: payterProducts?.length || 0,
-      searchTerm
-    });
-    
-    // Mevcut kategoride zaten atanmış cihazları hariç tut
     const currentAssignment = assignments.find(a => a.id === currentAssignmentId);
     const currentDeviceIds = currentAssignment?.deviceIds || [];
 
     const filtered = payterProducts.filter(product => {
-      // Zaten bu kategoride varsa gösterme
       if (currentDeviceIds.includes(product.id)) return false;
 
-      // Arama filtresi
       const searchLower = searchTerm.toLowerCase();
       const matchesSearch = 
         product.serialNumber?.toLowerCase().includes(searchLower) ||
@@ -398,7 +357,6 @@ export function BankDeviceManagementTab({
       return matchesSearch;
     });
     
-    console.log('✅ Filtrelenmiş cihaz sayısı:', filtered.length);
     return filtered;
   };
 

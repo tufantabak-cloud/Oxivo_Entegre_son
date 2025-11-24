@@ -707,39 +707,10 @@ export function BankPFDetail({
               </p>
             </CardHeader>
             <CardContent>
-              {console.log('📊 Kategoriler sekmesi props:', { 
-                banks: banks.length, 
-                epkList: epkList.length, 
-                okList: okList.length 
-              })}
               <BankPFCategorySelector
                 banks={banks}
                 epkList={epkList}
                 okList={okList}
-                selectedBankIds={formData.linkedBankIds || []}
-                selectedEPKIds={formData.linkedEPKIds || []}
-                selectedOKIds={formData.linkedOKIds || []}
-                onSelectionChange={(data) => {
-                  console.log('✅ Kategori seçimi değişti:', data);
-                  setFormData(prev => ({
-                    ...prev,
-                    linkedBankIds: data.banks,
-                    linkedEPKIds: data.epks,
-                    linkedOKIds: data.oks,
-                  }));
-                  
-                  // Değişikliği otomatik kaydet
-                  if (!isCreating) {
-                    const updatedFormData = {
-                      ...formData,
-                      linkedBankIds: data.banks,
-                      linkedEPKIds: data.epks,
-                      linkedOKIds: data.oks,
-                    };
-                    onSave(updatedFormData);
-                    toast.success('Kategori seçimleri kaydedildi');
-                  }
-                }}
               />
             </CardContent>
           </Card>

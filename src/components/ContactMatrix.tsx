@@ -77,10 +77,6 @@ export function ContactMatrix({ contacts, onContactsChange, gorevListesi }: Cont
     ? gorevListesi 
     : defaultGorevListesi;
 
-  // Debug: gorevListesi kontrolü
-  console.log('📋 ContactMatrix gorevListesi:', gorevListesi, 'length:', gorevListesi?.length || 0);
-  console.log('📋 Effective gorevListesi:', effectiveGorevListesi, 'length:', effectiveGorevListesi.length);
-
   const handleAdd = () => {
     setEditingContact(null);
     setFormData({
@@ -214,7 +210,7 @@ export function ContactMatrix({ contacts, onContactsChange, gorevListesi }: Cont
         )}
 
         {/* Add/Edit Dialog */}
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen} modal={true}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
@@ -258,12 +254,21 @@ export function ContactMatrix({ contacts, onContactsChange, gorevListesi }: Cont
                     setFormData({ ...formData, gorev: value })
                   }
                 >
-                  <SelectTrigger id="gorev">
+                  <SelectTrigger id="gorev" className="bg-white">
                     <SelectValue placeholder="Görev seçiniz..." />
                   </SelectTrigger>
-                  <SelectContent position="popper" className="z-[9999] max-h-[300px]">
+                  <SelectContent 
+                    position="popper" 
+                    side="bottom"
+                    sideOffset={8}
+                    className="z-[99999] bg-white border border-gray-200 shadow-xl max-h-[300px] overflow-y-auto"
+                  >
                     {effectiveGorevListesi.map((gorev) => (
-                      <SelectItem key={gorev} value={gorev}>
+                      <SelectItem 
+                        key={gorev} 
+                        value={gorev}
+                        className="cursor-pointer hover:bg-gray-100 focus:bg-blue-50 bg-white"
+                      >
                         {gorev}
                       </SelectItem>
                     ))}
