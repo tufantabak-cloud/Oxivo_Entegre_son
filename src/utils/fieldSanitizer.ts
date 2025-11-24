@@ -66,16 +66,17 @@ export function sanitizeOK(item: any): any {
  * Sales Representatives için sadece mevcut kolonları tut
  * Frontend: { id, adSoyad, email, telefon, departman, bolge, aktif, olusturmaTarihi, notlar }
  * Snake_case: { id, ad_soyad, email, telefon, departman, bolge, aktif, olusturma_tarihi, notlar }
- * Mevcut DB kolonlar: id, email, telefon, aktif, created_at, updated_at
- * Eksik DB kolonlar: ad_soyad, departman, bolge, olusturma_tarihi, notlar
+ * Mevcut DB kolonlar: id, kod, ad, email, telefon, aktif, created_at, updated_at
+ * Eksik DB kolonlar: departman, bolge, olusturma_tarihi, notlar
  * 
+ * ⚠️ CRITICAL: kod kolonu NOT NULL - ad_soyad'dan otomatik generate edilecek
  * ⚠️ CRITICAL: ID column in Supabase is UUID type, but frontend uses string IDs
  * 🔧 SOLUTION: Change column type in Supabase from UUID to TEXT
  *    Run in Supabase SQL Editor:
  *    ALTER TABLE sales_representatives ALTER COLUMN id TYPE TEXT;
  */
 export function sanitizeSalesRep(item: any): any {
-  const { id, email, telefon, aktif } = item;
+  const { id, ad_soyad, ad, email, telefon, aktif } = item;
   
   // ⚠️ Warning: If ID is not UUID format, Supabase will reject it
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -83,7 +84,24 @@ export function sanitizeSalesRep(item: any): any {
     console.warn(`⚠️ Sales Rep ID "${id}" is not UUID format. Change Supabase column to TEXT type.`);
   }
   
-  return { id, email, telefon, aktif };
+  // ✅ CRITICAL FIX: Generate 'kod' from 'ad_soyad' or 'ad' (NOT NULL constraint)
+  const name = ad_soyad || ad || email || 'UNKNOWN';
+  const kod = name
+    .toUpperCase()
+    .replace(/[ğĞ]/g, 'G')
+    .replace(/[üÜ]/g, 'U')
+    .replace(/[şŞ]/g, 'S')
+    .replace(/[ıİ]/g, 'I')
+    .replace(/[öÖ]/g, 'O')
+    .replace(/[çÇ]/g, 'C')
+    .replace(/\s+/g, '_')
+    .replace(/[^A-Z0-9_]/g, '')
+    .substring(0, 50); // Limit to 50 chars
+  
+  // ✅ CRITICAL: Ensure kod is never empty (fallback to ID)
+  const finalKod = kod || id?.substring(0, 50) || 'UNKNOWN';
+  
+  return { id, kod: finalKod, ad: ad_soyad || ad, email, telefon, aktif };
 }
 
 /**
@@ -116,17 +134,16 @@ export function sanitizeJobTitle(item: any): any {
  * Snake_case: { id, kod, model_adi, oran, aciklama, aktif, olusturma_tarihi, calculation_rows }
  * 
  * ⚠️ CRITICAL FIX: Gerçek field'lar kod, model_adi, oran (firma_adi, anlasma_tarihi değil!)
- * Mevcut DB kolonlar: id, kod, model_adi, oran, aciklama, aktif, calculation_rows (JSONB), created_at, updated_at
- * Eksik DB kolonlar: olusturma_tarihi
+ * Mevcut DB kolonlar: id, kod, model_adi, oran, aktif, calculation_rows (JSONB), created_at, updated_at
+ * Eksik DB kolonlar: aciklama, olusturma_tarihi
  */
 export function sanitizePartnership(item: any): any {
-  const { id, kod, model_adi, oran, aciklama, aktif, calculation_rows } = item;
+  const { id, kod, model_adi, oran, aktif, calculation_rows } = item;
   return { 
     id, 
     kod, 
     model_adi, 
     oran, 
-    aciklama, 
     aktif,
     // ✅ JSONB field: calculation_rows (Array of calculation rows)
     // Keep the array as-is, Supabase will handle JSONB conversion
@@ -176,12 +193,12 @@ export function sanitizeAdditionalRevenue(item: any): any {
  * Snake_case: { id, kod, model_adi, oran, aciklama, aktif, olusturma_tarihi }
  * 
  * ⚠️ CRITICAL FIX: Gerçek field'lar kod, model_adi, oran (firma_adi, paylasim_orani değil!)
- * Mevcut DB kolonlar: id, kod, model_adi, oran, aciklama, aktif, created_at, updated_at
- * Eksik DB kolonlar: olusturma_tarihi
+ * Mevcut DB kolonlar: id, kod, model_adi, oran, aktif, created_at, updated_at
+ * Eksik DB kolonlar: aciklama, olusturma_tarihi
  */
 export function sanitizeSharing(item: any): any {
-  const { id, kod, model_adi, oran, aciklama, aktif } = item;
-  return { id, kod, model_adi, oran, aciklama, aktif };
+  const { id, kod, model_adi, oran, aktif } = item;
+  return { id, kod, model_adi, oran, aktif };
 }
 
 /**
@@ -190,12 +207,12 @@ export function sanitizeSharing(item: any): any {
  * Snake_case: { id, kart_adi, aciklama, aktif, olusturma_tarihi }
  * 
  * ⚠️ CRITICAL FIX: Gerçek field kart_adi (program_adi, program_kodu değil!)
- * Mevcut DB kolonlar: id, kart_adi, aciklama, aktif, created_at, updated_at
- * Eksik DB kolonlar: olusturma_tarihi
+ * Mevcut DB kolonlar: id, kart_adi, aktif, created_at, updated_at
+ * Eksik DB kolonlar: aciklama, olusturma_tarihi
  */
 export function sanitizeKartProgram(item: any): any {
-  const { id, kart_adi, aciklama, aktif } = item;
-  return { id, kart_adi, aciklama, aktif };
+  const { id, kart_adi, aktif } = item;
+  return { id, kart_adi, aktif };
 }
 
 /**
