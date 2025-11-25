@@ -253,6 +253,12 @@ export function useDefinitionStore(): DefinitionStore {
       sampleData: newMCCList.slice(0, 3),
       allData: newMCCList
     });
+    
+    // 🚨 ALERT DEBUG
+    if (newMCCList.length !== 17 && newMCCList.length < 15) {
+      alert(`⚠️ setMCCList CALLED:\n\nYeni MCC sayısı: ${newMCCList.length}\nBeklenen: 17\n\nİlk MCC:\n${JSON.stringify(newMCCList[0], null, 2)}`);
+    }
+    
     setMCCListState(newMCCList);
   };
   const setBanks = (newBanks: Bank[]) => setBanksState(newBanks);

@@ -302,6 +302,20 @@ export default function App() {
           });
           setMCCList(mccCodesResult.data);
           logger.info(`✅ Loaded ${mccCodesResult.data.length} MCC codes from Supabase`);
+          
+          // 🚨 DEBUG: localStorage'ı kontrol et (1 saniye sonra)
+          setTimeout(() => {
+            const lsData = localStorage.getItem('mccList');
+            if (lsData) {
+              try {
+                const parsed = JSON.parse(lsData);
+                const dataArray = parsed?.data || parsed;
+                alert(`📦 LOCALSTORAGE MCC CHECK:\n\nSupabase'den: ${mccCodesResult.data.length} MCC\nLocalStorage'da: ${Array.isArray(dataArray) ? dataArray.length : 'HATA'}\n\nLS Format: ${parsed?.version ? 'Versioned' : 'Legacy'}\n\nİlk MCC:\n${JSON.stringify(dataArray?.[0], null, 2)}`);
+              } catch (e) {
+                alert(`❌ localStorage parse hatası: ${e}`);
+              }
+            }
+          }, 1000);
         }
         
         if (banksResult.success && banksResult.data) {
@@ -649,6 +663,12 @@ export default function App() {
       sampleMCC: mccList.slice(0, 3).map(m => ({ kod: m.kod, kategori: m.kategori, aktif: m.aktif })),
       fullResult: result
     });
+    
+    // 🚨 ALERT DEBUG - MCC state'ini kontrol et
+    if (mccList.length < 10) {
+      alert(`⚠️ MCC STATE DEBUG (App.tsx):\n\nmccList.length = ${mccList.length}\nresult.length = ${result.length}\n\nİlk 3 MCC:\n${JSON.stringify(mccList.slice(0, 3), null, 2)}`);
+    }
+    
     return result;
   }, [mccList]);
 

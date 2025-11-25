@@ -464,13 +464,25 @@ export function CustomerDetail({
   const matchDomain = utilMatchDomain;
 
   // ⚡ Dropdown options (memoized)
-  const mccOptions: FilterOption[] = useMemo(() => 
-    mccList.map(mcc => ({
+  const mccOptions: FilterOption[] = useMemo(() => {
+    const options = mccList.map(mcc => ({
       value: mcc.kod,
       label: `${mcc.kod} - ${mcc.kategori}`
-    })),
-    [mccList]
-  );
+    }));
+    console.log('🔍 [CustomerDetail] mccOptions created:', {
+      mccListLength: mccList.length,
+      optionsLength: options.length,
+      sampleOptions: options.slice(0, 5),
+      allOptions: options
+    });
+    
+    // 🚨 ALERT DEBUG - Console çalışmıyorsa popup ile göster
+    if (mccList.length < 10) {
+      alert(`⚠️ MCC DROPDOWN DEBUG:\n\nmccList.length = ${mccList.length}\noptions.length = ${options.length}\n\nİlk 3 MCC:\n${JSON.stringify(mccList.slice(0, 3), null, 2)}`);
+    }
+    
+    return options;
+  }, [mccList]);
 
   const durumOptions: FilterOption[] = useMemo(() => [
     { value: 'Aktif', label: 'Aktif' },
