@@ -24,8 +24,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "./components/*": ["./components/*"],
-      "./utils/*": ["./utils/*"]
+      "components/*": ["./components/*"],
+      "utils/*": ["./utils/*"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx"],

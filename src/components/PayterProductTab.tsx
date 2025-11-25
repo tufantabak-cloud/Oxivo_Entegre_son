@@ -13,7 +13,6 @@ import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { ColumnVisibilityDropdown, ColumnConfig } from './ColumnVisibilityDropdown';
 import { Customer } from './CustomerModule';
-import { checkProductDuplicate } from '@utils/productDuplicateChecker';
 
 export interface PayterProduct {
   id: string;
@@ -32,6 +31,41 @@ export interface PayterProduct {
   terminalModel?: string;
   macAddress?: string;
   ptid?: string;
+}
+
+/**
+ * Product-specific duplicate checker - Inline implementation
+ */
+function checkProductDuplicate(
+  existingProducts: PayterProduct[],
+  newProduct: PayterProduct
+): boolean {
+  // Serial Number kontrolü (case-insensitive)
+  const serialExists = existingProducts.some(
+    p => p.serialNumber.toLowerCase().trim() === newProduct.serialNumber.toLowerCase().trim()
+  );
+
+  if (serialExists) {
+    return true;
+  }
+
+  // TID kontrolü (case-insensitive)
+  const tidExists = existingProducts.some(
+    p => p.tid.toLowerCase().trim() === newProduct.tid.toLowerCase().trim()
+  );
+
+  if (tidExists) {
+    return true;
+  }
+
+  // Name + TID kombinasyonu kontrolü
+  const nameTidExists = existingProducts.some(
+    p => 
+      p.name.toLowerCase().trim() === newProduct.name.toLowerCase().trim() &&
+      p.tid.toLowerCase().trim() === newProduct.tid.toLowerCase().trim()
+  );
+
+  return nameTidExists;
 }
 
 interface PayterProductTabProps {
