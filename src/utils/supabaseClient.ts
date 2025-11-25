@@ -273,8 +273,17 @@ export const customerApi = {
     // Convert to array
     const customerArray = Array.isArray(customers) ? customers : [customers];
     
+    // ✅ Step 1: Remove duplicates by 'id' before processing
+    const uniqueRecords = Array.from(
+      new Map(customerArray.map(r => [r.id, r])).values()
+    );
+    
+    if (uniqueRecords.length < customerArray.length) {
+      console.warn(`⚠️ Step 1: Removed ${customerArray.length - uniqueRecords.length} duplicate customers (by id)`);
+    }
+    
     // ✅ ADD TIMESTAMPS: Enrich each customer with createdAt/updatedAt if missing
-    const enrichedCustomers = customerArray.map(customer => {
+    const enrichedCustomers = uniqueRecords.map(customer => {
       const now = new Date().toISOString();
       return {
         ...customer,
@@ -484,18 +493,42 @@ export const productApi = {
    * Tüm ürünleri getirir
    */
   async getAll() {
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .order('created_at', { ascending: false });
+    // ✅ FIX: Supabase'in 1000 kayıt limitini aşmak için pagination
+    let allProducts: any[] = [];
+    let page = 0;
+    const pageSize = 1000;
+    let hasMore = true;
 
-    if (error) {
-      console.error('❌ Error fetching products:', error);
-      return { success: false, error: error.message, data: [] };
+    while (hasMore) {
+      const { data, error, count } = await supabase
+        .from('products')
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(page * pageSize, (page + 1) * pageSize - 1);
+
+      if (error) {
+        console.error('❌ Error fetching products:', error);
+        return { success: false, error: error.message, data: [] };
+      }
+
+      if (data && data.length > 0) {
+        allProducts = [...allProducts, ...data];
+        console.log(`✅ Fetched page ${page + 1}: ${data.length} products (total: ${allProducts.length}/${count})`);
+      }
+
+      // Daha fazla veri var mı?
+      hasMore = data && data.length === pageSize;
+      page++;
+
+      // Güvenlik: Maksimum 10 sayfa (10,000 kayıt)
+      if (page >= 10) {
+        console.warn('⚠️ Reached maximum page limit (10). Some products may not be loaded.');
+        break;
+      }
     }
 
-    console.log(`✅ Fetched ${data.length} products from Supabase`);
-    return { success: true, data: data.map(objectToCamelCase) || [] };
+    console.log(`✅ Fetched total ${allProducts.length} products from Supabase`);
+    return { success: true, data: allProducts.map(objectToCamelCase) || [] };
   },
 
   /**
@@ -507,8 +540,17 @@ export const productApi = {
     // Convert to array
     const productArray = Array.isArray(products) ? products : [products];
     
+    // ✅ Step 1: Remove duplicates by 'id' before processing
+    const uniqueRecords = Array.from(
+      new Map(productArray.map(r => [r.id, r])).values()
+    );
+    
+    if (uniqueRecords.length < productArray.length) {
+      console.warn(`⚠️ Step 1: Removed ${productArray.length - uniqueRecords.length} duplicate products (by id)`);
+    }
+    
     // ✅ ADD TIMESTAMPS: Enrich each product with createdAt/updatedAt if missing
-    const enrichedProducts = productArray.map(product => {
+    const enrichedProducts = uniqueRecords.map(product => {
       const now = new Date().toISOString();
       return {
         ...product,
@@ -583,8 +625,17 @@ export const bankPFApi = {
     // Convert to array
     const recordArray = Array.isArray(records) ? records : [records];
     
+    // ✅ Step 1: Remove duplicates by 'id' before processing
+    const uniqueRecords = Array.from(
+      new Map(recordArray.map(r => [r.id, r])).values()
+    );
+    
+    if (uniqueRecords.length < recordArray.length) {
+      console.warn(`⚠️ Step 1: Removed ${recordArray.length - uniqueRecords.length} duplicate bankPF records (by id)`);
+    }
+    
     // ✅ ADD TIMESTAMPS: Enrich each record with createdAt/updatedAt if missing
-    const enrichedRecords = recordArray.map(record => {
+    const enrichedRecords = uniqueRecords.map(record => {
       const now = new Date().toISOString();
       return {
         ...record,
