@@ -295,6 +295,19 @@ export function PayterProductTab({ products, onProductsChange, customers = [] }:
             ptid: row['PTID'] ? String(row['PTID']).trim() : undefined,
           };
 
+          // ✅ DATA QUALITY WARNING: Boş name veya tid varsa uyar
+          const missingFields: string[] = [];
+          if (!product.name || product.name.trim() === '') {
+            missingFields.push('Name');
+          }
+          if (!product.tid || product.tid.trim() === '') {
+            missingFields.push('TID');
+          }
+          
+          if (missingFields.length > 0) {
+            errors.push(`⚠️ Satır ${rowNum}: Eksik veri (${missingFields.join(', ')}) - ${product.serialNumber || 'Seri No Yok'}`);
+          }
+
           // Ürünün zaten var olup olmadığını kontrol et
           if (checkProductDuplicate(products, product)) {
             errors.push(`Satır ${rowNum}: Ürün zaten mevcut - ${product.serialNumber}`);
@@ -876,11 +889,27 @@ export function PayterProductTab({ products, onProductsChange, customers = [] }:
                         </TableCell>
                       )}
                       {columnVisibility['name'] !== false && (
-                        <TableCell>{product.name}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {product.name || <span className="text-gray-400">-</span>}
+                            {(!product.name || product.name.trim() === '') && (
+                              <Badge variant="destructive" className="text-xs">
+                                ! Eksik veri !
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
                       )}
                       {columnVisibility['tid'] !== false && (
                         <TableCell>
-                          <span className="font-mono text-sm">{product.tid}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-sm">{product.tid || <span className="text-gray-400">-</span>}</span>
+                            {(!product.tid || product.tid.trim() === '') && (
+                              <Badge variant="destructive" className="text-xs">
+                                ! Eksik veri !
+                              </Badge>
+                            )}
+                          </div>
                         </TableCell>
                       )}
                       {columnVisibility['domain'] !== false && (
