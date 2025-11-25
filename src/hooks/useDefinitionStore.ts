@@ -164,9 +164,15 @@ export function useDefinitionStore(): DefinitionStore {
     () => getStoredData('jobTitles', defaultJobTitles)
   );
   
-  const [mccList, setMCCListState] = useState<MCC[]>(
-    () => getStoredData('mccList', defaultMCCList)
-  );
+  const [mccList, setMCCListState] = useState<MCC[]>(() => {
+    const loadedData = getStoredData('mccList', defaultMCCList);
+    console.log('🔍 [useDefinitionStore] Initial mccList load:', {
+      count: loadedData.length,
+      sampleData: loadedData.slice(0, 3),
+      allData: loadedData
+    });
+    return loadedData;
+  });
   
   const [banks, setBanksState] = useState<Bank[]>(
     () => getStoredData('banks', defaultBanks)
@@ -217,7 +223,13 @@ export function useDefinitionStore(): DefinitionStore {
   // ============================================================================
   
   useEffect(() => { setStoredData('jobTitles', jobTitles); }, [jobTitles]);
-  useEffect(() => { setStoredData('mccList', mccList); }, [mccList]);
+  useEffect(() => {
+    console.log('🔍 [useDefinitionStore] mccList changed, saving to localStorage:', {
+      count: mccList.length,
+      sampleData: mccList.slice(0, 3)
+    });
+    setStoredData('mccList', mccList);
+  }, [mccList]);
   useEffect(() => { setStoredData('banks', banks); }, [banks]);
   useEffect(() => { setStoredData('epkList', epkList); }, [epkList]);
   useEffect(() => { setStoredData('okList', okList); }, [okList]);
@@ -235,7 +247,14 @@ export function useDefinitionStore(): DefinitionStore {
   // ============================================================================
   
   const setJobTitles = (newJobTitles: JobTitle[]) => setJobTitlesState(newJobTitles);
-  const setMCCList = (newMCCList: MCC[]) => setMCCListState(newMCCList);
+  const setMCCList = (newMCCList: MCC[]) => {
+    console.log('🔍 [useDefinitionStore] setMCCList called with:', {
+      newCount: newMCCList.length,
+      sampleData: newMCCList.slice(0, 3),
+      allData: newMCCList
+    });
+    setMCCListState(newMCCList);
+  };
   const setBanks = (newBanks: Bank[]) => setBanksState(newBanks);
   const setEPKList = (newEPKList: EPK[]) => setEPKListState(newEPKList);
   const setOKList = (newOKList: OK[]) => setOKListState(newOKList);

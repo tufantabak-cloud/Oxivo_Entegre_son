@@ -295,6 +295,11 @@ export default function App() {
         }
         
         if (mccCodesResult.success && mccCodesResult.data) {
+          console.log('🔍 [App.tsx] Fetched MCC from Supabase, calling setMCCList:', {
+            count: mccCodesResult.data.length,
+            sampleData: mccCodesResult.data.slice(0, 3),
+            allData: mccCodesResult.data
+          });
           setMCCList(mccCodesResult.data);
           logger.info(`✅ Loaded ${mccCodesResult.data.length} MCC codes from Supabase`);
         }
@@ -636,10 +641,16 @@ export default function App() {
   // CustomerModule için özel transformasyonlar
   // ⚠️ FIX: Tüm MCC'leri göster (aktif/pasif fark etmeksizin)
   // Müşteri kartında MCC seçimi için tüm kayıtlar gerekli
-  const activeMCCListForCustomer = useMemo(
-    () => mccList.map(m => ({ kod: m.kod, kategori: m.kategori })),
-    [mccList]
-  );
+  const activeMCCListForCustomer = useMemo(() => {
+    const result = mccList.map(m => ({ kod: m.kod, kategori: m.kategori }));
+    console.log('🔍 [DEBUG] activeMCCListForCustomer calculated:', {
+      totalMCCInState: mccList.length,
+      transformedMCCCount: result.length,
+      sampleMCC: mccList.slice(0, 3).map(m => ({ kod: m.kod, kategori: m.kategori, aktif: m.aktif })),
+      fullResult: result
+    });
+    return result;
+  }, [mccList]);
 
   // BankPFModule için özel transformasyonlar
   const gorevListesiForBankPF = useMemo(
