@@ -207,8 +207,8 @@ export const ReportsModule = React.memo(function ReportsModule({
     // ✅ NULL SAFETY: bankPFRecords boş olabilir
     (bankPFRecords || []).forEach(record => {
       record.iletisimMatrisi?.forEach(contact => {
-        if (contact.gorevi) {
-          titles.add(contact.gorevi);
+        if (contact.gorev) {
+          titles.add(contact.gorev);
         }
       });
     });
@@ -217,7 +217,7 @@ export const ReportsModule = React.memo(function ReportsModule({
 
   // Belirli bir firma ve görev için kişileri bul
   const getContactsForFirmaAndJob = (firma: BankPF, jobTitle: string): ContactPerson[] => {
-    return (firma.iletisimMatrisi || []).filter(contact => contact.gorevi === jobTitle);
+    return (firma.iletisimMatrisi || []).filter(contact => contact.gorev === jobTitle);
   };
 
   // İletişim matrisi PDF export
@@ -276,9 +276,9 @@ export const ReportsModule = React.memo(function ReportsModule({
           
           if (contacts.length > 0) {
             // Birden fazla kişi varsa, hepsini alt alta yaz
-            const names = contacts.map(c => c.adiSoyadi).join('\n');
-            const phones = contacts.map(c => c.gsm || c.tel || '-').join('\n');
-            const emails = contacts.map(c => c.mail || '-').join('\n');
+            const names = contacts.map(c => `${c.ad} ${c.soyad}`).join('\n');
+            const phones = contacts.map(c => c.gsm || c.telefon || '-').join('\n');
+            const emails = contacts.map(c => c.email || '-').join('\n');
             
             row.push(names, phones, emails);
           } else {
@@ -540,7 +540,7 @@ export const ReportsModule = React.memo(function ReportsModule({
                                   {contacts.length > 0 ? (
                                     <div className="space-y-1">
                                       {contacts.map(contact => (
-                                        <div key={contact.id}>{contact.adiSoyadi}</div>
+                                        <div key={contact.id}>{contact.ad} {contact.soyad}</div>
                                       ))}
                                     </div>
                                   ) : (
@@ -553,7 +553,7 @@ export const ReportsModule = React.memo(function ReportsModule({
                                   {contacts.length > 0 ? (
                                     <div className="space-y-1">
                                       {contacts.map(contact => (
-                                        <div key={contact.id}>{contact.gsm || contact.tel || '-'}</div>
+                                        <div key={contact.id}>{contact.gsm || contact.telefon || '-'}</div>
                                       ))}
                                     </div>
                                   ) : (
@@ -567,7 +567,7 @@ export const ReportsModule = React.memo(function ReportsModule({
                                     <div className="space-y-1">
                                       {contacts.map(contact => (
                                         <div key={contact.id} className="truncate max-w-[200px]">
-                                          {contact.mail || '-'}
+                                          {contact.email || '-'}
                                         </div>
                                       ))}
                                     </div>

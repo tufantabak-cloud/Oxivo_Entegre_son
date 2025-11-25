@@ -213,11 +213,11 @@ export function ExcelDataManager({
           b.iletisimMatrisi.forEach(contact => {
             contactData.push({
               'Firma Ünvanı': b.firmaUnvan,
-              'Adı Soyadı': contact.adiSoyadi,
-              'Görevi': contact.gorevi,
-              'Telefon': contact.tel,
+              'Adı Soyadı': `${contact.ad} ${contact.soyad}`,
+              'Görevi': contact.gorev,
+              'Telefon': contact.telefon,
               'GSM': contact.gsm,
-              'Email': contact.mail,
+              'Email': contact.email,
             });
           });
         }

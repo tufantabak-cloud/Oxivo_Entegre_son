@@ -691,16 +691,20 @@ export function DashboardHome({
         ) : (
           <Tabs defaultValue="customers" className="w-full">
             <TabsList className="flex flex-nowrap w-full overflow-x-auto md:grid md:grid-cols-4 pb-1 gap-1">
-              <TabsTrigger value="customers" className="flex-none whitespace-nowrap min-w-[100px]">
+              <TabsTrigger value="customers" className="gap-1 flex-none whitespace-nowrap min-w-[90px] px-2 py-2">
+                <BarChart3 size={14} />
                 Müşteriler
               </TabsTrigger>
-              <TabsTrigger value="bankpf" className="flex-none whitespace-nowrap min-w-[100px]">
+              <TabsTrigger value="bankpf" className="gap-1 flex-none whitespace-nowrap min-w-[90px] px-2 py-2">
+                <BarChart3 size={14} />
                 Banka/PF
               </TabsTrigger>
-              <TabsTrigger value="products" className="flex-none whitespace-nowrap min-w-[100px]">
+              <TabsTrigger value="products" className="gap-1 flex-none whitespace-nowrap min-w-[90px] px-2 py-2">
+                <BarChart3 size={14} />
                 Ürün
               </TabsTrigger>
-              <TabsTrigger value="revenue" className="flex-none whitespace-nowrap min-w-[100px]">
+              <TabsTrigger value="revenue" className="gap-1 flex-none whitespace-nowrap min-w-[90px] px-2 py-2">
+                <BarChart3 size={14} />
                 Gelir
               </TabsTrigger>
             </TabsList>
