@@ -36,6 +36,7 @@ import { getStoredData, setStoredData } from './utils/storage';
 import { migrateData, validateImportData } from './utils/dataMigration';
 import { syncToSupabase } from './utils/supabaseSync';
 import { syncAllData } from './utils/autoSync';
+import { cleanupAllDuplicatesSQL, checkDuplicatesSQL } from './utils/supabaseClient';
 
 // ✅ CRITICAL: Import Supabase API helpers
 import { 
@@ -105,7 +106,7 @@ const GlobalSearch = lazy(() => import('./components/GlobalSearch').then(m => ({
 const ActivityLogViewer = lazy(() => import('./components/ActivityLogViewer').then(m => ({ default: m.ActivityLogViewer })));
 import { useGlobalSearch } from './hooks/useGlobalSearch';
 import { logActivity } from './utils/activityLog';
-import { Home, Users, Building2, Settings, Package, FileText, CheckCircle, XCircle, Filter, Euro, Download, Upload, Search, Trash2, CreditCard, TrendingUp, BarChart3, PieChart, DollarSign, Target, Award, Activity, Menu, X } from 'lucide-react';
+import { Home, Users, Building2, Settings, Package, FileText, CheckCircle, XCircle, Filter, Euro, Download, Upload, Search, Trash2, CreditCard, TrendingUp, BarChart3, PieChart, DollarSign, Target, Award, Activity, Menu, X, RefreshCw } from 'lucide-react';
 import { Toaster } from './components/ui/sonner';
 import { Button } from './components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './components/ui/sheet';
@@ -633,8 +634,10 @@ export default function App() {
   const activeKartProgramlar = useMemo(() => kartProgramlar.filter(k => k.aktif), [kartProgramlar]);
 
   // CustomerModule için özel transformasyonlar
+  // ⚠️ FIX: Tüm MCC'leri göster (aktif/pasif fark etmeksizin)
+  // Müşteri kartında MCC seçimi için tüm kayıtlar gerekli
   const activeMCCListForCustomer = useMemo(
-    () => mccList.filter(m => m.aktif).map(m => ({ kod: m.kod, kategori: m.kategori })),
+    () => mccList.map(m => ({ kod: m.kod, kategori: m.kategori })),
     [mccList]
   );
 
@@ -721,6 +724,57 @@ export default function App() {
       
       return prevCustomers.map(c => c.id === updatedCustomer.id ? updatedCustomer : c);
     });
+  }, []);
+
+  // 🧹 Supabase SQL-Based Duplicate Cleanup Handler
+  const handleDeduplication = useCallback(async () => {
+    const loadingToast = toast.loading('🧹 Duplicate kayıtlar Supabase\'de temizleniyor...');
+    
+    try {
+      // Call Supabase SQL function
+      const result = await cleanupAllDuplicatesSQL();
+      
+      toast.dismiss(loadingToast);
+      
+      if (result.success && result.results) {
+        // Count total deleted records
+        const totalDeleted = result.results.reduce((sum, r) => sum + (r.deleted_count || 0), 0);
+        const successfulTables = result.results.filter(r => r.status === 'success').length;
+        const totalTables = result.results.length;
+        
+        if (totalDeleted > 0) {
+          // Show detailed results
+          console.log('📊 Cleanup Results:', result.results);
+          
+          toast.success(
+            `✅ ${totalDeleted} duplicate kayıt silindi!`,
+            {
+              description: `${successfulTables}/${totalTables} tablo temizlendi`,
+              duration: 5000,
+            }
+          );
+          
+          // Verileri yeniden yükle
+          console.log('🔄 Refreshing data from Supabase...');
+          setTimeout(() => window.location.reload(), 1000);
+        } else {
+          toast.success('✨ Veritabanı zaten temiz! Duplicate kayıt bulunamadı.');
+        }
+      } else {
+        toast.error(
+          `❌ Temizleme başarısız`,
+          {
+            description: result.error || 'Bilinmeyen hata',
+          }
+        );
+      }
+    } catch (error: any) {
+      toast.dismiss(loadingToast);
+      console.error('❌ Deduplication error:', error);
+      toast.error('Temizleme sırasında hata oluştu', {
+        description: error.message || 'Bilinmeyen hata',
+      });
+    }
   }, []);
 
   // ⚡ SSR-SAFE JSON IMPORT HANDLER (Batched setState ile hydration fix)
@@ -2153,6 +2207,16 @@ export default function App() {
                 >
                   <Upload size={16} />
                   JSON Import
+                </Button>
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300 transition-colors"
+                  onClick={handleDeduplication}
+                  title="Supabase'deki duplicate kayıtları temizle"
+                >
+                  <RefreshCw size={16} />
+                  Duplicate Temizle
                 </Button>
                 <Button 
                   variant="outline"
