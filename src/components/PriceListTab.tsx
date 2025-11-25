@@ -607,34 +607,44 @@ export const PriceListTab = React.memo(function PriceListTab({
 
             <div>
               <Label>Değişiklik Sebebi *</Label>
-              <Select
-                value={priceUpdateForm.changeReason}
-                onValueChange={(value) => {
-                  setPriceUpdateForm({ ...priceUpdateForm, changeReason: value });
-                  setIsChangeReasonDropdownOpen(false);
-                }}
-                open={isChangeReasonDropdownOpen}
-                onOpenChange={setIsChangeReasonDropdownOpen}
-              >
-                <SelectTrigger
-                  onClick={() => setIsChangeReasonDropdownOpen(!isChangeReasonDropdownOpen)}
-                  className={`bg-white transition-all ${
-                    isChangeReasonDropdownOpen 
-                      ? 'ring-2 ring-blue-500 border-blue-500' 
-                      : 'hover:border-gray-400'
-                  }`}
-                >
-                  <SelectValue placeholder="Sebep seçin" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="price-increase">Fiyat Artışı</SelectItem>
-                  <SelectItem value="contract-renewal">Sözleşme Yenileme</SelectItem>
-                  <SelectItem value="service-upgrade">Hizmet Yükseltme</SelectItem>
-                  <SelectItem value="market-adjustment">Piyasa Uyumu</SelectItem>
-                  <SelectItem value="special-discount">Özel İndirim</SelectItem>
-                  <SelectItem value="other">Diğer</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="relative">
+                <Input
+                  list="change-reason-list"
+                  value={
+                    priceUpdateForm.changeReason === 'price-increase' ? 'Fiyat Artışı' :
+                    priceUpdateForm.changeReason === 'contract-renewal' ? 'Sözleşme Yenileme' :
+                    priceUpdateForm.changeReason === 'service-upgrade' ? 'Hizmet Yükseltme' :
+                    priceUpdateForm.changeReason === 'market-adjustment' ? 'Piyasa Uyumu' :
+                    priceUpdateForm.changeReason === 'special-discount' ? 'Özel İndirim' :
+                    priceUpdateForm.changeReason === 'other' ? 'Diğer' :
+                    ''
+                  }
+                  onChange={(e) => {
+                    const reasonMap: Record<string, string> = {
+                      'Fiyat Artışı': 'price-increase',
+                      'Sözleşme Yenileme': 'contract-renewal',
+                      'Hizmet Yükseltme': 'service-upgrade',
+                      'Piyasa Uyumu': 'market-adjustment',
+                      'Özel İndirim': 'special-discount',
+                      'Diğer': 'other',
+                    };
+                    const selectedValue = reasonMap[e.target.value];
+                    if (selectedValue) {
+                      setPriceUpdateForm({ ...priceUpdateForm, changeReason: selectedValue });
+                    }
+                  }}
+                  placeholder="Sebep seçin veya yazın"
+                  className="bg-white"
+                />
+                <datalist id="change-reason-list">
+                  <option value="Fiyat Artışı" />
+                  <option value="Sözleşme Yenileme" />
+                  <option value="Hizmet Yükseltme" />
+                  <option value="Piyasa Uyumu" />
+                  <option value="Özel İndirim" />
+                  <option value="Diğer" />
+                </datalist>
+              </div>
             </div>
 
             <div>
@@ -657,30 +667,32 @@ export const PriceListTab = React.memo(function PriceListTab({
             {priceUpdateForm.updatePaymentType && (
               <div>
                 <Label>Yeni Ödeme Tipi</Label>
-                <Select
-                  value={priceUpdateForm.newPaymentType}
-                  onValueChange={(value: 'monthly' | 'yearly') => {
-                    setPriceUpdateForm({ ...priceUpdateForm, newPaymentType: value });
-                    setIsPaymentTypeDropdownOpen(false);
-                  }}
-                  open={isPaymentTypeDropdownOpen}
-                  onOpenChange={setIsPaymentTypeDropdownOpen}
-                >
-                  <SelectTrigger
-                    onClick={() => setIsPaymentTypeDropdownOpen(!isPaymentTypeDropdownOpen)}
-                    className={`bg-white transition-all ${
-                      isPaymentTypeDropdownOpen 
-                        ? 'ring-2 ring-blue-500 border-blue-500' 
-                        : 'hover:border-gray-400'
-                    }`}
-                  >
-                    <SelectValue placeholder="Ödeme tipi seçin" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="monthly">Aylık</SelectItem>
-                    <SelectItem value="yearly">Yıllık</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="relative">
+                  <Input
+                    list="payment-type-list"
+                    value={
+                      priceUpdateForm.newPaymentType === 'monthly' ? 'Aylık' :
+                      priceUpdateForm.newPaymentType === 'yearly' ? 'Yıllık' :
+                      ''
+                    }
+                    onChange={(e) => {
+                      const typeMap: Record<string, 'monthly' | 'yearly'> = {
+                        'Aylık': 'monthly',
+                        'Yıllık': 'yearly',
+                      };
+                      const selectedType = typeMap[e.target.value];
+                      if (selectedType) {
+                        setPriceUpdateForm({ ...priceUpdateForm, newPaymentType: selectedType });
+                      }
+                    }}
+                    placeholder="Ödeme tipi seçin"
+                    className="bg-white"
+                  />
+                  <datalist id="payment-type-list">
+                    <option value="Aylık" />
+                    <option value="Yıllık" />
+                  </datalist>
+                </div>
               </div>
             )}
 

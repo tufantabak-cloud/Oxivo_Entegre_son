@@ -717,34 +717,29 @@ export function BatchOperationsDialog({
                   <CardContent className="space-y-3">
                     <div className="space-y-2">
                       <Label htmlFor="salesrep">Satış Temsilcisi</Label>
-                      <Select
-                        value={selectedSalesRepId}
-                        onValueChange={(value) => {
-                          setSelectedSalesRepId(value);
-                          setIsSalesRepDropdownOpen(false);
-                        }}
-                        disabled={isProcessing}
-                        open={isSalesRepDropdownOpen}
-                        onOpenChange={setIsSalesRepDropdownOpen}
-                      >
-                        <SelectTrigger
-                          onClick={() => !isProcessing && setIsSalesRepDropdownOpen(!isSalesRepDropdownOpen)}
-                          className={`bg-white transition-all ${
-                            !isProcessing && isSalesRepDropdownOpen 
-                              ? 'ring-2 ring-blue-500 border-blue-500' 
-                              : 'hover:border-gray-400'
-                          }`}
-                        >
-                          <SelectValue placeholder="Satış temsilcisi seçin" />
-                        </SelectTrigger>
-                        <SelectContent>
+                      <div className="relative">
+                        <Input
+                          id="salesrep"
+                          list="salesrep-list"
+                          value={activeSalesReps.find(rep => rep.id === selectedSalesRepId)?.adSoyad || ''}
+                          onChange={(e) => {
+                            const selectedRep = activeSalesReps.find(rep => rep.adSoyad === e.target.value);
+                            if (selectedRep) {
+                              setSelectedSalesRepId(selectedRep.id);
+                            } else if (!e.target.value) {
+                              setSelectedSalesRepId('');
+                            }
+                          }}
+                          placeholder="Satış temsilcisi seçin veya yazın"
+                          disabled={isProcessing}
+                          className="bg-white"
+                        />
+                        <datalist id="salesrep-list">
                           {activeSalesReps.map(rep => (
-                            <SelectItem key={rep.id} value={rep.id}>
-                              {rep.adSoyad}
-                            </SelectItem>
+                            <option key={rep.id} value={rep.adSoyad} />
                           ))}
-                        </SelectContent>
-                      </Select>
+                        </datalist>
+                      </div>
                     </div>
                     <Button
                       onClick={handleAssignSalesRep}

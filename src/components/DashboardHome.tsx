@@ -393,224 +393,122 @@ export function DashboardHome({
                     <div className="grid grid-cols-2 gap-3">
                       <Button
                         variant="outline"
-                        className="h-auto py-3 justify-start gap-3"
+                        className="h-auto py-3 justify-center"
                         onClick={() => handleAddWidget('customers')}
                       >
-                        <Plus size={16} />
-                        <div className="text-left">
-                          <div className="font-medium">Müşteriler Özeti</div>
-                          <div className="text-xs text-gray-500">
-                            {widgetTypeCounts.customers} mevcut
-                          </div>
-                        </div>
+                        Müşteriler Özeti
                       </Button>
                       <Button
                         variant="outline"
-                        className="h-auto py-3 justify-start gap-3"
+                        className="h-auto py-3 justify-center"
                         onClick={() => handleAddWidget('bankpf')}
                       >
-                        <Plus size={16} />
-                        <div className="text-left">
-                          <div className="font-medium">Banka/PF Özeti</div>
-                          <div className="text-xs text-gray-500">
-                            {widgetTypeCounts.bankpf} mevcut
-                          </div>
-                        </div>
+                        Banka/PF Özeti
                       </Button>
                       <Button
                         variant="outline"
-                        className="h-auto py-3 justify-start gap-3"
+                        className="h-auto py-3 justify-center"
                         onClick={() => handleAddWidget('bankPFMembers')}
                       >
-                        <Plus size={16} />
-                        <div className="text-left">
-                          <div className="font-medium">Banka/PF ÜİY Özeti</div>
-                          <div className="text-xs text-gray-500">
-                            {widgetTypeCounts.bankPFMembers} mevcut
-                          </div>
-                        </div>
+                        Banka/PF ÜİY Özeti
                       </Button>
                       <Button
                         variant="outline"
-                        className="h-auto py-3 justify-start gap-3"
+                        className="h-auto py-3 justify-center"
                         onClick={() => handleAddWidget('bankPFUiySummary')}
                       >
-                        <Plus size={16} />
-                        <div className="text-left">
-                          <div className="font-medium">ÜİY İcmal Tablosu</div>
-                          <div className="text-xs text-gray-500">
-                            {widgetTypeCounts.bankPFUiySummary} mevcut
-                          </div>
-                        </div>
+                        ÜİY İcmal Tablosu
                       </Button>
                       <Button
                         variant="outline"
-                        className="h-auto py-3 justify-start gap-3"
+                        className="h-auto py-3 justify-center"
                         onClick={() => handleAddWidget('products')}
                       >
-                        <Plus size={16} />
-                        <div className="text-left">
-                          <div className="font-medium">Ürün Özeti</div>
-                          <div className="text-xs text-gray-500">
-                            {widgetTypeCounts.products} mevcut
-                          </div>
-                        </div>
+                        Ürün Özeti
                       </Button>
                       <Button
                         variant="outline"
-                        className="h-auto py-3 justify-start gap-3"
+                        className="h-auto py-3 justify-center"
                         onClick={() => handleAddWidget('revenue')}
                       >
-                        <Plus size={16} />
-                        <div className="text-left">
-                          <div className="font-medium">Gelir Özeti</div>
-                          <div className="text-xs text-gray-500">
-                            {widgetTypeCounts.revenue} mevcut
-                          </div>
-                        </div>
+                        Gelir Özeti
                       </Button>
                       <Button
                         variant="outline"
-                        className="h-auto py-3 justify-start gap-3"
+                        className="h-auto py-3 justify-center"
                         onClick={() => handleAddWidget('customerGrowth')}
                       >
-                        <Plus size={16} />
-                        <div className="text-left">
-                          <div className="font-medium">Müşteri Büyüme</div>
-                          <div className="text-xs text-gray-500">
-                            {widgetTypeCounts.customerGrowth} mevcut
-                          </div>
-                        </div>
+                        Müşteri Büyüme
                       </Button>
                       <Button
                         variant="outline"
-                        className="h-auto py-3 justify-start gap-3"
+                        className="h-auto py-3 justify-center"
                         onClick={() => handleAddWidget('sectorDiversity')}
                       >
-                        <Plus size={16} />
-                        <div className="text-left">
-                          <div className="font-medium">Sektör Çeşitliliği</div>
-                          <div className="text-xs text-gray-500">
-                            {widgetTypeCounts.sectorDiversity} mevcut
-                          </div>
-                        </div>
+                        Sektör Çeşitliliği
                       </Button>
                       <Button
                         variant="outline"
-                        className="h-auto py-3 justify-start gap-3"
+                        className="h-auto py-3 justify-center"
                         onClick={() => handleAddWidget('mccDiversity')}
                       >
-                        <Plus size={16} />
-                        <div className="text-left">
-                          <div className="font-medium">MCC Çeşitliliği</div>
-                          <div className="text-xs text-gray-500">
-                            {widgetTypeCounts.mccDiversity} mevcut
-                          </div>
-                        </div>
+                        MCC Çeşitliliği
                       </Button>
                       <Button
                         variant="outline"
-                        className="h-auto py-3 justify-start gap-3"
+                        className="h-auto py-3 justify-center"
                         onClick={() => handleAddWidget('bankPerformance')}
                       >
-                        <Plus size={16} />
-                        <div className="text-left">
-                          <div className="font-medium">Banka Performansı</div>
-                          <div className="text-xs text-gray-500">
-                            {widgetTypeCounts.bankPerformance} mevcut
-                          </div>
-                        </div>
+                        Banka Performansı
                       </Button>
                       <Button
                         variant="outline"
-                        className="h-auto py-3 justify-start gap-3"
+                        className="h-auto py-3 justify-center"
                         onClick={() => handleAddWidget('revenueTrend')}
                       >
-                        <Plus size={16} />
-                        <div className="text-left">
-                          <div className="font-medium">Gelir Trendi</div>
-                          <div className="text-xs text-gray-500">
-                            {widgetTypeCounts.revenueTrend} mevcut
-                          </div>
-                        </div>
+                        Gelir Trendi
                       </Button>
                       <Button
                         variant="outline"
-                        className="h-auto py-3 justify-start gap-3"
+                        className="h-auto py-3 justify-center"
                         onClick={() => handleAddWidget('salesRepPerformance')}
                       >
-                        <Plus size={16} />
-                        <div className="text-left">
-                          <div className="font-medium">Temsilci Performansı</div>
-                          <div className="text-xs text-gray-500">
-                            {widgetTypeCounts.salesRepPerformance} mevcut
-                          </div>
-                        </div>
+                        Temsilci Performansı
                       </Button>
                       <Button
                         variant="outline"
-                        className="h-auto py-3 justify-start gap-3"
+                        className="h-auto py-3 justify-center"
                         onClick={() => handleAddWidget('riskDashboard')}
                       >
-                        <Plus size={16} />
-                        <div className="text-left">
-                          <div className="font-medium">Risk Dashboard'u</div>
-                          <div className="text-xs text-gray-500">
-                            {widgetTypeCounts.riskDashboard} mevcut
-                          </div>
-                        </div>
+                        Risk Dashboard'u
                       </Button>
                       <Button
                         variant="outline"
-                        className="h-auto py-3 justify-start gap-3"
+                        className="h-auto py-3 justify-center"
                         onClick={() => handleAddWidget('topCustomers')}
                       >
-                        <Plus size={16} />
-                        <div className="text-left">
-                          <div className="font-medium">Top 10 Müşteriler</div>
-                          <div className="text-xs text-gray-500">
-                            {widgetTypeCounts.topCustomers} mevcut
-                          </div>
-                        </div>
+                        Top 10 Müşteriler
                       </Button>
                       <Button
                         variant="outline"
-                        className="h-auto py-3 justify-start gap-3"
+                        className="h-auto py-3 justify-center"
                         onClick={() => handleAddWidget('systemStatus')}
                       >
-                        <Plus size={16} />
-                        <div className="text-left">
-                          <div className="font-medium">Sistem Durumu</div>
-                          <div className="text-xs text-gray-500">
-                            {widgetTypeCounts.systemStatus} mevcut
-                          </div>
-                        </div>
+                        Sistem Durumu
                       </Button>
                       <Button
                         variant="outline"
-                        className="h-auto py-3 justify-start gap-3"
+                        className="h-auto py-3 justify-center"
                         onClick={() => handleAddWidget('subscriptionRevenue')}
                       >
-                        <Plus size={16} />
-                        <div className="text-left">
-                          <div className="font-medium">Abone Hizmet Bedeli Özeti</div>
-                          <div className="text-xs text-gray-500">
-                            {widgetTypeCounts.subscriptionRevenue} mevcut
-                          </div>
-                        </div>
+                        Abone Hizmet Bedeli Özeti
                       </Button>
                       <Button
                         variant="outline"
-                        className="h-auto py-3 justify-start gap-3"
+                        className="h-auto py-3 justify-center"
                         onClick={() => handleAddWidget('deviceRevenueRatio')}
                       >
-                        <Plus size={16} />
-                        <div className="text-left">
-                          <div className="font-medium">Cihaz / Aidat Bedeli Oranı</div>
-                          <div className="text-xs text-gray-500">
-                            {widgetTypeCounts.deviceRevenueRatio} mevcut
-                          </div>
-                        </div>
+                        Cihaz / Aidat Bedeli Oranı
                       </Button>
                     </div>
                   </div>
@@ -792,34 +690,18 @@ export function DashboardHome({
           </Card>
         ) : (
           <Tabs defaultValue="customers" className="w-full">
-            <TabsList className="flex flex-nowrap w-full overflow-x-auto md:grid md:grid-cols-4 scrollbar-hide md:scrollbar-thin md:scrollbar-thumb-gray-300 md:scrollbar-track-gray-100 pb-1">
-              <TabsTrigger value="customers" className="gap-2 flex-none whitespace-nowrap">
-                <BarChart3 size={16} />
+            <TabsList className="flex flex-nowrap w-full overflow-x-auto md:grid md:grid-cols-4 pb-1 gap-1">
+              <TabsTrigger value="customers" className="flex-none whitespace-nowrap min-w-[100px]">
                 Müşteriler
-                {customerWidgets.length > 0 && (
-                  <Badge variant="secondary" className="ml-1">{customerWidgets.length}</Badge>
-                )}
               </TabsTrigger>
-              <TabsTrigger value="bankpf" className="gap-2 flex-none whitespace-nowrap">
-                <BarChart3 size={16} />
+              <TabsTrigger value="bankpf" className="flex-none whitespace-nowrap min-w-[100px]">
                 Banka/PF
-                {bankPFWidgets.length > 0 && (
-                  <Badge variant="secondary" className="ml-1">{bankPFWidgets.length}</Badge>
-                )}
               </TabsTrigger>
-              <TabsTrigger value="products" className="gap-2 flex-none whitespace-nowrap">
-                <BarChart3 size={16} />
+              <TabsTrigger value="products" className="flex-none whitespace-nowrap min-w-[100px]">
                 Ürün
-                {productWidgets.length > 0 && (
-                  <Badge variant="secondary" className="ml-1">{productWidgets.length}</Badge>
-                )}
               </TabsTrigger>
-              <TabsTrigger value="revenue" className="gap-2 flex-none whitespace-nowrap">
-                <BarChart3 size={16} />
+              <TabsTrigger value="revenue" className="flex-none whitespace-nowrap min-w-[100px]">
                 Gelir
-                {revenueWidgets.length > 0 && (
-                  <Badge variant="secondary" className="ml-1">{revenueWidgets.length}</Badge>
-                )}
               </TabsTrigger>
             </TabsList>
 

@@ -43,7 +43,6 @@ export function ContactMatrix({ contacts, onContactsChange, gorevListesi }: Cont
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<ContactPerson | null>(null);
   const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
-  const [isGorevDropdownOpen, setIsGorevDropdownOpen] = useState(false);
   const [formData, setFormData] = useState<ContactPerson>({
     id: '',
     ad: '',
@@ -249,43 +248,22 @@ export function ContactMatrix({ contacts, onContactsChange, gorevListesi }: Cont
 
               <div className="col-span-2 space-y-2">
                 <Label htmlFor="gorev">Görevi *</Label>
-                <Select
-                  value={formData.gorev}
-                  onValueChange={(value) => {
-                    setFormData({ ...formData, gorev: value });
-                    setIsGorevDropdownOpen(false);
-                  }}
-                  open={isGorevDropdownOpen}
-                  onOpenChange={setIsGorevDropdownOpen}
-                >
-                  <SelectTrigger 
-                    id="gorev" 
-                    onClick={() => setIsGorevDropdownOpen(!isGorevDropdownOpen)}
-                    className={`bg-white transition-all ${
-                      isGorevDropdownOpen 
-                        ? 'ring-2 ring-blue-500 border-blue-500' 
-                        : 'hover:border-gray-400'
-                    }`}
-                  >
-                    <SelectValue placeholder="Görev seçiniz..." />
-                  </SelectTrigger>
-                  <SelectContent 
-                    position="popper" 
-                    side="bottom"
-                    sideOffset={8}
-                    className="z-[99999] bg-white border border-gray-200 shadow-xl max-h-[300px] overflow-y-auto"
-                  >
+                <div className="relative">
+                  <Input
+                    id="gorev"
+                    value={formData.gorev}
+                    onChange={(e) => setFormData({ ...formData, gorev: e.target.value })}
+                    placeholder="Görev seçiniz veya yazınız..."
+                    list="gorev-listesi"
+                    autoComplete="off"
+                    className="bg-white"
+                  />
+                  <datalist id="gorev-listesi">
                     {effectiveGorevListesi.map((gorev) => (
-                      <SelectItem 
-                        key={gorev} 
-                        value={gorev}
-                        className="cursor-pointer hover:bg-gray-100 focus:bg-blue-50 bg-white"
-                      >
-                        {gorev}
-                      </SelectItem>
+                      <option key={gorev} value={gorev} />
                     ))}
-                  </SelectContent>
-                </Select>
+                  </datalist>
+                </div>
               </div>
 
               <div className="space-y-2">

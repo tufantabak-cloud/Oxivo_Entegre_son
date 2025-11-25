@@ -149,39 +149,7 @@ body {
   pointer-events: auto !important;
 }
 
-/* FIX: Select content - compact design without gaps */
-[data-radix-select-content] {
-  padding: 0 !important;
-  background: white !important;
-  border: 1px solid hsl(214.3 31.8% 91.4%) !important;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
-}
-
-[data-radix-select-viewport] {
-  padding: 0.25rem !important;
-  max-height: 300px !important;
-  overflow-y: auto !important;
-}
-
-/* FIX: Ensure all select items are properly sized and clickable */
-[data-slot="select-item"] {
-  min-height: 2rem !important;
-  cursor: pointer !important;
-  user-select: none !important;
-}
-
-/* FIX: Remove any extra spacing in dropdown menus */
-[data-slot="dropdown-menu-item"],
-[cmdk-item] {
-  margin: 0 !important;
-}
-
-/* FIX: Prevent layout shift and gaps in all popovers */
-[data-radix-popper-content-wrapper] > * {
-  max-height: fit-content !important;
-}
-
-/* Scrollbar Hide Utility */
+/* Scrollbar utilities */
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -191,23 +159,6 @@ body {
   display: none;
 }
 
-/* ==== MOBILE HORIZONTAL SCROLL OPTIMIZATION ==== */
-/* Smooth horizontal scrolling with touch support */
-.horizontal-scroll {
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-  /* Hide scrollbar on mobile for cleaner UI */
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.horizontal-scroll::-webkit-scrollbar {
-  display: none;
-}
-
-/* Tailwind scrollbar-thin utility for desktop */
 .scrollbar-thin {
   scrollbar-width: thin;
 }
@@ -219,24 +170,22 @@ body {
 
 .scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
   background-color: rgb(209 213 219);
-  border-radius: 9999px;
+  border-radius: 3px;
+}
+
+.scrollbar-track-gray-100::-webkit-scrollbar-track {
+  background-color: rgb(243 244 246);
 }
 
 .scrollbar-thumb-gray-400::-webkit-scrollbar-thumb {
   background-color: rgb(156 163 175);
-  border-radius: 9999px;
+  border-radius: 3px;
 }
 
 .scrollbar-track-transparent::-webkit-scrollbar-track {
   background-color: transparent;
 }
 
-.scrollbar-track-gray-100::-webkit-scrollbar-track {
-  background-color: rgb(243 244 246);
-  border-radius: 9999px;
-}
-
-/* Hover effect for scrollbar visibility */
 .hover\:scrollbar-thumb-gray-500:hover::-webkit-scrollbar-thumb {
   background-color: rgb(107 114 128);
 }
