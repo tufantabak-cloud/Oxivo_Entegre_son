@@ -608,7 +608,8 @@ export function CustomerDetail({
 
       if (isMatch) {
         const model = product.terminalModel?.toUpperCase() || '';
-        const isP6X = model.includes('P6X') || model.includes('P6-X') || model.includes('P 6 X');
+        // ✅ P6 ile başlayan tüm modelleri P6X ailesinden kabul et (P66.7.23, P68.7.20, P6X vb.)
+        const isP6X = model.startsWith('P6');
         const isApollo = model.includes('APOLLO');
         
         if (isP6X) p6xCount++;
