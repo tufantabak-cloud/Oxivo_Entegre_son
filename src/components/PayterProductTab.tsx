@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { ColumnVisibilityDropdown, ColumnConfig } from './ColumnVisibilityDropdown';
 import { Customer } from './CustomerModule';
+import { checkProductDuplicate } from '../utils/productDuplicateChecker';
 
 export interface PayterProduct {
   id: string;
@@ -260,7 +261,12 @@ export function PayterProductTab({ products, onProductsChange, customers = [] }:
             ptid: row['PTID'] ? String(row['PTID']).trim() : undefined,
           };
 
-          successProducts.push(product);
+          // Ürünün zaten var olup olmadığını kontrol et
+          if (checkProductDuplicate(products, product)) {
+            errors.push(`Satır ${rowNum}: Ürün zaten mevcut - ${product.serialNumber}`);
+          } else {
+            successProducts.push(product);
+          }
         } catch (error) {
           errors.push(`Satır ${rowNum}: Veri işlenirken hata - ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`);
         }
