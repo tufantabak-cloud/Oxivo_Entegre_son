@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { ColumnVisibilityDropdown, ColumnConfig } from './ColumnVisibilityDropdown';
 import { Customer } from './CustomerModule';
-import { checkProductDuplicate } from '../utils/productDuplicateChecker';
+import { checkProductDuplicate } from '@utils/productDuplicateChecker';
 
 export interface PayterProduct {
   id: string;
