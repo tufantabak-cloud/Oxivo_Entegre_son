@@ -804,6 +804,13 @@ ${notMatchedDomains.length > 0 ? `\n⚠️ Eşleşmeyen domainler konsola yazdı
   };
 
   if (selectedCustomer || isCreating) {
+    console.log('🔍 [CustomerModule] Rendering CustomerDetail with mccList:', {
+      mccListLength: mccList.length,
+      sampleMCC: mccList.slice(0, 5),
+      isCreating,
+      customerId: selectedCustomer?.id
+    });
+    
     return (
       <CustomerDetail
         customer={selectedCustomer}

@@ -395,8 +395,6 @@ export function BankDeviceManagementTab({
 
   // SİPAY Otomatik Eşleştirme
   const handleSipayAutoMatch = () => {
-    console.log('🚀 SİPAY otomatik eşleştirme başlatılıyor...');
-    
     // 70+ SİPAY domain listesi
     const sipayDomains = [
       'AKANMAR', 'ALIARI', 'ALKANN', 'ANKROTMT', 'ARESOTM', 'ARTVINOTMT',
@@ -428,12 +426,7 @@ export function BankDeviceManagementTab({
 
     const sipayAssignmentId = `ok-epk-${sipayEPK.id}`;
     
-    console.log('📋 SİPAY EPK bilgisi:', {
-      id: sipayEPK.id,
-      kod: sipayEPK.kod,
-      ad: sipayEPK.kurumAdi,
-      assignmentId: sipayAssignmentId
-    });
+
 
     // SİPAY domain'lerine ait cihazları bul
     const matchedDevices: string[] = [];
@@ -465,7 +458,6 @@ export function BankDeviceManagementTab({
           } else {
             // Başka bir kategoride
             assignedToOther.push(device.serialNumber);
-            console.log(`  ⚠️ ${device.serialNumber} zaten ${existingAssignment.bankName} kategorisinde`);
           }
         } else {
           // Atanmamış, eklenebilir
@@ -474,13 +466,7 @@ export function BankDeviceManagementTab({
       }
     });
 
-    console.log('📊 Eşleştirme sonuçları:', {
-      toplamSipayDomain: sipayDomains.length,
-      eslesen: matchedDomains.size,
-      yeniCihaz: matchedDevices.length,
-      zatenAtanmis: alreadyAssignedDevices.length,
-      baskaBankada: assignedToOther.length
-    });
+
 
     if (matchedDevices.length === 0 && alreadyAssignedDevices.length === 0) {
       toast.info('SİPAY domain\'ine ait cihaz bulunamadı! Cihazların domain bilgilerini kontrol edin.');
@@ -501,7 +487,6 @@ export function BankDeviceManagementTab({
         createdAt: new Date().toISOString(),
       };
       
-      console.log('✅ Yeni EPK004 SİPAY kategorisi oluşturuldu');
     }
 
     // Yeni cihazları ekle
@@ -514,8 +499,6 @@ export function BankDeviceManagementTab({
         });
       
       onAssignmentsChange(updatedAssignments);
-      
-      console.log(`✅ ${matchedDevices.length} cihaz EPK004 SİPAY kategorisine eklendi`);
     }
 
     // Sonuç mesajı
@@ -539,9 +522,7 @@ export function BankDeviceManagementTab({
       }
     }
 
-    if (matchedDomains.size > 0) {
-      console.log('\n📋 Eşleşen SİPAY Domainleri:', Array.from(matchedDomains).sort().join(', '));
-    }
+
 
     toast.success(messageParts.join('\n'), { duration: 8000 });
   };
@@ -934,7 +915,6 @@ export function BankDeviceManagementTab({
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          console.log('Cihaz Ekle butonuna tıklandı - Assignment ID:', assignment.id);
                           handleOpenAddDeviceDialog(assignment.id);
                         }}
                       >
@@ -974,7 +954,6 @@ export function BankDeviceManagementTab({
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          console.log('İlk cihazı ekle butonuna tıklandı - Assignment ID:', assignment.id);
                           handleOpenAddDeviceDialog(assignment.id);
                         }}
                         className="mt-2"
@@ -1080,7 +1059,6 @@ export function BankDeviceManagementTab({
       <Dialog 
         open={isAddDialogOpen} 
         onOpenChange={(open) => {
-          console.log('🔔 Dialog onOpenChange:', open);
           setIsAddDialogOpen(open);
         }}
       >
@@ -1144,7 +1122,6 @@ export function BankDeviceManagementTab({
             <div className="flex-1 overflow-y-auto border rounded-lg">
               {(() => {
                 const availableDevices = getAvailableDevices();
-                console.log('📋 Dialog içinde gösterilecek cihaz sayısı:', availableDevices.length);
                 
                 if (availableDevices.length === 0) {
                   return (

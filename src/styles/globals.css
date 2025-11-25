@@ -191,6 +191,68 @@ body {
   display: none;
 }
 
+/* ==== MOBILE HORIZONTAL SCROLL OPTIMIZATION ==== */
+/* Smooth horizontal scrolling with touch support */
+.horizontal-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  /* Hide scrollbar on mobile for cleaner UI */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.horizontal-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Tailwind scrollbar-thin utility for desktop */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
+  background-color: rgb(209 213 219);
+  border-radius: 9999px;
+}
+
+.scrollbar-thumb-gray-400::-webkit-scrollbar-thumb {
+  background-color: rgb(156 163 175);
+  border-radius: 9999px;
+}
+
+.scrollbar-track-transparent::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+.scrollbar-track-gray-100::-webkit-scrollbar-track {
+  background-color: rgb(243 244 246);
+  border-radius: 9999px;
+}
+
+/* Hover effect for scrollbar visibility */
+.hover\:scrollbar-thumb-gray-500:hover::-webkit-scrollbar-thumb {
+  background-color: rgb(107 114 128);
+}
+
+/* Mobile-optimized: Hide scrollbar completely on small screens */
+@media (max-width: 768px) {
+  .scrollbar-thin {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 /* FIX: Compact all radix scroll areas */
 [data-radix-scroll-area-viewport] > div {
   display: block !important;

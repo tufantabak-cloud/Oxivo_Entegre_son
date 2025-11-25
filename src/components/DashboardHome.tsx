@@ -273,47 +273,49 @@ export function DashboardHome({
         {/* Dashboard Header */}
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           {/* Action Buttons */}
-          <div className="flex items-center flex-wrap gap-2">
+          <div className="flex flex-nowrap overflow-x-auto gap-2 scrollbar-hide md:scrollbar-thin md:scrollbar-thumb-gray-400 md:scrollbar-track-transparent md:hover:scrollbar-thumb-gray-500 pb-2">
             {/* Excel Import/Export */}
-            <ExcelDataManager
-              customers={customers}
-              onCustomersChange={onCustomersChange}
-              payterProducts={payterProducts}
-              onPayterProductsChange={onPayterProductsChange}
-              bankPFRecords={bankPFRecords}
-              onBankPFRecordsChange={onBankPFRecordsChange}
-              hesapKalemleri={hesapKalemleri}
-              onHesapKalemleriChange={onHesapKalemleriChange}
-              sabitKomisyonlar={sabitKomisyonlar}
-              onSabitKomisyonlarChange={onSabitKomisyonlarChange}
-              ekGelirler={ekGelirler}
-              onEkGelirlerChange={onEkGelirlerChange}
-              jobTitles={jobTitles}
-              onJobTitlesChange={onJobTitlesChange}
-              mccList={mccList}
-              onMCCListChange={onMCCListChange}
-              banks={banks}
-              onBanksChange={onBanksChange}
-              epkList={epkList}
-              onEPKListChange={onEPKListChange}
-              okList={okList}
-              onOKListChange={onOKListChange}
-              partnerships={partnerships}
-              onPartnershipsChange={onPartnershipsChange}
-              sharings={sharings}
-              onSharingsChange={onSharingsChange}
-              kartProgramlar={kartProgramlar}
-              onKartProgramlarChange={onKartProgramlarChange}
-              salesReps={salesReps}
-              onSalesRepsChange={onSalesRepsChange}
-            />
+            <div className="flex-none">
+              <ExcelDataManager
+                customers={customers}
+                onCustomersChange={onCustomersChange}
+                payterProducts={payterProducts}
+                onPayterProductsChange={onPayterProductsChange}
+                bankPFRecords={bankPFRecords}
+                onBankPFRecordsChange={onBankPFRecordsChange}
+                hesapKalemleri={hesapKalemleri}
+                onHesapKalemleriChange={onHesapKalemleriChange}
+                sabitKomisyonlar={sabitKomisyonlar}
+                onSabitKomisyonlarChange={onSabitKomisyonlarChange}
+                ekGelirler={ekGelirler}
+                onEkGelirlerChange={onEkGelirlerChange}
+                jobTitles={jobTitles}
+                onJobTitlesChange={onJobTitlesChange}
+                mccList={mccList}
+                onMCCListChange={onMCCListChange}
+                banks={banks}
+                onBanksChange={onBanksChange}
+                epkList={epkList}
+                onEPKListChange={onEPKListChange}
+                okList={okList}
+                onOKListChange={onOKListChange}
+                partnerships={partnerships}
+                onPartnershipsChange={onPartnershipsChange}
+                sharings={sharings}
+                onSharingsChange={onSharingsChange}
+                kartProgramlar={kartProgramlar}
+                onKartProgramlarChange={onKartProgramlarChange}
+                salesReps={salesReps}
+                onSalesRepsChange={onSalesRepsChange}
+              />
+            </div>
 
             {/* JSON Export/Import Butonları */}
             {onExportData && (
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2 hover:bg-green-50 hover:text-green-600 hover:border-green-300 transition-colors"
+                className="gap-2 hover:bg-green-50 hover:text-green-600 hover:border-green-300 transition-colors flex-shrink-0"
                 onClick={onExportData}
               >
                 <Download size={16} />
@@ -325,7 +327,7 @@ export function DashboardHome({
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2 hover:bg-purple-50 hover:text-purple-600 hover:border-purple-300 transition-colors"
+                className="gap-2 hover:bg-purple-50 hover:text-purple-600 hover:border-purple-300 transition-colors flex-shrink-0"
                 onClick={onImportData}
               >
                 <Upload size={16} />
@@ -337,7 +339,7 @@ export function DashboardHome({
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition-colors"
+                className="gap-2 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition-colors flex-shrink-0"
                 onClick={onCheckData}
               >
                 <Search size={16} />
@@ -349,7 +351,7 @@ export function DashboardHome({
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors"
+                className="gap-2 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors flex-shrink-0"
                 onClick={onClearData}
               >
                 <Trash2 size={16} />
@@ -360,7 +362,7 @@ export function DashboardHome({
             <Button
               variant="outline"
               size="sm"
-              className="gap-2"
+              className="gap-2 flex-shrink-0"
               onClick={handleGlobalRefresh}
               disabled={isRefreshing}
             >
@@ -371,7 +373,7 @@ export function DashboardHome({
             {/* Widget Ayarları Dialog */}
             <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline" className="gap-2">
+                <Button variant="outline" size="sm" className="gap-2 flex-shrink-0">
                   <Settings size={16} />
                   Widget Yönetimi
                 </Button>
@@ -790,29 +792,29 @@ export function DashboardHome({
           </Card>
         ) : (
           <Tabs defaultValue="customers" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="customers" className="gap-2">
+            <TabsList className="flex flex-nowrap w-full overflow-x-auto md:grid md:grid-cols-4 scrollbar-hide md:scrollbar-thin md:scrollbar-thumb-gray-300 md:scrollbar-track-gray-100 pb-1">
+              <TabsTrigger value="customers" className="gap-2 flex-none whitespace-nowrap">
                 <BarChart3 size={16} />
                 Müşteriler
                 {customerWidgets.length > 0 && (
                   <Badge variant="secondary" className="ml-1">{customerWidgets.length}</Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="bankpf" className="gap-2">
+              <TabsTrigger value="bankpf" className="gap-2 flex-none whitespace-nowrap">
                 <BarChart3 size={16} />
                 Banka/PF
                 {bankPFWidgets.length > 0 && (
                   <Badge variant="secondary" className="ml-1">{bankPFWidgets.length}</Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="products" className="gap-2">
+              <TabsTrigger value="products" className="gap-2 flex-none whitespace-nowrap">
                 <BarChart3 size={16} />
                 Ürün
                 {productWidgets.length > 0 && (
                   <Badge variant="secondary" className="ml-1">{productWidgets.length}</Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="revenue" className="gap-2">
+              <TabsTrigger value="revenue" className="gap-2 flex-none whitespace-nowrap">
                 <BarChart3 size={16} />
                 Gelir
                 {revenueWidgets.length > 0 && (
@@ -839,11 +841,13 @@ export function DashboardHome({
                   </CardContent>
                 </Card>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" key={refreshKey}>
+                <div className="flex lg:grid lg:grid-cols-2 gap-6 overflow-x-auto lg:overflow-x-visible snap-x snap-mandatory lg:snap-none scrollbar-hide pb-4" key={refreshKey}>
+                  {/* 📱 MOBILE: Horizontal scroll | 🖥️ DESKTOP: 2-column grid */}
                   {customerWidgets.map((widget) => (
                     <div
                       key={`${widget.id}-${refreshKey}`}
                       className={`
+                        flex-shrink-0 w-[85vw] lg:w-auto snap-center
                         ${widget.size === 'large' ? 'lg:col-span-2' : 'lg:col-span-1'}
                         ${widget.pinned ? 'relative' : ''}
                       `}
@@ -878,11 +882,13 @@ export function DashboardHome({
                   </CardContent>
                 </Card>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" key={refreshKey}>
+                <div className="flex lg:grid lg:grid-cols-2 gap-6 overflow-x-auto lg:overflow-x-visible snap-x snap-mandatory lg:snap-none scrollbar-hide pb-4" key={refreshKey}>
+                  {/* 📱 MOBILE: Horizontal scroll | 🖥️ DESKTOP: 2-column grid */}
                   {bankPFWidgets.map((widget) => (
                     <div
                       key={`${widget.id}-${refreshKey}`}
                       className={`
+                        flex-shrink-0 w-[85vw] lg:w-auto snap-center
                         ${widget.size === 'large' ? 'lg:col-span-2' : 'lg:col-span-1'}
                         ${widget.pinned ? 'relative' : ''}
                       `}
@@ -917,11 +923,13 @@ export function DashboardHome({
                   </CardContent>
                 </Card>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" key={refreshKey}>
+                <div className="flex lg:grid lg:grid-cols-2 gap-6 overflow-x-auto lg:overflow-x-visible snap-x snap-mandatory lg:snap-none scrollbar-hide pb-4" key={refreshKey}>
+                  {/* 📱 MOBILE: Horizontal scroll | 🖥️ DESKTOP: 2-column grid */}
                   {productWidgets.map((widget) => (
                     <div
                       key={`${widget.id}-${refreshKey}`}
                       className={`
+                        flex-shrink-0 w-[85vw] lg:w-auto snap-center
                         ${widget.size === 'large' ? 'lg:col-span-2' : 'lg:col-span-1'}
                         ${widget.pinned ? 'relative' : ''}
                       `}
@@ -956,11 +964,13 @@ export function DashboardHome({
                   </CardContent>
                 </Card>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" key={refreshKey}>
+                <div className="flex lg:grid lg:grid-cols-2 gap-6 overflow-x-auto lg:overflow-x-visible snap-x snap-mandatory lg:snap-none scrollbar-hide pb-4" key={refreshKey}>
+                  {/* 📱 MOBILE: Horizontal scroll | 🖥️ DESKTOP: 2-column grid */}
                   {revenueWidgets.map((widget) => (
                     <div
                       key={`${widget.id}-${refreshKey}`}
                       className={`
+                        flex-shrink-0 w-[85vw] lg:w-auto snap-center
                         ${widget.size === 'large' ? 'lg:col-span-2' : 'lg:col-span-1'}
                         ${widget.pinned ? 'relative' : ''}
                       `}

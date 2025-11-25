@@ -34,6 +34,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from './ui/alert-dialog';
+import { mccCodesApi } from '../utils/supabaseClient';
 
 interface MCCTabProps {
   mccList: MCC[];
@@ -82,9 +83,20 @@ export const MCCTab = React.memo(function MCCTab({ mccList, onMCCListChange }: M
     setDeleteConfirmOpen(true);
   }, []);
 
-  const handleDeleteConfirm = useCallback(() => {
+  const handleDeleteConfirm = useCallback(async () => {
     if (mccToDelete) {
-      onMCCListChange(mccList.filter((m) => m.id !== mccToDelete));
+      // ✅ Delete from Supabase
+      const result = await mccCodesApi.delete(mccToDelete);
+      
+      if (result.success) {
+        // ✅ Update local state
+        onMCCListChange(mccList.filter((m) => m.id !== mccToDelete));
+        console.log(`✅ MCC ${mccToDelete} deleted successfully`);
+      } else {
+        console.error(`❌ Failed to delete MCC:`, result.error);
+        alert(`Silme işlemi başarısız: ${result.error}`);
+      }
+      
       setMCCToDelete(null);
       setDeleteConfirmOpen(false);
     }

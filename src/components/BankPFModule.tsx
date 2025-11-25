@@ -226,15 +226,11 @@ export const BankPFModule = React.memo(function BankPFModule({
   const handleSaveRecord = (record: BankPF) => {
     if (isCreating) {
       const newRecords = [...bankPFRecords, { ...record, id: Date.now().toString() }];
-      console.log('🆕 Yeni kayıt ekleniyor:', newRecords.length, 'kayıt');
-      console.log('📋 TABELA kayıtları:', record.tabelaRecords?.length || 0);
       onBankPFRecordsChange?.(newRecords);
       setIsCreating(false);
       setSelectedRecord(null);
     } else {
       const updatedRecords = bankPFRecords.map((r) => (r.id === record.id ? record : r));
-      console.log('✏️ Kayıt güncelleniyor:', record.firmaUnvan);
-      console.log('📋 TABELA kayıtları:', record.tabelaRecords?.length || 0);
       onBankPFRecordsChange?.(updatedRecords);
       // Otomatik kaydetme durumunda sayfadan atma!
       // setSelectedRecord(null); // Bu satırı kaldırdık
@@ -256,7 +252,6 @@ export const BankPFModule = React.memo(function BankPFModule({
     setSelectedRecord(null);
     
     // Bilgilendirme mesajı
-    console.log(`🗑️ BankPF kaydı silindi: ${deletedRecord?.firmaUnvan || id}`);
     toast.success(
       `Banka/PF kaydı silindi: ${deletedRecord?.firmaUnvan || 'Kayıt'}\nİlişkili müşteri bağlantıları temizlendi`,
       { duration: 4000 }

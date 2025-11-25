@@ -295,27 +295,8 @@ export default function App() {
         }
         
         if (mccCodesResult.success && mccCodesResult.data) {
-          console.log('🔍 [App.tsx] Fetched MCC from Supabase, calling setMCCList:', {
-            count: mccCodesResult.data.length,
-            sampleData: mccCodesResult.data.slice(0, 3),
-            allData: mccCodesResult.data
-          });
           setMCCList(mccCodesResult.data);
           logger.info(`✅ Loaded ${mccCodesResult.data.length} MCC codes from Supabase`);
-          
-          // 🚨 DEBUG: localStorage'ı kontrol et (1 saniye sonra)
-          setTimeout(() => {
-            const lsData = localStorage.getItem('mccList');
-            if (lsData) {
-              try {
-                const parsed = JSON.parse(lsData);
-                const dataArray = parsed?.data || parsed;
-                alert(`📦 LOCALSTORAGE MCC CHECK:\n\nSupabase'den: ${mccCodesResult.data.length} MCC\nLocalStorage'da: ${Array.isArray(dataArray) ? dataArray.length : 'HATA'}\n\nLS Format: ${parsed?.version ? 'Versioned' : 'Legacy'}\n\nİlk MCC:\n${JSON.stringify(dataArray?.[0], null, 2)}`);
-              } catch (e) {
-                alert(`❌ localStorage parse hatası: ${e}`);
-              }
-            }
-          }, 1000);
         }
         
         if (banksResult.success && banksResult.data) {
@@ -656,20 +637,7 @@ export default function App() {
   // ⚠️ FIX: Tüm MCC'leri göster (aktif/pasif fark etmeksizin)
   // Müşteri kartında MCC seçimi için tüm kayıtlar gerekli
   const activeMCCListForCustomer = useMemo(() => {
-    const result = mccList.map(m => ({ kod: m.kod, kategori: m.kategori }));
-    console.log('🔍 [DEBUG] activeMCCListForCustomer calculated:', {
-      totalMCCInState: mccList.length,
-      transformedMCCCount: result.length,
-      sampleMCC: mccList.slice(0, 3).map(m => ({ kod: m.kod, kategori: m.kategori, aktif: m.aktif })),
-      fullResult: result
-    });
-    
-    // 🚨 ALERT DEBUG - MCC state'ini kontrol et
-    if (mccList.length < 10) {
-      alert(`⚠️ MCC STATE DEBUG (App.tsx):\n\nmccList.length = ${mccList.length}\nresult.length = ${result.length}\n\nİlk 3 MCC:\n${JSON.stringify(mccList.slice(0, 3), null, 2)}`);
-    }
-    
-    return result;
+    return mccList.map(m => ({ kod: m.kod, kategori: m.kategori }));
   }, [mccList]);
 
   // BankPFModule için özel transformasyonlar
@@ -786,7 +754,6 @@ export default function App() {
           );
           
           // Verileri yeniden yükle
-          console.log('🔄 Refreshing data from Supabase...');
           setTimeout(() => window.location.reload(), 1000);
         } else {
           toast.success('✨ Veritabanı zaten temiz! Duplicate kayıt bulunamadı.');
@@ -829,21 +796,11 @@ export default function App() {
         try {
           const importData = JSON.parse(event.target?.result as string);
           
-          console.log('📦 JSON Import başlıyor...');
-          console.log('📄 Dosya adı:', file.name);
-          console.log('🔖 Import edilen versiyon:', importData.version || '(Bilinmiyor)');
-          console.log('🔖 Mevcut uygulama versiyonu:', CURRENT_APP_VERSION);
-          
           // ✅ 1. VALIDATION - Veri yapısını kontrol et
           const validation = validateImportData(importData);
           if (!validation.valid) {
-            console.error('❌ Validasyon hataları:', validation.errors);
             toast.error(validation.errors[0]);
-            
-            // Detailed error log
-            console.group('🔍 Validasyon Detayları');
-            validation.errors.forEach(err => console.log(err));
-            console.groupEnd();
+            logger.error('JSON import validation failed:', validation.errors);
             return;
           }
           
@@ -852,105 +809,34 @@ export default function App() {
           const importVersion = importData.version || '1.0';
           
           if (importVersion !== CURRENT_APP_VERSION) {
-            console.log(`🔄 Version mismatch detected: v${importVersion} → v${CURRENT_APP_VERSION}`);
-            console.log('🔧 Migration başlatılıyor...');
-            
-            // Migration uygula
             processedData = migrateData(importData, importVersion);
-            console.log('✅ Migration tamamlandı');
-          } else {
-            console.log('✅ Version match - Migration gerekmiyor');
+            logger.info(`Migration applied: v${importVersion} → v${CURRENT_APP_VERSION}`);
           }
           
           // ✅ 3. BATCHED DATA IMPORT - Tüm setState'leri batch içinde çalıştır
-          console.log('💾 Veriler state\'e aktarılıyor (batched)...');
-          
           const data = processedData.data;
           let importedCount = 0;
           
           // ⚡ CRITICAL: Batched updates (hydration fix)
           unstable_batchedUpdates(() => {
-            if (data.customers) { 
-              setCustomers(data.customers); 
-              importedCount++;
-              console.log(`  ✓ Müşteriler: ${data.customers.length} kayıt`);
-            }
-            if (data.payterProducts) { 
-              setPayterProducts(data.payterProducts); 
-              importedCount++;
-              console.log(`  ✓ Payter Ürünleri: ${data.payterProducts.length} kayıt`);
-            }
-            if (data.bankPFRecords) { 
-              setBankPFRecords(data.bankPFRecords); 
-              importedCount++;
-              const totalTabela = data.bankPFRecords.reduce((sum: number, r: BankPF) => 
-                sum + (r.tabelaRecords?.length || 0), 0
-              );
-              console.log(`  ✓ Banka/PF: ${data.bankPFRecords.length} kayıt (${totalTabela} TABELA)`);
-            }
-            if (data.hesapKalemleri) { 
-              setHesapKalemleri(data.hesapKalemleri); 
-              importedCount++;
-              console.log(`  ✓ Hesap Kalemleri: ${data.hesapKalemleri.length} kayıt`);
-            }
-            if (data.sabitKomisyonlar) { 
-              setSabitKomisyonlar(data.sabitKomisyonlar); 
-              importedCount++;
-              console.log(`  ✓ Sabit Komisyonlar: ${data.sabitKomisyonlar.length} kayıt`);
-            }
-            if (data.ekGelirler) { 
-              setEkGelirler(data.ekGelirler); 
-              importedCount++;
-              console.log(`  ✓ Ek Gelirler: ${data.ekGelirler.length} kayıt`);
-            }
-            if (data.jobTitles) { 
-              setJobTitles(data.jobTitles); 
-              importedCount++;
-              console.log(`  ✓ Görevler: ${data.jobTitles.length} kayıt`);
-            }
-            if (data.mccList) { 
-              setMCCList(data.mccList); 
-              importedCount++;
-              console.log(`  ✓ MCC: ${data.mccList.length} kayıt`);
-            }
-            if (data.banks) { 
-              setBanks(data.banks); 
-              importedCount++;
-              console.log(`  ✓ Bankalar: ${data.banks.length} kayıt`);
-            }
-            if (data.epkList) { 
-              setEPKList(data.epkList); 
-              importedCount++;
-              console.log(`  ✓ EPK: ${data.epkList.length} kayıt`);
-            }
-            if (data.okList) { 
-              setOKList(data.okList); 
-              importedCount++;
-              console.log(`  ✓ ÖK: ${data.okList.length} kayıt`);
-            }
-            if (data.partnerships) { 
-              setPartnerships(data.partnerships); 
-              importedCount++;
-              console.log(`  ✓ İşbirlikleri: ${data.partnerships.length} kayıt`);
-            }
-            if (data.sharings) { 
-              setSharings(data.sharings); 
-              importedCount++;
-              console.log(`  ✓ Gelir Modelleri: ${data.sharings.length} kayıt`);
-            }
-            if (data.kartProgramlar) { 
-              setKartProgramlar(data.kartProgramlar); 
-              importedCount++;
-              console.log(`  ✓ Kart Programları: ${data.kartProgramlar.length} kayıt`);
-            }
-            if (data.salesReps) { 
-              setSalesReps(data.salesReps); 
-              importedCount++;
-              console.log(`  ✓ Satış Temsilcileri: ${data.salesReps.length} kayıt`);
-            }
+            if (data.customers) { setCustomers(data.customers); importedCount++; }
+            if (data.payterProducts) { setPayterProducts(data.payterProducts); importedCount++; }
+            if (data.bankPFRecords) { setBankPFRecords(data.bankPFRecords); importedCount++; }
+            if (data.hesapKalemleri) { setHesapKalemleri(data.hesapKalemleri); importedCount++; }
+            if (data.sabitKomisyonlar) { setSabitKomisyonlar(data.sabitKomisyonlar); importedCount++; }
+            if (data.ekGelirler) { setEkGelirler(data.ekGelirler); importedCount++; }
+            if (data.jobTitles) { setJobTitles(data.jobTitles); importedCount++; }
+            if (data.mccList) { setMCCList(data.mccList); importedCount++; }
+            if (data.banks) { setBanks(data.banks); importedCount++; }
+            if (data.epkList) { setEPKList(data.epkList); importedCount++; }
+            if (data.okList) { setOKList(data.okList); importedCount++; }
+            if (data.partnerships) { setPartnerships(data.partnerships); importedCount++; }
+            if (data.sharings) { setSharings(data.sharings); importedCount++; }
+            if (data.kartProgramlar) { setKartProgramlar(data.kartProgramlar); importedCount++; }
+            if (data.salesReps) { setSalesReps(data.salesReps); importedCount++; }
           });
           
-          console.log(`✅ ${importedCount} veri kategorisi başarıyla import edildi (batched)`);
+          logger.info(`JSON import completed: ${importedCount} categories imported`);
           
           toast.success(
             importVersion !== CURRENT_APP_VERSION
@@ -1974,42 +1860,16 @@ export default function App() {
                   sum + (record.tabelaRecords?.length || 0), 0
                 );
                 
-                // Detaylı TABELA bilgisi
-                console.log('📋 TABELA Detayları:');
-                // ✅ ARRAY SAFETY: Ensure bankPFRecords is a valid array (Fix 1/3)
-                const safeBankPFRecords1 = Array.isArray(bankPFRecords) ? bankPFRecords : [];
-                safeBankPFRecords1.forEach(record => {
-                  if (record.tabelaRecords && record.tabelaRecords.length > 0) {
-                    console.log(`  ${record.firmaUnvan}: ${record.tabelaRecords.length} TABELA kaydı`);
-                    // ✅ ARRAY SAFETY: Ensure tabelaRecords is a valid array
-                    const safeTabelaRecords1 = Array.isArray(record.tabelaRecords) ? record.tabelaRecords : [];
-                    safeTabelaRecords1.forEach(t => {
-                      console.log(`    - ${t.gelirModeli.ad} (${t.kartTipi})`);
-                    });
-                  }
-                });
-                
-                const dataCount = {
-                  'Müşteriler': customers.length,
-                  'Banka/PF': bankPFRecords.length,
-                  'TABELA (Toplam)': totalTabelaRecords,
-                  'Bankalar': banks.length,
-                  'EPK': epkList.length,
-                  'ÖK': okList.length,
-                };
-                console.log('📊 Kayıtlı Veriler:', dataCount);
-                
-                // LocalStorage kontrolü
-                const storedData = localStorage.getItem('bankPFRecords');
-                if (storedData) {
-                  const parsed = JSON.parse(storedData);
-                  const storedTabela = parsed.reduce((sum: number, r: BankPF) => 
-                    sum + (r.tabelaRecords?.length || 0), 0
-                  );
-                  console.log('💾 LocalStorage\'da TABELA:', storedTabela);
-                }
-                
-                toast.success(`Toplam ${totalTabelaRecords} TABELA kaydı - Detaylar konsolda`);
+                toast.success(
+                  `📊 Veri Özeti:\n\n` +
+                  `• Müşteriler: ${customers.length}\n` +
+                  `• Banka/PF: ${bankPFRecords.length}\n` +
+                  `• TABELA: ${totalTabelaRecords}\n` +
+                  `• Bankalar: ${banks.length}\n` +
+                  `• EPK: ${epkList.length}\n` +
+                  `• ÖK: ${okList.length}`,
+                  { duration: 5000 }
+                );
               }}
               onClearData={() => {
                 if (confirm('⚠️ TÜM VERİLER SİLİNECEK!\n\nOnce export aldığınızdan emin olun.\n\nDevam etmek istiyor musunuz?')) {
