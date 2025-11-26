@@ -56,7 +56,9 @@ import {
   // additionalRevenuesApi,
   sharingApi,
   kartProgramApi,
-  suspensionReasonApi
+  suspensionReasonApi,
+  domainMappingApi,
+  signApi
 } from './utils/supabaseClient';
 
 // ⚡ PHASE 3: Code Splitting - Lazy load heavy modules
@@ -236,6 +238,8 @@ export default function App() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [payterProducts, setPayterProducts] = useState<PayterProduct[]>([]);
   const [bankPFRecords, setBankPFRecords] = useState<BankPF[]>([]);
+  const [domainMappings, setDomainMappings] = useState<any[]>([]);
+  const [signs, setSigns] = useState<any[]>([]);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [supabaseDataLoaded, setSupabaseDataLoaded] = useState(false);
   
@@ -257,10 +261,11 @@ export default function App() {
           salesRepsResult,
           jobTitlesResult,
           partnershipsResult,
-          // ❌ REMOVED: accountItemsResult, fixedCommissionsResult, additionalRevenuesResult
           sharingResult,
           kartProgramResult,
-          suspensionReasonResult
+          suspensionReasonResult,
+          domainMappingsResult,
+          signsResult
         ] = await Promise.all([
           customerApi.getAll(),
           productApi.getAll(),
@@ -272,10 +277,11 @@ export default function App() {
           salesRepsApi.getAll(),
           jobTitlesApi.getAll(),
           partnershipsApi.getAll(),
-          // ❌ REMOVED: accountItemsApi.getAll(), fixedCommissionsApi.getAll(), additionalRevenuesApi.getAll()
           sharingApi.getAll(),
           kartProgramApi.getAll(),
-          suspensionReasonApi.getAll()
+          suspensionReasonApi.getAll(),
+          domainMappingApi.getAll(),
+          signApi.getAll()
         ]);
         
         // Update state with fetched data
@@ -345,6 +351,16 @@ export default function App() {
         if (suspensionReasonResult.success && suspensionReasonResult.data) {
           setSuspensionReasons(suspensionReasonResult.data);
           logger.info(`✅ Loaded ${suspensionReasonResult.data.length} suspension reason records from Supabase`);
+        }
+        
+        if (domainMappingsResult.success && domainMappingsResult.data) {
+          setDomainMappings(domainMappingsResult.data);
+          logger.info(`✅ Loaded ${domainMappingsResult.data.length} domain mappings from Supabase`);
+        }
+        
+        if (signsResult.success && signsResult.data) {
+          setSigns(signsResult.data);
+          logger.info(`✅ Loaded ${signsResult.data.length} signs from Supabase`);
         }
         
         setSupabaseDataLoaded(true);
@@ -526,6 +542,14 @@ export default function App() {
     });
     setStoredData('bankPFRecords', bankPFRecords); 
   }, [bankPFRecords, dataLoaded]);
+  
+  useEffect(() => { 
+    if (dataLoaded) setStoredData('domainMappings', domainMappings); 
+  }, [domainMappings, dataLoaded]);
+  
+  useEffect(() => { 
+    if (dataLoaded) setStoredData('signs', signs); 
+  }, [signs, dataLoaded]);
 
   // ✅ NEW: Auto-sync ALL data types to Supabase (runs when ANY data changes)
   useEffect(() => {
@@ -568,7 +592,9 @@ export default function App() {
         additionalRevenues: ekGelirler,
         sharing: sharings,
         kartProgram: kartProgramlar,
-        suspensionReason: suspensionReasons
+        suspensionReason: suspensionReasons,
+        domainMappings: domainMappings,
+        signs: signs
       });
     }, 2000);
 
@@ -590,6 +616,8 @@ export default function App() {
     sharings,
     kartProgramlar,
     suspensionReasons,
+    domainMappings,
+    signs,
     dataLoaded
   ]);
 

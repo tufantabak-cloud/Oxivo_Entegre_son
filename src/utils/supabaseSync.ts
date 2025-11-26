@@ -3,7 +3,7 @@
  * JSON import sonrası toplu veri senkronizasyonu
  */
 
-import { customerApi } from './supabaseClient';
+import { customerApi, domainMappingApi, signApi } from './supabaseClient';
 import { toast } from 'sonner';
 
 interface SyncData {
@@ -13,6 +13,8 @@ interface SyncData {
   banks?: any[];
   epkList?: any[];
   okList?: any[];
+  domainMappings?: any[];
+  signs?: any[];
 }
 
 /**
@@ -44,8 +46,41 @@ export async function syncToSupabase(data: SyncData): Promise<void> {
       }
     }
     
-    // Diğer tablolar için de benzer sync eklenebilir
-    // BankPF, PayterProducts, vb.
+    // Domain Mappings sync
+    if (data.domainMappings && data.domainMappings.length > 0) {
+      try {
+        console.log(`  📤 Syncing ${data.domainMappings.length} domain mappings...`);
+        const result = await domainMappingApi.create(data.domainMappings);
+        if (result.success) {
+          syncedCount++;
+          console.log(`  ✅ Domain mappings synced: ${result.count} kayıt`);
+        } else {
+          syncErrors.push(`Domain Mappings: ${result.error}`);
+          console.error(`  ❌ Domain mappings sync failed:`, result.error);
+        }
+      } catch (err) {
+        syncErrors.push(`Domain Mappings: ${err}`);
+        console.error(`  ❌ Domain mappings sync error:`, err);
+      }
+    }
+    
+    // Signs sync
+    if (data.signs && data.signs.length > 0) {
+      try {
+        console.log(`  📤 Syncing ${data.signs.length} signs...`);
+        const result = await signApi.create(data.signs);
+        if (result.success) {
+          syncedCount++;
+          console.log(`  ✅ Signs synced: ${result.count} kayıt`);
+        } else {
+          syncErrors.push(`Signs: ${result.error}`);
+          console.error(`  ❌ Signs sync failed:`, result.error);
+        }
+      } catch (err) {
+        syncErrors.push(`Signs: ${err}`);
+        console.error(`  ❌ Signs sync error:`, err);
+      }
+    }
     
     // Sonuç bildirimi
     console.log(`☁️ Supabase sync tamamlandı: ${syncedCount} kategori`);

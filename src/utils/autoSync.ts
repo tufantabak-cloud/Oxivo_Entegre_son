@@ -19,6 +19,8 @@
  * 14. Sharing → sharing table
  * 15. Kart Program → kart_program table
  * 16. Suspension Reason → suspension_reason table
+ * 17. Domain Mappings → domain_mappings table
+ * 18. Signs → signs table
  * 
  * USAGE IN APP.TSX:
  * ```
@@ -38,7 +40,9 @@
  *   additionalRevenues: ekGelirler,
  *   sharing: payterSharing,
  *   kartProgram: payterKartProgram,
- *   suspensionReason: payterSuspensionReason
+ *   suspensionReason: payterSuspensionReason,
+ *   domainMappings,
+ *   signs
  * });
  * ```
  */
@@ -60,7 +64,9 @@ import {
   // additionalRevenuesApi,
   sharingApi,
   kartProgramApi,
-  suspensionReasonApi
+  suspensionReasonApi,
+  domainMappingApi,
+  signApi
 } from './supabaseClient';
 
 // ========================================
@@ -85,6 +91,8 @@ export interface SyncDataOptions {
   sharing?: any[];
   kartProgram?: any[];
   suspensionReason?: any[];
+  domainMappings?: any[];
+  signs?: any[];
 }
 
 export interface SyncResult {
@@ -578,6 +586,60 @@ export async function syncSuspensionReason(suspensionReason: any[]): Promise<Syn
   }
 }
 
+/**
+ * Sync Domain Mappings to Supabase
+ */
+export async function syncDomainMappings(domainMappings: any[]): Promise<SyncResult> {
+  if (!domainMappings || domainMappings.length === 0) {
+    console.log('⏭️ Skipping Domain Mappings sync: No data');
+    return { success: true, type: 'domainMappings', count: 0 };
+  }
+
+  console.log(`☁️ Syncing ${domainMappings.length} Domain Mappings to Supabase...`);
+
+  try {
+    const result = await domainMappingApi.create(domainMappings);
+    
+    if (result.success) {
+      console.log(`✅ Domain Mappings synced: ${result.count} records`);
+      return { success: true, type: 'domainMappings', count: result.count };
+    } else {
+      console.error(`❌ Domain Mappings sync failed:`, result.error);
+      return { success: false, type: 'domainMappings', error: result.error };
+    }
+  } catch (err: any) {
+    console.error(`❌ Domain Mappings sync error:`, err);
+    return { success: false, type: 'domainMappings', error: err.message || 'Unknown error' };
+  }
+}
+
+/**
+ * Sync Signs to Supabase
+ */
+export async function syncSigns(signs: any[]): Promise<SyncResult> {
+  if (!signs || signs.length === 0) {
+    console.log('⏭️ Skipping Signs sync: No data');
+    return { success: true, type: 'signs', count: 0 };
+  }
+
+  console.log(`☁️ Syncing ${signs.length} Signs to Supabase...`);
+
+  try {
+    const result = await signApi.create(signs);
+    
+    if (result.success) {
+      console.log(`✅ Signs synced: ${result.count} records`);
+      return { success: true, type: 'signs', count: result.count };
+    } else {
+      console.error(`❌ Signs sync failed:`, result.error);
+      return { success: false, type: 'signs', error: result.error };
+    }
+  } catch (err: any) {
+    console.error(`❌ Signs sync error:`, err);
+    return { success: false, type: 'signs', error: err.message || 'Unknown error' };
+  }
+}
+
 // ========================================
 // BATCH SYNC FUNCTION
 // ========================================
@@ -606,7 +668,9 @@ export async function syncSuspensionReason(suspensionReason: any[]): Promise<Syn
  *   additionalRevenues: additionalRevenuesArray,
  *   sharing: sharingArray,
  *   kartProgram: kartProgramArray,
- *   suspensionReason: suspensionReasonArray
+ *   suspensionReason: suspensionReasonArray,
+ *   domainMappings: domainMappingsArray,
+ *   signs: signsArray
  * });
  * 
  * console.log('Sync summary:', results);
@@ -630,7 +694,9 @@ export async function syncAllData(options: SyncDataOptions): Promise<SyncResult[
     additionalRevenues: options.additionalRevenues?.length || 0,
     sharing: options.sharing?.length || 0,
     kartProgram: options.kartProgram?.length || 0,
-    suspensionReason: options.suspensionReason?.length || 0
+    suspensionReason: options.suspensionReason?.length || 0,
+    domainMappings: options.domainMappings?.length || 0,
+    signs: options.signs?.length || 0
   });
 
   const results: SyncResult[] = [];
@@ -713,6 +779,16 @@ export async function syncAllData(options: SyncDataOptions): Promise<SyncResult[
   // Sync Suspension Reason
   if (options.suspensionReason) {
     results.push(await syncSuspensionReason(options.suspensionReason));
+  }
+
+  // Sync Domain Mappings
+  if (options.domainMappings) {
+    results.push(await syncDomainMappings(options.domainMappings));
+  }
+
+  // Sync Signs
+  if (options.signs) {
+    results.push(await syncSigns(options.signs));
   }
 
   // Summary
@@ -871,6 +947,14 @@ export function getSyncStatus(): Record<string, { lastSync: string | null; needs
     suspensionReason: {
       lastSync: localStorage.getItem('suspensionReason_last_sync'),
       needsSync: needsSync('suspensionReason')
+    },
+    domainMappings: {
+      lastSync: localStorage.getItem('domainMappings_last_sync'),
+      needsSync: needsSync('domainMappings')
+    },
+    signs: {
+      lastSync: localStorage.getItem('signs_last_sync'),
+      needsSync: needsSync('signs')
     }
   };
 }
