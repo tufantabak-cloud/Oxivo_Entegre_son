@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Customer, DomainNode } from './CustomerModule';
 import { BankPF } from './BankPFModule';
-import { Search, ArrowUpDown, ArrowUp, ArrowDown, Eye, Filter, Download, CheckSquare, Square, ListChecks, Bug, Database } from 'lucide-react';
+import { Search, ArrowUpDown, ArrowUp, ArrowDown, Eye, Filter, Download, CheckSquare, Square, ListChecks, Bug } from 'lucide-react';
 import { DeviceCountAnalyzer } from './DeviceCountAnalyzer';
 import { Switch } from './ui/switch';
 import { toast } from 'sonner';
@@ -121,9 +121,6 @@ export const CustomerList = React.memo(function CustomerList({ customers, onSele
   
   // Cihaz sayısı analiz tool
   const [showAnalyzer, setShowAnalyzer] = useState(false);
-  
-  // Domain migration state
-  const [isMigrating, setIsMigrating] = useState(false);
 
   const handleSort = (field: keyof Customer | 'cihazAdedi' | 'bankaPF') => {
     if (sortField === field) {
@@ -837,74 +834,6 @@ export const CustomerList = React.memo(function CustomerList({ customers, onSele
     }
   };
 
-  // Domain Hierarchy Migration fonksiyonu
-  const handleDomainMigration = async () => {
-    if (isMigrating) {
-      toast.error('Migration zaten devam ediyor!');
-      return;
-    }
-
-    try {
-      setIsMigrating(true);
-      console.log('🚀 Starting domain migration...');
-      
-      // Get APIs from window
-      const apis = (window as any).__OXIVO_SUPABASE__?.apis;
-      
-      if (!apis) {
-        throw new Error('Supabase APIs not available');
-      }
-
-      // Find customers with domain hierarchy
-      const customersWithDomains = customers.filter(c => 
-        c.domainHierarchy && 
-        Array.isArray(c.domainHierarchy) && 
-        c.domainHierarchy.length > 0
-      );
-
-      console.log(`📊 Found ${customersWithDomains.length} customers with domain hierarchy`);
-
-      if (customersWithDomains.length === 0) {
-        toast.info('⚠️ Domain hiyerarşisine sahip müşteri bulunamadı!');
-        setIsMigrating(false);
-        return;
-      }
-
-      // Create domain mapping records
-      const domainMappings = customersWithDomains.map(customer => ({
-        id: `dm-${customer.id}`,
-        customerId: customer.id,
-        domainTree: customer.domainHierarchy,
-        mainDomain: customer.guncelMyPayterDomain || null,
-        ignoreMainDomain: customer.ignoreMainDomain || false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }));
-
-      console.log(`📦 Creating ${domainMappings.length} domain mapping records...`);
-
-      // Save to Supabase
-      const result = await apis.domainMappingApi.create(domainMappings);
-
-      if (result.success) {
-        console.log(`✅ Migration successful: ${result.count} records created`);
-        toast.success(`✅ ${result.count} domain mapping kaydı oluşturuldu!`);
-        
-        // Verify
-        const checkResult = await apis.domainMappingApi.getAll();
-        console.log(`📊 Total domain mappings in Supabase: ${checkResult.data.length}`);
-      } else {
-        throw new Error('Migration failed');
-      }
-
-    } catch (error) {
-      console.error('❌ Domain migration error:', error);
-      toast.error(`Migration hatası: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-      setIsMigrating(false);
-    }
-  };
-
   return (
     <div className="space-y-6">
       {/* Cihaz Sayısı Analiz Tool */}
@@ -978,18 +907,6 @@ export const CustomerList = React.memo(function CustomerList({ customers, onSele
               <Bug size={16} />
               <span className="hidden md:inline">{showAnalyzer ? 'Analizi Kapat' : 'Cihaz Analizi'}</span>
               <span className="md:hidden">Analiz</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDomainMigration}
-              disabled={isMigrating}
-              className="flex items-center justify-center gap-2 bg-purple-50 hover:bg-purple-100 border-purple-300"
-              title="Domain hiyerarşilerini domain_mappings tablosuna migrate et"
-            >
-              <Database size={16} className={isMigrating ? 'animate-pulse' : ''} />
-              <span className="hidden md:inline">{isMigrating ? 'Migrate ediliyor...' : 'Domain Migrate'}</span>
-              <span className="md:hidden">{isMigrating ? '...' : 'Migrate'}</span>
             </Button>
             <Button
               variant="outline"
