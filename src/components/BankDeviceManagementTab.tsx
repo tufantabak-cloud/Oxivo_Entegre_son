@@ -1001,7 +1001,7 @@ export function BankDeviceManagementTab({
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <code className="text-sm bg-white px-2 py-0.5 rounded border">
+                                  <code className="text-sm bg-white px-2 py-1 rounded border">
                                     {device.serialNumber}
                                   </code>
                                   <span className="text-sm truncate">{device.name}</span>
@@ -1195,7 +1195,7 @@ export function BankDeviceManagementTab({
                           />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <code className="text-sm bg-gray-100 px-2 py-0.5 rounded">
+                              <code className="text-sm bg-gray-100 px-2 py-1 rounded">
                                 {device.serialNumber}
                               </code>
                               <span className="text-sm truncate">{device.name}</span>

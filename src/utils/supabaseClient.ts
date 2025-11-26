@@ -353,8 +353,19 @@ export const customerApi = {
       // Convert each JSONB field to JSON string (or null)
       jsonbFields.forEach(field => {
         if (sanitized[field] !== undefined && sanitized[field] !== null) {
-          // Only stringify if it's an object/array
-          if (typeof sanitized[field] === 'object') {
+          // If it's already a string, try to parse then re-stringify to ensure valid JSON
+          if (typeof sanitized[field] === 'string') {
+            try {
+              // Parse the string to validate and clean it
+              const parsed = JSON.parse(sanitized[field]);
+              sanitized[field] = JSON.stringify(parsed);
+            } catch (e) {
+              console.warn(`⚠️ Invalid JSON string in ${field}, setting to null:`, e);
+              sanitized[field] = null;
+            }
+          }
+          // Only stringify if it's an object/array (not already string)
+          else if (typeof sanitized[field] === 'object') {
             sanitized[field] = JSON.stringify(sanitized[field]);
           }
         } else {
@@ -546,7 +557,9 @@ export const productApi = {
     );
     
     if (uniqueRecords.length < productArray.length) {
-      console.warn(`⚠️ Step 1: Removed ${productArray.length - uniqueRecords.length} duplicate products (by id)`);
+      // ✅ FIX: Changed to debug log (not warning) - this is expected behavior
+      const duplicateCount = productArray.length - uniqueRecords.length;
+      console.log(`🔄 Deduplicated ${duplicateCount} product(s) before sync (${productArray.length} → ${uniqueRecords.length})`);
     }
     
     // ✅ ADD TIMESTAMPS: Enrich each product with createdAt/updatedAt if missing

@@ -170,7 +170,7 @@ export function ContactMatrix({ contacts, onContactsChange, gorevListesi }: Cont
                     )}
                     {columnVisibility['gorevi'] !== false && (
                       <TableCell>
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm bg-blue-100 text-blue-800">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
                           {contact.gorev}
                         </span>
                       </TableCell>

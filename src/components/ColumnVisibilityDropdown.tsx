@@ -76,9 +76,9 @@ export function ColumnVisibilityDropdown({
       <PopoverTrigger asChild>
         <Button type="button" variant="outline" size="sm" className="gap-2">
           <Settings2 size={16} />
-          Sütun Görünürlüğü
+          Sütun Gör
           {visibleCount < columns.length && (
-            <span className="ml-1 text-xs bg-blue-100 text-blue-700 px-1.5 rounded">
+            <span className="ml-1 text-xs bg-blue-100 text-blue-700 px-2 rounded">
               {visibleCount}/{columns.length}
             </span>
           )}
@@ -122,7 +122,7 @@ export function ColumnVisibilityDropdown({
             {columns.map(column => (
               <label
                 key={column.key}
-                className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md px-2 py-1.5 cursor-pointer transition-colors"
+                className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md px-2 py-2 cursor-pointer transition-colors"
               >
                 <Checkbox
                   id={`col-${column.key}`}

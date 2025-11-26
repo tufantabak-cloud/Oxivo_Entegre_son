@@ -66,7 +66,7 @@ export const FilterDropdown = React.memo(function FilterDropdown({
             <span className="truncate">{displayLabel}</span>
           </div>
           {!isAllSelected && showCount && selectedOption?.count !== undefined && (
-            <span className="ml-1 text-xs bg-blue-200 text-blue-800 px-1.5 rounded">
+            <span className="ml-1 text-xs bg-blue-200 text-blue-800 px-2 rounded">
               {selectedOption.count}
             </span>
           )}
@@ -129,7 +129,7 @@ export const FilterDropdown = React.memo(function FilterDropdown({
                 <div className="flex items-center gap-2">
                   {showCount && option.count !== undefined && (
                     <span className={cn(
-                      "text-xs px-1.5 py-0.5 rounded",
+                      "text-xs px-2 py-1 rounded",
                       value === option.value
                         ? "bg-blue-200 text-blue-800 dark:bg-blue-800 dark:text-blue-200"
                         : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"

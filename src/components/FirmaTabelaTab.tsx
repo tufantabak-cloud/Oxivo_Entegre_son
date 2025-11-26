@@ -1203,10 +1203,10 @@ export function FirmaTabelaTab({
                   </Badge>
                 </TableCell>
                 <TableCell className="py-4">
-                  <div className="space-y-1.5">
+                  <div className="space-y-2">
                     {/* Sadece seçilen (aktif) vadeleri göster - Alt alta */}
                     {record.komisyonOranları.filter(ko => ko.aktif !== false).length > 0 ? (
-                      <div className="flex flex-col gap-0.5">
+                      <div className="flex flex-col gap-1">
                         {record.komisyonOranları.filter(ko => ko.aktif !== false).map((ko, idx) => (
                           <div key={idx} className="text-xs text-blue-700">
                             {ko.vade.replace(' (Peşin)', '')}
@@ -1219,15 +1219,15 @@ export function FirmaTabelaTab({
                   </div>
                 </TableCell>
                 <TableCell className="py-4">
-                  <div className="text-xs space-y-1.5">
+                  <div className="text-xs space-y-2">
                     {record.gelirModeli.ad === 'Hazine Geliri' ? (
-                      <div className="flex items-center justify-between gap-2 bg-blue-50 px-2 py-1.5 rounded">
+                      <div className="flex items-center justify-between gap-2 bg-blue-50 px-2 py-2 rounded">
                         <span className="text-gray-700">Kazanç:</span>
                         <span className="text-blue-700">{parseFloat(record.hazineGeliri?.kazancTL || '0').toFixed(2)}₺</span>
                       </div>
                     ) : record.gelirModeli.ad === 'Gelir Ortaklığı' ? (
                       // Gelir Ortaklığı: Alış (kırmızı), Satış (yeşil), Kazanç (mavi)
-                      <div className="flex flex-col gap-1.5">
+                      <div className="flex flex-col gap-2">
                         {record.komisyonOranları.filter(ko => ko.aktif !== false).map((ko, idx) => {
                           const formatPercent = (val: string | undefined) => {
                             if (!val || val === '') return '0,00';
@@ -1235,7 +1235,7 @@ export function FirmaTabelaTab({
                           };
                           
                           return (
-                            <div key={idx} className="flex flex-col gap-0.5 px-2 py-1.5 rounded bg-gray-50">
+                            <div key={idx} className="flex flex-col gap-1 px-2 py-2 rounded bg-gray-50">
                               <div className="flex items-center justify-between gap-2">
                                 <span className="text-gray-600">Alış:</span>
                                 <span className="text-red-600">%{formatPercent(ko.alisTL)}</span>
@@ -1254,7 +1254,7 @@ export function FirmaTabelaTab({
                       </div>
                     ) : (
                       // Sabit Komisyon: Komisyon oranı yüzdesi göster - Alt alta
-                      <div className="flex flex-col gap-0.5">
+                      <div className="flex flex-col gap-1">
                         {record.komisyonOranları.filter(ko => ko.aktif !== false).map((ko, idx) => {
                           const vadeLabel = ko.vade.replace(' (Peşin)', '');
                           
@@ -1269,12 +1269,12 @@ export function FirmaTabelaTab({
                   </div>
                 </TableCell>
                 <TableCell className="py-4">
-                  <div className="text-xs space-y-1.5">
-                    <div className="flex items-center justify-between gap-2 bg-green-50 px-2 py-1.5 rounded">
+                  <div className="text-xs space-y-2">
+                    <div className="flex items-center justify-between gap-2 bg-green-50 px-2 py-2 rounded">
                       <span className="text-gray-700">{record.kurulus.ad}</span>
                       <span className="text-green-700">%{record.paylaşımOranları.kurulusOrani}</span>
                     </div>
-                    <div className="flex items-center justify-between gap-2 bg-blue-50 px-2 py-1.5 rounded">
+                    <div className="flex items-center justify-between gap-2 bg-blue-50 px-2 py-2 rounded">
                       <span className="text-gray-700">OXİVO</span>
                       <span className="text-blue-700">%{record.paylaşımOranları.oxivoOrani}</span>
                     </div>
@@ -1307,7 +1307,7 @@ export function FirmaTabelaTab({
                   </div>
                 </TableCell>
                 <TableCell className="py-4" onClick={(e) => e.stopPropagation()}>
-                  <div className="flex flex-col gap-1.5">
+                  <div className="flex flex-col gap-2">
                     {record.aktif ? (
                       <Button
                         size="sm"
@@ -1530,9 +1530,9 @@ export function FirmaTabelaTab({
                           </Badge>
                         </TableCell>
                         <TableCell className="py-4">
-                          <div className="space-y-1.5">
+                          <div className="space-y-2">
                             {record.komisyonOranları.filter(ko => ko.aktif !== false).length > 0 ? (
-                              <div className="flex flex-col gap-0.5">
+                              <div className="flex flex-col gap-1">
                                 {record.komisyonOranları.filter(ko => ko.aktif !== false).map((ko, idx) => (
                                   <div key={idx} className="text-xs text-blue-700">
                                     {ko.vade.replace(' (Peşin)', '')}
@@ -1545,14 +1545,14 @@ export function FirmaTabelaTab({
                           </div>
                         </TableCell>
                         <TableCell className="py-4">
-                          <div className="text-xs space-y-1.5">
+                          <div className="text-xs space-y-2">
                             {record.gelirModeli.ad === 'Hazine Geliri' ? (
-                              <div className="flex items-center justify-between gap-2 bg-blue-50 px-2 py-1.5 rounded">
+                              <div className="flex items-center justify-between gap-2 bg-blue-50 px-2 py-2 rounded">
                                 <span className="text-gray-700">Kazanç:</span>
                                 <span className="text-blue-700">{parseFloat(record.hazineGeliri?.kazancTL || '0').toFixed(2)}₺</span>
                               </div>
                             ) : record.gelirModeli.ad === 'Gelir Ortaklığı' ? (
-                              <div className="flex flex-col gap-1.5">
+                              <div className="flex flex-col gap-2">
                                 {record.komisyonOranları.filter(ko => ko.aktif !== false).map((ko, idx) => {
                                   const formatPercent = (val: string | undefined) => {
                                     if (!val || val === '') return '0,00';
@@ -1560,7 +1560,7 @@ export function FirmaTabelaTab({
                                   };
                                   
                                   return (
-                                    <div key={idx} className="flex flex-col gap-0.5 px-2 py-1.5 rounded bg-gray-50">
+                                    <div key={idx} className="flex flex-col gap-1 px-2 py-2 rounded bg-gray-50">
                                       <div className="flex items-center justify-between gap-2">
                                         <span className="text-gray-600">Alış:</span>
                                         <span className="text-red-600">%{formatPercent(ko.alisTL)}</span>
@@ -1578,7 +1578,7 @@ export function FirmaTabelaTab({
                                 })}
                               </div>
                             ) : (
-                              <div className="flex flex-col gap-0.5">
+                              <div className="flex flex-col gap-1">
                                 {record.komisyonOranları.filter(ko => ko.aktif !== false).map((ko, idx) => {
                                   const vadeLabel = ko.vade.replace(' (Peşin)', '');
                                   return (
@@ -1618,7 +1618,7 @@ export function FirmaTabelaTab({
                           </div>
                         </TableCell>
                         <TableCell className="py-4" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex flex-col gap-1.5">
+                          <div className="flex flex-col gap-2">
                             {record.aktif ? (
                               <Button
                                 size="sm"
@@ -3286,7 +3286,7 @@ export function FirmaTabelaTab({
                     <span className="text-orange-600">1.</span>
                     <div className="text-sm space-y-1">
                       <strong>Yeni Anlaşma Ekleme:</strong>
-                      <div className="text-gray-600 pl-4 space-y-0.5">
+                      <div className="text-gray-600 pl-4 space-y-1">
                         <div>• TABELA tab'ına git</div>
                         <div>• "Yeni TABELA Kaydı" butonuna tıkla</div>
                         <div>• Form adımlarını doldur (10 adım)</div>
@@ -3300,7 +3300,7 @@ export function FirmaTabelaTab({
                     <span className="text-orange-600">2.</span>
                     <div className="text-sm space-y-1">
                       <strong>Dönemsel Gruplama:</strong>
-                      <div className="text-gray-600 pl-4 space-y-0.5">
+                      <div className="text-gray-600 pl-4 space-y-1">
                         <div>• TABELA kayıtlarını seç (Checkbox)</div>
                         <div>• "Grup Oluştur" butonuna tıkla</div>
                         <div>• Grup bilgilerini gir (ad, geçerlilik tarihleri)</div>
@@ -3314,7 +3314,7 @@ export function FirmaTabelaTab({
                     <span className="text-orange-600">3.</span>
                     <div className="text-sm space-y-1">
                       <strong>Aylık Hakediş Hesaplama:</strong>
-                      <div className="text-gray-600 pl-4 space-y-0.5">
+                      <div className="text-gray-600 pl-4 space-y-1">
                         <div>• Hakediş tab'ına geç</div>
                         <div>• "Yeni Hakediş Oluştur" butonuna tıkla</div>
                         <div>• TABELA grubunu seç (sadece aktif gruplar)</div>
@@ -3338,7 +3338,7 @@ export function FirmaTabelaTab({
                 <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
                   <div className="text-sm space-y-1">
                     <strong>TabelaRecord (TABELA Kaydı)</strong>
-                    <div className="text-gray-700 pl-4 text-xs space-y-0.5 font-mono">
+                    <div className="text-gray-700 pl-4 text-xs space-y-1 font-mono">
                       <div>• id, kurulus, urun, kartTipi</div>
                       <div>• gelirModeli, kartProgramIds</div>
                       <div>• komisyonOranları (vade bazlı)</div>
@@ -3351,7 +3351,7 @@ export function FirmaTabelaTab({
                 <div className="bg-green-50 p-3 rounded-lg border border-green-200">
                   <div className="text-sm space-y-1">
                     <strong>TabelaGroup (TABELA Grubu)</strong>
-                    <div className="text-gray-700 pl-4 text-xs space-y-0.5 font-mono">
+                    <div className="text-gray-700 pl-4 text-xs space-y-1 font-mono">
                       <div>• id, name</div>
                       <div>• gecerlilikBaslangic, gecerlilikBitis</div>
                       <div>• recordIds (kayıt ID dizisi)</div>
@@ -3363,7 +3363,7 @@ export function FirmaTabelaTab({
                 <div className="bg-purple-50 p-3 rounded-lg border border-purple-200">
                   <div className="text-sm space-y-1">
                     <strong>HakedisRecord (Hakediş Kaydı)</strong>
-                    <div className="text-gray-700 pl-4 text-xs space-y-0.5 font-mono">
+                    <div className="text-gray-700 pl-4 text-xs space-y-1 font-mono">
                       <div>• id, tabelaGroupId, tabelaGroupAd</div>
                       <div>• donem (YYYY-MM)</div>
                       <div>• islemHacmiMap (vade bazlı)</div>

@@ -196,15 +196,15 @@ export function GlobalSearch({
               <span>{totalIndexedItems.toLocaleString('tr-TR')} kayıt indekslendi</span>
             </div>
             <div className="flex items-center gap-3">
-              <kbd className="px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded text-[10px]">
+              <kbd className="px-2 py-1 bg-gray-100 border border-gray-300 rounded text-xs">
                 ↑↓
               </kbd>
               <span>Gezin</span>
-              <kbd className="px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded text-[10px]">
+              <kbd className="px-2 py-1 bg-gray-100 border border-gray-300 rounded text-xs">
                 Enter
               </kbd>
               <span>Seç</span>
-              <kbd className="px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded text-[10px]">
+              <kbd className="px-2 py-1 bg-gray-100 border border-gray-300 rounded text-xs">
                 Esc
               </kbd>
               <span>Kapat</span>
@@ -257,7 +257,7 @@ export function GlobalSearch({
                                   </p>
                                   <Badge
                                     variant="outline"
-                                    className={`text-[10px] px-1.5 py-0 ${getCategoryColor(
+                                    className={`text-xs px-2 py-0 ${getCategoryColor(
                                       result.category
                                     )}`}
                                   >
@@ -274,7 +274,7 @@ export function GlobalSearch({
                                       .map(([key, value]) => (
                                         <span
                                           key={key}
-                                          className="text-[10px] text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded"
+                                          className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded"
                                         >
                                           {String(value)}
                                         </span>
@@ -283,7 +283,7 @@ export function GlobalSearch({
                                 )}
                               </div>
                               <div className="flex items-center gap-2 flex-shrink-0">
-                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                                <Badge variant="secondary" className="text-xs px-2 py-0">
                                   %{Math.round(result.score)}
                                 </Badge>
                                 <ArrowRight className="h-4 w-4 text-gray-400" />

@@ -158,7 +158,7 @@ function DomainTreeNode({
   return (
     <div className="select-none">
       <div 
-        className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-gray-50 group transition-colors mb-1"
+        className="flex items-center gap-2 py-2 px-2 rounded hover:bg-gray-50 group transition-colors mb-1"
         style={{ marginLeft: `${indent}px` }}
       >
         {/* Toggle button */}
@@ -179,7 +179,7 @@ function DomainTreeNode({
         {node.children.length === 0 && <div className="w-[18px]" />}
 
         {/* Numaralandırma */}
-        <span className="text-xs text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded min-w-[28px] text-center tabular-nums">
+        <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded min-w-[28px] text-center tabular-nums">
           {numbering}
         </span>
 
@@ -204,7 +204,7 @@ function DomainTreeNode({
               {node.name || '(Boş)'}
             </span>
             {node.children.length > 0 && (
-              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
                 {node.children.length}
               </span>
             )}
@@ -212,13 +212,13 @@ function DomainTreeNode({
         )}
 
         {/* Butonlar */}
-        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <Button
             type="button"
             variant="ghost"
             size="sm"
             onClick={() => setIsEditing(true)}
-            className="h-6 px-1.5 hover:bg-gray-200"
+            className="h-6 px-2 hover:bg-gray-200"
             title="Düzenle"
           >
             <Edit2 size={12} className="text-gray-600" />
@@ -228,7 +228,7 @@ function DomainTreeNode({
             variant="ghost"
             size="sm"
             onClick={() => onAddChild(path)}
-            className="h-6 px-1.5 hover:bg-green-50"
+            className="h-6 px-2 hover:bg-green-50"
             title="Alt birim ekle"
           >
             <Plus size={12} className="text-green-600" />
@@ -238,7 +238,7 @@ function DomainTreeNode({
             variant="ghost"
             size="sm"
             onClick={() => onAddSibling(path)}
-            className="h-6 px-1.5 hover:bg-blue-50"
+            className="h-6 px-2 hover:bg-blue-50"
             title="Yan birim ekle"
           >
             <Plus size={12} className="text-blue-600" />
@@ -248,7 +248,7 @@ function DomainTreeNode({
             variant="ghost"
             size="sm"
             onClick={() => onDelete(path)}
-            className="h-6 px-1.5 hover:bg-red-50"
+            className="h-6 px-2 hover:bg-red-50"
             title="Sil"
           >
             <Trash size={12} className="text-red-600" />
@@ -2230,7 +2230,7 @@ export function CustomerDetail({
                       <Label htmlFor="guncelMyPayterDomain" className="text-blue-900">
                         🌐 Ana Domain (Kök)
                       </Label>
-                      <span className="text-xs bg-blue-200 text-blue-800 px-2 py-0.5 rounded">
+                      <span className="text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded">
                         Zorunlu
                       </span>
                     </div>
@@ -2395,7 +2395,7 @@ export function CustomerDetail({
                   </div>
                   <div className="bg-white border border-gray-200 p-4 min-h-[400px] max-h-[600px] overflow-y-auto">
                     {formData.domainHierarchy && formData.domainHierarchy.length > 0 ? (
-                      <div className="space-y-0.5">
+                      <div className="space-y-1">
                         {formData.domainHierarchy.map((node, index) => (
                           <DomainTreeNode
                             key={node.id}
