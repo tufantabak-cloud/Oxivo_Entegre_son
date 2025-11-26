@@ -874,7 +874,6 @@ export const CustomerList = React.memo(function CustomerList({ customers, onSele
       const domainMappings = customersWithDomains.map(customer => ({
         id: `dm-${customer.id}`,
         customerId: customer.id,
-        customerName: customer.cariAdi || customer.id,
         domainTree: customer.domainHierarchy,
         mainDomain: customer.guncelMyPayterDomain || null,
         ignoreMainDomain: customer.ignoreMainDomain || false,
