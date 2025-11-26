@@ -18,6 +18,12 @@ export interface KartProgram {
   aciklama: string;
   aktif: boolean;
   olusturmaTarihi: string;
+  // ✅ EKSIK ALANLAR EKLENDİ - Supabase entegrasyonu için gerekli
+  kod?: string;
+  ad?: string; // Supabase'de 'ad' kolonu kullanılıyor
+  bankaKodu?: string;
+  kartTipi?: string;
+  komisyonOrani?: number;
 }
 
 interface KartProgramTabProps {

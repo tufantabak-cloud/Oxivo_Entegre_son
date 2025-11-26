@@ -6,11 +6,13 @@ import { Button } from '../ui/button';
 import { UserCircle, Award, Users, Maximize2, Minimize2, ExternalLink } from 'lucide-react';
 import type { Customer } from '../CustomerModule';
 import type { PayterProduct } from '../PayterProductTab';
+import type { SalesRepresentative } from '../DefinitionsModule';
 import { FullListModal } from './FullListModal';
 
 interface SalesRepPerformanceWidgetProps {
   customers: Customer[];
   payterProducts: PayterProduct[];
+  salesReps: SalesRepresentative[]; // ✅ SalesRep tanımlarını prop olarak al
 }
 
 interface SalesRepStats {
@@ -23,7 +25,7 @@ interface SalesRepStats {
   averageDevicesPerCustomer: number;
 }
 
-export function SalesRepPerformanceWidget({ customers, payterProducts }: SalesRepPerformanceWidgetProps) {
+export function SalesRepPerformanceWidget({ customers, payterProducts, salesReps }: SalesRepPerformanceWidgetProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [showFullListModal, setShowFullListModal] = useState(false);
   const [modalData, setModalData] = useState<{ title: string; items: any[] }>({ title: '', items: [] });
@@ -33,13 +35,11 @@ export function SalesRepPerformanceWidget({ customers, payterProducts }: SalesRe
 
   // ✅ NULL SAFETY: customers boş olabilir
   (customers || []).forEach((customer) => {
-    const rawRepId = customer.salesRepId || 'unassigned';
-    const rawRepName = customer.salesRepName || 'Atanmamış';
+    const repId = customer.salesRepId || 'unassigned';
     
-    // Normalize edilmiş ID: isim bazlı, büyük/küçük harf ve boşluk farkı olmadan
-    const normalizedName = rawRepName.trim().toLowerCase().replace(/\s+/g, '-');
-    const repId = rawRepId === 'unassigned' ? 'unassigned' : normalizedName;
-    const repName = rawRepName.trim(); // Orijinal ismi kullan, sadece trim et
+    // ✅ SalesRep bilgisini salesReps'ten dinamik olarak al
+    const salesRepDefinition = salesReps.find(r => r.id === repId);
+    const repName = salesRepDefinition?.adSoyad || 'Atanmamış';
 
     if (!salesRepMap.has(repId)) {
       salesRepMap.set(repId, {

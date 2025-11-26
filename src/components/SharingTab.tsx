@@ -27,6 +27,11 @@ export interface Sharing {
   aciklama: string;
   aktif: boolean;
   olusturmaTarihi: string;
+  // ✅ EKSIK ALANLAR EKLENDİ - Supabase entegrasyonu için gerekli
+  ad?: string; // Supabase'de 'ad' kolonu kullanılıyor
+  tip?: string;
+  sira?: number;
+  paydaslar?: any[]; // JSONB field
 }
 
 interface SharingTabProps {

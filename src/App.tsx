@@ -2226,6 +2226,30 @@ export default function App() {
               banks={banks}
               epkList={epkList}
               okList={okList}
+              mccList={mccList}
+              salesReps={salesReps}
+              jobTitles={jobTitles}
+              partnerships={partnerships}
+              sharings={sharings}
+              kartProgramlar={kartProgramlar}
+              hesapKalemleri={hesapKalemleri}
+              sabitKomisyonlar={sabitKomisyonlar}
+              ekGelirler={ekGelirler}
+              onCustomersChange={setCustomers}
+              onBankPFRecordsChange={setBankPFRecords}
+              onPayterProductsChange={setPayterProducts}
+              onMCCListChange={setMCCList}
+              onBanksChange={setBanks}
+              onEPKListChange={setEPKList}
+              onOKListChange={setOKList}
+              onSalesRepsChange={setSalesReps}
+              onJobTitlesChange={setJobTitles}
+              onPartnershipsChange={setPartnerships}
+              onSharingsChange={setSharings}
+              onKartProgramlarChange={setKartProgramlar}
+              onHesapKalemleriChange={setHesapKalemleri}
+              onSabitKomisyonlarChange={setSabitKomisyonlar}
+              onEkGelirlerChange={setEkGelirler}
               onExportData={() => {
                 const exportData = {
                   version: CURRENT_APP_VERSION,

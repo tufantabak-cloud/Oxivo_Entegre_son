@@ -6,12 +6,14 @@ import { Button } from '../ui/button';
 import { CreditCard, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Maximize2, Minimize2, ExternalLink } from 'lucide-react';
 import type { Customer } from '../CustomerModule';
 import type { PayterProduct } from '../PayterProductTab';
+import type { MCC } from '../DefinitionsModule';
 import { matchDomain, normalizeDomain } from '../../utils/domainMatching';
 import { FullListModal } from './FullListModal';
 
 interface MCCDiversityWidgetProps {
   customers: Customer[];
   payterProducts: PayterProduct[];
+  mccList: MCC[]; // ✅ MCC tanımlarını prop olarak al
 }
 
 interface MCCData {
@@ -29,21 +31,7 @@ interface MCCData {
   opportunity: number; // 1-4 yıldız
 }
 
-// MCC kategorileri ve açıklamaları
-const MCC_CATEGORIES: Record<string, { category: string; description: string }> = {
-  '5411': { category: 'Perakende', description: 'Süpermarketler' },
-  '8211': { category: 'Eğitim', description: 'İlköğretim ve Ortaöğretim Okulları' },
-  '8011': { category: 'Sağlık', description: 'Doktorlar ve Hekimler' },
-  '6011': { category: 'Finans', description: 'Finansal Kurumlar (Manuel)' },
-  '5812': { category: 'Restoran', description: 'Yeme-İçme Yerleri' },
-  '5999': { category: 'Perakende', description: 'Çeşitli Perakende Mağazaları' },
-  '7011': { category: 'Konaklama', description: 'Oteller ve Moteller' },
-  '5912': { category: 'Sağlık', description: 'Eczaneler' },
-  '5941': { category: 'Spor', description: 'Spor Malzemeleri Mağazaları' },
-  '7372': { category: 'Teknoloji', description: 'Yazılım Hizmetleri' },
-};
-
-export function MCCDiversityWidget({ customers, payterProducts }: MCCDiversityWidgetProps) {
+export function MCCDiversityWidget({ customers, payterProducts, mccList }: MCCDiversityWidgetProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [showFullListModal, setShowFullListModal] = useState(false);
   const [modalData, setModalData] = useState<{ title: string; items: any[] }>({ title: '', items: [] });
@@ -63,7 +51,12 @@ export function MCCDiversityWidget({ customers, payterProducts }: MCCDiversityWi
 
     // Her MCC için detaylı analiz
     const mccData: MCCData[] = Array.from(mccMap.entries()).map(([mcc, mccCustomers]) => {
-      const mccInfo = MCC_CATEGORIES[mcc] || { category: 'Diğer', description: 'Tanımsız Kategori' };
+      // ✅ MCC bilgisini mccList'ten dinamik olarak al
+      const mccDefinition = mccList.find(m => m.kod === mcc);
+      const mccInfo = mccDefinition 
+        ? { category: mccDefinition.kategori || 'Diğer', description: mccDefinition.kategori || 'Tanımsız Kategori' }
+        : { category: 'Diğer', description: 'Tanımsız Kategori' };
+      
       const customerCount = mccCustomers.length;
       const percentage = (customerCount / customersWithMCC.length) * 100;
       
@@ -176,7 +169,7 @@ export function MCCDiversityWidget({ customers, payterProducts }: MCCDiversityWi
       })).sort((a, b) => b.customers - a.customers),
       allMCCs: mccData
     };
-  }, [customers, payterProducts]);
+  }, [customers, payterProducts, mccList]);
 
   const getRiskBadge = (risk: 'low' | 'medium' | 'high') => {
     const colors = {

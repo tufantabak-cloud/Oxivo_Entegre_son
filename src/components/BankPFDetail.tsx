@@ -88,6 +88,9 @@ export function BankPFDetail({
       linkedBankIds: [],
       linkedEPKIds: [],
       linkedOKIds: [],
+      // ✅ EPK ve ÖK No alanları
+      epkNo: '',
+      okNo: '',
       durum: 'Aktif',
     }
   );
@@ -713,6 +716,21 @@ export function BankPFDetail({
                 banks={banks}
                 epkList={epkList}
                 okList={okList}
+                selectedBankIds={formData.linkedBankIds || []}
+                selectedEPKIds={formData.linkedEPKIds || []}
+                selectedOKIds={formData.linkedOKIds || []}
+                onSelectionChange={(data) => {
+                  // ✅ Kategori seçimlerini formData'ya kaydet
+                  const updatedFormData = {
+                    ...formData,
+                    linkedBankIds: data.banks,
+                    linkedEPKIds: data.epks,
+                    linkedOKIds: data.oks,
+                  };
+                  setFormData(updatedFormData);
+                  // ✅ Otomatik kaydet
+                  onSave(updatedFormData);
+                }}
               />
             </CardContent>
           </Card>

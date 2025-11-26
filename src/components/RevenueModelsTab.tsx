@@ -41,6 +41,17 @@ export interface EkGelir {
   birim: 'TL' | 'EUR' | 'USD';
   aciklama: string;
   aktif: boolean;
+  // ✅ EKSIK ALANLAR EKLENDİ - TABELA entegrasyonu için gerekli
+  kodNo?: string;
+  gelirTuru?: string; // 'Hazine Geliri' vb.
+  kullanim?: 'Yurt İçi' | 'Yurt Dışı';
+  kartTipi?: 'Credit' | 'Debit' | 'Paçal';
+  pfYuzde?: string; // PF payı yüzde
+  pfTL?: string; // PF payı TL
+  oxYuzde?: string; // OXIVO payı yüzde
+  oxTL?: string; // OXIVO payı TL
+  gelirModeli?: string; // İlişkili gelir modeli adı
+  urun?: string; // İlişkili ürün adı
 }
 
 interface RevenueModelsTabProps {

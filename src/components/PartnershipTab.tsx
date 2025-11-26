@@ -47,6 +47,13 @@ export interface Partnership {
   aktif: boolean;
   olusturmaTarihi: string;
   calculationRows: PartnershipCalculationRow[];
+  // ✅ EKSIK ALANLAR EKLENDİ - Supabase entegrasyonu için gerekli
+  partnerName?: string;
+  partnerType?: string;
+  contactPerson?: string;
+  phone?: string;
+  email?: string;
+  notes?: string;
 }
 
 interface PartnershipTabProps {

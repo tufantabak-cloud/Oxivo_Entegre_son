@@ -87,6 +87,9 @@ export interface BankPF {
   linkedBankIds?: string[]; // Bağlı Banka ID'leri
   linkedEPKIds?: string[]; // Bağlı EPK ID'leri
   linkedOKIds?: string[]; // Bağlı ÖK ID'leri
+  // ✅ EPK ve ÖK Numaraları
+  epkNo?: string; // EPK numarası (EPK ise doldurulur)
+  okNo?: string; // ÖK numarası (ÖK ise doldurulur)
   durum: 'Aktif' | 'Pasif';
 }
 
@@ -221,6 +224,9 @@ export const BankPFModule = React.memo(function BankPFModule({
     adres: '',
     telefon: '',
     email: '',
+    // ✅ EPK ve ÖK No alanları
+    epkNo: '',
+    okNo: '',
   });
 
   const handleSaveRecord = (record: BankPF) => {
@@ -274,6 +280,9 @@ export const BankPFModule = React.memo(function BankPFModule({
       adres: '',
       telefon: '',
       email: '',
+      // ✅ EPK ve ÖK No alanları
+      epkNo: '',
+      okNo: '',
     });
     setIsNewRecordDialogOpen(true);
   };
@@ -308,6 +317,8 @@ export const BankPFModule = React.memo(function BankPFModule({
           bankaPFAd: '',
           odemeKurulusuTipi: 'EPK',
           odemeKurulusuAd: epk.kurumAdi,
+          // ✅ EPK No'yu doldur
+          epkNo: epk.kod,
         });
         if (epk.aciklama) {
           toast.info(`ℹ️ ${epk.aciklama}`);
@@ -324,6 +335,8 @@ export const BankPFModule = React.memo(function BankPFModule({
           bankaPFAd: '',
           odemeKurulusuTipi: 'ÖK',
           odemeKurulusuAd: ok.kurumAdi,
+          // ✅ ÖK No'yu doldur
+          okNo: ok.kod,
         });
         if (ok.aciklama) {
           toast.info(`ℹ️ ${ok.aciklama}`);
@@ -451,6 +464,9 @@ export const BankPFModule = React.memo(function BankPFModule({
                   adres: '',
                   telefon: '',
                   email: '',
+                  // ✅ EPK ve ÖK No alanları
+                  epkNo: '',
+                  okNo: '',
                 });
               }}
               placeholder="Kategori seçiniz..."

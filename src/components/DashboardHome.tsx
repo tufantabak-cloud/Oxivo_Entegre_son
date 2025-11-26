@@ -214,7 +214,7 @@ export function DashboardHome({
       case 'sectorDiversity':
         return <SectorDiversityWidget customers={customers} payterProducts={payterProducts} />;
       case 'mccDiversity':
-        return <MCCDiversityWidget customers={customers} payterProducts={payterProducts} />;
+        return <MCCDiversityWidget customers={customers} payterProducts={payterProducts} mccList={mccList} />;
       case 'bankPerformance':
         return <BankPerformanceWidget customers={customers} bankPFRecords={bankPFRecords} banks={banks} />;
       case 'bankPFMembers':
@@ -224,7 +224,7 @@ export function DashboardHome({
       case 'revenueTrend':
         return <RevenueTrendWidget customers={customers} payterProducts={payterProducts} />;
       case 'salesRepPerformance':
-        return <SalesRepPerformanceWidget customers={customers} payterProducts={payterProducts} />;
+        return <SalesRepPerformanceWidget customers={customers} payterProducts={payterProducts} salesReps={salesReps} />;
       case 'riskDashboard':
         return <RiskDashboardWidget customers={customers} />;
       case 'topCustomers':

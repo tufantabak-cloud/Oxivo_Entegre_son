@@ -409,7 +409,21 @@ export function CustomerDetail({
       durum: 'Aktif',
       p6x: '',
       apollo: '',
+      // ✅ EKSIK ALANLAR EKLENDİ - Veri akış sorununu çözer
+      linkedBankPFIds: [],
       bankDeviceAssignments: [],
+      blokeDurumu: false,
+      sorumluKisi: '',
+      cariGrubu: '',
+      serviceFeeSettings: undefined,
+      salesRepId: '',
+      salesRepName: '',
+      kayitTarihi: new Date().toISOString(),
+      musteriTipi: '',
+      domain: '',
+      ignoreMainDomain: false,
+      ignoreMainDomainNote: '',
+      subscriptionFee: undefined,
     }
   );
 
