@@ -215,10 +215,20 @@ export async function syncBanks(banks: any[]): Promise<SyncResult> {
     return { success: true, type: 'banks', count: 0 };
   }
 
-  console.log(`☁️ Syncing ${banks.length} Banks to Supabase...`);
+  // ✅ CRITICAL FIX: Remove duplicates by 'kod' BEFORE syncing
+  const uniqueBanks = Array.from(
+    new Map(banks.map(b => [b.kod, b])).values()
+  );
+  
+  const duplicateCount = banks.length - uniqueBanks.length;
+  if (duplicateCount > 0) {
+    console.warn(`⚠️ Removed ${duplicateCount} duplicate bank codes from localStorage`);
+  }
+  
+  console.log(`☁️ Syncing ${uniqueBanks.length} unique Banks to Supabase...`);
 
   try {
-    const result = await banksApi.create(banks);
+    const result = await banksApi.create(uniqueBanks);
     
     if (result.success) {
       console.log(`✅ Banks synced: ${result.count} records`);
@@ -242,10 +252,20 @@ export async function syncEPKList(epkList: any[]): Promise<SyncResult> {
     return { success: true, type: 'epkList', count: 0 };
   }
 
-  console.log(`☁️ Syncing ${epkList.length} EPK List to Supabase...`);
+  // ✅ CRITICAL FIX: Remove duplicates by 'kod' BEFORE syncing
+  const uniqueEPK = Array.from(
+    new Map(epkList.map(e => [e.kod, e])).values()
+  );
+  
+  const duplicateCount = epkList.length - uniqueEPK.length;
+  if (duplicateCount > 0) {
+    console.warn(`⚠️ Removed ${duplicateCount} duplicate EPK codes from localStorage`);
+  }
+  
+  console.log(`☁️ Syncing ${uniqueEPK.length} unique EPK List to Supabase...`);
 
   try {
-    const result = await epkListApi.create(epkList);
+    const result = await epkListApi.create(uniqueEPK);
     
     if (result.success) {
       console.log(`✅ EPK List synced: ${result.count} records`);
@@ -269,10 +289,20 @@ export async function syncOKList(okList: any[]): Promise<SyncResult> {
     return { success: true, type: 'okList', count: 0 };
   }
 
-  console.log(`☁️ Syncing ${okList.length} OK List to Supabase...`);
+  // ✅ CRITICAL FIX: Remove duplicates by 'kod' BEFORE syncing
+  const uniqueOK = Array.from(
+    new Map(okList.map(o => [o.kod, o])).values()
+  );
+  
+  const duplicateCount = okList.length - uniqueOK.length;
+  if (duplicateCount > 0) {
+    console.warn(`⚠️ Removed ${duplicateCount} duplicate OK codes from localStorage`);
+  }
+  
+  console.log(`☁️ Syncing ${uniqueOK.length} unique OK List to Supabase...`);
 
   try {
-    const result = await okListApi.create(okList);
+    const result = await okListApi.create(uniqueOK);
     
     if (result.success) {
       console.log(`✅ OK List synced: ${result.count} records`);

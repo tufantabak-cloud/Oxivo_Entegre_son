@@ -1587,6 +1587,162 @@ export const suspensionReasonApi = {
 };
 
 // ========================================
+// DOMAIN MAPPINGS API
+// ========================================
+
+export const domainMappingApi = {
+  async getAll() {
+    const { data, error } = await supabase
+      .from('domain_mappings')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('❌ Error fetching domain mapping records:', error);
+      return { success: false, error: error.message, data: [] };
+    }
+
+    console.log(`✅ Fetched ${data.length} domain mapping records from Supabase`);
+    return { success: true, data: data.map(objectToCamelCase) || [] };
+  },
+
+  async create(records: any | any[]) {
+    console.log('📤 Creating domain mapping records in Supabase...');
+    
+    const recordsArray = Array.isArray(records) ? records : [records];
+    
+    // ✅ Step 1: Remove duplicates by 'id' before processing
+    const uniqueRecords = Array.from(
+      new Map(recordsArray.map(r => [r.id, r])).values()
+    );
+    
+    if (uniqueRecords.length < recordsArray.length) {
+      console.warn(`⚠️ Step 1: Removed ${recordsArray.length - uniqueRecords.length} duplicate domain mappings (by id)`);
+    }
+    
+    // ✅ Step 2: Apply transformations
+    const transformedItems = uniqueRecords.map(objectToSnakeCase);
+    
+    // ✅ Step 3: CRITICAL FIX - Remove duplicates AFTER sanitization
+    const finalItems = Array.from(
+      new Map(transformedItems.map(item => [item.id, item])).values()
+    );
+    
+    if (finalItems.length < transformedItems.length) {
+      console.warn(`⚠️ Step 3: Removed ${transformedItems.length - finalItems.length} duplicate domain mappings after sanitization`);
+    }
+    
+    const { data, error } = await supabase
+      .from('domain_mappings')
+      .upsert(finalItems, { onConflict: 'id' })
+      .select();
+
+    if (error) {
+      console.error('❌ Error creating domain mappings:', error);
+      return { success: false, error: error.message, count: 0 };
+    }
+
+    console.log(`✅ Created/updated ${data.length} domain mapping records in Supabase`);
+    return { success: true, count: data.length };
+  },
+
+  async delete(id: string) {
+    console.log(`🗑️ Deleting domain mapping ${id} from Supabase...`);
+    
+    const { error } = await supabase
+      .from('domain_mappings')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error(`❌ Error deleting domain mapping ${id}:`, error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`✅ Deleted domain mapping ${id} from Supabase`);
+    return { success: true };
+  },
+};
+
+// ========================================
+// SIGNS (TABELA) API
+// ========================================
+
+export const signApi = {
+  async getAll() {
+    const { data, error } = await supabase
+      .from('signs')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('❌ Error fetching sign records:', error);
+      return { success: false, error: error.message, data: [] };
+    }
+
+    console.log(`✅ Fetched ${data.length} sign records from Supabase`);
+    return { success: true, data: data.map(objectToCamelCase) || [] };
+  },
+
+  async create(records: any | any[]) {
+    console.log('📤 Creating sign records in Supabase...');
+    
+    const recordsArray = Array.isArray(records) ? records : [records];
+    
+    // ✅ Step 1: Remove duplicates by 'id' before processing
+    const uniqueRecords = Array.from(
+      new Map(recordsArray.map(r => [r.id, r])).values()
+    );
+    
+    if (uniqueRecords.length < recordsArray.length) {
+      console.warn(`⚠️ Step 1: Removed ${recordsArray.length - uniqueRecords.length} duplicate signs (by id)`);
+    }
+    
+    // ✅ Step 2: Apply transformations
+    const transformedItems = uniqueRecords.map(objectToSnakeCase);
+    
+    // ✅ Step 3: CRITICAL FIX - Remove duplicates AFTER sanitization
+    const finalItems = Array.from(
+      new Map(transformedItems.map(item => [item.id, item])).values()
+    );
+    
+    if (finalItems.length < transformedItems.length) {
+      console.warn(`⚠️ Step 3: Removed ${transformedItems.length - finalItems.length} duplicate signs after sanitization`);
+    }
+    
+    const { data, error } = await supabase
+      .from('signs')
+      .upsert(finalItems, { onConflict: 'id' })
+      .select();
+
+    if (error) {
+      console.error('❌ Error creating signs:', error);
+      return { success: false, error: error.message, count: 0 };
+    }
+
+    console.log(`✅ Created/updated ${data.length} sign records in Supabase`);
+    return { success: true, count: data.length };
+  },
+
+  async delete(id: string) {
+    console.log(`🗑️ Deleting sign ${id} from Supabase...`);
+    
+    const { error } = await supabase
+      .from('signs')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error(`❌ Error deleting sign ${id}:`, error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`✅ Deleted sign ${id} from Supabase`);
+    return { success: true };
+  },
+};
+
+// ========================================
 // DUPLICATE CLEANUP API (SQL Functions)
 // ========================================
 
