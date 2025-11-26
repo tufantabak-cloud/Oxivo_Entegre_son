@@ -70,19 +70,10 @@ export function sanitizeOK(item: any): any {
  * Eksik DB kolonlar: departman, bolge, olusturma_tarihi, notlar
  * 
  * ⚠️ CRITICAL: kod kolonu NOT NULL - ad_soyad'dan otomatik generate edilecek
- * ⚠️ CRITICAL: ID column in Supabase is UUID type, but frontend uses string IDs
- * 🔧 SOLUTION: Change column type in Supabase from UUID to TEXT
- *    Run in Supabase SQL Editor:
- *    ALTER TABLE sales_representatives ALTER COLUMN id TYPE TEXT;
+ * ✅ FIXED: ID column changed from UUID to TEXT in Supabase
  */
 export function sanitizeSalesRep(item: any): any {
   const { id, ad_soyad, ad, email, telefon, aktif, bolge } = item;
-  
-  // ⚠️ Warning: If ID is not UUID format, Supabase will reject it
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  if (id && !uuidRegex.test(id)) {
-    console.warn(`⚠️ Sales Rep ID "${id}" is not UUID format. Change Supabase column to TEXT type.`);
-  }
   
   // ✅ CRITICAL FIX: Generate 'kod' from 'ad_soyad' or 'ad' (NOT NULL constraint)
   const name = ad_soyad || ad || email || 'UNKNOWN';
@@ -120,19 +111,10 @@ export function sanitizeSalesRep(item: any): any {
  * Mevcut DB kolonlar: id, unvan, aktif, created_at, updated_at
  * Eksik DB kolonlar: aciklama, olusturma_tarihi
  * 
- * ⚠️ CRITICAL: ID column in Supabase is UUID type, but frontend uses string IDs
- * 🔧 SOLUTION: Change column type in Supabase from UUID to TEXT
- *    Run in Supabase SQL Editor:
- *    ALTER TABLE job_titles ALTER COLUMN id TYPE TEXT;
+ * ✅ FIXED: ID column changed from UUID to TEXT in Supabase
  */
 export function sanitizeJobTitle(item: any): any {
   const { id, unvan, aktif } = item;
-  
-  // ⚠️ Warning: If ID is not UUID format, Supabase will reject it
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  if (id && !uuidRegex.test(id)) {
-    console.warn(`⚠️ Job Title ID "${id}" is not UUID format. Change Supabase column to TEXT type.`);
-  }
   
   return { id, unvan, aktif };
 }

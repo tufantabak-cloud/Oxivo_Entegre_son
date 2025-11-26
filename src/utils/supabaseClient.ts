@@ -1853,3 +1853,31 @@ export async function checkDuplicatesSQL(): Promise<{
     return { success: false, error: error.message || 'Unknown error' };
   }
 }
+
+// ========================================
+// EXPOSE APIs TO WINDOW FOR BROWSER CONSOLE
+// ========================================
+
+if (typeof window !== 'undefined') {
+  (window as any).__OXIVO_SUPABASE__ = {
+    ...(window as any).__OXIVO_SUPABASE__,
+    apis: {
+      customerApi,
+      productApi,
+      bankPFApi,
+      mccCodesApi,
+      banksApi,
+      epkListApi,
+      okListApi,
+      salesRepsApi,
+      jobTitlesApi,
+      partnershipsApi,
+      sharingApi,
+      kartProgramApi,
+      suspensionReasonApi,
+      domainMappingApi,
+      signApi
+    }
+  };
+  console.log('✅ All APIs available at window.__OXIVO_SUPABASE__.apis');
+}
