@@ -20,6 +20,10 @@ import {
   ChevronDown,
   Pin,
   PinOff,
+  Users,
+  Building2,
+  Package,
+  Euro,
 } from 'lucide-react';
 import { useDashboardWidgets } from '../hooks/useDashboardWidgets';
 import type { WidgetConfig } from '../hooks/useDashboardWidgets';
@@ -692,19 +696,19 @@ export function DashboardHome({
           <Tabs defaultValue="customers" className="w-full">
             <TabsList className="flex flex-nowrap w-full overflow-x-auto md:grid md:grid-cols-4 pb-1 gap-1">
               <TabsTrigger value="customers" className="gap-1 flex-none whitespace-nowrap min-w-[90px] px-2 py-2">
-                <BarChart3 size={14} />
+                <Users size={16} className="mr-2" />
                 Müşteriler
               </TabsTrigger>
               <TabsTrigger value="bankpf" className="gap-1 flex-none whitespace-nowrap min-w-[90px] px-2 py-2">
-                <BarChart3 size={14} />
+                <Building2 size={16} className="mr-2" />
                 Banka/PF
               </TabsTrigger>
               <TabsTrigger value="products" className="gap-1 flex-none whitespace-nowrap min-w-[90px] px-2 py-2">
-                <BarChart3 size={14} />
+                <Package size={16} className="mr-2" />
                 Ürün
               </TabsTrigger>
               <TabsTrigger value="revenue" className="gap-1 flex-none whitespace-nowrap min-w-[90px] px-2 py-2">
-                <BarChart3 size={14} />
+                <Euro size={16} className="mr-2" />
                 Gelir
               </TabsTrigger>
             </TabsList>
