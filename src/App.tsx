@@ -1294,7 +1294,7 @@ export default function App() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="lg:hidden p-2 h-9 w-9 border-blue-200 hover:bg-blue-50 hover:border-blue-300"
+                    className="lg:hidden p-2 h-8 w-8 border-blue-200 hover:bg-blue-50 hover:border-blue-300"
                     aria-label="Menüyü Aç"
                   >
                     <Menu size={20} className="text-blue-600" />
@@ -1304,18 +1304,18 @@ export default function App() {
                   <SheetHeader className="pb-4 border-b">
                     <SheetTitle className="flex items-center gap-2 text-base">
                       <span className="font-bold text-blue-600">Oxivo</span>
-                      <span className="text-[9px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
+                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
                         v{CURRENT_APP_VERSION}
                       </span>
                     </SheetTitle>
                   </SheetHeader>
-                  <nav className="flex flex-col gap-1.5 mt-4">
+                  <nav className="flex flex-col gap-2 mt-4">
                     <button
                       onClick={() => {
                         setActiveModule('home');
                         setIsMobileMenuOpen(false);
                       }}
-                      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium transition-all text-[13px] ${
+                      className={`flex items-center gap-3 px-3 py-3 rounded-lg font-medium transition-all text-sm ${
                         activeModule === 'home'
                           ? 'bg-blue-600 text-white shadow-md'
                           : 'text-gray-700 hover:bg-gray-100'
@@ -1329,7 +1329,7 @@ export default function App() {
                         setActiveModule('reports');
                         setIsMobileMenuOpen(false);
                       }}
-                      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium transition-all text-[13px] ${
+                      className={`flex items-center gap-3 px-3 py-3 rounded-lg font-medium transition-all text-sm ${
                         activeModule === 'reports'
                           ? 'bg-blue-600 text-white shadow-md'
                           : 'text-gray-700 hover:bg-gray-100'
@@ -1343,7 +1343,7 @@ export default function App() {
                         setActiveModule('customers');
                         setIsMobileMenuOpen(false);
                       }}
-                      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium transition-all text-[13px] ${
+                      className={`flex items-center gap-3 px-3 py-3 rounded-lg font-medium transition-all text-sm ${
                         activeModule === 'customers'
                           ? 'bg-blue-600 text-white shadow-md'
                           : 'text-gray-700 hover:bg-gray-100'
@@ -1357,7 +1357,7 @@ export default function App() {
                         setActiveModule('bankpf');
                         setIsMobileMenuOpen(false);
                       }}
-                      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium transition-all text-[13px] ${
+                      className={`flex items-center gap-3 px-3 py-3 rounded-lg font-medium transition-all text-sm ${
                         activeModule === 'bankpf'
                           ? 'bg-blue-600 text-white shadow-md'
                           : 'text-gray-700 hover:bg-gray-100'
@@ -1371,7 +1371,7 @@ export default function App() {
                         setActiveModule('products');
                         setIsMobileMenuOpen(false);
                       }}
-                      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium transition-all text-[13px] ${
+                      className={`flex items-center gap-3 px-3 py-3 rounded-lg font-medium transition-all text-sm ${
                         activeModule === 'products'
                           ? 'bg-blue-600 text-white shadow-md'
                           : 'text-gray-700 hover:bg-gray-100'
@@ -1385,7 +1385,7 @@ export default function App() {
                         setActiveModule('revenue');
                         setIsMobileMenuOpen(false);
                       }}
-                      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium transition-all text-[13px] ${
+                      className={`flex items-center gap-3 px-3 py-3 rounded-lg font-medium transition-all text-sm ${
                         activeModule === 'revenue'
                           ? 'bg-blue-600 text-white shadow-md'
                           : 'text-gray-700 hover:bg-gray-100'
@@ -1399,7 +1399,7 @@ export default function App() {
                         setActiveModule('definitions');
                         setIsMobileMenuOpen(false);
                       }}
-                      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium transition-all text-[13px] ${
+                      className={`flex items-center gap-3 px-3 py-3 rounded-lg font-medium transition-all text-sm ${
                         activeModule === 'definitions'
                           ? 'bg-blue-600 text-white shadow-md'
                           : 'text-gray-700 hover:bg-gray-100'
@@ -1413,8 +1413,8 @@ export default function App() {
               </Sheet>
 
               <div className="flex items-center gap-2">
-                <h1 className="font-bold text-blue-600 text-[15px]">Oxivo</h1>
-                <span className="text-[8px] bg-blue-100 text-blue-700 px-2 py-1.5 rounded-md font-medium hidden sm:block">
+                <h1 className="font-bold text-blue-600 text-base">Oxivo</h1>
+                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-md font-medium hidden sm:block">
                   v{CURRENT_APP_VERSION}
                 </span>
               </div>
@@ -1432,10 +1432,10 @@ export default function App() {
             </div>
             
             {/* Desktop Navigation - Hidden on Mobile */}
-            <nav className="hidden lg:flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
+            <nav className="hidden lg:flex items-center gap-2 overflow-x-auto scrollbar-hide">
               <button
                 onClick={() => setActiveModule('home')}
-                className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-[13px] ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm ${
                   activeModule === 'home'
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
                     : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
@@ -1446,7 +1446,7 @@ export default function App() {
               </button>
               <button
                 onClick={() => setActiveModule('reports')}
-                className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-[13px] ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm ${
                   activeModule === 'reports'
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
                     : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
@@ -1457,7 +1457,7 @@ export default function App() {
               </button>
               <button
                 onClick={() => setActiveModule('customers')}
-                className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-[13px] ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm ${
                   activeModule === 'customers'
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
                     : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
@@ -1468,7 +1468,7 @@ export default function App() {
               </button>
               <button
                 onClick={() => setActiveModule('bankpf')}
-                className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-[13px] ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm ${
                   activeModule === 'bankpf'
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
                     : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
@@ -1479,7 +1479,7 @@ export default function App() {
               </button>
               <button
                 onClick={() => setActiveModule('products')}
-                className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-[13px] ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm ${
                   activeModule === 'products'
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
                     : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
@@ -1490,7 +1490,7 @@ export default function App() {
               </button>
               <button
                 onClick={() => setActiveModule('revenue')}
-                className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-[13px] ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm ${
                   activeModule === 'revenue'
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
                     : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
@@ -1501,7 +1501,7 @@ export default function App() {
               </button>
               <button
                 onClick={() => setActiveModule('definitions')}
-                className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-[13px] ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm ${
                   activeModule === 'definitions'
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
                     : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'

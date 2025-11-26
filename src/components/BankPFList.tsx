@@ -209,7 +209,7 @@ export function BankPFList({ records, onSelectRecord, banks = [], epkList = [], 
                   }`}
                   onClick={() => handleSort('firmaUnvan')}
                 >
-                  <div className="flex items-center space-x-1">
+                  <div className="flex items-center gap-1">
                     <span className={sortField === 'firmaUnvan' ? 'text-blue-600' : ''}>
                       Firma Ünvanı
                     </span>
@@ -224,7 +224,7 @@ export function BankPFList({ records, onSelectRecord, banks = [], epkList = [], 
                   }`}
                   onClick={() => handleSort('bankaOrPF')}
                 >
-                  <div className="flex items-center space-x-1">
+                  <div className="flex items-center gap-1">
                     <span className={sortField === 'bankaOrPF' ? 'text-blue-600' : ''}>
                       Banka/PF
                     </span>
@@ -239,7 +239,7 @@ export function BankPFList({ records, onSelectRecord, banks = [], epkList = [], 
                   }`}
                   onClick={() => handleSort('bankaPFAd')}
                 >
-                  <div className="flex items-center space-x-1">
+                  <div className="flex items-center gap-1">
                     <span className={sortField === 'bankaPFAd' ? 'text-blue-600' : ''}>
                       Banka/PF Adı
                     </span>
@@ -255,7 +255,7 @@ export function BankPFList({ records, onSelectRecord, banks = [], epkList = [], 
                   }`}
                   onClick={() => handleSort('odemeKurulusuAd')}
                 >
-                  <div className="flex items-center space-x-1">
+                  <div className="flex items-center gap-1">
                     <span className={sortField === 'odemeKurulusuAd' ? 'text-blue-600' : ''}>
                       Ödeme Kuruluşu
                     </span>
@@ -270,7 +270,7 @@ export function BankPFList({ records, onSelectRecord, banks = [], epkList = [], 
                   }`}
                   onClick={() => handleSort('epkNo')}
                 >
-                  <div className="flex items-center space-x-1">
+                  <div className="flex items-center gap-1">
                     <span className={sortField === 'epkNo' ? 'text-blue-600' : ''}>
                       EPK No
                     </span>
@@ -285,7 +285,7 @@ export function BankPFList({ records, onSelectRecord, banks = [], epkList = [], 
                   }`}
                   onClick={() => handleSort('okNo')}
                 >
-                  <div className="flex items-center space-x-1">
+                  <div className="flex items-center gap-1">
                     <span className={sortField === 'okNo' ? 'text-blue-600' : ''}>
                       ÖK No
                     </span>
@@ -300,7 +300,7 @@ export function BankPFList({ records, onSelectRecord, banks = [], epkList = [], 
                   }`}
                   onClick={() => handleSort('durum')}
                 >
-                  <div className="flex items-center space-x-1">
+                  <div className="flex items-center gap-1">
                     <span className={sortField === 'durum' ? 'text-blue-600' : ''}>
                       Durum
                     </span>
@@ -416,7 +416,7 @@ export function BankPFList({ records, onSelectRecord, banks = [], epkList = [], 
                         e.stopPropagation();
                         onSelectRecord(record);
                       }}
-                      className="inline-flex items-center space-x-1 px-3 py-1 rounded hover:bg-gray-100 transition-colors"
+                      className="inline-flex items-center gap-1 px-3 py-1 rounded hover:bg-gray-100 transition-colors"
                     >
                       <Eye size={16} />
                       <span>Detay</span>
@@ -451,7 +451,7 @@ export function BankPFList({ records, onSelectRecord, banks = [], epkList = [], 
           <span className="text-gray-600">
             Gösterilen: <strong>{filteredRecords.length}</strong> kayıt
           </span>
-          <div className="flex items-center space-x-4 text-gray-600">
+          <div className="flex items-center gap-4 text-gray-600">
             <span>
               Banka: <strong>{filteredRecords.filter(r => r.bankaOrPF === 'Banka').length}</strong>
             </span>
