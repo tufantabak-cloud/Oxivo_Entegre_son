@@ -216,9 +216,8 @@ function DomainTreeNode({
           <Button
             type="button"
             variant="ghost"
-            size="sm"
+            size="xs"
             onClick={() => setIsEditing(true)}
-            className="h-6 px-2 hover:bg-gray-200"
             title="Düzenle"
           >
             <Edit2 size={12} className="text-gray-600" />
@@ -226,9 +225,8 @@ function DomainTreeNode({
           <Button
             type="button"
             variant="ghost"
-            size="sm"
+            size="xs"
             onClick={() => onAddChild(path)}
-            className="h-6 px-2 hover:bg-green-50"
             title="Alt birim ekle"
           >
             <Plus size={12} className="text-green-600" />
@@ -236,9 +234,8 @@ function DomainTreeNode({
           <Button
             type="button"
             variant="ghost"
-            size="sm"
+            size="xs"
             onClick={() => onAddSibling(path)}
-            className="h-6 px-2 hover:bg-blue-50"
             title="Yan birim ekle"
           >
             <Plus size={12} className="text-blue-600" />
@@ -246,9 +243,8 @@ function DomainTreeNode({
           <Button
             type="button"
             variant="ghost"
-            size="sm"
+            size="xs"
             onClick={() => onDelete(path)}
-            className="h-6 px-2 hover:bg-red-50"
             title="Sil"
           >
             <Trash size={12} className="text-red-600" />
@@ -1837,10 +1833,10 @@ export function CustomerDetail({
           {!isCreating && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <button type="button" className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                <Button type="button" variant="destructive">
                   <Trash2 size={18} />
                   <span>Sil</span>
-                </button>
+                </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>

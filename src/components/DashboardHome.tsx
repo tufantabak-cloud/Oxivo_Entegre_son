@@ -315,7 +315,7 @@ export function DashboardHome({
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2 hover:bg-green-50 hover:text-green-600 hover:border-green-300 transition-colors flex-shrink-0"
+                className="gap-2 transition-colors flex-shrink-0"
                 onClick={onExportData}
               >
                 <Download size={16} />
@@ -343,7 +343,7 @@ export function DashboardHome({
                 onClick={onCheckData}
               >
                 <Search size={16} />
-                Verileri Kontrol Et
+                Veri Kontrol
               </Button>
             )}
             
@@ -355,7 +355,7 @@ export function DashboardHome({
                 onClick={onClearData}
               >
                 <Trash2 size={16} />
-                Tüm Verileri Temizle
+                Verileri SİL
               </Button>
             )}
             
@@ -375,7 +375,7 @@ export function DashboardHome({
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2 flex-shrink-0">
                   <Settings size={16} />
-                  Widget Yönetimi
+                  Widget
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">

@@ -1310,104 +1310,118 @@ export default function App() {
                     </SheetTitle>
                   </SheetHeader>
                   <nav className="flex flex-col gap-2 mt-4">
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="default"
                       onClick={() => {
                         setActiveModule('home');
                         setIsMobileMenuOpen(false);
                       }}
-                      className={`flex items-center gap-3 px-3 py-3 rounded-lg font-medium transition-all text-sm ${
+                      className={`justify-start gap-3 ${
                         activeModule === 'home'
-                          ? 'bg-blue-600 text-white shadow-md'
+                          ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700 hover:text-white'
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
                       <Home size={16} className="flex-shrink-0" />
                       <span className="truncate">Ana Sayfa</span>
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="default"
                       onClick={() => {
                         setActiveModule('reports');
                         setIsMobileMenuOpen(false);
                       }}
-                      className={`flex items-center gap-3 px-3 py-3 rounded-lg font-medium transition-all text-sm ${
+                      className={`justify-start gap-3 ${
                         activeModule === 'reports'
-                          ? 'bg-blue-600 text-white shadow-md'
+                          ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700 hover:text-white'
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
                       <FileText size={16} className="flex-shrink-0" />
                       <span className="truncate">Rapor</span>
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="default"
                       onClick={() => {
                         setActiveModule('customers');
                         setIsMobileMenuOpen(false);
                       }}
-                      className={`flex items-center gap-3 px-3 py-3 rounded-lg font-medium transition-all text-sm ${
+                      className={`justify-start gap-3 ${
                         activeModule === 'customers'
-                          ? 'bg-blue-600 text-white shadow-md'
+                          ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700 hover:text-white'
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
                       <Users size={16} className="flex-shrink-0" />
                       <span className="truncate">Müşteriler</span>
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="default"
                       onClick={() => {
                         setActiveModule('bankpf');
                         setIsMobileMenuOpen(false);
                       }}
-                      className={`flex items-center gap-3 px-3 py-3 rounded-lg font-medium transition-all text-sm ${
+                      className={`justify-start gap-3 ${
                         activeModule === 'bankpf'
-                          ? 'bg-blue-600 text-white shadow-md'
+                          ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700 hover:text-white'
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
                       <Building2 size={16} className="flex-shrink-0" />
                       <span className="truncate">Banka/PF</span>
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="default"
                       onClick={() => {
                         setActiveModule('products');
                         setIsMobileMenuOpen(false);
                       }}
-                      className={`flex items-center gap-3 px-3 py-3 rounded-lg font-medium transition-all text-sm ${
+                      className={`justify-start gap-3 ${
                         activeModule === 'products'
-                          ? 'bg-blue-600 text-white shadow-md'
+                          ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700 hover:text-white'
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
                       <Package size={16} className="flex-shrink-0" />
                       <span className="truncate">Ürün</span>
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="default"
                       onClick={() => {
                         setActiveModule('revenue');
                         setIsMobileMenuOpen(false);
                       }}
-                      className={`flex items-center gap-3 px-3 py-3 rounded-lg font-medium transition-all text-sm ${
+                      className={`justify-start gap-3 ${
                         activeModule === 'revenue'
-                          ? 'bg-blue-600 text-white shadow-md'
+                          ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700 hover:text-white'
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
                       <Euro size={16} className="flex-shrink-0" />
                       <span className="truncate">Gelir</span>
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="default"
                       onClick={() => {
                         setActiveModule('definitions');
                         setIsMobileMenuOpen(false);
                       }}
-                      className={`flex items-center gap-3 px-3 py-3 rounded-lg font-medium transition-all text-sm ${
+                      className={`justify-start gap-3 ${
                         activeModule === 'definitions'
-                          ? 'bg-blue-600 text-white shadow-md'
+                          ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700 hover:text-white'
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
                       <Settings size={16} className="flex-shrink-0" />
                       <span className="truncate">Tanımlar</span>
-                    </button>
+                    </Button>
                   </nav>
                 </SheetContent>
               </Sheet>
@@ -1432,84 +1446,104 @@ export default function App() {
             </div>
             
             {/* Desktop Navigation - Hidden on Mobile */}
-            <nav className="hidden lg:flex items-center gap-2 overflow-x-auto scrollbar-hide">
-              <button
+            <nav className="hidden lg:flex items-center gap-1 overflow-x-auto scrollbar-hide">
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setActiveModule('home')}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm ${
+                className={`gap-2 ${
                   activeModule === 'home'
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-200 hover:bg-blue-700 hover:text-white'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
                 <Home size={16} />
                 <span>Ana Sayfa</span>
-              </button>
-              <button
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setActiveModule('reports')}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm ${
+                className={`gap-2 ${
                   activeModule === 'reports'
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-200 hover:bg-blue-700 hover:text-white'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
                 <FileText size={16} />
                 <span>Rapor</span>
-              </button>
-              <button
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setActiveModule('customers')}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm ${
+                className={`gap-2 ${
                   activeModule === 'customers'
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-200 hover:bg-blue-700 hover:text-white'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
                 <Users size={16} />
                 <span>Müşteriler</span>
-              </button>
-              <button
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setActiveModule('bankpf')}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm ${
+                className={`gap-2 ${
                   activeModule === 'bankpf'
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-200 hover:bg-blue-700 hover:text-white'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
                 <Building2 size={16} />
                 <span>Banka/PF</span>
-              </button>
-              <button
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setActiveModule('products')}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm ${
+                className={`gap-2 ${
                   activeModule === 'products'
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-200 hover:bg-blue-700 hover:text-white'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
                 <Package size={16} />
                 <span>Ürün</span>
-              </button>
-              <button
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setActiveModule('revenue')}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm ${
+                className={`gap-2 ${
                   activeModule === 'revenue'
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-200 hover:bg-blue-700 hover:text-white'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
                 <Euro size={16} />
                 <span>Gelir</span>
-              </button>
-              <button
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setActiveModule('definitions')}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm ${
+                className={`gap-2 ${
                   activeModule === 'definitions'
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-200 hover:bg-blue-700 hover:text-white'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
                 <Settings size={16} />
                 <span>Tanımlar</span>
-              </button>
+              </Button>
             </nav>
           </div>
         </div>
@@ -1898,7 +1932,7 @@ export default function App() {
                 <Button 
                   variant="outline"
                   size="sm"
-                  className="gap-2 hover:bg-green-50 hover:text-green-600 hover:border-green-300 transition-colors"
+                  className="gap-2 transition-colors"
                   onClick={() => {
                     const exportData = {
                       version: CURRENT_APP_VERSION,

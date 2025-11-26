@@ -205,6 +205,7 @@ export function BankPFDetail({
         <div className="flex items-center space-x-2 w-full sm:w-auto">
           {!isCreating && !isEditing && (
             <Button 
+              size="default"
               onClick={() => setIsEditing(true)}
               className="flex items-center space-x-1 sm:space-x-2 flex-1 sm:flex-none text-sm"
             >
@@ -215,10 +216,10 @@ export function BankPFDetail({
           {!isCreating && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <button className="flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm flex-1 sm:flex-none">
+                <Button variant="destructive" size="default" className="flex-1 sm:flex-none">
                   <Trash2 size={16} />
                   <span>Sil</span>
-                </button>
+                </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -1054,11 +1055,11 @@ export function BankPFDetail({
             {/* Actions */}
             {isEditing && (
               <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">
-                <Button type="button" variant="outline" onClick={handleCancelEdit}>
+                <Button type="button" variant="outline" size="default" onClick={handleCancelEdit}>
                   <X size={18} className="mr-2" />
                   İptal
               </Button>
-                <Button type="submit" className="flex items-center space-x-2">
+                <Button type="submit" size="default" className="flex items-center space-x-2">
                   <Save size={18} />
                   <span>{isCreating ? 'Kaydet' : 'Güncelle'}</span>
                 </Button>
