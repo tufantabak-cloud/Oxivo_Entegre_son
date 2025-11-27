@@ -236,6 +236,9 @@ export const customerApi = {
             parsed[field] = JSON.parse(parsed[field]);
           } catch (e) {
             console.warn(`⚠️ Failed to parse ${field}:`, e);
+            console.warn(`⚠️ Invalid JSON preview:`, parsed[field]?.substring(0, 200));
+            // Set to null to avoid breaking the app
+            parsed[field] = null;
           }
         }
       });
@@ -339,6 +342,24 @@ export const customerApi = {
         sanitized.domain_hierarchy = [];
       }
       
+      // Helper function to clean invalid UTF8 sequences
+      const cleanUTF8 = (str: string): string => {
+        if (!str || typeof str !== 'string') return str;
+        // Remove control characters (0x00-0x1F) except newline, tab, carriage return
+        // Also remove DEL (0x7F) and C1 control codes (0x80-0x9F)
+        return str
+          .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, '')
+          // Replace problematic byte sequences that might not be valid UTF8
+          .replace(/\uFFFD/g, ''); // Replace replacement character
+      };
+      
+      // 🔧 CLEAN ALL STRING FIELDS (not just JSONB) to prevent UTF8 errors
+      Object.keys(sanitized).forEach(key => {
+        if (typeof sanitized[key] === 'string') {
+          sanitized[key] = cleanUTF8(sanitized[key]);
+        }
+      });
+      
       // List of JSONB fields that need stringification (NOT including linked_bank_pf_ids or domain_hierarchy!)
       const jsonbFields = [
         'bank_device_assignments',
@@ -353,20 +374,45 @@ export const customerApi = {
       // Convert each JSONB field to JSON string (or null)
       jsonbFields.forEach(field => {
         if (sanitized[field] !== undefined && sanitized[field] !== null) {
-          // If it's already a string, try to parse then re-stringify to ensure valid JSON
-          if (typeof sanitized[field] === 'string') {
-            try {
-              // Parse the string to validate and clean it
-              const parsed = JSON.parse(sanitized[field]);
-              sanitized[field] = JSON.stringify(parsed);
-            } catch (e) {
-              console.warn(`⚠️ Invalid JSON string in ${field}, setting to null:`, e);
-              sanitized[field] = null;
+          try {
+            let jsonData;
+            
+            // If it's already a string, try to parse it first
+            if (typeof sanitized[field] === 'string') {
+              // Clean the string before parsing
+              const cleanedStr = cleanUTF8(sanitized[field]);
+              jsonData = JSON.parse(cleanedStr);
+            } else {
+              // It's already an object/array
+              jsonData = sanitized[field];
             }
-          }
-          // Only stringify if it's an object/array (not already string)
-          else if (typeof sanitized[field] === 'object') {
-            sanitized[field] = JSON.stringify(sanitized[field]);
+            
+            // Recursively clean all string values in the object
+            const cleanObject = (obj: any): any => {
+              if (typeof obj === 'string') {
+                return cleanUTF8(obj);
+              } else if (Array.isArray(obj)) {
+                return obj.map(cleanObject);
+              } else if (obj !== null && typeof obj === 'object') {
+                const cleaned: any = {};
+                for (const [key, value] of Object.entries(obj)) {
+                  cleaned[key] = cleanObject(value);
+                }
+                return cleaned;
+              }
+              return obj;
+            };
+            
+            const cleanedData = cleanObject(jsonData);
+            sanitized[field] = JSON.stringify(cleanedData);
+            
+          } catch (e) {
+            console.warn(`⚠️ Failed to parse ${field}, setting to null:`, e);
+            console.warn(`⚠️ Failed value type:`, typeof sanitized[field]);
+            if (typeof sanitized[field] === 'string') {
+              console.warn(`⚠️ Failed value preview:`, sanitized[field].substring(0, 200));
+            }
+            sanitized[field] = null;
           }
         } else {
           // Convert undefined to null for Postgres
@@ -402,9 +448,17 @@ export const customerApi = {
         hint: error.hint,
       });
       
-      // 🔍 DEBUG: Log problematic record
+      // 🔍 DEBUG: Log ALL problematic records with their service_fee_settings
       if (sanitizedRecords.length > 0) {
-        console.error('🔍 First record causing error:', JSON.stringify(sanitizedRecords[0], null, 2));
+        console.error(`🔍 Total records attempted: ${sanitizedRecords.length}`);
+        sanitizedRecords.forEach((rec, idx) => {
+          if (rec.service_fee_settings) {
+            const preview = typeof rec.service_fee_settings === 'string' 
+              ? rec.service_fee_settings.substring(0, 100) + '...'
+              : JSON.stringify(rec.service_fee_settings).substring(0, 100) + '...';
+            console.error(`🔍 Record ${idx + 1} (${rec.unvan || rec.id}): service_fee_settings = ${preview}`);
+          }
+        });
       }
       
       // Extra debugging for common errors
@@ -414,6 +468,8 @@ export const customerApi = {
         console.error('💡 Column mismatch! Check that table schema matches Customer interface');
       } else if (error.code === '22P02') {
         console.error('💡 Invalid JSON syntax! Check JSONB fields (bankDeviceAssignments, serviceFeeSettings, etc.)');
+      } else if (error.message.includes('UTF8') || error.message.includes('encoding')) {
+        console.error('💡 UTF8 encoding error! Check for invalid characters in string fields');
       }
       
       return { success: false, error: error.message };
@@ -446,6 +502,9 @@ export const customerApi = {
             parsed[field] = JSON.parse(parsed[field]);
           } catch (e) {
             console.warn(`⚠️ Failed to parse ${field}:`, e);
+            console.warn(`⚠️ Invalid JSON preview:`, parsed[field]?.substring(0, 200));
+            // Set to null to avoid breaking the app
+            parsed[field] = null;
           }
         }
       });
