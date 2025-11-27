@@ -56,8 +56,15 @@ export const ContextMenu = ({ children, items, disabled = false }: ContextMenuPr
   const handleContextMenu = (e: React.MouseEvent) => {
     if (disabled) return;
     
+    // ✅ CRITICAL FIX: Always prevent default context menu
     e.preventDefault();
-    e.stopPropagation();
+    
+    // ✅ If Ctrl/Cmd/Shift is pressed, don't show our menu (let onClick handler deal with it)
+    if (e.ctrlKey || e.metaKey || e.shiftKey) {
+      return; // Don't show context menu, but still prevent browser's menu
+    }
+    
+    // ⚠️ Note: We don't call e.stopPropagation() to allow onClick to fire
 
     // Calculate position (prevent overflow)
     const menuWidth = 220;

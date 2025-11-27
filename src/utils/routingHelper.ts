@@ -121,22 +121,36 @@ export const handleSmartClick = (
   params: RouteParams,
   defaultAction: () => void
 ) => {
+  // ✅ DEBUG: Log the event
+  console.log('🎯 handleSmartClick:', {
+    button: e.button,
+    ctrlKey: e.ctrlKey,
+    metaKey: e.metaKey,
+    shiftKey: e.shiftKey,
+    params
+  });
+
   // Middle click or Ctrl+Click → New tab
   if (e.button === 1 || (e.button === 0 && (e.ctrlKey || e.metaKey))) {
+    console.log('✅ Opening in new tab...');
     e.preventDefault();
+    e.stopPropagation();
     openInNewTab(params);
     return;
   }
 
   // Shift+Click → New window
   if (e.button === 0 && e.shiftKey) {
+    console.log('✅ Opening in new window...');
     e.preventDefault();
+    e.stopPropagation();
     openInNewWindow(params);
     return;
   }
 
   // Normal click → Default action
   if (e.button === 0) {
+    console.log('✅ Normal click, calling default action...');
     defaultAction();
   }
 };
