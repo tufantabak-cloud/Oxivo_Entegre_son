@@ -109,13 +109,17 @@ export const SuspensionReasonsTab = React.memo(function SuspensionReasonsTab({
   }, [handleCloseDialog]);
 
   const handleSave = useCallback(async () => {
+    console.log('🔍 [SuspensionReasonsTab] handleSave BAŞLADI', { formData, editingReason });
+    
     if (!formData.reason.trim()) {
+      console.log('❌ [SuspensionReasonsTab] Sebep adı boş!');
       toast.error('Lütfen sebep adını girin');
       return;
     }
 
     if (editingReason) {
       // Güncelleme
+      console.log('🔄 [SuspensionReasonsTab] GÜNCELLEME modu');
       const updatedReason: SuspensionReason = {
         ...editingReason,
         reason: formData.reason.trim(),
@@ -123,8 +127,10 @@ export const SuspensionReasonsTab = React.memo(function SuspensionReasonsTab({
         aktif: formData.aktif,
       };
       
-      // ✅ SUPABASE'E KAYDET
-      const result = await suspensionReasonApi.upsert(updatedReason);
+      console.log('📤 [SuspensionReasonsTab] Supabase CREATE (upsert) çağrılıyor...', updatedReason);
+      // ✅ SUPABASE'E KAYDET (create içinde upsert var)
+      const result = await suspensionReasonApi.create(updatedReason);
+      console.log('📥 [SuspensionReasonsTab] Supabase sonuç:', result);
       
       if (result.success) {
         const updatedReasons = suspensionReasons.map((r) =>
@@ -132,12 +138,15 @@ export const SuspensionReasonsTab = React.memo(function SuspensionReasonsTab({
         );
         onSuspensionReasonsChange(updatedReasons);
         toast.success('Pasifleştirme sebebi güncellendi');
+        console.log('✅ [SuspensionReasonsTab] Güncelleme başarılı');
       } else {
         toast.error(`Güncelleme hatası: ${result.error}`);
+        console.error('❌ [SuspensionReasonsTab] Güncelleme hatası:', result.error);
         return;
       }
     } else {
       // Yeni ekleme
+      console.log('➕ [SuspensionReasonsTab] YENİ EKLEME modu');
       const newReason: SuspensionReason = {
         id: Date.now().toString(),
         reason: formData.reason.trim(),
@@ -146,12 +155,15 @@ export const SuspensionReasonsTab = React.memo(function SuspensionReasonsTab({
         olusturmaTarihi: new Date().toISOString().split('T')[0],
       };
       
-      // ✅ SUPABASE'E KAYDET
-      const result = await suspensionReasonApi.upsert(newReason);
+      console.log('📤 [SuspensionReasonsTab] Supabase CREATE (upsert) çağrılıyor...', newReason);
+      // ✅ SUPABASE'E KAYDET (create içinde upsert var)
+      const result = await suspensionReasonApi.create(newReason);
+      console.log('📥 [SuspensionReasonsTab] Supabase sonuç:', result);
       
       if (result.success) {
         onSuspensionReasonsChange([...suspensionReasons, newReason]);
         toast.success('Yeni pasifleştirme sebebi eklendi');
+        console.log('✅ [SuspensionReasonsTab] Ekleme başarılı');
       } else {
         toast.error(`Kaydetme hatası: ${result.error}`);
         return;
@@ -183,8 +195,8 @@ export const SuspensionReasonsTab = React.memo(function SuspensionReasonsTab({
     
     const updatedReason = { ...reasonToUpdate, aktif: !reasonToUpdate.aktif };
     
-    // ✅ SUPABASE'E KAYDET
-    const result = await suspensionReasonApi.upsert(updatedReason);
+    // ✅ SUPABASE'E KAYDET (create içinde upsert var)
+    const result = await suspensionReasonApi.create(updatedReason);
     
     if (result.success) {
       const updatedReasons = suspensionReasons.map((r) =>
@@ -407,7 +419,12 @@ export const SuspensionReasonsTab = React.memo(function SuspensionReasonsTab({
             <Button variant="outline" onClick={handleCloseDialog}>
               İptal
             </Button>
-            <Button onClick={handleSave}>
+            <Button 
+              onClick={() => {
+                console.log('🔍 [SuspensionReasonsTab] EKLE butonu tıklandı!');
+                handleSave();
+              }}
+            >
               {editingReason ? 'Güncelle' : 'Ekle'}
             </Button>
           </DialogFooter>
