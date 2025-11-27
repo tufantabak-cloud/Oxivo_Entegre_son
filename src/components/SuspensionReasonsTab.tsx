@@ -91,7 +91,7 @@ export const SuspensionReasonsTab = React.memo(function SuspensionReasonsTab({
     });
   }, []);
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     if (!formData.reason.trim()) {
       toast.error('Lütfen sebep adını girin');
       return;
@@ -99,18 +99,26 @@ export const SuspensionReasonsTab = React.memo(function SuspensionReasonsTab({
 
     if (editingReason) {
       // Güncelleme
-      const updatedReasons = suspensionReasons.map((r) =>
-        r.id === editingReason.id
-          ? {
-              ...r,
-              reason: formData.reason.trim(),
-              aciklama: formData.aciklama.trim(),
-              aktif: formData.aktif,
-            }
-          : r
-      );
-      onSuspensionReasonsChange(updatedReasons);
-      toast.success('Pasifleştirme sebebi güncellendi');
+      const updatedReason: SuspensionReason = {
+        ...editingReason,
+        reason: formData.reason.trim(),
+        aciklama: formData.aciklama.trim(),
+        aktif: formData.aktif,
+      };
+      
+      // ✅ SUPABASE'E KAYDET
+      const result = await suspensionReasonApi.upsert(updatedReason);
+      
+      if (result.success) {
+        const updatedReasons = suspensionReasons.map((r) =>
+          r.id === editingReason.id ? updatedReason : r
+        );
+        onSuspensionReasonsChange(updatedReasons);
+        toast.success('Pasifleştirme sebebi güncellendi');
+      } else {
+        toast.error(`Güncelleme hatası: ${result.error}`);
+        return;
+      }
     } else {
       // Yeni ekleme
       const newReason: SuspensionReason = {
@@ -120,8 +128,17 @@ export const SuspensionReasonsTab = React.memo(function SuspensionReasonsTab({
         aktif: formData.aktif,
         olusturmaTarihi: new Date().toISOString().split('T')[0],
       };
-      onSuspensionReasonsChange([...suspensionReasons, newReason]);
-      toast.success('Yeni pasifleştirme sebebi eklendi');
+      
+      // ✅ SUPABASE'E KAYDET
+      const result = await suspensionReasonApi.upsert(newReason);
+      
+      if (result.success) {
+        onSuspensionReasonsChange([...suspensionReasons, newReason]);
+        toast.success('Yeni pasifleştirme sebebi eklendi');
+      } else {
+        toast.error(`Kaydetme hatası: ${result.error}`);
+        return;
+      }
     }
 
     handleCloseDialog();
@@ -143,12 +160,24 @@ export const SuspensionReasonsTab = React.memo(function SuspensionReasonsTab({
     setDeleteConfirmId(null);
   }, [suspensionReasons, onSuspensionReasonsChange]);
 
-  const handleToggleActive = useCallback((id: string) => {
-    const updatedReasons = suspensionReasons.map((r) =>
-      r.id === id ? { ...r, aktif: !r.aktif } : r
-    );
-    onSuspensionReasonsChange(updatedReasons);
-    toast.success('Durum güncellendi');
+  const handleToggleActive = useCallback(async (id: string) => {
+    const reasonToUpdate = suspensionReasons.find((r) => r.id === id);
+    if (!reasonToUpdate) return;
+    
+    const updatedReason = { ...reasonToUpdate, aktif: !reasonToUpdate.aktif };
+    
+    // ✅ SUPABASE'E KAYDET
+    const result = await suspensionReasonApi.upsert(updatedReason);
+    
+    if (result.success) {
+      const updatedReasons = suspensionReasons.map((r) =>
+        r.id === id ? updatedReason : r
+      );
+      onSuspensionReasonsChange(updatedReasons);
+      toast.success('Durum güncellendi');
+    } else {
+      toast.error(`Güncelleme hatası: ${result.error}`);
+    }
   }, [suspensionReasons, onSuspensionReasonsChange]);
 
   const activeCount = suspensionReasons.filter((r) => r.aktif).length;
