@@ -273,7 +273,7 @@ export function BankPFList({ records, onSelectRecord, banks = [], epkList = [], 
             <TableRow>
               {columnVisibility['muhasebeKodu'] !== false && columnVisibility['firmaUnvan'] !== false && (
                 <TableHead
-                  className={`cursor-pointer hover:bg-gray-100 transition-colors w-[35%] ${
+                  className={`cursor-pointer hover:bg-gray-100 transition-colors w-[22%] ${
                     sortField === 'firmaUnvan' ? 'bg-blue-50' : ''
                   }`}
                   onClick={() => handleSort('firmaUnvan')}
@@ -288,7 +288,7 @@ export function BankPFList({ records, onSelectRecord, banks = [], epkList = [], 
               )}
               {columnVisibility['tip'] !== false && (
                 <TableHead
-                  className={`cursor-pointer hover:bg-gray-100 transition-colors w-[15%] ${
+                  className={`cursor-pointer hover:bg-gray-100 transition-colors w-[10%] ${
                     sortField === 'bankaOrPF' ? 'bg-blue-50' : ''
                   }`}
                   onClick={() => handleSort('bankaOrPF')}
@@ -303,7 +303,7 @@ export function BankPFList({ records, onSelectRecord, banks = [], epkList = [], 
               )}
               {columnVisibility['bankaPFAd'] !== false && (
                 <TableHead
-                  className={`cursor-pointer hover:bg-gray-100 transition-colors w-[35%] ${
+                  className={`cursor-pointer hover:bg-gray-100 transition-colors w-[20%] ${
                     sortField === 'bankaPFAd' ? 'bg-blue-50' : ''
                   }`}
                   onClick={() => handleSort('bankaPFAd')}
@@ -316,10 +316,10 @@ export function BankPFList({ records, onSelectRecord, banks = [], epkList = [], 
                   </div>
                 </TableHead>
               )}
-              {columnVisibility['kategoriler'] !== false && <TableHead className="w-[30%]">🏷️ Kategoriler</TableHead>}
+              {columnVisibility['kategoriler'] !== false && <TableHead className="w-[16%]">🏷️ Kategoriler</TableHead>}
               {columnVisibility['odemeKurulusuAd'] !== false && (
                 <TableHead
-                  className={`cursor-pointer hover:bg-gray-100 transition-colors ${
+                  className={`cursor-pointer hover:bg-gray-100 transition-colors w-[12%] ${
                     sortField === 'odemeKurulusuAd' ? 'bg-blue-50' : ''
                   }`}
                   onClick={() => handleSort('odemeKurulusuAd')}
@@ -334,7 +334,7 @@ export function BankPFList({ records, onSelectRecord, banks = [], epkList = [], 
               )}
               {columnVisibility['epkNo'] !== false && (
                 <TableHead
-                  className={`cursor-pointer hover:bg-gray-100 transition-colors ${
+                  className={`cursor-pointer hover:bg-gray-100 transition-colors w-[8%] ${
                     sortField === 'epkNo' ? 'bg-blue-50' : ''
                   }`}
                   onClick={() => handleSort('epkNo')}
@@ -349,7 +349,7 @@ export function BankPFList({ records, onSelectRecord, banks = [], epkList = [], 
               )}
               {columnVisibility['okNo'] !== false && (
                 <TableHead
-                  className={`cursor-pointer hover:bg-gray-100 transition-colors ${
+                  className={`cursor-pointer hover:bg-gray-100 transition-colors w-[8%] ${
                     sortField === 'okNo' ? 'bg-blue-50' : ''
                   }`}
                   onClick={() => handleSort('okNo')}
@@ -364,7 +364,7 @@ export function BankPFList({ records, onSelectRecord, banks = [], epkList = [], 
               )}
               {columnVisibility['durum'] !== false && (
                 <TableHead
-                  className={`cursor-pointer hover:bg-gray-100 transition-colors w-[10%] ${
+                  className={`cursor-pointer hover:bg-gray-100 transition-colors w-[8%] ${
                     sortField === 'durum' ? 'bg-blue-50' : ''
                   }`}
                   onClick={() => handleSort('durum')}
@@ -377,7 +377,7 @@ export function BankPFList({ records, onSelectRecord, banks = [], epkList = [], 
                   </div>
                 </TableHead>
               )}
-              <TableHead className="text-right w-[5%]">İşlemler</TableHead>
+              <TableHead className="text-right w-[6%]">İşlemler</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
