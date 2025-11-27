@@ -368,7 +368,7 @@ export const CustomerModule = React.memo(function CustomerModule({
     onCustomersChange?.(updatedCustomers);
   };
 
-  const handleSaveCustomer = (customer: Customer, options?: { autoSave?: boolean }) => {
+  const handleSaveCustomer = async (customer: Customer, options?: { autoSave?: boolean }) => {
     const duplicateError = checkDuplicate(customer, isCreating ? undefined : customer.id);
     
     if (duplicateError) {
@@ -381,9 +381,26 @@ export const CustomerModule = React.memo(function CustomerModule({
       onCustomersChange?.(newCustomers);
       setIsCreating(false);
       toast.success('Müşteri başarıyla eklendi');
+      
+      // ✅ INSTANT SUPABASE SYNC: Yeni müşteri
+      try {
+        await customerApi.upsert([{ ...customer, id: Date.now().toString() }]);
+        console.log('✅ New customer instantly synced to Supabase');
+      } catch (error) {
+        console.error('❌ Customer instant sync error:', error);
+      }
     } else {
       const updatedCustomers = customers.map((c) => (c.id === customer.id ? customer : c));
       onCustomersChange?.(updatedCustomers);
+      
+      // ✅ INSTANT SUPABASE SYNC: Müşteri güncelleme (banka atamaları dahil)
+      try {
+        await customerApi.upsert([customer]);
+        console.log('✅ Customer update instantly synced to Supabase (including bank assignments)');
+      } catch (error) {
+        console.error('❌ Customer update instant sync error:', error);
+      }
+      
       // Otomatik kayıt durumunda sayfadan atma
       if (!options?.autoSave) {
         setSelectedCustomer(null);
@@ -1769,8 +1786,8 @@ ${notMatchedDomains.length > 0 ? `\n⚠️ Eşleşmeyen domainler konsola yazdı
             className="group relative text-xs sm:text-sm"
             title="Müşteri-Banka/PF eşleştirme şablonunu indir"
           >
-            <span className="hidden lg:inline">🏦📥 Banka/PF Şablon</span>
-            <span className="lg:hidden">🏦📥</span>
+            <span className="hidden lg:inline">Banka/PF Şablon</span>
+            <span className="lg:hidden">Şablon</span>
           </Button>
           <Button
             variant="outline"
@@ -1779,8 +1796,8 @@ ${notMatchedDomains.length > 0 ? `\n⚠️ Eşleşmeyen domainler konsola yazdı
             className="group relative text-xs sm:text-sm"
             title="Excel'den müşteri-Banka/PF eşleştirmelerini yükle"
           >
-            <span className="hidden lg:inline">🏦📤 Banka/PF Yükle</span>
-            <span className="lg:hidden">🏦📤</span>
+            <span className="hidden lg:inline">Banka/PF Yükle</span>
+            <span className="lg:hidden">Yükle</span>
           </Button>
 
           {/* Domain Hiyerarşisi Butonları */}
@@ -1791,8 +1808,8 @@ ${notMatchedDomains.length > 0 ? `\n⚠️ Eşleşmeyen domainler konsola yazdı
             className="group relative text-xs sm:text-sm"
             title="Tüm müşterilerin mevcut domain hiyerarşisini Excel'e aktar"
           >
-            <span className="hidden lg:inline">🌐📥 Domain Şablon</span>
-            <span className="lg:hidden">🌐📥</span>
+            <span className="hidden lg:inline">Domain Şablon</span>
+            <span className="lg:hidden">Şablon</span>
           </Button>
           <Button
             variant="outline"
@@ -1801,8 +1818,8 @@ ${notMatchedDomains.length > 0 ? `\n⚠️ Eşleşmeyen domainler konsola yazdı
             className="group relative text-xs sm:text-sm"
             title="Excel'den tüm müşteriler için domain hiyerarşisini yükle (Cari Adı bazlı)"
           >
-            <span className="hidden lg:inline">🌐📤 Domain Yükle</span>
-            <span className="lg:hidden">🌐📤</span>
+            <span className="hidden lg:inline">Domain Yükle</span>
+            <span className="lg:hidden">Yükle</span>
           </Button>
           
           <ExcelImport onImport={handleImportCustomers} bankPFRecords={bankPFRecords} />
