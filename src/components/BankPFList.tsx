@@ -1,12 +1,15 @@
 import { useState, useCallback, useMemo } from 'react';
 import { BankPF } from './BankPFModule';
-import { Search, ArrowUpDown, ArrowUp, ArrowDown, Eye } from 'lucide-react';
+import { Search, ArrowUpDown, ArrowUp, ArrowDown, Eye, ExternalLink, Copy, Edit } from 'lucide-react';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { ColumnVisibilityDropdown, ColumnConfig } from './ColumnVisibilityDropdown';
 import { FilterDropdown, FilterOption } from './FilterDropdown';
 import { PaginationControls } from './PaginationControls';
 import { usePagination } from '../hooks/usePagination';
+import { ContextMenu, ContextMenuItem } from './ContextMenu';
+import { openInNewTab, openInNewWindow, handleSmartClick, copyUrlToClipboard, routes } from '../utils/routingHelper';
+import { toast } from 'sonner';
 import {
   Table,
   TableBody,
@@ -65,6 +68,72 @@ export function BankPFList({ records, onSelectRecord, banks = [], epkList = [], 
       <ArrowDown size={14} className="text-blue-600" />
     );
   };
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // CONTEXT MENU HELPER
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  
+  const getContextMenuItems = useCallback((record: BankPF): ContextMenuItem[] => {
+    return [
+      {
+        label: 'Yeni Sekmede Aç',
+        icon: <ExternalLink size={16} />,
+        shortcut: 'Ctrl+Click',
+        action: () => {
+          openInNewTab(routes.bankpf(record.id, 'view'));
+          toast.success(`${record.firmaUnvan} yeni sekmede açıldı`);
+        },
+      },
+      {
+        label: 'Düzenle',
+        icon: <Edit size={16} />,
+        action: () => {
+          onSelectRecord(record);
+        },
+      },
+      {
+        label: 'ID Kopyala',
+        icon: <Copy size={16} />,
+        action: async () => {
+          try {
+            await navigator.clipboard.writeText(record.id);
+            toast.success('ID kopyalandı');
+          } catch (error) {
+            toast.error('Kopyalama başarısız');
+          }
+        },
+      },
+      {
+        label: 'Muhasebe Kodu Kopyala',
+        icon: <Copy size={16} />,
+        action: async () => {
+          try {
+            await navigator.clipboard.writeText(record.muhasebeKodu || '');
+            toast.success('Muhasebe Kodu kopyalandı');
+          } catch (error) {
+            toast.error('Kopyalama başarısız');
+          }
+        },
+      },
+      {
+        separator: true,
+        label: '',
+        action: () => {},
+      },
+      {
+        label: 'URL Paylaş',
+        icon: <ExternalLink size={16} />,
+        action: async () => {
+          const success = await copyUrlToClipboard(routes.bankpf(record.id, 'view'));
+          if (success) {
+            toast.success('Link kopyalandı');
+          } else {
+            toast.error('Link kopyalama başarısız');
+          }
+        },
+      },
+    ];
+  }, [onSelectRecord]);
 
   // ⚡ Performance: Filter ve sort işlemini memoize et
   const filteredRecords = useMemo(() => {
@@ -320,11 +389,26 @@ export function BankPFList({ records, onSelectRecord, banks = [], epkList = [], 
               </TableRow>
             ) : (
               paginatedRecords.map((record) => (
-                <TableRow
-                  key={record.id}
-                  className="hover:bg-gray-50 cursor-pointer"
-                  onClick={() => onSelectRecord(record)}
-                >
+                <ContextMenu key={record.id} items={getContextMenuItems(record)}>
+                  <TableRow
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={(e) => {
+                      // Smart click handler - Ctrl/Cmd+Click → New tab
+                      handleSmartClick(
+                        e,
+                        routes.bankpf(record.id, 'view'),
+                        () => onSelectRecord(record)
+                      );
+                    }}
+                    onAuxClick={(e) => {
+                      // Middle click → New tab
+                      if (e.button === 1) {
+                        e.preventDefault();
+                        openInNewTab(routes.bankpf(record.id, 'view'));
+                        toast.success(`${record.firmaUnvan} yeni sekmede açıldı`);
+                      }
+                    }}
+                  >
                   {columnVisibility['muhasebeKodu'] !== false && columnVisibility['firmaUnvan'] !== false && (
                     <TableCell>
                       <div>
@@ -423,6 +507,7 @@ export function BankPFList({ records, onSelectRecord, banks = [], epkList = [], 
                     </button>
                   </TableCell>
                 </TableRow>
+              </ContextMenu>
               ))
             )}
           </TableBody>

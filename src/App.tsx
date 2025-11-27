@@ -27,6 +27,7 @@
 import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
 import { unstable_batchedUpdates } from 'react-dom';
 import { useDefinitionStore } from './hooks/useDefinitionStore';
+import { useRoute } from './utils/routingHelper';
 import { Customer } from './components/CustomerModule';
 import { BankPF } from './components/BankPFModule';
 import { TabelaRecord, TabelaGroup } from './components/TabelaTab';
@@ -205,6 +206,11 @@ if (!CURRENT_APP_VERSION) {
 }
 
 export default function App() {
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // URL ROUTING (Context Menu & Deep Linking Support)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  const route = useRoute();
+
   // activeModule her zaman 'home' ile başlamalı (Figma uyumu için)
   // Not: Diğer state'ler localStorage'dan yüklenir ama activeModule her seferinde sıfırlanır
   const [activeModule, setActiveModule] = useState('home');
@@ -620,6 +626,63 @@ export default function App() {
     signs,
     dataLoaded
   ]);
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 🔗 URL ROUTING: Handle deep links from context menu
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  useEffect(() => {
+    if (!dataLoaded) return; // Wait for data to load first
+    
+    // Check if URL has routing parameters
+    if (route.module) {
+      logger.info('🔗 URL routing detected:', route);
+      
+      // Handle module navigation
+      switch (route.module) {
+        case 'customer':
+          setActiveModule('customers');
+          // TODO: Open customer detail by ID (route.id)
+          if (route.id) {
+            const customer = customers.find(c => c.id === route.id);
+            if (customer) {
+              logger.info('✅ Customer found:', customer.cariAdi);
+              // Note: CustomerModule needs to handle this internally
+              // For now, just navigate to customers module
+            }
+          }
+          break;
+          
+        case 'bankpf':
+          setActiveModule('bankpf');
+          if (route.id) {
+            setSelectedBankPFId(route.id);
+            logger.info('✅ BankPF selected:', route.id);
+          }
+          break;
+          
+        case 'product':
+          setActiveModule('products');
+          // TODO: Open product detail
+          break;
+          
+        case 'revenue':
+          setActiveModule('revenue');
+          break;
+          
+        case 'reports':
+          setActiveModule('reports');
+          // TODO: Open specific report (route.report)
+          break;
+          
+        case 'definitions':
+          setActiveModule('definitions');
+          break;
+          
+        default:
+          logger.warn('❌ Unknown module:', route.module);
+      }
+    }
+  }, [route, dataLoaded, customers, bankPFRecords]);
 
   // ========================================
   // 📥 REAL-TIME SUBSCRIPTIONS: Multi-user sync
