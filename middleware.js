@@ -1,12 +1,10 @@
 /**
  * Vercel Edge Middleware - Basic Authentication
+ * Pure Web Standards API (works with Vite/React)
  * 
- * USAGE:
- * - Set environment variables in Vercel dashboard:
- *   BASIC_AUTH_USER=admin
- *   BASIC_AUTH_PASSWORD=Qaz1071
- * 
- * - Or use default credentials if env vars not set
+ * Environment Variables:
+ * - BASIC_AUTH_USER (default: admin)
+ * - BASIC_AUTH_PASSWORD (default: Qaz1071)
  */
 
 export const config = {
@@ -14,34 +12,45 @@ export const config = {
 };
 
 export default function middleware(request) {
-  const basicAuth = request.headers.get('authorization');
-  const url = request.url;
+  const url = new URL(request.url);
+  
+  // Skip auth for static assets
+  if (
+    url.pathname.startsWith('/_next') ||
+    url.pathname.startsWith('/api') ||
+    url.pathname.match(/\.(ico|png|jpg|jpeg|svg|gif|webp|css|js|woff|woff2|ttf|eot)$/i)
+  ) {
+    return;
+  }
 
-  // Get credentials from environment variables or use defaults
-  const expectedUser = process.env.BASIC_AUTH_USER || 'admin';
-  const expectedPassword = process.env.BASIC_AUTH_PASSWORD || 'Qaz1071';
+  const authHeader = request.headers.get('authorization');
+  
+  // Credentials from environment (Vercel will inject these)
+  const BASIC_USER = process.env.BASIC_AUTH_USER || 'admin';
+  const BASIC_PASS = process.env.BASIC_AUTH_PASSWORD || 'Qaz1071';
 
-  if (basicAuth) {
-    const authValue = basicAuth.split(' ')[1];
+  if (authHeader) {
     try {
-      const [user, pwd] = atob(authValue).split(':');
+      // Parse "Basic <base64>" header
+      const base64Credentials = authHeader.split(' ')[1];
+      const credentials = atob(base64Credentials);
+      const [username, password] = credentials.split(':');
 
-      if (user === expectedUser && pwd === expectedPassword) {
-        // Authentication successful - allow request
-        return Response.next();
+      // Verify credentials
+      if (username === BASIC_USER && password === BASIC_PASS) {
+        // ✅ Authentication successful
+        return;
       }
-    } catch (error) {
-      // Invalid base64 or malformed auth header
-      console.error('Auth parsing error:', error);
+    } catch (e) {
+      // Invalid auth header format
     }
   }
 
-  // Authentication failed or not provided - request credentials
+  // ❌ Request authentication
   return new Response('Authentication Required', {
     status: 401,
     headers: {
-      'WWW-Authenticate': 'Basic realm="Oxivo - Secure Area", charset="UTF-8"',
-      'Content-Type': 'text/html; charset=utf-8',
+      'WWW-Authenticate': 'Basic realm="Secure Area"',
     },
   });
 }
