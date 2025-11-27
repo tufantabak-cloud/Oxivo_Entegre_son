@@ -676,6 +676,26 @@ export const bankPFApi = {
     console.log(`✅ Upserted ${data.length} bankPF records in Supabase`);
     return { success: true, data: data.map(objectToCamelCase), count: data.length };
   },
+
+  /**
+   * Bank/PF kaydı siler
+   */
+  async delete(id: string) {
+    console.log(`🗑️ Deleting bankPF record ${id} from Supabase...`);
+    
+    const { error } = await supabase
+      .from('bank_accounts')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('❌ Error deleting bankPF record:', error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`✅ Deleted bankPF record ${id} from Supabase`);
+    return { success: true };
+  },
 };
 
 // ========================================

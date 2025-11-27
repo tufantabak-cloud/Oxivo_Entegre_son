@@ -11,6 +11,7 @@ import { Input } from './ui/input';
 import { ModernFormSelect, FormSelectOption } from './ModernFormSelect';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { toast } from 'sonner';
+import { bankPFApi } from '../utils/supabaseClient';
 
 export interface ContactPerson {
   id: string;
@@ -229,15 +230,35 @@ export const BankPFModule = React.memo(function BankPFModule({
     okNo: '',
   });
 
-  const handleSaveRecord = (record: BankPF) => {
+  const handleSaveRecord = async (record: BankPF) => {
     if (isCreating) {
       const newRecords = [...bankPFRecords, { ...record, id: Date.now().toString() }];
       onBankPFRecordsChange?.(newRecords);
+      
+      // ✅ INSTANT SYNC: Yeni kayıt hemen Supabase'e yazılsın
+      try {
+        await bankPFApi.create(record);
+        toast.success('Kayıt eklendi ve Supabase\'e senkronize edildi');
+      } catch (error) {
+        console.error('❌ Supabase sync hatası:', error);
+        toast.error('Kayıt eklendi ama Supabase senkronizasyonu başarısız');
+      }
+      
       setIsCreating(false);
       setSelectedRecord(null);
     } else {
       const updatedRecords = bankPFRecords.map((r) => (r.id === record.id ? record : r));
       onBankPFRecordsChange?.(updatedRecords);
+      
+      // ✅ INSTANT SYNC: Güncelleme hemen Supabase'e yazılsın
+      try {
+        await bankPFApi.create(record);
+        toast.success('Kayıt güncellendi ve Supabase\'e senkronize edildi');
+      } catch (error) {
+        console.error('❌ Supabase sync hatası:', error);
+        toast.error('Kayıt güncellendi ama Supabase senkronizasyonu başarısız');
+      }
+      
       // Otomatik kaydetme durumunda sayfadan atma!
       // setSelectedRecord(null); // Bu satırı kaldırdık
       // Güncellenen kaydı yeniden set et (state'i güncel tut)
@@ -245,12 +266,21 @@ export const BankPFModule = React.memo(function BankPFModule({
     }
   };
 
-  const handleDeleteRecord = (id: string) => {
+  const handleDeleteRecord = async (id: string) => {
     const deletedRecord = bankPFRecords.find(r => r.id === id);
     const filteredRecords = bankPFRecords.filter((r) => r.id !== id);
     
     // BankPF kaydını sil
     onBankPFRecordsChange?.(filteredRecords);
+    
+    // ✅ INSTANT SYNC: Silme işlemi hemen Supabase'e yansısın
+    try {
+      await bankPFApi.delete(id);
+      console.log('✅ Kayıt Supabase\'den silindi');
+    } catch (error) {
+      console.error('❌ Supabase silme hatası:', error);
+      toast.error('Kayıt silindi ama Supabase senkronizasyonu başarısız');
+    }
     
     // Parent component'e bildir (müşteri referanslarını temizlemesi için)
     onDeleteBankPF?.(id);
@@ -414,7 +444,7 @@ export const BankPFModule = React.memo(function BankPFModule({
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Banka / PF - Ödeme Kuruluşları</h2>
           <p className="text-xs sm:text-sm font-medium text-gray-600">Banka ve ödeme kuruluşu kayıtlarını yönetin</p>
         </div>
-        <Button onClick={handleCreateNew} className="flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-shadow w-full sm:w-auto">
+        <Button size="default" onClick={handleCreateNew} className="flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-shadow w-full sm:w-auto">
           <Plus size={18} />
           <span>Yeni Kayıt</span>
         </Button>
@@ -632,10 +662,11 @@ export const BankPFModule = React.memo(function BankPFModule({
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsNewRecordDialogOpen(false)}>
+            <Button variant="outline" size="default" onClick={() => setIsNewRecordDialogOpen(false)}>
               İptal
             </Button>
             <Button 
+              size="default"
               onClick={handleSaveNewRecord}
               disabled={!selectedKurulus}
             >
