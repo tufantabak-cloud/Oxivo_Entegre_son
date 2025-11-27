@@ -221,12 +221,31 @@ export function sanitizeKartProgram(item: any): any {
 
 /**
  * Suspension Reason için sadece mevcut kolonları tut
- * Frontend: { id, neden, aciklama, aktif, olusturmaTarihi }
- * Snake_case: { id, neden, aciklama, aktif, olusturma_tarihi }
+ * Frontend: { id, reason, aciklama, aktif, olusturmaTarihi }
+ * Snake_case: { id, neden, aciklama, aktif, created_at }
+ * 
+ * ⚠️ CRITICAL: 'reason' (Frontend) → 'neden' (Supabase) MANUEL MAPPING!
+ * 
  * Mevcut DB kolonlar: id, neden, aktif, created_at, updated_at
- * Eksik DB kolonlar: aciklama, olusturma_tarihi
+ * Eksik DB kolonlar: aciklama (TEXT kolonu eklenecek!)
  */
 export function sanitizeSuspensionReason(item: any): any {
-  const { id, neden, aktif } = item;
-  return { id, neden, aktif };
+  // ✅ CRITICAL FIX: 'reason' alanını 'neden' olarak map et!
+  const { id, reason, neden, aciklama, aktif } = item;
+  
+  // reason ve neden ikisi de olabilir (objectToSnakeCase öncesi/sonrası)
+  const finalNeden = neden || reason;
+  
+  const result: any = { 
+    id, 
+    neden: finalNeden,  // ✅ Frontend'den 'reason' gelir, Supabase'e 'neden' gönder
+    aktif 
+  };
+  
+  // ✅ ACIKLAMA KOLONU EKLENDİĞİNDE otomatik çalışacak:
+  if (aciklama !== undefined && aciklama !== null) {
+    result.aciklama = aciklama;
+  }
+  
+  return result;
 }

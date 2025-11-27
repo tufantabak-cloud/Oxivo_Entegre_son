@@ -1632,6 +1632,7 @@ export const suspensionReasonApi = {
     }
     
     console.log(`📤 Final: Sending ${finalItems.length} unique suspension reason records to Supabase...`);
+    console.log('📋 DEBUGGING - Final items to upsert:', JSON.stringify(finalItems, null, 2));
     
     const { data, error } = await supabase
       .from('suspension_reasons') // ✅ FIXED: 'suspension_reason' → 'suspension_reasons' (plural)
@@ -1640,6 +1641,8 @@ export const suspensionReasonApi = {
 
     if (error) {
       console.error('❌ Error upserting suspension reason records:', error);
+      console.error('📋 Error details:', JSON.stringify(error, null, 2));
+      console.error('📋 Attempted to upsert data:', JSON.stringify(finalItems, null, 2));
       return { success: false, error: error.message };
     }
 
