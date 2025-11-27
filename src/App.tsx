@@ -27,7 +27,6 @@
 import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
 import { unstable_batchedUpdates } from 'react-dom';
 import { useDefinitionStore } from './hooks/useDefinitionStore';
-import { useRoute } from './utils/routingHelper';
 import { Customer } from './components/CustomerModule';
 import { BankPF } from './components/BankPFModule';
 import { TabelaRecord, TabelaGroup } from './components/TabelaTab';
@@ -37,7 +36,7 @@ import { getStoredData, setStoredData } from './utils/storage';
 import { migrateData, validateImportData } from './utils/dataMigration';
 import { syncToSupabase } from './utils/supabaseSync';
 import { syncAllData } from './utils/autoSync';
-import { cleanupAllDuplicatesSQL, checkDuplicatesSQL, supabase } from './utils/supabaseClient';
+import { cleanupAllDuplicatesSQL, checkDuplicatesSQL } from './utils/supabaseClient';
 
 // ✅ CRITICAL: Import Supabase API helpers
 import { 
@@ -57,9 +56,7 @@ import {
   // additionalRevenuesApi,
   sharingApi,
   kartProgramApi,
-  suspensionReasonApi,
-  domainMappingApi,
-  signApi
+  suspensionReasonApi
 } from './utils/supabaseClient';
 
 // ⚡ PHASE 3: Code Splitting - Lazy load heavy modules
@@ -206,11 +203,6 @@ if (!CURRENT_APP_VERSION) {
 }
 
 export default function App() {
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // URL ROUTING (Context Menu & Deep Linking Support)
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  const route = useRoute();
-
   // activeModule her zaman 'home' ile başlamalı (Figma uyumu için)
   // Not: Diğer state'ler localStorage'dan yüklenir ama activeModule her seferinde sıfırlanır
   const [activeModule, setActiveModule] = useState('home');
@@ -244,8 +236,6 @@ export default function App() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [payterProducts, setPayterProducts] = useState<PayterProduct[]>([]);
   const [bankPFRecords, setBankPFRecords] = useState<BankPF[]>([]);
-  const [domainMappings, setDomainMappings] = useState<any[]>([]);
-  const [signs, setSigns] = useState<any[]>([]);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [supabaseDataLoaded, setSupabaseDataLoaded] = useState(false);
   
@@ -267,11 +257,10 @@ export default function App() {
           salesRepsResult,
           jobTitlesResult,
           partnershipsResult,
+          // ❌ REMOVED: accountItemsResult, fixedCommissionsResult, additionalRevenuesResult
           sharingResult,
           kartProgramResult,
-          suspensionReasonResult,
-          domainMappingsResult,
-          signsResult
+          suspensionReasonResult
         ] = await Promise.all([
           customerApi.getAll(),
           productApi.getAll(),
@@ -283,11 +272,10 @@ export default function App() {
           salesRepsApi.getAll(),
           jobTitlesApi.getAll(),
           partnershipsApi.getAll(),
+          // ❌ REMOVED: accountItemsApi.getAll(), fixedCommissionsApi.getAll(), additionalRevenuesApi.getAll()
           sharingApi.getAll(),
           kartProgramApi.getAll(),
-          suspensionReasonApi.getAll(),
-          domainMappingApi.getAll(),
-          signApi.getAll()
+          suspensionReasonApi.getAll()
         ]);
         
         // Update state with fetched data
@@ -357,16 +345,6 @@ export default function App() {
         if (suspensionReasonResult.success && suspensionReasonResult.data) {
           setSuspensionReasons(suspensionReasonResult.data);
           logger.info(`✅ Loaded ${suspensionReasonResult.data.length} suspension reason records from Supabase`);
-        }
-        
-        if (domainMappingsResult.success && domainMappingsResult.data) {
-          setDomainMappings(domainMappingsResult.data);
-          logger.info(`✅ Loaded ${domainMappingsResult.data.length} domain mappings from Supabase`);
-        }
-        
-        if (signsResult.success && signsResult.data) {
-          setSigns(signsResult.data);
-          logger.info(`✅ Loaded ${signsResult.data.length} signs from Supabase`);
         }
         
         setSupabaseDataLoaded(true);
@@ -548,14 +526,6 @@ export default function App() {
     });
     setStoredData('bankPFRecords', bankPFRecords); 
   }, [bankPFRecords, dataLoaded]);
-  
-  useEffect(() => { 
-    if (dataLoaded) setStoredData('domainMappings', domainMappings); 
-  }, [domainMappings, dataLoaded]);
-  
-  useEffect(() => { 
-    if (dataLoaded) setStoredData('signs', signs); 
-  }, [signs, dataLoaded]);
 
   // ✅ NEW: Auto-sync ALL data types to Supabase (runs when ANY data changes)
   useEffect(() => {
@@ -598,9 +568,7 @@ export default function App() {
         additionalRevenues: ekGelirler,
         sharing: sharings,
         kartProgram: kartProgramlar,
-        suspensionReason: suspensionReasons,
-        domainMappings: domainMappings,
-        signs: signs
+        suspensionReason: suspensionReasons
       });
     }, 2000);
 
@@ -622,536 +590,8 @@ export default function App() {
     sharings,
     kartProgramlar,
     suspensionReasons,
-    domainMappings,
-    signs,
     dataLoaded
   ]);
-
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // 🔗 URL ROUTING: Handle deep links from context menu
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  useEffect(() => {
-    if (!dataLoaded) return; // Wait for data to load first
-    
-    // Check if URL has routing parameters
-    if (route.module) {
-      logger.info('🔗 URL routing detected:', route);
-      
-      // Handle module navigation
-      switch (route.module) {
-        case 'customer':
-          setActiveModule('customers');
-          // TODO: Open customer detail by ID (route.id)
-          if (route.id) {
-            const customer = customers.find(c => c.id === route.id);
-            if (customer) {
-              logger.info('✅ Customer found:', customer.cariAdi);
-              // Note: CustomerModule needs to handle this internally
-              // For now, just navigate to customers module
-            }
-          }
-          break;
-          
-        case 'bankpf':
-          setActiveModule('bankpf');
-          if (route.id) {
-            setSelectedBankPFId(route.id);
-            logger.info('✅ BankPF selected:', route.id);
-          }
-          break;
-          
-        case 'product':
-          setActiveModule('products');
-          // TODO: Open product detail
-          break;
-          
-        case 'revenue':
-          setActiveModule('revenue');
-          break;
-          
-        case 'reports':
-          setActiveModule('reports');
-          // TODO: Open specific report (route.report)
-          break;
-          
-        case 'definitions':
-          setActiveModule('definitions');
-          break;
-          
-        default:
-          logger.warn('❌ Unknown module:', route.module);
-      }
-    }
-  }, [route, dataLoaded, customers, bankPFRecords]);
-
-  // ========================================
-  // 📥 REAL-TIME SUBSCRIPTIONS: Multi-user sync
-  // ========================================
-  
-  // 📥 REAL-TIME: EPK List değişikliklerini dinle
-  useEffect(() => {
-    if (!dataLoaded) return;
-    
-    console.log('🔄 Starting real-time subscription for EPK List...');
-    
-    const epkChannel = supabase
-      .channel('epk-list-realtime')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'epk_list' },
-        async (payload) => {
-          console.log('📥 EPK değişikliği algılandı:', payload);
-          try {
-            const { data } = await epkListApi.getAll();
-            if (data) {
-              setEpkList(data);
-              console.log('✅ EPK listesi güncellendi:', data.length, 'kayıt');
-            }
-          } catch (error) {
-            console.error('❌ EPK listesi güncellenirken hata:', error);
-          }
-        }
-      )
-      .subscribe();
-    
-    return () => {
-      console.log('🛑 EPK real-time subscription kapatılıyor...');
-      supabase.removeChannel(epkChannel);
-    };
-  }, [dataLoaded]);
-
-  // 📥 REAL-TIME: ÖK List değişikliklerini dinle
-  useEffect(() => {
-    if (!dataLoaded) return;
-    
-    console.log('🔄 Starting real-time subscription for ÖK List...');
-    
-    const okChannel = supabase
-      .channel('ok-list-realtime')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'ok_list' },
-        async (payload) => {
-          console.log('📥 ÖK değişikliği algılandı:', payload);
-          try {
-            const { data } = await okListApi.getAll();
-            if (data) {
-              setOkList(data);
-              console.log('✅ ÖK listesi güncellendi:', data.length, 'kayıt');
-            }
-          } catch (error) {
-            console.error('❌ ÖK listesi güncellenirken hata:', error);
-          }
-        }
-      )
-      .subscribe();
-    
-    return () => {
-      console.log('🛑 ÖK real-time subscription kapatılıyor...');
-      supabase.removeChannel(okChannel);
-    };
-  }, [dataLoaded]);
-
-  // 📥 REAL-TIME: Banks değişikliklerini dinle
-  useEffect(() => {
-    if (!dataLoaded) return;
-    
-    console.log('🔄 Starting real-time subscription for Banks...');
-    
-    const banksChannel = supabase
-      .channel('banks-realtime')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'banks' },
-        async (payload) => {
-          console.log('📥 Banka değişikliği algılandı:', payload);
-          try {
-            const { data } = await banksApi.getAll();
-            if (data) {
-              setBanks(data);
-              console.log('✅ Bankalar listesi güncellendi:', data.length, 'kayıt');
-            }
-          } catch (error) {
-            console.error('❌ Bankalar listesi güncellenirken hata:', error);
-          }
-        }
-      )
-      .subscribe();
-    
-    return () => {
-      console.log('🛑 Banks real-time subscription kapatılıyor...');
-      supabase.removeChannel(banksChannel);
-    };
-  }, [dataLoaded]);
-
-  // 📥 REAL-TIME: MCC Codes değişikliklerini dinle
-  useEffect(() => {
-    if (!dataLoaded) return;
-    
-    console.log('🔄 Starting real-time subscription for MCC Codes...');
-    
-    const mccChannel = supabase
-      .channel('mcc-codes-realtime')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'mcc_codes' },
-        async (payload) => {
-          console.log('📥 MCC değişikliği algılandı:', payload);
-          try {
-            const { data } = await mccCodesApi.getAll();
-            if (data) {
-              setMccList(data);
-              console.log('✅ MCC listesi güncellendi:', data.length, 'kayıt');
-            }
-          } catch (error) {
-            console.error('❌ MCC listesi güncellenirken hata:', error);
-          }
-        }
-      )
-      .subscribe();
-    
-    return () => {
-      console.log('🛑 MCC Codes real-time subscription kapatılıyor...');
-      supabase.removeChannel(mccChannel);
-    };
-  }, [dataLoaded]);
-
-  // 📥 REAL-TIME: Sales Representatives değişikliklerini dinle
-  useEffect(() => {
-    if (!dataLoaded) return;
-    
-    console.log('🔄 Starting real-time subscription for Sales Representatives...');
-    
-    const salesRepsChannel = supabase
-      .channel('sales-reps-realtime')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'sales_representatives' },
-        async (payload) => {
-          console.log('📥 Satış Temsilcisi değişikliği algılandı:', payload);
-          try {
-            const { data } = await salesRepsApi.getAll();
-            if (data) {
-              setSalesReps(data);
-              console.log('✅ Satış Temsilcileri listesi güncellendi:', data.length, 'kayıt');
-            }
-          } catch (error) {
-            console.error('❌ Satış Temsilcileri listesi güncellenirken hata:', error);
-          }
-        }
-      )
-      .subscribe();
-    
-    return () => {
-      console.log('🛑 Sales Representatives real-time subscription kapatılıyor...');
-      supabase.removeChannel(salesRepsChannel);
-    };
-  }, [dataLoaded]);
-
-  // 📥 REAL-TIME: Job Titles değişikliklerini dinle
-  useEffect(() => {
-    if (!dataLoaded) return;
-    
-    console.log('🔄 Starting real-time subscription for Job Titles...');
-    
-    const jobTitlesChannel = supabase
-      .channel('job-titles-realtime')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'job_titles' },
-        async (payload) => {
-          console.log('📥 Ünvan değişikliği algılandı:', payload);
-          try {
-            const { data } = await jobTitlesApi.getAll();
-            if (data) {
-              setJobTitles(data);
-              console.log('✅ Ünvanlar listesi güncellendi:', data.length, 'kayıt');
-            }
-          } catch (error) {
-            console.error('❌ Ünvanlar listesi güncellenirken hata:', error);
-          }
-        }
-      )
-      .subscribe();
-    
-    return () => {
-      console.log('🛑 Job Titles real-time subscription kapatılıyor...');
-      supabase.removeChannel(jobTitlesChannel);
-    };
-  }, [dataLoaded]);
-
-  // 📥 REAL-TIME: Partnerships değişikliklerini dinle
-  useEffect(() => {
-    if (!dataLoaded) return;
-    
-    console.log('🔄 Starting real-time subscription for Partnerships...');
-    
-    const partnershipsChannel = supabase
-      .channel('partnerships-realtime')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'partnerships' },
-        async (payload) => {
-          console.log('📥 Ortaklık değişikliği algılandı:', payload);
-          try {
-            const { data } = await partnershipsApi.getAll();
-            if (data) {
-              setPartnerships(data);
-              console.log('✅ Ortaklıklar listesi güncellendi:', data.length, 'kayıt');
-            }
-          } catch (error) {
-            console.error('❌ Ortaklıklar listesi güncellenirken hata:', error);
-          }
-        }
-      )
-      .subscribe();
-    
-    return () => {
-      console.log('🛑 Partnerships real-time subscription kapatılıyor...');
-      supabase.removeChannel(partnershipsChannel);
-    };
-  }, [dataLoaded]);
-
-  // 📥 REAL-TIME: Sharing değişikliklerini dinle
-  useEffect(() => {
-    if (!dataLoaded) return;
-    
-    console.log('🔄 Starting real-time subscription for Sharing...');
-    
-    const sharingChannel = supabase
-      .channel('sharing-realtime')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'sharing' },
-        async (payload) => {
-          console.log('📥 Paylaşım değişikliği algılandı:', payload);
-          try {
-            const { data } = await sharingApi.getAll();
-            if (data) {
-              setSharings(data);
-              console.log('✅ Paylaşımlar listesi güncellendi:', data.length, 'kayıt');
-            }
-          } catch (error) {
-            console.error('❌ Paylaşımlar listesi güncellenirken hata:', error);
-          }
-        }
-      )
-      .subscribe();
-    
-    return () => {
-      console.log('🛑 Sharing real-time subscription kapatılıyor...');
-      supabase.removeChannel(sharingChannel);
-    };
-  }, [dataLoaded]);
-
-  // 📥 REAL-TIME: Kart Program değişikliklerini dinle
-  useEffect(() => {
-    if (!dataLoaded) return;
-    
-    console.log('🔄 Starting real-time subscription for Kart Program...');
-    
-    const kartProgramChannel = supabase
-      .channel('kart-program-realtime')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'kart_program' },
-        async (payload) => {
-          console.log('📥 Kart Program değişikliği algılandı:', payload);
-          try {
-            const { data } = await kartProgramApi.getAll();
-            if (data) {
-              setKartProgramlar(data);
-              console.log('✅ Kart Programlar listesi güncellendi:', data.length, 'kayıt');
-            }
-          } catch (error) {
-            console.error('❌ Kart Programlar listesi güncellenirken hata:', error);
-          }
-        }
-      )
-      .subscribe();
-    
-    return () => {
-      console.log('🛑 Kart Program real-time subscription kapatılıyor...');
-      supabase.removeChannel(kartProgramChannel);
-    };
-  }, [dataLoaded]);
-
-  // 📥 REAL-TIME: Suspension Reasons değişikliklerini dinle
-  useEffect(() => {
-    if (!dataLoaded) return;
-    
-    console.log('🔄 Starting real-time subscription for Suspension Reasons...');
-    
-    const suspensionChannel = supabase
-      .channel('suspension-reasons-realtime')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'suspension_reasons' },
-        async (payload) => {
-          console.log('📥 Tatil Nedeni değişikliği algılandı:', payload);
-          try {
-            const { data } = await suspensionReasonApi.getAll();
-            if (data) {
-              setSuspensionReasons(data);
-              console.log('✅ Tatil Nedenleri listesi güncellendi:', data.length, 'kayıt');
-            }
-          } catch (error) {
-            console.error('❌ Tatil Nedenleri listesi güncellenirken hata:', error);
-          }
-        }
-      )
-      .subscribe();
-    
-    return () => {
-      console.log('🛑 Suspension Reasons real-time subscription kapatılıyor...');
-      supabase.removeChannel(suspensionChannel);
-    };
-  }, [dataLoaded]);
-
-  // 📥 REAL-TIME: Domain Mappings değişikliklerini dinle
-  useEffect(() => {
-    if (!dataLoaded) return;
-    
-    console.log('🔄 Starting real-time subscription for Domain Mappings...');
-    
-    const domainChannel = supabase
-      .channel('domain-mappings-realtime')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'domain_mappings' },
-        async (payload) => {
-          console.log('📥 Domain Mapping değişikliği algılandı:', payload);
-          try {
-            const { data } = await domainMappingApi.getAll();
-            if (data) {
-              setDomainMappings(data);
-              console.log('✅ Domain Mappings listesi güncellendi:', data.length, 'kayıt');
-            }
-          } catch (error) {
-            console.error('❌ Domain Mappings listesi güncellenirken hata:', error);
-          }
-        }
-      )
-      .subscribe();
-    
-    return () => {
-      console.log('🛑 Domain Mappings real-time subscription kapatılıyor...');
-      supabase.removeChannel(domainChannel);
-    };
-  }, [dataLoaded]);
-
-  // 📥 REAL-TIME: Signs değişikliklerini dinle
-  useEffect(() => {
-    if (!dataLoaded) return;
-    
-    console.log('🔄 Starting real-time subscription for Signs...');
-    
-    const signsChannel = supabase
-      .channel('signs-realtime')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'signs' },
-        async (payload) => {
-          console.log('📥 Tabela değişikliği algılandı:', payload);
-          try {
-            const { data } = await signApi.getAll();
-            if (data) {
-              setSigns(data);
-              console.log('✅ Tabelalar listesi güncellendi:', data.length, 'kayıt');
-            }
-          } catch (error) {
-            console.error('❌ Tabelalar listesi güncellenirken hata:', error);
-          }
-        }
-      )
-      .subscribe();
-    
-    return () => {
-      console.log('🛑 Signs real-time subscription kapatılıyor...');
-      supabase.removeChannel(signsChannel);
-    };
-  }, [dataLoaded]);
-
-  // 📥 REAL-TIME: Customers değişikliklerini dinle
-  useEffect(() => {
-    if (!dataLoaded) return;
-    
-    console.log('🔄 Starting real-time subscription for Customers...');
-    
-    const customersChannel = supabase
-      .channel('customers-realtime')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'customers' },
-        async (payload) => {
-          console.log('📥 Müşteri değişikliği algılandı:', payload);
-          try {
-            const { data } = await customerApi.getAll();
-            if (data) {
-              setCustomers(data);
-              console.log('✅ Müşteriler listesi güncellendi:', data.length, 'kayıt');
-            }
-          } catch (error) {
-            console.error('❌ Müşteriler listesi güncellenirken hata:', error);
-          }
-        }
-      )
-      .subscribe();
-    
-    return () => {
-      console.log('🛑 Customers real-time subscription kapatılıyor...');
-      supabase.removeChannel(customersChannel);
-    };
-  }, [dataLoaded]);
-
-  // 📥 REAL-TIME: Products değişikliklerini dinle
-  useEffect(() => {
-    if (!dataLoaded) return;
-    
-    console.log('🔄 Starting real-time subscription for Products...');
-    
-    const productsChannel = supabase
-      .channel('products-realtime')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'products' },
-        async (payload) => {
-          console.log('📥 Ürün değişikliği algılandı:', payload);
-          try {
-            const { data } = await productApi.getAll();
-            if (data) {
-              setPayterProducts(data);
-              console.log('✅ Ürünler listesi güncellendi:', data.length, 'kayıt');
-            }
-          } catch (error) {
-            console.error('❌ Ürünler listesi güncellenirken hata:', error);
-          }
-        }
-      )
-      .subscribe();
-    
-    return () => {
-      console.log('🛑 Products real-time subscription kapatılıyor...');
-      supabase.removeChannel(productsChannel);
-    };
-  }, [dataLoaded]);
-
-  // 📥 REAL-TIME: Bank Accounts (BankPF) değişikliklerini dinle
-  useEffect(() => {
-    if (!dataLoaded) return;
-    
-    console.log('🔄 Starting real-time subscription for Bank Accounts...');
-    
-    const bankAccountsChannel = supabase
-      .channel('bank-accounts-realtime')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'bank_accounts' },
-        async (payload) => {
-          console.log('📥 Banka Hesap değişikliği algılandı:', payload);
-          try {
-            const { data } = await bankPFApi.getAll();
-            if (data) {
-              setBankPFRecords(data);
-              console.log('✅ Banka Hesapları listesi güncellendi:', data.length, 'kayıt');
-            }
-          } catch (error) {
-            console.error('❌ Banka Hesapları listesi güncellenirken hata:', error);
-          }
-        }
-      )
-      .subscribe();
-    
-    return () => {
-      console.log('🛑 Bank Accounts real-time subscription kapatılıyor...');
-      supabase.removeChannel(bankAccountsChannel);
-    };
-  }, [dataLoaded]);
 
   // Debug: Veri durumu izleme (Ana Sayfa analizi için)
   useEffect(() => {
