@@ -49,6 +49,11 @@ export const SuspensionReasonsTab = React.memo(function SuspensionReasonsTab({
     aktif: true,
   });
 
+  // 🔍 DEBUG: showDialog state değişimini izle
+  React.useEffect(() => {
+    console.log('🔍 [SuspensionReasonsTab] showDialog changed:', showDialog);
+  }, [showDialog]);
+
   // ⚡ PERFORMANCE: useMemo caches filtered list
   const filteredReasons = useMemo(() => {
     if (!searchTerm.trim()) return suspensionReasons;
@@ -63,6 +68,8 @@ export const SuspensionReasonsTab = React.memo(function SuspensionReasonsTab({
 
   // ⚡ PERFORMANCE: useCallback prevents function recreation
   const handleOpenDialog = useCallback((reason?: SuspensionReason) => {
+    console.log('🔍 [SuspensionReasonsTab] handleOpenDialog called', { reason, isEdit: !!reason });
+    
     if (reason) {
       setEditingReason(reason);
       setFormData({
@@ -79,6 +86,7 @@ export const SuspensionReasonsTab = React.memo(function SuspensionReasonsTab({
       });
     }
     setShowDialog(true);
+    console.log('🔍 [SuspensionReasonsTab] showDialog set to true');
   }, []);
 
   const handleCloseDialog = useCallback(() => {
@@ -90,6 +98,15 @@ export const SuspensionReasonsTab = React.memo(function SuspensionReasonsTab({
       aktif: true,
     });
   }, []);
+
+  // Dialog'un onOpenChange handler'ı - açılma/kapanma durumunu yönetir
+  const handleDialogOpenChange = useCallback((open: boolean) => {
+    if (!open) {
+      handleCloseDialog();
+    } else {
+      setShowDialog(true);
+    }
+  }, [handleCloseDialog]);
 
   const handleSave = useCallback(async () => {
     if (!formData.reason.trim()) {
@@ -341,7 +358,7 @@ export const SuspensionReasonsTab = React.memo(function SuspensionReasonsTab({
       </Card>
 
       {/* Düzenleme Dialog */}
-      <Dialog open={showDialog} onOpenChange={handleCloseDialog}>
+      <Dialog open={showDialog} onOpenChange={handleDialogOpenChange}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
