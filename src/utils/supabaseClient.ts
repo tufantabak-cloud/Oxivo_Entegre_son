@@ -235,8 +235,13 @@ export const customerApi = {
           try {
             parsed[field] = JSON.parse(parsed[field]);
           } catch (e) {
-            console.warn(`⚠️ Failed to parse ${field}:`, e);
-            console.warn(`⚠️ Invalid JSON preview:`, parsed[field]?.substring(0, 200));
+            console.error(`❌ [getAll] Failed to parse ${field}:`, e);
+            console.error(`❌ Error message:`, (e as Error).message);
+            console.error(`❌ Invalid JSON preview (first 500):`, parsed[field]?.substring(0, 500));
+            console.error(`❌ Invalid JSON preview (last 500):`, parsed[field]?.substring(Math.max(0, parsed[field].length - 500)));
+            if (parsed[field]?.length > 50000) {
+              console.error(`⚠️ WARNING: JSON string is very large (${parsed[field].length} chars) - might be corrupted or truncated!`);
+            }
             // Set to null to avoid breaking the app
             parsed[field] = null;
           }
@@ -377,17 +382,26 @@ export const customerApi = {
           try {
             let jsonData;
             
-            // If it's already a string, try to parse it first
+            // ✅ FIX: Parse JSON FIRST, then clean the object (not the JSON string!)
             if (typeof sanitized[field] === 'string') {
-              // Clean the string before parsing
-              const cleanedStr = cleanUTF8(sanitized[field]);
-              jsonData = JSON.parse(cleanedStr);
+              // DON'T clean the JSON string itself - it will break the structure!
+              // Parse it first, then clean the object values
+              try {
+                jsonData = JSON.parse(sanitized[field]);
+              } catch (parseError) {
+                // If direct parse fails, try cleaning ONLY control chars (not structure)
+                console.warn(`⚠️ First parse attempt failed for ${field}, trying with minimal cleaning...`);
+                const minimalClean = sanitized[field]
+                  .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // Keep \n (0x0A) and \r (0x0D)
+                  .replace(/\uFFFD/g, '');
+                jsonData = JSON.parse(minimalClean);
+              }
             } else {
               // It's already an object/array
               jsonData = sanitized[field];
             }
             
-            // Recursively clean all string values in the object
+            // ✅ Now recursively clean all STRING VALUES in the object (not keys, not structure)
             const cleanObject = (obj: any): any => {
               if (typeof obj === 'string') {
                 return cleanUTF8(obj);
@@ -404,13 +418,44 @@ export const customerApi = {
             };
             
             const cleanedData = cleanObject(jsonData);
-            sanitized[field] = JSON.stringify(cleanedData);
+            
+            // ✅ Use JSON.stringify with circular reference and size limit handling
+            try {
+              const seen = new WeakSet();
+              const jsonString = JSON.stringify(cleanedData, (key, value) => {
+                // Handle circular references
+                if (typeof value === 'object' && value !== null) {
+                  if (seen.has(value)) {
+                    console.warn(`⚠️ Circular reference detected in ${field}.${key}, skipping...`);
+                    return '[Circular Reference]';
+                  }
+                  seen.add(value);
+                }
+                return value;
+              });
+              
+              // Check size before assigning
+              if (jsonString.length > 100000) {
+                console.warn(`⚠️ WARNING: ${field} JSON is very large (${jsonString.length} chars). Consider splitting data.`);
+              }
+              
+              sanitized[field] = jsonString;
+            } catch (stringifyError) {
+              console.error(`❌ JSON.stringify failed for ${field}:`, stringifyError);
+              throw stringifyError; // Re-throw to be caught by outer catch
+            }
             
           } catch (e) {
-            console.warn(`⚠️ Failed to parse ${field}, setting to null:`, e);
-            console.warn(`⚠️ Failed value type:`, typeof sanitized[field]);
+            console.error(`❌ Failed to parse ${field}:`, e);
+            console.error(`❌ Error message:`, (e as Error).message);
+            console.error(`❌ Value type:`, typeof sanitized[field]);
             if (typeof sanitized[field] === 'string') {
-              console.warn(`⚠️ Failed value preview:`, sanitized[field].substring(0, 200));
+              console.error(`❌ JSON preview (first 500 chars):`, sanitized[field].substring(0, 500));
+              console.error(`❌ JSON preview (last 500 chars):`, sanitized[field].substring(Math.max(0, sanitized[field].length - 500)));
+              // Check if it's truncated
+              if (sanitized[field].length > 50000) {
+                console.error(`⚠️ WARNING: JSON string is very large (${sanitized[field].length} chars) - might be truncated!`);
+              }
             }
             sanitized[field] = null;
           }
@@ -501,8 +546,13 @@ export const customerApi = {
           try {
             parsed[field] = JSON.parse(parsed[field]);
           } catch (e) {
-            console.warn(`⚠️ Failed to parse ${field}:`, e);
-            console.warn(`⚠️ Invalid JSON preview:`, parsed[field]?.substring(0, 200));
+            console.error(`❌ [create] Failed to parse ${field}:`, e);
+            console.error(`❌ Error message:`, (e as Error).message);
+            console.error(`❌ Invalid JSON preview (first 500):`, parsed[field]?.substring(0, 500));
+            console.error(`❌ Invalid JSON preview (last 500):`, parsed[field]?.substring(Math.max(0, parsed[field].length - 500)));
+            if (parsed[field]?.length > 50000) {
+              console.error(`⚠️ WARNING: JSON string is very large (${parsed[field].length} chars) - might be corrupted or truncated!`);
+            }
             // Set to null to avoid breaking the app
             parsed[field] = null;
           }
@@ -1619,8 +1669,31 @@ export const suspensionReasonApi = {
       console.warn(`⚠️ Step 1: Removed ${recordsArray.length - uniqueRecords.length} duplicate suspension reasons (by id)`);
     }
     
-    // ✅ Step 2: Apply transformations
-    const transformedItems = uniqueRecords.map(objectToSnakeCase).map(sanitizeSuspensionReason);
+    // 🔧 UTF8 CLEANING HELPER FUNCTION
+    const cleanUTF8 = (str: string): string => {
+      if (!str || typeof str !== 'string') return str;
+      // Remove control characters (0x00-0x1F) except newline, tab, carriage return
+      // Also remove DEL (0x7F) and C1 control codes (0x80-0x9F)
+      return str
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, '')
+        // Replace replacement character
+        .replace(/\uFFFD/g, '');
+    };
+    
+    // ✅ Step 2: Apply transformations + UTF8 cleaning
+    const transformedItems = uniqueRecords
+      .map(objectToSnakeCase)
+      .map(sanitizeSuspensionReason)
+      .map(item => {
+        // Clean all string fields to prevent UTF8 errors
+        const cleaned: any = { ...item };
+        Object.keys(cleaned).forEach(key => {
+          if (typeof cleaned[key] === 'string') {
+            cleaned[key] = cleanUTF8(cleaned[key]);
+          }
+        });
+        return cleaned;
+      });
     
     // ✅ Step 3: CRITICAL FIX - Remove duplicates AFTER sanitization
     const finalItems = Array.from(
@@ -1632,7 +1705,14 @@ export const suspensionReasonApi = {
     }
     
     console.log(`📤 Final: Sending ${finalItems.length} unique suspension reason records to Supabase...`);
-    console.log('📋 DEBUGGING - Final items to upsert:', JSON.stringify(finalItems, null, 2));
+    
+    // ✅ Safe JSON.stringify with try-catch
+    try {
+      console.log('📋 DEBUGGING - Final items to upsert:', JSON.stringify(finalItems, null, 2));
+    } catch (e) {
+      console.warn('⚠️ JSON.stringify failed for finalItems:', e);
+      console.log('📋 DEBUGGING - Final items (raw):', finalItems);
+    }
     
     const { data, error } = await supabase
       .from('suspension_reasons') // ✅ FIXED: 'suspension_reason' → 'suspension_reasons' (plural)
@@ -1641,8 +1721,20 @@ export const suspensionReasonApi = {
 
     if (error) {
       console.error('❌ Error upserting suspension reason records:', error);
-      console.error('📋 Error details:', JSON.stringify(error, null, 2));
-      console.error('📋 Attempted to upsert data:', JSON.stringify(finalItems, null, 2));
+      
+      // ✅ Safe JSON.stringify with try-catch for error logging
+      try {
+        console.error('📋 Error details:', JSON.stringify(error, null, 2));
+      } catch (e) {
+        console.error('📋 Error details (raw):', error);
+      }
+      
+      try {
+        console.error('📋 Attempted to upsert data:', JSON.stringify(finalItems, null, 2));
+      } catch (e) {
+        console.error('📋 Attempted to upsert data (raw):', finalItems);
+      }
+      
       return { success: false, error: error.message };
     }
 
