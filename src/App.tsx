@@ -374,6 +374,17 @@ export default function App() {
         if (suspensionReasonResult.success && suspensionReasonResult.data) {
           setSuspensionReasons(suspensionReasonResult.data);
           logger.info(`✅ Loaded ${suspensionReasonResult.data.length} suspension reason records from Supabase`);
+          
+          // 🔍 DEBUG: Verify 'reason' field mapping
+          const firstReason = suspensionReasonResult.data[0];
+          if (firstReason) {
+            console.log('🔍 [App.tsx] First suspension reason:', {
+              id: firstReason.id,
+              reason: firstReason.reason || '❌ MISSING!',
+              neden: (firstReason as any).neden || 'not present (correct)',
+              aktif: firstReason.aktif
+            });
+          }
         }
         
         if (domainMappingsResult.success && domainMappingsResult.data) {

@@ -1701,13 +1701,32 @@ export const suspensionReasonApi = {
     // ✅ CRITICAL FIX: Manual field mapping 'neden' (Supabase) → 'reason' (Frontend)
     const mappedData = data.map(item => {
       const camelCased = objectToCamelCase(item);
-      return {
-        ...camelCased,
-        reason: item.neden || camelCased.neden || '', // Map 'neden' to 'reason'
-        olusturmaTarihi: camelCased.createdAt || camelCased.olusturmaTarihi || new Date().toISOString()
-      };
+      
+      // 🔥 SPECIAL HANDLING: 'neden' is Turkish word, won't convert automatically
+      // We must MANUALLY map 'neden' → 'reason'
+      const mapped: any = { ...camelCased };
+      
+      // Map 'neden' field to 'reason'
+      if (item.neden !== undefined) {
+        mapped.reason = item.neden;
+        delete mapped.neden; // Remove Turkish field
+      }
+      
+      // Fix date field
+      if (camelCased.createdAt) {
+        mapped.olusturmaTarihi = camelCased.createdAt;
+      }
+      
+      console.log('🔍 [suspensionReasonApi.getAll] Mapped item:', { 
+        original_neden: item.neden, 
+        mapped_reason: mapped.reason,
+        has_reason: !!mapped.reason 
+      });
+      
+      return mapped;
     });
     
+    console.log(`✅ Mapped ${mappedData.length} suspension reasons with 'reason' field`);
     return { success: true, data: mappedData || [] };
   },
 
@@ -1799,11 +1818,22 @@ export const suspensionReasonApi = {
     // ✅ CRITICAL FIX: Manual field mapping 'neden' (Supabase) → 'reason' (Frontend)
     const mappedData = data.map(item => {
       const camelCased = objectToCamelCase(item);
-      return {
-        ...camelCased,
-        reason: item.neden || camelCased.neden || '', // Map 'neden' to 'reason'
-        olusturmaTarihi: camelCased.createdAt || camelCased.olusturmaTarihi || new Date().toISOString()
-      };
+      
+      // 🔥 SPECIAL HANDLING: 'neden' is Turkish word, won't convert automatically
+      const mapped: any = { ...camelCased };
+      
+      // Map 'neden' field to 'reason'
+      if (item.neden !== undefined) {
+        mapped.reason = item.neden;
+        delete mapped.neden; // Remove Turkish field
+      }
+      
+      // Fix date field
+      if (camelCased.createdAt) {
+        mapped.olusturmaTarihi = camelCased.createdAt;
+      }
+      
+      return mapped;
     });
     
     return { success: true, data: mappedData, count: data.length };
