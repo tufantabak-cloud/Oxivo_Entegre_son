@@ -1845,22 +1845,23 @@ export default function App() {
     <div className="min-h-screen bg-gray-50">
       {/* Header - Single Row */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
-        <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
-          <div className="flex items-center justify-between h-14 gap-4">
+        <div className="max-w-[1400px] mx-auto px-3 md:px-4 lg:px-8">
+          <div className="flex items-center justify-between h-14 md:h-16 gap-2 md:gap-4">
             <div className="flex items-center gap-2 flex-shrink-0">
-              {/* Mobile Menu Button */}
-              <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-                <SheetTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="lg:hidden p-2 h-8 w-8 border-blue-200 hover:bg-blue-50 hover:border-blue-300"
-                    aria-label="Menüyü Aç"
-                  >
-                    <Menu size={20} className="text-blue-600" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="w-[260px] p-4">
+              {/* Mobile Menu Button - Visible only on mobile/tablet (< 1024px) */}
+              <div className="lg:hidden">
+                <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                  <SheetTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center justify-center p-2 h-10 w-10 min-h-[44px] min-w-[44px] border-blue-200 hover:bg-blue-50 hover:border-blue-300"
+                      aria-label="Menüyü Aç"
+                    >
+                      <Menu size={22} className="text-blue-600" />
+                    </Button>
+                  </SheetTrigger>
+                <SheetContent side="left" className="w-[280px] sm:w-[320px] p-4 overflow-y-auto">
                   <SheetHeader className="pb-4 border-b">
                     <SheetTitle className="flex items-center gap-2 text-base">
                       <span className="font-bold text-blue-600">Oxivo</span>
@@ -1869,10 +1870,11 @@ export default function App() {
                       </span>
                     </SheetTitle>
                   </SheetHeader>
-                  <nav className="flex flex-col gap-2 mt-4">
+                  <nav className="flex flex-col gap-3 mt-4">
                     <Button
                       variant="ghost"
                       size="default"
+                      style={{ minHeight: '48px' }}
                       onClick={() => {
                         setActiveModule('home');
                         setIsMobileMenuOpen(false);
@@ -1883,12 +1885,13 @@ export default function App() {
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
-                      <Home size={16} className="flex-shrink-0" />
+                      <Home size={18} className="flex-shrink-0" />
                       <span className="truncate">Ana Sayfa</span>
                     </Button>
                     <Button
                       variant="ghost"
                       size="default"
+                      style={{ minHeight: '48px' }}
                       onClick={() => {
                         setActiveModule('reports');
                         setIsMobileMenuOpen(false);
@@ -1899,12 +1902,13 @@ export default function App() {
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
-                      <FileText size={16} className="flex-shrink-0" />
+                      <FileText size={18} className="flex-shrink-0" />
                       <span className="truncate">Rapor</span>
                     </Button>
                     <Button
                       variant="ghost"
                       size="default"
+                      style={{ minHeight: '48px' }}
                       onClick={() => {
                         setActiveModule('customers');
                         setIsMobileMenuOpen(false);
@@ -1915,12 +1919,13 @@ export default function App() {
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
-                      <Users size={16} className="flex-shrink-0" />
+                      <Users size={18} className="flex-shrink-0" />
                       <span className="truncate">Müşteriler</span>
                     </Button>
                     <Button
                       variant="ghost"
                       size="default"
+                      style={{ minHeight: '48px' }}
                       onClick={() => {
                         setActiveModule('bankpf');
                         setIsMobileMenuOpen(false);
@@ -1931,12 +1936,13 @@ export default function App() {
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
-                      <Building2 size={16} className="flex-shrink-0" />
+                      <Building2 size={18} className="flex-shrink-0" />
                       <span className="truncate">Banka/PF</span>
                     </Button>
                     <Button
                       variant="ghost"
                       size="default"
+                      style={{ minHeight: '48px' }}
                       onClick={() => {
                         setActiveModule('products');
                         setIsMobileMenuOpen(false);
@@ -1947,12 +1953,13 @@ export default function App() {
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
-                      <Package size={16} className="flex-shrink-0" />
+                      <Package size={18} className="flex-shrink-0" />
                       <span className="truncate">Ürün</span>
                     </Button>
                     <Button
                       variant="ghost"
                       size="default"
+                      style={{ minHeight: '48px' }}
                       onClick={() => {
                         setActiveModule('revenue');
                         setIsMobileMenuOpen(false);
@@ -1963,12 +1970,13 @@ export default function App() {
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
-                      <Euro size={16} className="flex-shrink-0" />
+                      <Euro size={18} className="flex-shrink-0" />
                       <span className="truncate">Gelir</span>
                     </Button>
                     <Button
                       variant="ghost"
                       size="default"
+                      style={{ minHeight: '48px' }}
                       onClick={() => {
                         setActiveModule('definitions');
                         setIsMobileMenuOpen(false);
@@ -1979,16 +1987,17 @@ export default function App() {
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
-                      <Settings size={16} className="flex-shrink-0" />
+                      <Settings size={18} className="flex-shrink-0" />
                       <span className="truncate">Tanımlar</span>
                     </Button>
                   </nav>
                 </SheetContent>
               </Sheet>
+              </div>
 
-              <div className="flex items-center gap-2">
-                <h1 className="font-bold text-blue-600 text-base">Oxivo</h1>
-                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-md font-medium hidden sm:block">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <h1 className="font-bold text-blue-600 text-sm sm:text-base">Oxivo</h1>
+                <span className="text-xs bg-blue-100 text-blue-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md font-medium hidden sm:block">
                   v{CURRENT_APP_VERSION}
                 </span>
               </div>
