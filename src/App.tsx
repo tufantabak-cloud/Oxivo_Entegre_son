@@ -208,19 +208,28 @@ if (!CURRENT_APP_VERSION) {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // SUPABASE CONNECTIVITY TEST - DEV/DEBUG ONLY
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Make test functions globally available in browser console
-if (typeof window !== 'undefined') {
-  import('./utils/supabaseConnectivityTest').then(module => {
-    (window as any).testSupabase = module.quickSupabaseTest;
-    (window as any).SupabaseConnectivityTester = module.SupabaseConnectivityTester;
-    console.log('🔧 Supabase connectivity test loaded! Run: window.testSupabase()');
-  });
-  
-  import('./utils/testSuspensionReasons').then(module => {
-    (window as any).testSuspensionReasons = module.quickTestSuspensionReasons;
-    console.log('🔧 Suspension reasons test loaded! Run: window.testSuspensionReasons()');
-  });
-}
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// DEVELOPMENT TEST UTILITIES (disabled for production builds)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TEMPORARILY DISABLED TO FIX VERCEL BUILD ISSUES
+// Uncomment in development if needed:
+//
+// if (typeof window !== 'undefined' && import.meta.env.DEV) {
+//   import('./utils/supabaseConnectivityTest')
+//     .then(module => {
+//       (window as any).testSupabase = module.quickSupabaseTest;
+//       (window as any).SupabaseConnectivityTester = module.SupabaseConnectivityTester;
+//       console.log('🔧 Supabase connectivity test loaded! Run: window.testSupabase()');
+//     })
+//     .catch(err => console.warn('⚠️ Could not load supabaseConnectivityTest:', err.message));
+//   
+//   import('./utils/testSuspensionReasons')
+//     .then(module => {
+//       (window as any).testSuspensionReasons = module.quickTestSuspensionReasons;
+//       console.log('🔧 Suspension reasons test loaded! Run: window.testSuspensionReasons()');
+//     })
+//     .catch(err => console.warn('⚠️ Could not load testSuspensionReasons:', err.message));
+// }
 
 export default function App() {
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
