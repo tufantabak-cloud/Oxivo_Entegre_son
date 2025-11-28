@@ -205,6 +205,23 @@ if (!CURRENT_APP_VERSION) {
   logger.warn('CURRENT_APP_VERSION missing, fallback to default');
 }
 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SUPABASE CONNECTIVITY TEST - DEV/DEBUG ONLY
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Make test functions globally available in browser console
+if (typeof window !== 'undefined') {
+  import('./utils/supabaseConnectivityTest').then(module => {
+    (window as any).testSupabase = module.quickSupabaseTest;
+    (window as any).SupabaseConnectivityTester = module.SupabaseConnectivityTester;
+    console.log('🔧 Supabase connectivity test loaded! Run: window.testSupabase()');
+  });
+  
+  import('./utils/testSuspensionReasons').then(module => {
+    (window as any).testSuspensionReasons = module.quickTestSuspensionReasons;
+    console.log('🔧 Suspension reasons test loaded! Run: window.testSuspensionReasons()');
+  });
+}
+
 export default function App() {
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // URL ROUTING (Context Menu & Deep Linking Support)

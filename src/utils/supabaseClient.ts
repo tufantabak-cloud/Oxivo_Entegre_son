@@ -1697,7 +1697,18 @@ export const suspensionReasonApi = {
     }
 
     console.log(`✅ Fetched ${data.length} suspension reason records from Supabase`);
-    return { success: true, data: data.map(objectToCamelCase) || [] };
+    
+    // ✅ CRITICAL FIX: Manual field mapping 'neden' (Supabase) → 'reason' (Frontend)
+    const mappedData = data.map(item => {
+      const camelCased = objectToCamelCase(item);
+      return {
+        ...camelCased,
+        reason: item.neden || camelCased.neden || '', // Map 'neden' to 'reason'
+        olusturmaTarihi: camelCased.createdAt || camelCased.olusturmaTarihi || new Date().toISOString()
+      };
+    });
+    
+    return { success: true, data: mappedData || [] };
   },
 
   async create(records: any | any[]) {
@@ -1784,7 +1795,18 @@ export const suspensionReasonApi = {
     }
 
     console.log(`✅ Upserted ${data.length} suspension reason records in Supabase`);
-    return { success: true, data: data.map(objectToCamelCase), count: data.length };
+    
+    // ✅ CRITICAL FIX: Manual field mapping 'neden' (Supabase) → 'reason' (Frontend)
+    const mappedData = data.map(item => {
+      const camelCased = objectToCamelCase(item);
+      return {
+        ...camelCased,
+        reason: item.neden || camelCased.neden || '', // Map 'neden' to 'reason'
+        olusturmaTarihi: camelCased.createdAt || camelCased.olusturmaTarihi || new Date().toISOString()
+      };
+    });
+    
+    return { success: true, data: mappedData, count: data.length };
   },
 
   async delete(id: string) {
