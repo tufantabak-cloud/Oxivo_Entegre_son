@@ -685,39 +685,10 @@ export const productApi = {
     const records = enrichedProducts.map(objectToSnakeCase);
     
     console.log(`📤 Converting ${records.length} products to snake_case...`);
-    console.log(`🔍 CHECKPOINT 1: records.length = ${records.length}`);
     
-    // 🔍 DEBUG: Log first product's fields and types BEFORE sanitization
-    console.log(`🔍 CHECKPOINT 2: About to check records.length = ${records.length}`);
-    if (records && records.length > 0) {
-      console.log(`🔍 CHECKPOINT 3: Inside if block, firstRecord = `, records[0]);
-      const firstRecord = records[0];
-      console.log('🔍 DEBUG: First product field types (BEFORE sanitization):');
-      
-      // Count object/array fields
-      let objectCount = 0;
-      Object.entries(firstRecord).forEach(([key, value]) => {
-        const valueType = typeof value;
-        const isObject = value !== null && value !== undefined && typeof value === 'object';
-        if (isObject) objectCount++;
-        
-        const valuePreview = valueType === 'string' && value && value.length > 100 
-          ? value.substring(0, 100) + '...'
-          : value;
-        console.log(`   ${key}: ${valueType}${isObject ? ' [OBJECT/ARRAY]' : ''} = `, valuePreview);
-      });
-      
-      console.log(`🔍 Total object/array fields: ${objectCount}`);
-    } else {
-      console.log(`⚠️ CHECKPOINT 4: records is empty or invalid!`);
-    }
+    // Auto-sanitize: Convert any object/array fields to JSON strings (if needed)
     
-    // ✅ SANITIZE: Convert any object/array fields to JSON strings
-    // This prevents "invalid input syntax for type json" errors when the PostgreSQL column is TEXT
-    console.log(`🔍 CHECKPOINT 5: Starting sanitization...`);
-    
-    let totalStringified = 0;
-    const sanitizedRecords = records.map((record, index) => {
+    const sanitizedRecords = records.map(record => {
       const sanitized = { ...record };
       
       Object.keys(sanitized).forEach(key => {
@@ -727,10 +698,6 @@ export const productApi = {
         if (value !== null && value !== undefined && typeof value === 'object') {
           try {
             sanitized[key] = JSON.stringify(value);
-            totalStringified++;
-            if (index === 0) { // Only log for first record
-              console.log(`🔧 Stringified field '${key}': ${Array.isArray(value) ? 'array' : 'object'} → string`);
-            }
           } catch (e) {
             console.error(`❌ Failed to stringify field '${key}':`, e);
             sanitized[key] = null; // Fallback to null
@@ -740,21 +707,6 @@ export const productApi = {
       
       return sanitized;
     });
-    
-    console.log(`🔍 CHECKPOINT 6: Sanitization complete. Total fields stringified: ${totalStringified}`);
-    
-    // 🔍 DEBUG: Log first product's fields and types AFTER sanitization
-    if (sanitizedRecords.length > 0) {
-      const firstRecord = sanitizedRecords[0];
-      console.log('🔍 DEBUG: First product field types (AFTER sanitization):');
-      Object.entries(firstRecord).forEach(([key, value]) => {
-        const valueType = typeof value;
-        const valuePreview = valueType === 'string' && value.length > 100 
-          ? value.substring(0, 100) + '...'
-          : value;
-        console.log(`   ${key}: ${valueType} = `, valuePreview);
-      });
-    }
     
     // ✅ UPSERT: Insert new records or update existing ones (based on 'id')
     const { data, error } = await supabase
