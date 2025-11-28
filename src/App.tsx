@@ -1849,18 +1849,18 @@ export default function App() {
           <div className="flex items-center justify-between h-14 md:h-16 gap-2 md:gap-4">
             <div className="flex items-center gap-2 flex-shrink-0">
               {/* Mobile Menu Button - Visible only on mobile/tablet (< 1024px) */}
-              <div className="lg:hidden">
-                <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-                  <SheetTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex items-center justify-center p-2 h-10 w-10 min-h-[44px] min-w-[44px] border-blue-200 hover:bg-blue-50 hover:border-blue-300"
-                      aria-label="Menüyü Aç"
-                    >
-                      <Menu size={22} className="text-blue-600" />
-                    </Button>
-                  </SheetTrigger>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="lg:hidden flex items-center justify-center p-2 h-10 w-10 min-h-[44px] min-w-[44px] border-blue-200 hover:bg-blue-50 hover:border-blue-300"
+                aria-label="Menüyü Aç"
+              >
+                <Menu size={22} className="text-blue-600" />
+              </Button>
+
+              {/* Mobile Menu Sheet */}
+              <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetContent side="left" className="w-[280px] sm:w-[320px] p-4 overflow-y-auto">
                   <SheetHeader className="pb-4 border-b">
                     <SheetTitle className="flex items-center gap-2 text-base">
@@ -1993,7 +1993,6 @@ export default function App() {
                   </nav>
                 </SheetContent>
               </Sheet>
-              </div>
 
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <h1 className="font-bold text-blue-600 text-sm sm:text-base">Oxivo</h1>
