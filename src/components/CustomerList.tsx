@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Customer, DomainNode } from './CustomerModule';
 import { BankPF } from './BankPFModule';
-import { Search, ArrowUpDown, ArrowUp, ArrowDown, Eye, Filter, Download, CheckSquare, Square, ListChecks, Bug } from 'lucide-react';
+import { Search, ArrowUpDown, ArrowUp, ArrowDown, Eye, Filter, Download, CheckSquare, Square, ListChecks, Bug, ExternalLink, Copy, Edit } from 'lucide-react';
 import { DeviceCountAnalyzer } from './DeviceCountAnalyzer';
 import { Switch } from './ui/switch';
 import { toast } from 'sonner';
@@ -17,6 +17,8 @@ import { usePagination } from '../hooks/usePagination';
 // XLSX import - ES6 module format (v3.0.8 - fixed require issue)
 import * as XLSX from 'xlsx';
 import { matchDomain } from '../utils/domainMatching';
+import { ContextMenu, ContextMenuItem } from './ContextMenu';
+import { openInNewTab, openInNewWindow, handleSmartClick, copyUrlToClipboard, routes } from '../utils/routingHelper';
 import {
   Table,
   TableBody,
@@ -142,6 +144,72 @@ export const CustomerList = React.memo(function CustomerList({ customers, onSele
       <ArrowDown size={14} className="text-blue-600" />
     );
   };
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // CONTEXT MENU HELPER
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  
+  const getContextMenuItems = useCallback((customer: Customer): ContextMenuItem[] => {
+    return [
+      {
+        label: 'Yeni Sekmede Aç',
+        icon: <ExternalLink size={16} />,
+        shortcut: 'Ctrl+Click',
+        action: () => {
+          openInNewTab(routes.customer(customer.id, 'view'));
+          toast.success(`${customer.cariAdi} yeni sekmede açıldı`);
+        },
+      },
+      {
+        label: 'Düzenle',
+        icon: <Edit size={16} />,
+        action: () => {
+          onSelectCustomer(customer);
+        },
+      },
+      {
+        label: 'ID Kopyala',
+        icon: <Copy size={16} />,
+        action: async () => {
+          try {
+            await navigator.clipboard.writeText(customer.id);
+            toast.success('Müşteri ID kopyalandı');
+          } catch (error) {
+            toast.error('Kopyalama başarısız');
+          }
+        },
+      },
+      {
+        label: 'Cari Hesap Kodu Kopyala',
+        icon: <Copy size={16} />,
+        action: async () => {
+          try {
+            await navigator.clipboard.writeText(customer.cariHesapKodu || '');
+            toast.success('Cari Hesap Kodu kopyalandı');
+          } catch (error) {
+            toast.error('Kopyalama başarısız');
+          }
+        },
+      },
+      {
+        separator: true,
+        label: '',
+        action: () => {},
+      },
+      {
+        label: 'URL Paylaş',
+        icon: <ExternalLink size={16} />,
+        action: async () => {
+          const success = await copyUrlToClipboard(routes.customer(customer.id, 'view'));
+          if (success) {
+            toast.success('Link kopyalandı');
+          } else {
+            toast.error('Link kopyalama başarısız');
+          }
+        },
+      },
+    ];
+  }, [onSelectCustomer]);
 
   // Domain bazlı eşleşen cihaz sayısı (matchDomain utility kullanarak - ignoreMainDomain desteği ile)
   const getDomainMatchCount = useCallback((customer: Customer): number => {
@@ -1271,13 +1339,28 @@ export const CustomerList = React.memo(function CustomerList({ customers, onSele
               </TableRow>
             ) : (
               paginatedCustomers.map((customer) => (
-                <TableRow
-                  key={customer.id}
-                  className={`hover:bg-gray-50 cursor-pointer ${
-                    selectedCustomerIds.includes(customer.id) ? 'bg-blue-50' : ''
-                  }`}
-                  onClick={() => onSelectCustomer(customer)}
-                >
+                <ContextMenu key={customer.id} items={getContextMenuItems(customer)} as="fragment">
+                  <TableRow
+                    className={`hover:bg-gray-50 cursor-pointer ${
+                      selectedCustomerIds.includes(customer.id) ? 'bg-blue-50' : ''
+                    }`}
+                    onClick={(e) => {
+                      // Smart click handler - Ctrl/Cmd+Click → New tab
+                      handleSmartClick(
+                        e,
+                        routes.customer(customer.id, 'view'),
+                        () => onSelectCustomer(customer)
+                      );
+                    }}
+                    onAuxClick={(e) => {
+                      // Middle click → New tab
+                      if (e.button === 1) {
+                        e.preventDefault();
+                        openInNewTab(routes.customer(customer.id, 'view'));
+                        toast.success(`${customer.cariAdi} yeni sekmede açıldı`);
+                      }
+                    }}
+                  >
                   {/* Checkbox */}
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <Checkbox
@@ -1449,6 +1532,7 @@ export const CustomerList = React.memo(function CustomerList({ customers, onSele
                     </button>
                   </TableCell>
                 </TableRow>
+              </ContextMenu>
               ))
             )}
           </TableBody>

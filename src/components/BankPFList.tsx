@@ -271,7 +271,7 @@ export function BankPFList({ records, onSelectRecord, banks = [], epkList = [], 
         <Table>
           <TableHeader>
             <TableRow>
-              {columnVisibility['muhasebeKodu'] !== false && columnVisibility['firmaUnvan'] !== false && (
+              {columnVisibility['firmaUnvan'] !== false && (
                 <TableHead
                   className={`cursor-pointer hover:bg-gray-100 transition-colors min-w-[200px] ${
                     sortField === 'firmaUnvan' ? 'bg-blue-50' : ''
@@ -389,7 +389,7 @@ export function BankPFList({ records, onSelectRecord, banks = [], epkList = [], 
               </TableRow>
             ) : (
               paginatedRecords.map((record) => (
-                <ContextMenu key={record.id} items={getContextMenuItems(record)}>
+                <ContextMenu key={record.id} items={getContextMenuItems(record)} as="fragment">
                   <TableRow
                     className="hover:bg-gray-50 cursor-pointer"
                     onClick={(e) => {
@@ -409,14 +409,9 @@ export function BankPFList({ records, onSelectRecord, banks = [], epkList = [], 
                       }
                     }}
                   >
-                  {columnVisibility['muhasebeKodu'] !== false && columnVisibility['firmaUnvan'] !== false && (
+                  {columnVisibility['firmaUnvan'] !== false && (
                     <TableCell>
-                      <div>
-                        <div>{record.firmaUnvan}</div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          Kod: {record.muhasebeKodu}
-                        </div>
-                      </div>
+                      {record.firmaUnvan}
                     </TableCell>
                   )}
                   {columnVisibility['tip'] !== false && (

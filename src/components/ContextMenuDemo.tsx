@@ -148,7 +148,7 @@ export const ContextMenuDemo = () => {
           </thead>
           <tbody className="divide-y">
             {demoItems.map((item) => (
-              <ContextMenu key={item.id} items={getContextMenuItems(item)}>
+              <ContextMenu key={item.id} items={getContextMenuItems(item)} as="fragment">
                 <tr
                   className="hover:bg-gray-50 cursor-pointer transition-colors"
                   onClick={(e) => {

@@ -37,17 +37,18 @@ interface ContextMenuProps {
   children: ReactNode;
   items: ContextMenuItem[];
   disabled?: boolean;
+  as?: 'div' | 'fragment'; // New prop to control wrapper type
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // CONTEXT MENU COMPONENT
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-export const ContextMenu = ({ children, items, disabled = false }: ContextMenuProps) => {
+export const ContextMenu = ({ children, items, disabled = false, as = 'div' }: ContextMenuProps) => {
   const [isVisible, setIsVisible] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const menuRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLSpanElement | HTMLDivElement>(null);
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // HANDLE RIGHT CLICK
@@ -136,15 +137,18 @@ export const ContextMenu = ({ children, items, disabled = false }: ContextMenuPr
   // RENDER
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+  // Use Fragment for table rows to avoid DOM nesting errors
+  const WrapperComponent = as === 'fragment' ? 'span' : 'div';
+
   return (
     <>
-      <div
+      <WrapperComponent
         ref={containerRef}
         onContextMenu={handleContextMenu}
-        style={{ width: '100%', height: '100%' }}
+        style={as === 'fragment' ? { display: 'contents' } : { width: '100%', height: '100%' }}
       >
         {children}
-      </div>
+      </WrapperComponent>
 
       {isVisible && (
         <div
