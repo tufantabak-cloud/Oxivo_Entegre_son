@@ -602,6 +602,14 @@ export const customerApi = {
     console.log(`✅ Deleted customer ${id} from Supabase`);
     return { success: true };
   },
+
+  /**
+   * Müşteri ekler veya günceller (alias for create)
+   * create() metodu zaten upsert kullanıyor
+   */
+  async upsert(customers: any | any[]) {
+    return this.create(customers);
+  },
 };
 
 // ========================================
@@ -833,6 +841,14 @@ export const bankPFApi = {
 
     console.log(`✅ Deleted bankPF record ${id} from Supabase`);
     return { success: true };
+  },
+
+  /**
+   * Bank/PF kaydı ekler veya günceller (alias for create)
+   * create() metodu zaten upsert kullanıyor
+   */
+  async upsert(records: any | any[]) {
+    return this.create(records);
   },
 };
 
