@@ -1,0 +1,209 @@
+/* ============================================================
+   MOBILE ENHANCEMENTS
+   Mobile-first optimizations without affecting desktop view
+   ============================================================ */
+
+/* ==== TOUCH TARGET OPTIMIZATION ==== */
+@media (max-width: 768px) {
+  /* Ensure all interactive elements are at least 44x44px (Apple HIG) */
+  button,
+  a,
+  input[type="button"],
+  input[type="submit"],
+  .btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Exception for icon-only buttons that already have padding */
+  button.btn-icon-only,
+  [data-slot="button"].btn-icon-only {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.5rem;
+  }
+}
+
+/* ==== TABLE SCROLL OPTIMIZATION ==== */
+@media (max-width: 768px) {
+  /* Horizontal scroll for tables on mobile */
+  .table-scroll-mobile {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(59, 130, 246, 0.3) transparent;
+  }
+  
+  .table-scroll-mobile::-webkit-scrollbar {
+    height: 6px;
+  }
+  
+  .table-scroll-mobile::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .table-scroll-mobile::-webkit-scrollbar-thumb {
+    background-color: rgba(59, 130, 246, 0.3);
+    border-radius: 3px;
+  }
+  
+  .table-scroll-mobile::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(59, 130, 246, 0.5);
+  }
+}
+
+/* ==== FORM INPUT OPTIMIZATION ==== */
+@media (max-width: 768px) {
+  /* Prevent zoom on iOS when focusing inputs */
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="date"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+  
+  /* Full width inputs on mobile */
+  .form-mobile-full input,
+  .form-mobile-full select,
+  .form-mobile-full textarea {
+    width: 100%;
+  }
+}
+
+/* ==== RESPONSIVE GRID UTILITIES ==== */
+@media (max-width: 640px) {
+  /* Stack grid items on small mobile */
+  .grid-mobile-1 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 641px) and (max-width: 768px) {
+  /* 2 columns on larger mobile */
+  .grid-mobile-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ==== SPACING UTILITIES ==== */
+@media (max-width: 768px) {
+  /* Reduce padding on mobile for more content space */
+  .mobile-compact {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  
+  .mobile-compact-y {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+}
+
+/* ==== NAVIGATION ENHANCEMENTS ==== */
+@media (max-width: 1023px) {
+  /* Sticky header on mobile */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background-color: white;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* ==== TEXT UTILITIES ==== */
+@media (max-width: 640px) {
+  /* Smaller text on very small screens */
+  .text-mobile-sm {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  
+  .text-mobile-xs {
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+}
+
+/* ==== MODAL/SHEET OPTIMIZATION ==== */
+@media (max-width: 768px) {
+  /* Full width sheets on mobile */
+  [data-slot="sheet-content"] {
+    width: 85% !important;
+    max-width: 320px !important;
+  }
+}
+
+/* ==== BUTTON GROUP OPTIMIZATION ==== */
+@media (max-width: 640px) {
+  /* Stack button groups vertically on small mobile */
+  .button-group-mobile-stack {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .button-group-mobile-stack > button {
+    width: 100%;
+  }
+}
+
+/* ==== CARD OPTIMIZATION ==== */
+@media (max-width: 768px) {
+  /* Reduce card padding on mobile */
+  [data-slot="card"] {
+    padding: 1rem;
+  }
+  
+  [data-slot="card-header"] {
+    padding: 0.75rem;
+  }
+  
+  [data-slot="card-content"] {
+    padding: 0.75rem;
+  }
+}
+
+/* ==== VISIBILITY UTILITIES ==== */
+@media (max-width: 640px) {
+  .hide-mobile-sm {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .show-mobile-only {
+    display: none !important;
+  }
+}
+
+/* ==== PERFORMANCE OPTIMIZATION ==== */
+@media (max-width: 768px) {
+  /* Reduce animations on mobile for better performance */
+  .reduce-motion-mobile * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ==== SAFE AREA INSETS (iOS) ==== */
+@supports (padding: env(safe-area-inset-bottom)) {
+  @media (max-width: 768px) {
+    body {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    
+    header {
+      padding-top: env(safe-area-inset-top);
+    }
+  }
+}
