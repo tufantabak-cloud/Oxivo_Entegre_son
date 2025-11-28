@@ -16,7 +16,10 @@ import './styles/figma.css'
 // 3. Custom utilities - Scrollbars, animations
 import './styles/utilities.css'
 
-// 4. Figma pixel-perfect fixes - ALWAYS LAST (highest priority overrides)
+// 4. Mobile enhancements - Touch-friendly, responsive optimizations
+import './styles/mobile-enhancements.css'
+
+// 5. Figma pixel-perfect fixes - ALWAYS LAST (highest priority overrides)
 import './styles/figma-fixes.css'
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

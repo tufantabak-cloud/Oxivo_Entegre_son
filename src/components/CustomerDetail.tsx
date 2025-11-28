@@ -550,47 +550,30 @@ export function CustomerDetail({
   // Müşteriye atanmış toplam cihaz sayısını hesapla (domain bazlı eşleştirme - PRIMARY)
   const totalAssignedDevices = useMemo(() => {
     // PRIMARY: PayterProducts'tan domain bazlı eşleştirme yap
+    // ✅ CRITICAL FIX: matchedProducts ile aynı algoritma kullanılmalı (ignoreMainDomain desteği)
     if (payterProducts && payterProducts.length > 0) {
-      // Müşterinin tüm domain'lerini topla
-      const customerDomains: string[] = [];
+      const customerDomain = formData.domain || formData.guncelMyPayterDomain;
       
-      // Ana domain
-      if (formData.guncelMyPayterDomain && formData.guncelMyPayterDomain.trim()) {
-        customerDomains.push(formData.guncelMyPayterDomain.trim().toLowerCase());
+      if (!customerDomain) {
+        return 0;
       }
       
-      // Domain hierarchy'den tüm domain'leri topla
-      const collectFromHierarchy = (nodes: DomainNode[]) => {
-        nodes.forEach(node => {
-          if (node.name && node.name.trim()) {
-            customerDomains.push(node.name.trim().toLowerCase());
-          }
-          if (node.children && node.children.length > 0) {
-            collectFromHierarchy(node.children);
-          }
-        });
-      };
-      
-      if (formData.domainHierarchy && formData.domainHierarchy.length > 0) {
-        collectFromHierarchy(formData.domainHierarchy);
-      }
-      
-      // Domain eşleştirmesi olan ürünleri say
-      if (customerDomains.length > 0) {
-        const matchedDevices = payterProducts.filter(product => {
-          if (!product.domain || !product.domain.trim()) {
-            return false;
-          }
-          const productDomain = product.domain.trim().toLowerCase();
-          return customerDomains.includes(productDomain);
-        });
-        
-        // Debug kaldırıldı - artık DeviceCountAnalyzer UI'ı kullanılıyor
-        
-        // Domain eşleştirmesi bulunduysa, onu döndür
-        if (matchedDevices.length > 0) {
-          return matchedDevices.length;
+      // matchDomain fonksiyonunu kullan (ignoreMainDomain desteği ile)
+      const matched = payterProducts.filter(product => {
+        if (!product.domain || !product.domain.trim()) {
+          return false;
         }
+        
+        return matchDomain(
+          product.domain, 
+          customerDomain, 
+          formData.ignoreMainDomain || false,
+          formData.domainHierarchy
+        );
+      });
+      
+      if (matched.length > 0) {
+        return matched.length;
       }
     }
     
@@ -602,7 +585,7 @@ export function CustomerDetail({
       (total, assignment) => total + (assignment.deviceIds?.length || 0),
       0
     );
-  }, [formData.cariAdi, formData.guncelMyPayterDomain, formData.domainHierarchy, formData.bankDeviceAssignments, payterProducts]);
+  }, [formData.cariAdi, formData.guncelMyPayterDomain, formData.domain, formData.ignoreMainDomain, formData.domainHierarchy, formData.bankDeviceAssignments, payterProducts]);
 
   // Müşteriye ait P6X ve APOLLO cihaz sayılarını hesapla
   const deviceModelCounts = useMemo(() => {
@@ -1875,7 +1858,7 @@ export function CustomerDetail({
       <div id="customer-detail-form" className="space-y-6">
         {/* Tabs Yapısı - SEVIYE 1 FIX: Controlled State */}
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="grid w-full max-w-4xl grid-cols-5">
+          <TabsList className="grid w-full max-w-4xl grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1">
             <TabsTrigger value="genel">Genel Bilgiler</TabsTrigger>
             <TabsTrigger value="domain">🌐 Domain</TabsTrigger>
             <TabsTrigger value="payter">📱 Payter</TabsTrigger>
@@ -1892,7 +1875,7 @@ export function CustomerDetail({
                   <CardTitle>Cari Bilgileri</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="cariHesapKodu">Cari Hesap Kodu *</Label>
                   <Input
@@ -1947,7 +1930,7 @@ export function CustomerDetail({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="vergiDairesi">Vergi Dairesi</Label>
                   <Input
@@ -1981,7 +1964,7 @@ export function CustomerDetail({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="ilce">İlçe</Label>
                   <Input

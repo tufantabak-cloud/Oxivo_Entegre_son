@@ -858,7 +858,7 @@ export function PayterProductTab({ products, onProductsChange, customers = [] }:
               <p>Arama sonucu bulunamadı</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto mobile-table-scroll">
               <Table>
                 <TableHeader>
                   <TableRow>

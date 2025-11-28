@@ -1022,7 +1022,7 @@ export const CustomerList = React.memo(function CustomerList({ customers, onSele
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto mobile-table-scroll">
         <Table>
           <TableHeader>
             <TableRow>

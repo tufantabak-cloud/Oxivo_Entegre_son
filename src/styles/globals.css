@@ -275,3 +275,187 @@ body {
 .dropdown-panel [data-radix-scroll-area-viewport] > div {
   display: block !important;
 }
+
+/* ==== MOBILE OPTIMIZATION UTILITIES ==== */
+/* Touch-friendly button sizing for mobile */
+@media (max-width: 768px) {
+  /* Touch target minimum: 44x44px (Apple guideline) */
+  button:not(.btn-icon-only) {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Icon-only buttons */
+  .btn-icon-only {
+    min-height: 40px;
+    min-width: 40px;
+  }
+  
+  /* Compact padding for mobile */
+  .mobile-compact-padding {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  
+  /* Full width buttons on mobile */
+  .mobile-full-width {
+    width: 100% !important;
+  }
+  
+  /* Stack items on mobile */
+  .mobile-stack {
+    flex-direction: column !important;
+  }
+  
+  /* Hide on mobile */
+  .mobile-hidden {
+    display: none !important;
+  }
+  
+  /* Show only on mobile */
+  .mobile-only {
+    display: block !important;
+  }
+  
+  /* Mobile card padding */
+  .mobile-card-padding {
+    padding: 0.75rem !important;
+  }
+  
+  /* Mobile table - enable horizontal scroll */
+  .mobile-table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Mobile dialog/modal - full screen */
+  [role="dialog"]:not(.mobile-keep-size) {
+    max-width: 100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+  
+  /* Mobile sheet - wider */
+  [data-radix-dialog-content][data-state="open"] {
+    max-width: 85vw !important;
+  }
+}
+
+/* Show only on desktop */
+@media (min-width: 769px) {
+  .mobile-only {
+    display: none !important;
+  }
+}
+
+/* ==== MOBILE-FIRST TABLE STYLES ==== */
+@media (max-width: 768px) {
+  /* Make tables scrollable horizontally */
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Compact table cells on mobile */
+  td, th {
+    padding: 0.5rem !important;
+  }
+  
+  /* Smaller text in tables on mobile */
+  table {
+    font-size: 0.875rem;
+  }
+}
+
+/* ==== MOBILE NAVIGATION IMPROVEMENTS ==== */
+@media (max-width: 1024px) {
+  /* Sticky header optimization */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  
+  /* Compact header height on mobile */
+  header .flex.items-center {
+    min-height: 56px;
+  }
+}
+
+/* ==== MOBILE FORM IMPROVEMENTS ==== */
+@media (max-width: 768px) {
+  /* Full width inputs on mobile */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="search"],
+  textarea,
+  select {
+    width: 100%;
+    min-height: 44px;
+    font-size: 16px; /* Prevents iOS zoom on focus */
+  }
+  
+  /* Compact form spacing */
+  form > div,
+  form > fieldset {
+    margin-bottom: 1rem;
+  }
+  
+  /* Stack form buttons */
+  form button + button {
+    margin-top: 0.5rem;
+    margin-left: 0;
+  }
+}
+
+/* ==== MOBILE SPACING UTILITIES ==== */
+@media (max-width: 768px) {
+  /* Reduce spacing on mobile */
+  .space-y-6 {
+    gap: 1rem;
+  }
+  
+  .gap-4 {
+    gap: 0.75rem;
+  }
+  
+  /* Mobile container padding */
+  .container,
+  .max-w-\[1400px\] {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* ==== MOBILE PERFORMANCE OPTIMIZATIONS ==== */
+/* Reduce animations on mobile for better performance */
+@media (max-width: 768px) and (prefers-reduced-motion: no-preference) {
+  * {
+    transition-duration: 150ms !important;
+  }
+}
+
+/* ==== MOBILE ACCESSIBILITY ==== */
+@media (max-width: 768px) {
+  /* Larger tap targets for better accessibility */
+  a, button, [role="button"] {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Ensure text remains readable on mobile */
+  body {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+  }
+}
