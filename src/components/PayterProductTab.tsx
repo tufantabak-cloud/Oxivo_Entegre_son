@@ -549,29 +549,31 @@ export function PayterProductTab({ products, onProductsChange, customers = [] }:
       {/* Header */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Payter Ürün Yönetimi</CardTitle>
-              <CardDescription>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <CardTitle className="text-base sm:text-lg">Payter Ürün Yönetimi</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
                 Terminal ve cihaz listelerini Excel ile yükleyin ve yönetin
               </CardDescription>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 w-full sm:w-auto flex-shrink-0">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleDownloadTemplate}
+                className="flex-1 sm:flex-initial"
               >
-                <Download size={16} className="mr-2" />
-                Excel Şablon İndir
+                <Download size={14} className="mr-1 sm:mr-2" />
+                <span className="text-xs sm:text-sm">Excel Şablon İndir</span>
               </Button>
               <Button
                 variant="default"
                 size="sm"
                 onClick={() => setIsImportDialogOpen(true)}
+                className="flex-1 sm:flex-initial"
               >
-                <Upload size={16} className="mr-2" />
-                Excel'den Yükle
+                <Upload size={14} className="mr-1 sm:mr-2" />
+                <span className="text-xs sm:text-sm">Excel'den Yükle</span>
               </Button>
             </div>
           </div>
