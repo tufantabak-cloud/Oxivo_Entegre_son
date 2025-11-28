@@ -414,32 +414,37 @@ export const ReportsModule = React.memo(function ReportsModule({
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="banka-pf">
-            <Building2 size={16} className="mr-2" />
-            Banka/PF
-          </TabsTrigger>
-          <TabsTrigger value="iletisim-matrisi">
-            <Users size={16} className="mr-2" />
-            İletişim Matrisi
-          </TabsTrigger>
-          <TabsTrigger value="musteriler">
-            <Users size={16} className="mr-2" />
-            Müşteriler
-          </TabsTrigger>
-          <TabsTrigger value="domain">
-            <Database size={16} className="mr-2" />
-            Domain
-          </TabsTrigger>
-          <TabsTrigger value="tabela">
-            <BarChart3 size={16} className="mr-2" />
-            Tabela
-          </TabsTrigger>
-          <TabsTrigger value="hakedis">
-            <Calculator size={16} className="mr-2" />
-            Hakediş
-          </TabsTrigger>
-        </TabsList>
+        {/* MOBILE FIX: Horizontal scroll + smaller text on mobile */}
+        <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0">
+          <TabsList className="inline-flex w-auto min-w-full md:w-auto">
+            <TabsTrigger value="banka-pf" className="flex-shrink-0 text-xs sm:text-sm">
+              <Building2 size={14} className="mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Banka/PF</span>
+              <span className="inline sm:hidden">Banka</span>
+            </TabsTrigger>
+            <TabsTrigger value="iletisim-matrisi" className="flex-shrink-0 text-xs sm:text-sm">
+              <Users size={14} className="mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">İletişim Matrisi</span>
+              <span className="inline sm:hidden">İletişim</span>
+            </TabsTrigger>
+            <TabsTrigger value="musteriler" className="flex-shrink-0 text-xs sm:text-sm">
+              <Users size={14} className="mr-1 sm:mr-2" />
+              Müşteriler
+            </TabsTrigger>
+            <TabsTrigger value="domain" className="flex-shrink-0 text-xs sm:text-sm">
+              <Database size={14} className="mr-1 sm:mr-2" />
+              Domain
+            </TabsTrigger>
+            <TabsTrigger value="tabela" className="flex-shrink-0 text-xs sm:text-sm">
+              <BarChart3 size={14} className="mr-1 sm:mr-2" />
+              Tabela
+            </TabsTrigger>
+            <TabsTrigger value="hakedis" className="flex-shrink-0 text-xs sm:text-sm">
+              <Calculator size={14} className="mr-1 sm:mr-2" />
+              Hakediş
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* İletişim Matrisi Tab */}
         <TabsContent value="iletisim-matrisi" className="space-y-4">
