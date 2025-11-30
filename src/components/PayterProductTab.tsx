@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { ColumnVisibilityDropdown, ColumnConfig } from './ColumnVisibilityDropdown';
 import { Customer } from './CustomerModule';
+import type { UserInfo } from '../hooks/useUserRole'; // 🔐 User role types
 
 export interface PayterProduct {
   id: string;
@@ -69,6 +70,7 @@ function checkProductDuplicate(
 }
 
 interface PayterProductTabProps {
+  userInfo?: UserInfo; // 🔐 User permissions
   products: PayterProduct[];
   onProductsChange: (products: PayterProduct[]) => void;
   customers?: Customer[];
@@ -118,7 +120,11 @@ const COLUMN_CONFIGS: ColumnConfig[] = [
   { key: 'ptid', label: 'PTID', defaultVisible: false },
 ];
 
-export function PayterProductTab({ products, onProductsChange, customers = [] }: PayterProductTabProps) {
+export function PayterProductTab({ userInfo, products, onProductsChange, customers = [] }: PayterProductTabProps) {
+  // 🔐 Check permissions
+  const canCreate = userInfo?.permissions.canCreate ?? true;
+  const canDelete = userInfo?.permissions.canDelete ?? true;
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -566,15 +572,17 @@ export function PayterProductTab({ products, onProductsChange, customers = [] }:
                 <Download size={14} className="mr-1 sm:mr-2" />
                 <span className="text-xs sm:text-sm">Excel Şablon İndir</span>
               </Button>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => setIsImportDialogOpen(true)}
-                className="flex-1 sm:flex-initial"
-              >
-                <Upload size={14} className="mr-1 sm:mr-2" />
-                <span className="text-xs sm:text-sm">Excel'den Yükle</span>
-              </Button>
+              {canCreate && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => setIsImportDialogOpen(true)}
+                  className="flex-1 sm:flex-initial"
+                >
+                  <Upload size={14} className="mr-1 sm:mr-2" />
+                  <span className="text-xs sm:text-sm">Excel'den Yükle</span>
+                </Button>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -781,7 +789,7 @@ export function PayterProductTab({ products, onProductsChange, customers = [] }:
               storageKey="payterProducts"
               onVisibilityChange={handleVisibilityChange}
             />
-            {products.length > 0 && (
+            {canDelete && products.length > 0 && (
               <Button variant="outline" size="sm" onClick={handleClearAll}>
                 <Trash2 size={16} className="mr-2" />
                 Tümünü Temizle
@@ -1041,13 +1049,15 @@ export function PayterProductTab({ products, onProductsChange, customers = [] }:
                         </TableCell>
                       )}
                       <TableCell className="text-center">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteProduct(product.id)}
-                        >
-                          <Trash2 size={16} className="text-red-600" />
-                        </Button>
+                        {canDelete && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteProduct(product.id)}
+                          >
+                            <Trash2 size={16} className="text-red-600" />
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}

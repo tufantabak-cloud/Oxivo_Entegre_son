@@ -3,6 +3,7 @@ import { Customer, DomainNode, BankDeviceAssignment, ServiceFeeSettings, DeviceS
 import { PayterProduct } from './PayterProductTab';
 import { BankPF } from './BankPFModule';
 import { BankDeviceManagementTab } from './BankDeviceManagementTab';
+import { useUserRole } from '../hooks/useUserRole';
 import { ArrowLeft, Save, Trash2, X, Plus, ChevronDown, ChevronRight, Edit2, Trash, Monitor, CheckCircle, XCircle, FileSpreadsheet, FileText, Download, FileDown, Calendar, AlertTriangle, Clock, Euro, Bell, Ban, Play, DollarSign } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -385,6 +386,9 @@ export function CustomerDetail({
   allCustomers = [],
   onNavigateToCustomer,
 }: CustomerDetailProps) {
+  // 🔐 User role management
+  const { hasPermission } = useUserRole();
+
   const [formData, setFormData] = useState<Customer>(
     customer || {
       id: '',
@@ -1822,7 +1826,7 @@ export function CustomerDetail({
               </Tooltip>
             </TooltipProvider>
           
-          {!isCreating && (
+          {!isCreating && hasPermission('canDelete') && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button type="button" variant="destructive">

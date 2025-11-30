@@ -6,6 +6,7 @@ import { DocumentManagement } from './DocumentManagement';
 import { FirmaTabelaTab } from './FirmaTabelaTab';
 import { FirmaBankalarTab } from './FirmaBankalarTab';
 import { HakedisTab } from './HakedisTab';
+import { useUserRole } from '../hooks/useUserRole';
 import { ArrowLeft, Save, Trash2, X, Plus, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from './ui/button';
@@ -65,6 +66,9 @@ export function BankPFDetail({
   ekGelirler = [],
   hesapKalemleri = [],
 }: BankPFDetailProps) {
+  // 🔐 User role management
+  const { hasPermission } = useUserRole();
+
   const [formData, setFormData] = useState<BankPF>(
     record || {
       id: '',
@@ -213,7 +217,7 @@ export function BankPFDetail({
               <span className="sm:hidden">Güncelle</span>
             </Button>
           )}
-          {!isCreating && (
+          {!isCreating && hasPermission('canDelete') && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive" size="default" className="flex-1 sm:flex-none">
