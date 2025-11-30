@@ -28,6 +28,7 @@ import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react
 import { unstable_batchedUpdates } from 'react-dom';
 import { useDefinitionStore } from './hooks/useDefinitionStore';
 import { useRoute } from './utils/routingHelper';
+import { useUserRole } from './hooks/useUserRole'; // 🔐 User role management
 import { Customer } from './components/CustomerModule';
 import { BankPF } from './components/BankPFModule';
 import { TabelaRecord, TabelaGroup } from './components/TabelaTab';
@@ -232,6 +233,11 @@ if (!CURRENT_APP_VERSION) {
 // }
 
 export default function App() {
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 🔐 USER ROLE MANAGEMENT (Admin vs Viewer)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  const { userInfo, hasPermission, isAdmin, isViewer } = useUserRole();
+
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // URL ROUTING (Context Menu & Deep Linking Support)
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -2036,6 +2042,14 @@ export default function App() {
                 <span className="text-xs bg-blue-100 text-blue-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md font-medium hidden sm:block">
                   v{CURRENT_APP_VERSION}
                 </span>
+                {/* 🔐 User Badge */}
+                <span className={`text-xs px-2 py-1 rounded-md font-medium ${
+                  userInfo.role === 'admin' 
+                    ? 'bg-green-100 text-green-700' 
+                    : 'bg-gray-100 text-gray-700'
+                }`} title={`Kullanıcı: ${userInfo.username}`}>
+                  {userInfo.role === 'admin' ? '👤 Admin' : '👁️ Görüntüleyici'}
+                </span>
               </div>
               
               {/* Activity Log Button - Desktop Only */}
@@ -3011,6 +3025,7 @@ export default function App() {
         {dataLoaded && activeModule === 'customers' && (
           <Suspense fallback={<ModuleLoadingFallback />}>
             <CustomerModule 
+              userInfo={userInfo}
               mccList={activeMCCListForCustomer}
               customers={customers}
               onCustomersChange={setCustomers}
@@ -3028,6 +3043,7 @@ export default function App() {
         {dataLoaded && activeModule === 'bankpf' && (
           <Suspense fallback={<ModuleLoadingFallback />}>
             <BankPFModule 
+              userInfo={userInfo}
               gorevListesi={gorevListesiForBankPF}
               gelirModelleri={gelirModelleriForBankPF}
               ekGelirler={ekGelirler}
@@ -3047,6 +3063,7 @@ export default function App() {
         {dataLoaded && activeModule === 'reports' && (
           <Suspense fallback={<ModuleLoadingFallback />}>
             <ReportsModule
+              userInfo={userInfo}
               customers={customers}
               bankPFRecords={bankPFRecords}
               banks={banks}
@@ -3059,6 +3076,7 @@ export default function App() {
         {dataLoaded && activeModule === 'products' && (
           <Suspense fallback={<ModuleLoadingFallback />}>
             <ProductModule 
+              userInfo={userInfo}
               payterProducts={payterProducts}
               onPayterProductsChange={setPayterProducts}
               customers={customers}
@@ -3068,6 +3086,7 @@ export default function App() {
         {dataLoaded && activeModule === 'revenue' && (
           <Suspense fallback={<ModuleLoadingFallback />}>
             <RevenueModule
+              userInfo={userInfo}
               customers={customers}
               payterProducts={payterProducts}
               onUpdateCustomer={handleUpdateCustomer}
@@ -3078,6 +3097,7 @@ export default function App() {
         {dataLoaded && activeModule === 'definitions' && (
           <Suspense fallback={<ModuleLoadingFallback />}>
             <DefinitionsModule
+              userInfo={userInfo}
               jobTitles={jobTitles}
               onJobTitlesChange={setJobTitles}
               mccList={mccList}

@@ -12,6 +12,7 @@ import { ModernFormSelect, FormSelectOption } from './ModernFormSelect';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { toast } from 'sonner';
 import { bankPFApi } from '../utils/supabaseClient';
+import type { UserInfo } from '../hooks/useUserRole'; // 🔐 User role types
 
 export interface ContactPerson {
   id: string;
@@ -172,6 +173,7 @@ interface BankPFModuleProps {
   selectedBankPFId?: string | null;
   onClearSelectedBankPFId?: () => void;
   onDeleteBankPF?: (id: string) => void; // Müşteri referanslarını temizlemek için
+  userInfo?: UserInfo; // 🔐 User role info
 }
 
 // PERFORMANCE: React.memo prevents unnecessary re-renders
@@ -190,8 +192,14 @@ export const BankPFModule = React.memo(function BankPFModule({
   onTabelaRecordsChange,
   selectedBankPFId = null,
   onClearSelectedBankPFId,
-  onDeleteBankPF
+  onDeleteBankPF,
+  userInfo
 }: BankPFModuleProps) {
+  // 🔐 Check permissions
+  const canCreate = userInfo?.permissions.canCreate ?? true; // Default to true for backward compatibility
+  const canEdit = userInfo?.permissions.canEdit ?? true;
+  const canDelete = userInfo?.permissions.canDelete ?? true;
+
   const [selectedRecord, setSelectedRecord] = useState<BankPF | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   
@@ -444,10 +452,12 @@ export const BankPFModule = React.memo(function BankPFModule({
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Banka / PF - Ödeme Kuruluşları</h2>
           <p className="text-xs sm:text-sm font-medium text-gray-600">Banka ve ödeme kuruluşu kayıtlarını yönetin</p>
         </div>
-        <Button size="default" onClick={handleCreateNew} className="flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-shadow w-full sm:w-auto">
-          <Plus size={18} />
-          <span>Yeni Kayıt</span>
-        </Button>
+        {canCreate && (
+          <Button size="default" onClick={handleCreateNew} className="flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-shadow w-full sm:w-auto">
+            <Plus size={18} />
+            <span>Yeni Kayıt</span>
+          </Button>
+        )}
       </div>
 
       <BankPFList

@@ -1,10 +1,16 @@
 /**
- * Vercel Edge Middleware - Basic Authentication
+ * Vercel Edge Middleware - Multi-User Basic Authentication
  * Pure Web Standards API (works with Vite/React)
  * 
- * Environment Variables:
+ * Users:
+ * 👤 admin / Qaz1071 (Full Access - CRUD)
+ * 👁️ viewer / Viewer2025! (Read-Only)
+ * 
+ * Environment Variables (optional overrides):
  * - BASIC_AUTH_USER (default: admin)
  * - BASIC_AUTH_PASSWORD (default: Qaz1071)
+ * - BASIC_AUTH_VIEWER_USER (default: viewer)
+ * - BASIC_AUTH_VIEWER_PASSWORD (default: Viewer2025!)
  */
 
 export const config = {
@@ -25,9 +31,19 @@ export default function middleware(request) {
 
   const authHeader = request.headers.get('authorization');
   
-  // Credentials from environment (Vercel will inject these)
-  const BASIC_USER = process.env.BASIC_AUTH_USER || 'admin';
-  const BASIC_PASS = process.env.BASIC_AUTH_PASSWORD || 'Qaz1071';
+  // Define users (environment variables or defaults)
+  const users = [
+    {
+      username: process.env.BASIC_AUTH_USER || 'admin',
+      password: process.env.BASIC_AUTH_PASSWORD || 'Qaz1071',
+      role: 'admin'
+    },
+    {
+      username: process.env.BASIC_AUTH_VIEWER_USER || 'viewer',
+      password: process.env.BASIC_AUTH_VIEWER_PASSWORD || 'Viewer2025!',
+      role: 'viewer'
+    }
+  ];
 
   if (authHeader) {
     try {
@@ -36,10 +52,18 @@ export default function middleware(request) {
       const credentials = atob(base64Credentials);
       const [username, password] = credentials.split(':');
 
-      // Verify credentials
-      if (username === BASIC_USER && password === BASIC_PASS) {
-        // ✅ Authentication successful
-        return;
+      // Find matching user
+      const user = users.find(u => u.username === username && u.password === password);
+
+      if (user) {
+        // ✅ Authentication successful - Inject role into response
+        const response = new Response(null, {
+          headers: {
+            'X-User-Role': user.role,
+            'X-Username': user.username
+          }
+        });
+        return response;
       }
     } catch (e) {
       // Invalid auth header format

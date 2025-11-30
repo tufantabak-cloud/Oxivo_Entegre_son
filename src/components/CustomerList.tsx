@@ -14,6 +14,7 @@ import { Checkbox } from './ui/checkbox';
 import { BatchOperationsDialog, BatchOperation, BatchOperationResult } from './BatchOperationsDialog';
 import { PaginationControls } from './PaginationControls';
 import { usePagination } from '../hooks/usePagination';
+import type { UserInfo } from '../hooks/useUserRole'; // 🔐 User role types
 // XLSX import - ES6 module format (v3.0.8 - fixed require issue)
 import * as XLSX from 'xlsx';
 import { matchDomain } from '../utils/domainMatching';
@@ -71,6 +72,7 @@ interface OK {
 }
 
 interface CustomerListProps {
+  userInfo?: UserInfo; // 🔐 User permissions
   customers: Customer[];
   onSelectCustomer: (customer: Customer) => void;
   onUpdateCustomer?: (customer: Customer) => void;
@@ -108,7 +110,11 @@ const CUSTOMER_COLUMN_CONFIGS: ColumnConfig[] = [
 ];
 
 // ⚡ PERFORMANCE: React.memo prevents re-renders when props haven't changed
-export const CustomerList = React.memo(function CustomerList({ customers, onSelectCustomer, onUpdateCustomer, onUpdateCustomers, payterProducts = [], bankPFRecords = [], salesReps = [], banks = [], epkList = [], okList = [] }: CustomerListProps) {
+export const CustomerList = React.memo(function CustomerList({ userInfo, customers, onSelectCustomer, onUpdateCustomer, onUpdateCustomers, payterProducts = [], bankPFRecords = [], salesReps = [], banks = [], epkList = [], okList = [] }: CustomerListProps) {
+  // 🔐 Check permissions
+  const canEdit = userInfo?.permissions.canEdit ?? true; // Default to true for backward compatibility
+  const canDelete = userInfo?.permissions.canDelete ?? true;
+
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [cihazFilter, setCihazFilter] = useState<string>('all');
@@ -150,7 +156,7 @@ export const CustomerList = React.memo(function CustomerList({ customers, onSele
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   
   const getContextMenuItems = useCallback((customer: Customer): ContextMenuItem[] => {
-    return [
+    const items: ContextMenuItem[] = [
       {
         label: 'Yeni Sekmede Aç',
         icon: <ExternalLink size={16} />,
@@ -160,13 +166,20 @@ export const CustomerList = React.memo(function CustomerList({ customers, onSele
           toast.success(`${customer.cariAdi} yeni sekmede açıldı`);
         },
       },
-      {
+    ];
+
+    // Only show "Edit" option if user has edit permission
+    if (canEdit) {
+      items.push({
         label: 'Düzenle',
         icon: <Edit size={16} />,
         action: () => {
           onSelectCustomer(customer);
         },
-      },
+      });
+    }
+
+    items.push(
       {
         label: 'ID Kopyala',
         icon: <Copy size={16} />,
@@ -208,8 +221,10 @@ export const CustomerList = React.memo(function CustomerList({ customers, onSele
           }
         },
       },
-    ];
-  }, [onSelectCustomer]);
+    );
+
+    return items;
+  }, [onSelectCustomer, canEdit]);
 
   // Domain bazlı eşleşen cihaz sayısı (matchDomain utility kullanarak - ignoreMainDomain desteği ile)
   const getDomainMatchCount = useCallback((customer: Customer): number => {
@@ -953,7 +968,7 @@ export const CustomerList = React.memo(function CustomerList({ customers, onSele
           
           {/* Action Buttons - Responsive Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-            {selectedCustomerIds.length > 0 && (
+            {selectedCustomerIds.length > 0 && canEdit && (
               <Button
                 variant="default"
                 size="sm"
