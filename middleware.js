@@ -2,15 +2,25 @@
  * Vercel Edge Middleware - Multi-User Basic Authentication
  * Pure Web Standards API (works with Vite/React)
  * 
- * Users:
+ * 🔐 SECURITY BEST PRACTICE:
+ * Set these environment variables in Vercel Dashboard to override defaults:
+ * 
+ * Vercel Dashboard → Settings → Environment Variables:
+ * ┌─────────────────────────────────┬───────────────────┬──────────────────────────┐
+ * │ Variable Name                   │ Value (Example)   │ Environment              │
+ * ├─────────────────────────────────┼───────────────────┼──────────────────────────┤
+ * │ BASIC_AUTH_USER                 │ admin             │ Production, Preview, Dev │
+ * │ BASIC_AUTH_PASSWORD             │ Qaz1071           │ Production, Preview, Dev │
+ * │ BASIC_AUTH_VIEWER_USER          │ viewer            │ Production, Preview, Dev │
+ * │ BASIC_AUTH_VIEWER_PASSWORD      │ Viewer2025!       │ Production, Preview, Dev │
+ * └─────────────────────────────────┴───────────────────┴──────────────────────────┘
+ * 
+ * 🎯 DEFAULT USERS (if no environment variables set):
  * 👤 admin / Qaz1071 (Full Access - CRUD)
  * 👁️ viewer / Viewer2025! (Read-Only)
  * 
- * Environment Variables (optional overrides):
- * - BASIC_AUTH_USER (default: admin)
- * - BASIC_AUTH_PASSWORD (default: Qaz1071)
- * - BASIC_AUTH_VIEWER_USER (default: viewer)
- * - BASIC_AUTH_VIEWER_PASSWORD (default: Viewer2025!)
+ * ⚠️ WARNING: Default passwords are for development only!
+ *    Set environment variables in production for security.
  */
 
 export const config = {
@@ -31,7 +41,7 @@ export default function middleware(request) {
 
   const authHeader = request.headers.get('authorization');
   
-  // Define users (environment variables or defaults)
+  // 🔐 Define users from environment variables (fallback to defaults for development)
   const users = [
     {
       username: process.env.BASIC_AUTH_USER || 'admin',
