@@ -66,14 +66,8 @@ export default function middleware(request) {
       const user = users.find(u => u.username === username && u.password === password);
 
       if (user) {
-        // ✅ Authentication successful - Inject role into response
-        const response = new Response(null, {
-          headers: {
-            'X-User-Role': user.role,
-            'X-Username': user.username
-          }
-        });
-        return response;
+        // ✅ Authentication successful - allow request to proceed
+        return;
       }
     } catch (e) {
       // Invalid auth header format

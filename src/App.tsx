@@ -236,7 +236,7 @@ export default function App() {
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // 🔐 USER ROLE MANAGEMENT (Admin vs Viewer)
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  const { userInfo, hasPermission, isAdmin, isViewer } = useUserRole();
+  const { userInfo, isInitialized, showPrompt, selectUser, hasPermission, isAdmin, isViewer } = useUserRole();
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // URL ROUTING (Context Menu & Deep Linking Support)
@@ -3153,6 +3153,42 @@ export default function App() {
       )}
       
       <Toaster position="top-right" />
+      
+      {/* 🔐 User Selection Prompt */}
+      {showPrompt && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-8 max-w-md mx-4 shadow-2xl">
+            <h2 className="mb-4 text-center">Hangi kullanıcı ile giriş yaptınız?</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6 text-center">
+              Yetkilerinizi belirlemek için kullanıcı adınızı seçin
+            </p>
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={() => selectUser('admin')}
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                👤 Admin
+              </button>
+              <button
+                onClick={() => selectUser('viewer')}
+                className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                👁️ Viewer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* 🔐 User Initialization Loading Overlay */}
+      {!isInitialized && !showPrompt && (
+        <div className="fixed inset-0 bg-white dark:bg-gray-900 z-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400">Kullanıcı yetkileri kontrol ediliyor...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
