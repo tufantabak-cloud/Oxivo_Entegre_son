@@ -1,12 +1,21 @@
-# 🔒 Basic Authentication Kurulum Rehberi
+# 🔒 Multi-User Basic Authentication Kurulum Rehberi
 
-Bu uygulama **Basic HTTP Authentication** ile korunmaktadır.
+Bu uygulama **Multi-User Basic HTTP Authentication** ile korunmaktadır.
 
-## 📋 Default Credentials
+## 📋 Default Kullanıcılar
 
+### 👤 Admin Kullanıcısı (Tam Yetki)
 ```
 Kullanıcı Adı: admin
 Şifre: Qaz1071
+Yetkiler: Tam CRUD (Create, Read, Update, Delete)
+```
+
+### 👁️ Viewer Kullanıcısı (Sadece Görüntüleme)
+```
+Kullanıcı Adı: viewer
+Şifre: Viewer2025!
+Yetkiler: Sadece görüntüleme (Read-Only)
 ```
 
 ⚠️ **ÖNEMLİ:** Bu şifreler sadece başlangıç içindir. **MUTLAKA DEĞİŞTİRİN!**
