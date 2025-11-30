@@ -191,7 +191,7 @@ function extractLeadingNumber(text: string | undefined): number {
 //         - Liste görünümünde manuel değer badge'i eklendi
 // v1.0.8 - Hakediş kayıtlarına toplam değerler eklendi (totalIslemHacmi, totalPFPay, totalOxivoPay)
 //         - Rapor performansı iyileştirildi (önbelleklenmiş değerler kullanılıyor)
-//         - Sabit Komisyon hesaplama hatası düzeltildi (işlem hacmi × komisyon oranı)
+//         - Sabit Komisyon hesaplama hatası d��zeltildi (işlem hacmi × komisyon oranı)
 // v1.0.7 - Rapor modülüne "Müşteriler" sayfası eklendi (PF bazlı, dönem bazlı, detaylı analiz)
 // v1.0.6 - Hakediş formuna PF/OXİVO İşlem Hacmi tablosu eklendi (manuel giriş + otomatik fark hesaplama)
 // v1.0.5 - TABELA gruplarına aktif/pasif durumu eklendi - Hakediş sadece aktif gruplar için
@@ -2812,63 +2812,67 @@ export default function App() {
                   <Search size={16} />
                   Verileri Kontrol Et
                 </Button>
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors"
-                  onClick={() => {
-                    if (confirm('⚠️ TÜM VERİLER SİLİNECEK!\n\nOnce export aldığınızdan emin olun.\n\nDevam etmek istiyor musunuz?')) {
-                      const keys = ['customers', 'payterProducts', 'bankPFRecords', 
-                                    'hesapKalemleri', 'sabitKomisyonlar', 'ekGelirler',
-                                    'jobTitles', 'mccList', 'banks', 'epkList', 'okList', 
-                                    'partnerships', 'sharings', 'kartProgramlar', 'salesReps'];
-                      keys.forEach(key => localStorage.removeItem(key));
-                      toast.success('Tüm veriler temizlendi. Sayfa yenileniyor...');
-                      setTimeout(() => window.location.reload(), 1000);
-                    }
-                  }}
-                >
-                  <Trash2 size={16} />
-                  Tüm Verileri Temizle
-                </Button>
+                {hasPermission('canDelete') && (
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors"
+                    onClick={() => {
+                      if (confirm('⚠️ TÜM VERİLER SİLİNECEK!\n\nOnce export aldığınızdan emin olun.\n\nDevam etmek istiyor musunuz?')) {
+                        const keys = ['customers', 'payterProducts', 'bankPFRecords', 
+                                      'hesapKalemleri', 'sabitKomisyonlar', 'ekGelirler',
+                                      'jobTitles', 'mccList', 'banks', 'epkList', 'okList', 
+                                      'partnerships', 'sharings', 'kartProgramlar', 'salesReps'];
+                        keys.forEach(key => localStorage.removeItem(key));
+                        toast.success('Tüm veriler temizlendi. Sayfa yenileniyor...');
+                        setTimeout(() => window.location.reload(), 1000);
+                      }
+                    }}
+                  >
+                    <Trash2 size={16} />
+                    Tüm Verileri Temizle
+                  </Button>
+                )}
               </div>
             </div>
 
-            {/* Excel Data Manager */}
-            <Suspense fallback={<div className="text-center py-6 text-gray-500">Excel yönetici yükleniyor...</div>}>
-              <ExcelDataManager
-              customers={customers}
-              onCustomersChange={setCustomers}
-              payterProducts={payterProducts}
-              onPayterProductsChange={setPayterProducts}
-              bankPFRecords={bankPFRecords}
-              onBankPFRecordsChange={setBankPFRecords}
-              hesapKalemleri={hesapKalemleri}
-              onHesapKalemleriChange={setHesapKalemleri}
-              sabitKomisyonlar={sabitKomisyonlar}
-              onSabitKomisyonlarChange={setSabitKomisyonlar}
-              ekGelirler={ekGelirler}
-              onEkGelirlerChange={setEkGelirler}
-              jobTitles={jobTitles}
-              onJobTitlesChange={setJobTitles}
-              mccList={mccList}
-              onMCCListChange={setMCCList}
-              banks={banks}
-              onBanksChange={setBanks}
-              epkList={epkList}
-              onEPKListChange={setEPKList}
-              okList={okList}
-              onOKListChange={setOKList}
-              partnerships={partnerships}
-              onPartnershipsChange={setPartnerships}
-              sharings={sharings}
-              onSharingsChange={setSharings}
-              kartProgramlar={kartProgramlar}
-              onKartProgramlarChange={setKartProgramlar}
-              salesReps={salesReps}
-              onSalesRepsChange={setSalesReps}
-              />
-            </Suspense>
+            {/* Excel Data Manager - Only for users with create permission */}
+            {hasPermission('canCreate') && (
+              <Suspense fallback={<div className="text-center py-6 text-gray-500">Excel yönetici yükleniyor...</div>}>
+                <ExcelDataManager
+                customers={customers}
+                onCustomersChange={setCustomers}
+                payterProducts={payterProducts}
+                onPayterProductsChange={setPayterProducts}
+                bankPFRecords={bankPFRecords}
+                onBankPFRecordsChange={setBankPFRecords}
+                hesapKalemleri={hesapKalemleri}
+                onHesapKalemleriChange={setHesapKalemleri}
+                sabitKomisyonlar={sabitKomisyonlar}
+                onSabitKomisyonlarChange={setSabitKomisyonlar}
+                ekGelirler={ekGelirler}
+                onEkGelirlerChange={setEkGelirler}
+                jobTitles={jobTitles}
+                onJobTitlesChange={setJobTitles}
+                mccList={mccList}
+                onMCCListChange={setMCCList}
+                banks={banks}
+                onBanksChange={setBanks}
+                epkList={epkList}
+                onEPKListChange={setEPKList}
+                okList={okList}
+                onOKListChange={setOKList}
+                partnerships={partnerships}
+                onPartnershipsChange={setPartnerships}
+                sharings={sharings}
+                onSharingsChange={setSharings}
+                kartProgramlar={kartProgramlar}
+                onKartProgramlarChange={setKartProgramlar}
+                salesReps={salesReps}
+                onSalesRepsChange={setSalesReps}
+                />
+              </Suspense>
+            )}
 
             {/* YENİ DASHBOARD - Özelleştirilebilir Widget Sistemi */}
             <Suspense fallback={<ModuleLoadingFallback />}>

@@ -1,4 +1,4 @@
-// Top 6 Müşteriler Widget'ı
+// Top 10 Müşteriler Widget'ı
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
@@ -105,7 +105,7 @@ export function TopCustomersWidget({ customers, payterProducts }: TopCustomersWi
   // Gelire göre sırala
   const topByRevenue = [...rankings]
     .sort((a, b) => b.revenue - a.revenue)
-    .slice(0, 6);
+    .slice(0, 10); // ✅ Top 6'dan Top 10'a güncellendi
 
   // Toplam istatistikler
   const totalDevices = rankings.reduce((sum, r) => sum + r.deviceCount, 0);
@@ -157,7 +157,7 @@ export function TopCustomersWidget({ customers, payterProducts }: TopCustomersWi
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Trophy className="text-amber-600" size={20} />
-            Top 6 Müşteriler
+            Top 10 Müşteriler
           </div>
           <Button
             variant="ghost"
@@ -193,13 +193,13 @@ export function TopCustomersWidget({ customers, payterProducts }: TopCustomersWi
             </div>
           </div>
 
-          {/* Cihaz Sayısına Göre Top 6 - Responsive Grid */}
+          {/* Cihaz Sayısına Göre Top 10 - Responsive Grid */}
           <div>
             <div className="flex items-center justify-between mb-3">
               <h4 className="text-sm font-semibold text-gray-700">
-                En Çok Cihaza Sahip 6 Müşteri
+                En Çok Cihaza Sahip 10 Müşteri
               </h4>
-              {topByDevices.length > 6 && (
+              {topByDevices.length > 10 && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -218,7 +218,7 @@ export function TopCustomersWidget({ customers, payterProducts }: TopCustomersWi
               </div>
             ) : (
               <div className="space-y-2">
-                {topByDevices.slice(0, 6).map((customer, index) => (
+                {topByDevices.slice(0, 10).map((customer, index) => (
                   <div key={customer.id} className="p-3 bg-white border rounded-lg">
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3 flex-1 min-w-0">

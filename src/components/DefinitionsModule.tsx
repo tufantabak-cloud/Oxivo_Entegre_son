@@ -12,6 +12,7 @@ import { SalesRepresentativesTab, SalesRepresentative } from './SalesRepresentat
 import { SuspensionReasonsTab } from './SuspensionReasonsTab';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { SupabaseDataImporter } from './SupabaseDataImporter';
+import type { UserInfo } from '../hooks/useUserRole'; // 🔐 User role types
 
 export interface JobTitle {
   id: string;
@@ -543,6 +544,7 @@ export const defaultKartProgramlar: KartProgram[] = [
 ];
 
 interface DefinitionsModuleProps {
+  userInfo?: UserInfo; // 🔐 User permissions
   jobTitles: JobTitle[];
   onJobTitlesChange: (titles: JobTitle[]) => void;
   mccList: MCC[];
@@ -573,6 +575,7 @@ interface DefinitionsModuleProps {
 
 // PERFORMANCE: React.memo prevents unnecessary re-renders (critical for 22 props!)
 export const DefinitionsModule = React.memo(function DefinitionsModule({ 
+  userInfo, // 🔐 User permissions
   jobTitles, 
   onJobTitlesChange,
   mccList,
