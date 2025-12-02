@@ -136,9 +136,10 @@ export function PayterProductTab({ products, onProductsChange, customers = [] }:
   // Domain değiştirme state'leri
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
   const [isDomainChangeDialogOpen, setIsDomainChangeDialogOpen] = useState(false);
-  const [selectedDomain, setSelectedDomain] = useState<string>('');
+  const [selectedDomain, setSelectedDomain] = useState<string>(''); // Yeni domain (manuel input)
   const [isDomainChanging, setIsDomainChanging] = useState(false);
   const [singleProductIdForDomainChange, setSingleProductIdForDomainChange] = useState<string | null>(null);
+  const [currentDomain, setCurrentDomain] = useState<string>(''); // Mevcut domain'i göstermek için
 
   // Model bazlı istatistikler
   const modelStats = useMemo(() => {
@@ -597,12 +598,22 @@ export function PayterProductTab({ products, onProductsChange, customers = [] }:
 
   // Toplu domain değiştir
   const handleBulkDomainChange = () => {
-    setIsDomainChangeDialogOpen(true);
+    // Seçili ürünlerden mevcut domain'i al (hepsi aynı değilse boş)
+    const selectedProducts = products.filter(p => selectedProductIds.has(p.id));
+    const domains = new Set(selectedProducts.map(p => p.domain || ''));
+    const sameDomain = domains.size === 1 ? Array.from(domains)[0] : '';
+    
+    setCurrentDomain(sameDomain);
+    setSelectedDomain('');
     setSingleProductIdForDomainChange(null);
+    setIsDomainChangeDialogOpen(true);
   };
 
   // Tekil domain değiştir
   const handleSingleDomainChange = (productId: string) => {
+    const product = products.find(p => p.id === productId);
+    setCurrentDomain(product?.domain || '');
+    setSelectedDomain('');
     setSingleProductIdForDomainChange(productId);
     setSelectedProductIds(new Set());
     setIsDomainChangeDialogOpen(true);
@@ -610,13 +621,14 @@ export function PayterProductTab({ products, onProductsChange, customers = [] }:
 
   // Domain değiştirme işlemleri
   const handleDomainChange = () => {
-    if (selectedDomain) {
+    const newDomain = selectedDomain.trim();
+    if (newDomain) {
       setIsDomainChanging(true);
       const updatedProducts = products.map(product => {
         if (selectedProductIds.has(product.id) || product.id === singleProductIdForDomainChange) {
           return {
             ...product,
-            domain: selectedDomain
+            domain: newDomain
           };
         }
         return product;
@@ -625,7 +637,7 @@ export function PayterProductTab({ products, onProductsChange, customers = [] }:
       // ✅ FIX: Önce localStorage'a kaydet, sonra state'i güncelle
       try {
         localStorage.setItem('payterProducts', JSON.stringify(updatedProducts));
-        console.log(`✅ Domain değiştirildi ve localStorage güncellendi`);
+        console.log(`✅ Domain değiştirildi: "${currentDomain}" → "${newDomain}"`);
       } catch (error) {
         console.error('❌ localStorage kaydetme hatası:', error);
       }
@@ -633,13 +645,14 @@ export function PayterProductTab({ products, onProductsChange, customers = [] }:
       onProductsChange(updatedProducts);
       
       const count = selectedProductIds.size > 0 ? selectedProductIds.size : 1;
-      toast.success(`${count} ürünün domain'i değiştirildi`);
+      toast.success(`${count} ürünün domain'i "${newDomain}" olarak değiştirildi`);
       
       setIsDomainChangeDialogOpen(false);
       setIsDomainChanging(false);
       setSelectedProductIds(new Set());
       setSingleProductIdForDomainChange(null);
       setSelectedDomain('');
+      setCurrentDomain('');
     }
   };
 
@@ -1383,25 +1396,29 @@ export function PayterProductTab({ products, onProductsChange, customers = [] }:
           </DialogHeader>
 
           <div className="space-y-4">
-            {/* Domain Seçimi */}
+            {/* Mevcut Domain (Read-only) */}
             <div className="space-y-2">
-              <Label htmlFor="domain-select">Yeni Domain</Label>
-              <Select
+              <Label htmlFor="current-domain">Mevcut Domain</Label>
+              <Input
+                id="current-domain"
+                type="text"
+                value={currentDomain || 'Boş'}
+                disabled
+                className="bg-gray-50 text-gray-600"
+              />
+            </div>
+
+            {/* Yeni Domain (Manuel Input) */}
+            <div className="space-y-2">
+              <Label htmlFor="new-domain">Yeni Domain</Label>
+              <Input
+                id="new-domain"
+                type="text"
                 value={selectedDomain}
-                onValueChange={setSelectedDomain}
+                onChange={(e) => setSelectedDomain(e.target.value)}
+                placeholder="Yeni domain girin..."
                 disabled={isDomainChanging}
-              >
-                <SelectTrigger id="domain-select">
-                  <SelectValue placeholder="Domain seçin..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {uniqueDomains.map(domain => (
-                    <SelectItem key={domain} value={domain}>
-                      {domain}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              />
             </div>
 
             {isDomainChanging && (
@@ -1420,7 +1437,7 @@ export function PayterProductTab({ products, onProductsChange, customers = [] }:
             <Button
               variant="default"
               onClick={handleDomainChange}
-              disabled={isDomainChanging || !selectedDomain}
+              disabled={isDomainChanging || !selectedDomain.trim()}
             >
               {isDomainChanging ? 'Değiştiriliyor...' : 'Değiştir'}
             </Button>
