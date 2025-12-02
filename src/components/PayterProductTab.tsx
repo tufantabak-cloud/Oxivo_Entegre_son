@@ -8,12 +8,15 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Alert, AlertDescription } from './ui/alert';
 import { Progress } from './ui/progress';
 import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
-import { Upload, FileSpreadsheet, Download, Search, Trash2, CheckCircle, XCircle, AlertCircle, Monitor } from 'lucide-react';
+import { Checkbox } from './ui/checkbox';
+import { Label } from './ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Upload, FileSpreadsheet, Download, Search, Trash2, CheckCircle, XCircle, AlertCircle, Monitor, Globe } from 'lucide-react';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { ColumnVisibilityDropdown, ColumnConfig } from './ColumnVisibilityDropdown';
 import { Customer } from './CustomerModule';
-import type { UserInfo } from '../hooks/useUserRole'; // 🔐 User role types
+import { productApi } from '../utils/supabaseClient';
 
 export interface PayterProduct {
   id: string;
@@ -70,7 +73,6 @@ function checkProductDuplicate(
 }
 
 interface PayterProductTabProps {
-  userInfo?: UserInfo; // 🔐 User permissions
   products: PayterProduct[];
   onProductsChange: (products: PayterProduct[]) => void;
   customers?: Customer[];
@@ -120,11 +122,7 @@ const COLUMN_CONFIGS: ColumnConfig[] = [
   { key: 'ptid', label: 'PTID', defaultVisible: false },
 ];
 
-export function PayterProductTab({ userInfo, products, onProductsChange, customers = [] }: PayterProductTabProps) {
-  // 🔐 Check permissions
-  const canCreate = userInfo?.permissions.canCreate ?? true;
-  const canDelete = userInfo?.permissions.canDelete ?? true;
-  
+export function PayterProductTab({ products, onProductsChange, customers = [] }: PayterProductTabProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -134,6 +132,13 @@ export function PayterProductTab({ userInfo, products, onProductsChange, custome
   const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50; // Sayfa başına 50 ürün (performans için)
+  
+  // Domain değiştirme state'leri
+  const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
+  const [isDomainChangeDialogOpen, setIsDomainChangeDialogOpen] = useState(false);
+  const [selectedDomain, setSelectedDomain] = useState<string>('');
+  const [isDomainChanging, setIsDomainChanging] = useState(false);
+  const [singleProductIdForDomainChange, setSingleProductIdForDomainChange] = useState<string | null>(null);
 
   // Model bazlı istatistikler
   const modelStats = useMemo(() => {
@@ -447,6 +452,25 @@ export function PayterProductTab({ userInfo, products, onProductsChange, custome
     return map;
   }, [customers, getAllDomainNames, normalizeDomain]);
 
+  // Unique domain listesi (Select için)
+  const uniqueDomains = useMemo(() => {
+    const domains = new Set<string>();
+    customers.forEach(customer => {
+      const mainDomain = customer.domain || customer.guncelMyPayterDomain;
+      if (mainDomain) {
+        domains.add(mainDomain);
+      }
+      // Alt domainleri de ekle
+      if (customer.domainHierarchy && customer.domainHierarchy.length > 0) {
+        getAllDomainNames(customer.domainHierarchy).forEach(d => {
+          // Normalize edilmiş hallerini orjinal forma çeviremeyeceğimiz için sadece mainDomain kullanıyoruz
+          // Bu yeterli çünkü domain seçimi ana domainler üzerinden yapılıyor
+        });
+      }
+    });
+    return Array.from(domains).sort();
+  }, [customers, getAllDomainNames]);
+
   // Arama filtresi (useMemo ile optimize edilmiş)
   const filteredProducts = useMemo(() => {
     if (!searchTerm.trim()) {
@@ -550,6 +574,75 @@ export function PayterProductTab({ userInfo, products, onProductsChange, custome
     setColumnVisibility(visibility);
   }, []);
 
+  // Checkbox seçim fonksiyonları
+  const handleSelectAll = useCallback((checked: boolean) => {
+    if (checked) {
+      setSelectedProductIds(new Set(paginatedProducts.map(p => p.id)));
+    } else {
+      setSelectedProductIds(new Set());
+    }
+  }, [paginatedProducts]);
+
+  const handleSelectProduct = useCallback((productId: string, checked: boolean) => {
+    setSelectedProductIds(prev => {
+      const newSet = new Set(prev);
+      if (checked) {
+        newSet.add(productId);
+      } else {
+        newSet.delete(productId);
+      }
+      return newSet;
+    });
+  }, []);
+
+  // Toplu domain değiştir
+  const handleBulkDomainChange = () => {
+    setIsDomainChangeDialogOpen(true);
+    setSingleProductIdForDomainChange(null);
+  };
+
+  // Tekil domain değiştir
+  const handleSingleDomainChange = (productId: string) => {
+    setSingleProductIdForDomainChange(productId);
+    setSelectedProductIds(new Set());
+    setIsDomainChangeDialogOpen(true);
+  };
+
+  // Domain değiştirme işlemleri
+  const handleDomainChange = () => {
+    if (selectedDomain) {
+      setIsDomainChanging(true);
+      const updatedProducts = products.map(product => {
+        if (selectedProductIds.has(product.id) || product.id === singleProductIdForDomainChange) {
+          return {
+            ...product,
+            domain: selectedDomain
+          };
+        }
+        return product;
+      });
+
+      // ✅ FIX: Önce localStorage'a kaydet, sonra state'i güncelle
+      try {
+        localStorage.setItem('payterProducts', JSON.stringify(updatedProducts));
+        console.log(`✅ Domain değiştirildi ve localStorage güncellendi`);
+      } catch (error) {
+        console.error('❌ localStorage kaydetme hatası:', error);
+      }
+      
+      onProductsChange(updatedProducts);
+      
+      const count = selectedProductIds.size > 0 ? selectedProductIds.size : 1;
+      toast.success(`${count} ürünün domain'i değiştirildi`);
+      
+      setIsDomainChangeDialogOpen(false);
+      setIsDomainChanging(false);
+      setSelectedProductIds(new Set());
+      setSingleProductIdForDomainChange(null);
+      setSelectedDomain('');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -572,17 +665,15 @@ export function PayterProductTab({ userInfo, products, onProductsChange, custome
                 <Download size={14} className="mr-1 sm:mr-2" />
                 <span className="text-xs sm:text-sm">Excel Şablon İndir</span>
               </Button>
-              {canCreate && (
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={() => setIsImportDialogOpen(true)}
-                  className="flex-1 sm:flex-initial"
-                >
-                  <Upload size={14} className="mr-1 sm:mr-2" />
-                  <span className="text-xs sm:text-sm">Excel'den Yükle</span>
-                </Button>
-              )}
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => setIsImportDialogOpen(true)}
+                className="flex-1 sm:flex-initial"
+              >
+                <Upload size={14} className="mr-1 sm:mr-2" />
+                <span className="text-xs sm:text-sm">Excel'den Yükle</span>
+              </Button>
             </div>
           </div>
         </CardHeader>
@@ -789,7 +880,13 @@ export function PayterProductTab({ userInfo, products, onProductsChange, custome
               storageKey="payterProducts"
               onVisibilityChange={handleVisibilityChange}
             />
-            {canDelete && products.length > 0 && (
+            {selectedProductIds.size > 0 && (
+              <Button variant="default" size="sm" onClick={handleBulkDomainChange}>
+                <Globe size={16} className="mr-2" />
+                Domain Değiştir ({selectedProductIds.size})
+              </Button>
+            )}
+            {products.length > 0 && (
               <Button variant="outline" size="sm" onClick={handleClearAll}>
                 <Trash2 size={16} className="mr-2" />
                 Tümünü Temizle
@@ -872,6 +969,12 @@ export function PayterProductTab({ userInfo, products, onProductsChange, custome
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12">
+                      <Checkbox
+                        checked={selectedProductIds.size === paginatedProducts.length && paginatedProducts.length > 0}
+                        onCheckedChange={handleSelectAll}
+                      />
+                    </TableHead>
                     {columnVisibility['serialNumber'] !== false && <TableHead>Serial Number</TableHead>}
                     {columnVisibility['name'] !== false && <TableHead>Name</TableHead>}
                     {columnVisibility['tid'] !== false && <TableHead>TID</TableHead>}
@@ -893,6 +996,12 @@ export function PayterProductTab({ userInfo, products, onProductsChange, custome
                 <TableBody>
                   {paginatedProducts.map((product) => (
                     <TableRow key={product.id}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedProductIds.has(product.id)}
+                          onCheckedChange={(checked) => handleSelectProduct(product.id, !!checked)}
+                        />
+                      </TableCell>
                       {columnVisibility['serialNumber'] !== false && (
                         <TableCell>
                           <span className="font-mono text-sm">{product.serialNumber}</span>
@@ -1049,7 +1158,15 @@ export function PayterProductTab({ userInfo, products, onProductsChange, custome
                         </TableCell>
                       )}
                       <TableCell className="text-center">
-                        {canDelete && (
+                        <div className="flex items-center gap-2 justify-center">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleSingleDomainChange(product.id)}
+                            title="Domain Değiştir"
+                          >
+                            <Globe size={16} className="text-blue-600" />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -1057,7 +1174,7 @@ export function PayterProductTab({ userInfo, products, onProductsChange, custome
                           >
                             <Trash2 size={16} className="text-red-600" />
                           </Button>
-                        )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -1247,6 +1364,65 @@ export function PayterProductTab({ userInfo, products, onProductsChange, custome
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsImportDialogOpen(false)}>
               Kapat
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Domain Değiştirme Dialog */}
+      <Dialog open={isDomainChangeDialogOpen} onOpenChange={setIsDomainChangeDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Domain Değiştirme</DialogTitle>
+            <DialogDescription>
+              {singleProductIdForDomainChange 
+                ? `"${products.find(p => p.id === singleProductIdForDomainChange)?.name}" ürününün domain'ini değiştirin`
+                : `${selectedProductIds.size} ürünün domain'ini değiştirin`
+              }
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Domain Seçimi */}
+            <div className="space-y-2">
+              <Label htmlFor="domain-select">Yeni Domain</Label>
+              <Select
+                value={selectedDomain}
+                onValueChange={setSelectedDomain}
+                disabled={isDomainChanging}
+              >
+                <SelectTrigger id="domain-select">
+                  <SelectValue placeholder="Domain seçin..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {uniqueDomains.map(domain => (
+                    <SelectItem key={domain} value={domain}>
+                      {domain}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {isDomainChanging && (
+              <Progress value={100} className="w-full" />
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDomainChangeDialogOpen(false)}
+              disabled={isDomainChanging}
+            >
+              İptal
+            </Button>
+            <Button
+              variant="default"
+              onClick={handleDomainChange}
+              disabled={isDomainChanging || !selectedDomain}
+            >
+              {isDomainChanging ? 'Değiştiriliyor...' : 'Değiştir'}
             </Button>
           </DialogFooter>
         </DialogContent>
