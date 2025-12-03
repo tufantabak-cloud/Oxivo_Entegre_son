@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Textarea } from './ui/textarea';
 import { Checkbox } from './ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+// Tooltip removed - import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { TabelaRecord, TabelaGroup } from './TabelaTab';
 import { HakedisRecord } from './BankPFModule';
 import { Calendar, Download, Printer, Calculator, Plus, Eye, Edit, Trash2, Save, Archive, FileText, Columns3, Info, HelpCircle } from 'lucide-react';
@@ -959,21 +959,12 @@ export function HakedisTab({
                               const hasManualValues = (hakedis as any).manualAnaTabelaIslemHacmi || (hakedis as any).manualAnaTabelaOxivoTotal || (hakedis as any).manualEkGelirOxivoTotal;
                               if (hasManualValues) {
                                 return (
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <span className="inline-block">
-                                        <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300 text-xs cursor-help">
-                                          <Info size={10} className="mr-1" />
-                                          Manuel Değer
-                                        </Badge>
-                                      </span>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <div className="text-xs">
-                                        Bu hakediş manuel değerler içeriyor
-                                      </div>
-                                    </TooltipContent>
-                                  </Tooltip>
+                                  <span className="inline-block">
+                                    <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300 text-xs">
+                                      <Info size={10} className="mr-1" />
+                                      Manuel Değer
+                                    </Badge>
+                                  </span>
                                 );
                               }
                               return null;
@@ -1528,30 +1519,16 @@ export function HakedisTab({
                 </Badge>
                 
                 {/* Eksi Değer Filtresi */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <label className="flex items-center gap-2 text-sm cursor-pointer bg-white border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-50 transition-colors">
-                      <Checkbox 
-                        checked={includeNegativeValues}
-                        onCheckedChange={(checked) => setIncludeNegativeValues(checked as boolean)}
-                      />
-                      <span className="text-xs whitespace-nowrap">
-                        Eksi (-) değerleri toplama dahil et
-                      </span>
-                      <Info size={14} className="text-gray-400" />
-                    </label>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="max-w-xs">
-                    <p className="text-xs">
-                      <strong>PF Payı</strong> ve <strong>OXİVO Payı</strong> hesaplamalarında eksi (-) değer oluşan satırları 
-                      <strong> ANA TABELA TOPLAM</strong>'a dahil edip etmeyeceğinizi seçin.
-                    </p>
-                    <p className="text-xs mt-1 text-gray-400">
-                      ✓ İşaretli: Tüm değerler toplama dahil edilir<br/>
-                      ✗ İşaretsiz: Sadece pozitif değerler toplama dahil edilir
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
+                <label className="flex items-center gap-2 text-sm cursor-pointer bg-white border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-50 transition-colors">
+                  <Checkbox 
+                    checked={includeNegativeValues}
+                    onCheckedChange={(checked) => setIncludeNegativeValues(checked as boolean)}
+                  />
+                  <span className="text-xs whitespace-nowrap">
+                    Eksi (-) değerleri toplama dahil et
+                  </span>
+                  <Info size={14} className="text-gray-400" />
+                </label>
                 
                 {/* Sütun Göster/Gizle Kontrolü */}
                 <Popover>

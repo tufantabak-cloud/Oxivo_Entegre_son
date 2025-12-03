@@ -4,7 +4,7 @@ import { ChevronDown, ChevronRight, Users, Database, FileText } from 'lucide-rea
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
-import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
+// Tooltip removed - import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
 
 interface DomainReportTabProps {
   customers: Customer[];
@@ -164,18 +164,7 @@ export function DomainReportTab({ customers }: DomainReportTabProps) {
           <CardContent>
             <div className="flex items-center gap-2">
               <Users className="text-blue-600" size={24} />
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="text-2xl font-semibold cursor-help">{customers.length}</span>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-xs">
-                  <div className="space-y-1">
-                    <p className="font-medium">Veri Kaynağı:</p>
-                    <p className="text-xs">Müşteriler modülündeki tüm kayıtlar</p>
-                    <p className="text-xs opacity-75">Domain tanımlı + tanımsız müşteriler</p>
-                  </div>
-                </TooltipContent>
-              </Tooltip>
+              <span className="text-2xl font-semibold">{customers.length}</span>
             </div>
           </CardContent>
         </Card>
@@ -187,18 +176,7 @@ export function DomainReportTab({ customers }: DomainReportTabProps) {
           <CardContent>
             <div className="flex items-center gap-2">
               <Database className="text-green-600" size={24} />
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="text-2xl font-semibold cursor-help">{customersWithDomains.length}</span>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-xs">
-                  <div className="space-y-1">
-                    <p className="font-medium">Veri Kaynağı:</p>
-                    <p className="text-xs">domainHierarchy verisi olan müşteriler</p>
-                    <p className="text-xs opacity-75">Domain hiyerarşisi tanımlanmış müşteri sayısı</p>
-                  </div>
-                </TooltipContent>
-              </Tooltip>
+              <span className="text-2xl font-semibold">{customersWithDomains.length}</span>
             </div>
           </CardContent>
         </Card>
@@ -210,18 +188,7 @@ export function DomainReportTab({ customers }: DomainReportTabProps) {
           <CardContent>
             <div className="flex items-center gap-2">
               <FileText className="text-orange-600" size={24} />
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="text-2xl font-semibold cursor-help">{customersWithoutDomains.length}</span>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-xs">
-                  <div className="space-y-1">
-                    <p className="font-medium">Veri Kaynağı:</p>
-                    <p className="text-xs">domainHierarchy verisi olmayan müşteriler</p>
-                    <p className="text-xs opacity-75">Domain tanımı yapılması gereken müşteriler</p>
-                  </div>
-                </TooltipContent>
-              </Tooltip>
+              <span className="text-2xl font-semibold">{customersWithoutDomains.length}</span>
             </div>
           </CardContent>
         </Card>
@@ -233,18 +200,7 @@ export function DomainReportTab({ customers }: DomainReportTabProps) {
           <CardContent>
             <div className="flex items-center gap-2">
               <Database className="text-purple-600" size={24} />
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="text-2xl font-semibold cursor-help">{totalDomainNodes}</span>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-xs">
-                  <div className="space-y-1">
-                    <p className="font-medium">Hesaplama:</p>
-                    <p className="text-xs">Tüm müşterilerdeki toplam domain node sayısı</p>
-                    <p className="text-xs opacity-75">Ana domain + alt domainler dahil (recursive)</p>
-                  </div>
-                </TooltipContent>
-              </Tooltip>
+              <span className="text-2xl font-semibold">{totalDomainNodes}</span>
             </div>
           </CardContent>
         </Card>

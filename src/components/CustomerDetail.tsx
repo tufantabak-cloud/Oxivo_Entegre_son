@@ -3,7 +3,6 @@ import { Customer, DomainNode, BankDeviceAssignment, ServiceFeeSettings, DeviceS
 import { PayterProduct } from './PayterProductTab';
 import { BankPF } from './BankPFModule';
 import { BankDeviceManagementTab } from './BankDeviceManagementTab';
-import { useUserRole } from '../hooks/useUserRole';
 import { ArrowLeft, Save, Trash2, X, Plus, ChevronDown, ChevronRight, Edit2, Trash, Monitor, CheckCircle, XCircle, FileSpreadsheet, FileText, Download, FileDown, Calendar, AlertTriangle, Clock, Euro, Bell, Ban, Play, DollarSign } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -36,7 +35,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Switch } from './ui/switch';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+// Tooltip removed - import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { toast } from 'sonner';
 import { matchDomain as utilMatchDomain, normalizeDomain as utilNormalizeDomain } from '../utils/domainMatching';
 
@@ -386,9 +385,6 @@ export function CustomerDetail({
   allCustomers = [],
   onNavigateToCustomer,
 }: CustomerDetailProps) {
-  // 🔐 User role management
-  const { hasPermission } = useUserRole();
-
   const [formData, setFormData] = useState<Customer>(
     customer || {
       id: '',
@@ -1630,14 +1626,11 @@ export function CustomerDetail({
             </Button>
             
             {/* Debug Butonu - Domain Eşleştirme Kontrolü İçin */}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
               console.log('='.repeat(80));
               console.log('🔍 MÜŞTERİ DETAY DEBUG BİLGİLERİ');
               console.log('='.repeat(80));
@@ -1813,20 +1806,13 @@ export function CustomerDetail({
               console.log('='.repeat(80));
               
               toast.success('Detaylı debug bilgileri konsola yazdırıldı (F12)', { duration: 3000 });
-                  }}
-                  className="text-xs"
-                >
-                  🔍 Debug
-                </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-xs">
-                  <p className="text-xs">Domain eşleştirme sorunlarını analiz eder</p>
-                  <p className="text-xs text-gray-400 mt-1">Console'a (F12) detaylı bilgi yazdırır</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+              }}
+              className="text-xs"
+            >
+              🔍 Debug
+            </Button>
           
-          {!isCreating && hasPermission('canDelete') && (
+          {!isCreating && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button type="button" variant="destructive">

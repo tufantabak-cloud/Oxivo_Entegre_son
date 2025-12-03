@@ -5,7 +5,7 @@ import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
-import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
+// Tooltip removed - import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
 import { Checkbox } from './ui/checkbox';
 import { toast } from 'sonner';
 import {
@@ -892,22 +892,15 @@ export function SubscriptionFeesTable({
                         <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                           {/* Toplu Onay Butonu */}
                           {devicesForApproval.length > 0 && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100"
-                                  onClick={() => handleBatchApproval(group.customer.id)}
-                                >
-                                  <CheckCircle size={16} className="mr-2" />
-                                  Ödemeyi Toplu Onayla ({devicesForApproval.length})
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                Tüm cihazların ödemesini onayla ve fatura kayıtları oluştur
-                              </TooltipContent>
-                            </Tooltip>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100"
+                              onClick={() => handleBatchApproval(group.customer.id)}
+                            >
+                              <CheckCircle size={16} className="mr-2" />
+                              Ödemeyi Toplu Onayla ({devicesForApproval.length})
+                            </Button>
                           )}
 
                           {/* Hatırlatma Ayarları */}
@@ -1103,22 +1096,10 @@ export function SubscriptionFeesTable({
                                           Aktif
                                         </Badge>
                                       ) : (
-                                        <Tooltip>
-                                          <TooltipTrigger>
-                                            <Badge className="bg-orange-100 text-orange-700 text-xs">
-                                              <Pause size={10} className="mr-1" />
-                                              Askıda
-                                            </Badge>
-                                          </TooltipTrigger>
-                                          <TooltipContent>
-                                            <div className="space-y-1">
-                                              <p className="text-xs">Sebep: {row.currentInvoice?.manualSuspensionReason || '-'}</p>
-                                              {row.currentInvoice?.suspensionUntilDate && (
-                                                <p className="text-xs">Bitiş: {row.currentInvoice.suspensionUntilDate}</p>
-                                              )}
-                                            </div>
-                                          </TooltipContent>
-                                        </Tooltip>
+                                        <Badge className="bg-orange-100 text-orange-700 text-xs">
+                                          <Pause size={10} className="mr-1" />
+                                          Askıda
+                                        </Badge>
                                       )}
                                     </td>
                                   )}

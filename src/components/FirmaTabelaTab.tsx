@@ -10,7 +10,7 @@ import { Badge } from './ui/badge';
 import { Checkbox } from './ui/checkbox';
 import { Switch } from './ui/switch';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+// Tooltip removed - import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { Plus, Pencil, Trash2, AlertCircle, Upload, X, Image as ImageIcon, XCircle, ChevronDown, ChevronRight, Info, HelpCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { TabelaRecord, TabelaGroup } from './TabelaTab';
@@ -817,39 +817,28 @@ export function FirmaTabelaTab({
             🔍 Verileri Kontrol Et
           </Button>
           {filteredRecords.length > 0 && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div>
-                  <Button 
-                    onClick={() => {
-                      if (availableRecordsForGroup.length === 0) {
-                        toast.error('Gruplanabilir kayıt yok', {
-                          description: 'Tüm aktif TABELA kayıtları zaten bir gruba atanmış. Önce yeni TABELA kaydı oluşturun veya mevcut kayıtları gruplardan çıkarın.'
-                        });
-                        return;
-                      }
-                      handleOpenGroupDialog();
-                    }}
-                    variant="outline"
-                    className="flex items-center gap-2"
-                    disabled={availableRecordsForGroup.length === 0}
-                  >
-                    <Plus size={20} />
-                    <span>Grup Oluştur</span>
-                    {availableRecordsForGroup.length > 0 && (
-                      <Badge variant="secondary" className="ml-1">
-                        {availableRecordsForGroup.length}
-                      </Badge>
-                    )}
-                  </Button>
-                </div>
-              </TooltipTrigger>
-              {availableRecordsForGroup.length === 0 && (
-                <TooltipContent>
-                  <p>Tüm aktif TABELA kayıtları zaten bir gruba atanmış</p>
-                </TooltipContent>
+            <Button 
+              onClick={() => {
+                if (availableRecordsForGroup.length === 0) {
+                  toast.error('Gruplanabilir kayıt yok', {
+                    description: 'Tüm aktif TABELA kayıtları zaten bir gruba atanmış. Önce yeni TABELA kaydı oluşturun veya mevcut kayıtları gruplardan çıkarın.'
+                  });
+                  return;
+                }
+                handleOpenGroupDialog();
+              }}
+              variant="outline"
+              className="flex items-center gap-2"
+              disabled={availableRecordsForGroup.length === 0}
+            >
+              <Plus size={20} />
+              <span>Grup Oluştur</span>
+              {availableRecordsForGroup.length > 0 && (
+                <Badge variant="secondary" className="ml-1">
+                  {availableRecordsForGroup.length}
+                </Badge>
               )}
-            </Tooltip>
+            </Button>
           )}
           <Button onClick={() => handleOpenDialog()} className="flex items-center gap-2">
             <Plus size={20} />

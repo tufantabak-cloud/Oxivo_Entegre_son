@@ -28,7 +28,6 @@ import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react
 import { unstable_batchedUpdates } from 'react-dom';
 import { useDefinitionStore } from './hooks/useDefinitionStore';
 import { useRoute } from './utils/routingHelper';
-import { useUserRole } from './hooks/useUserRole'; // 🔐 User role management
 import { Customer } from './components/CustomerModule';
 import { BankPF } from './components/BankPFModule';
 import { TabelaRecord, TabelaGroup } from './components/TabelaTab';
@@ -39,6 +38,7 @@ import { migrateData, validateImportData } from './utils/dataMigration';
 import { syncToSupabase } from './utils/supabaseSync';
 import { syncAllData } from './utils/autoSync';
 import { cleanupAllDuplicatesSQL, checkDuplicatesSQL, supabase } from './utils/supabaseClient';
+import { FeatureFlags, debugLog, debugWarn, debugError } from './utils/featureFlags';
 
 // ✅ CRITICAL: Import Supabase API helpers
 import { 
@@ -116,11 +116,14 @@ import { Button } from './components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './components/ui/sheet';
 import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card';
 import { Badge } from './components/ui/badge';
-import { Tooltip, TooltipTrigger, TooltipContent } from './components/ui/tooltip';
+// Tooltip removed - import { Tooltip, TooltipTrigger, TooltipContent } from './components/ui/tooltip';
 import { toast } from 'sonner';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './components/ui/table';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
 import { Skeleton } from './components/ui/skeleton';
+// TEMPORARY: Using auth bypass until Supabase is configured
+import { useAuth } from './utils/authBypass';
+import { LoginPage } from './components/LoginPage';
 
 // ⚡ Loading fallback component for code splitting
 const ModuleLoadingFallback = () => (
@@ -191,7 +194,7 @@ function extractLeadingNumber(text: string | undefined): number {
 //         - Liste görünümünde manuel değer badge'i eklendi
 // v1.0.8 - Hakediş kayıtlarına toplam değerler eklendi (totalIslemHacmi, totalPFPay, totalOxivoPay)
 //         - Rapor performansı iyileştirildi (önbelleklenmiş değerler kullanılıyor)
-//         - Sabit Komisyon hesaplama hatası d��zeltildi (işlem hacmi × komisyon oranı)
+//         - Sabit Komisyon hesaplama hatası düzeltildi (işlem hacmi × komisyon oranı)
 // v1.0.7 - Rapor modülüne "Müşteriler" sayfası eklendi (PF bazlı, dönem bazlı, detaylı analiz)
 // v1.0.6 - Hakediş formuna PF/OXİVO İşlem Hacmi tablosu eklendi (manuel giriş + otomatik fark hesaplama)
 // v1.0.5 - TABELA gruplarına aktif/pasif durumu eklendi - Hakediş sadece aktif gruplar için
@@ -234,9 +237,25 @@ if (!CURRENT_APP_VERSION) {
 
 export default function App() {
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // 🔐 USER ROLE MANAGEMENT (Admin vs Viewer)
+  // AUTHENTICATION
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  const { userInfo, isInitialized, showPrompt, selectUser, hasPermission, isAdmin, isViewer } = useUserRole();
+  const { user, loading: authLoading, isAdmin, isViewer, signOut } = useAuth();
+
+  // Show login page if not authenticated
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
+        <div className="text-center space-y-4">
+          <Skeleton className="h-12 w-12 rounded-full mx-auto" />
+          <Skeleton className="h-6 w-48 mx-auto" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginPage />;
+  }
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // URL ROUTING (Context Menu & Deep Linking Support)
@@ -393,7 +412,7 @@ export default function App() {
           // 🔍 DEBUG: Verify 'reason' field mapping
           const firstReason = suspensionReasonResult.data[0];
           if (firstReason) {
-            console.log('🔍 [App.tsx] First suspension reason:', {
+            debugLog('🔍 [App.tsx] First suspension reason:', {
               id: firstReason.id,
               reason: firstReason.reason || '❌ MISSING!',
               neden: (firstReason as any).neden || 'not present (correct)',
@@ -733,465 +752,465 @@ export default function App() {
   
   // 📥 REAL-TIME: EPK List değişikliklerini dinle
   useEffect(() => {
-    if (!dataLoaded) return;
+    if (!dataLoaded || !FeatureFlags.ENABLE_REALTIME_SYNC) return;
     
-    console.log('🔄 Starting real-time subscription for EPK List...');
+    debugLog('🔄 Starting real-time subscription for EPK List...');
     
     const epkChannel = supabase
       .channel('epk-list-realtime')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'epk_list' },
         async (payload) => {
-          console.log('📥 EPK değişikliği algılandı:', payload);
+          debugLog('📥 EPK değişikliği algılandı:', payload);
           try {
             const { data } = await epkListApi.getAll();
             if (data) {
               setEpkList(data);
-              console.log('✅ EPK listesi güncellendi:', data.length, 'kayıt');
+              debugLog('✅ EPK listesi güncellendi:', data.length, 'kayıt');
             }
           } catch (error) {
-            console.error('❌ EPK listesi güncellenirken hata:', error);
+            debugError('❌ EPK listesi güncellenirken hata:', error);
           }
         }
       )
       .subscribe();
     
     return () => {
-      console.log('🛑 EPK real-time subscription kapatılıyor...');
+      debugLog('🛑 EPK real-time subscription kapatılıyor...');
       supabase.removeChannel(epkChannel);
     };
   }, [dataLoaded]);
 
   // 📥 REAL-TIME: ÖK List değişikliklerini dinle
   useEffect(() => {
-    if (!dataLoaded) return;
+    if (!dataLoaded || !FeatureFlags.ENABLE_REALTIME_SYNC) return;
     
-    console.log('🔄 Starting real-time subscription for ÖK List...');
+    debugLog('🔄 Starting real-time subscription for ÖK List...');
     
     const okChannel = supabase
       .channel('ok-list-realtime')
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'ok_list' },
         async (payload) => {
-          console.log('📥 ÖK değişikliği algılandı:', payload);
+          debugLog('📥 ÖK değişikliği algılandı:', payload);
           try {
             const { data } = await okListApi.getAll();
             if (data) {
               setOkList(data);
-              console.log('✅ ÖK listesi güncellendi:', data.length, 'kayıt');
+              debugLog('✅ ÖK listesi güncellendi:', data.length, 'kayıt');
             }
           } catch (error) {
-            console.error('❌ ÖK listesi güncellenirken hata:', error);
+            debugError('❌ ÖK listesi güncellenirken hata:', error);
           }
         }
       )
       .subscribe();
     
     return () => {
-      console.log('🛑 ÖK real-time subscription kapatılıyor...');
+      debugLog('🛑 ÖK real-time subscription kapatılıyor...');
       supabase.removeChannel(okChannel);
     };
   }, [dataLoaded]);
 
   // 📥 REAL-TIME: Banks değişikliklerini dinle
   useEffect(() => {
-    if (!dataLoaded) return;
+    if (!dataLoaded || !FeatureFlags.ENABLE_REALTIME_SYNC) return;
     
-    console.log('🔄 Starting real-time subscription for Banks...');
+    debugLog('🔄 Starting real-time subscription for Banks...');
     
     const banksChannel = supabase
       .channel('banks-realtime')
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'banks' },
         async (payload) => {
-          console.log('📥 Banka değişikliği algılandı:', payload);
+          debugLog('📥 Banka değişikliği algılandı:', payload);
           try {
             const { data } = await banksApi.getAll();
             if (data) {
               setBanks(data);
-              console.log('✅ Bankalar listesi güncellendi:', data.length, 'kayıt');
+              debugLog('✅ Bankalar listesi güncellendi:', data.length, 'kayıt');
             }
           } catch (error) {
-            console.error('❌ Bankalar listesi güncellenirken hata:', error);
+            debugError('❌ Bankalar listesi güncellenirken hata:', error);
           }
         }
       )
       .subscribe();
     
     return () => {
-      console.log('🛑 Banks real-time subscription kapatılıyor...');
+      debugLog('🛑 Banks real-time subscription kapatılıyor...');
       supabase.removeChannel(banksChannel);
     };
   }, [dataLoaded]);
 
   // 📥 REAL-TIME: MCC Codes değişikliklerini dinle
   useEffect(() => {
-    if (!dataLoaded) return;
+    if (!dataLoaded || !FeatureFlags.ENABLE_REALTIME_SYNC) return;
     
-    console.log('🔄 Starting real-time subscription for MCC Codes...');
+    debugLog('🔄 Starting real-time subscription for MCC Codes...');
     
     const mccChannel = supabase
       .channel('mcc-codes-realtime')
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'mcc_codes' },
         async (payload) => {
-          console.log('📥 MCC değişikliği algılandı:', payload);
+          debugLog('📥 MCC değişikliği algılandı:', payload);
           try {
             const { data } = await mccCodesApi.getAll();
             if (data) {
               setMccList(data);
-              console.log('✅ MCC listesi güncellendi:', data.length, 'kayıt');
+              debugLog('✅ MCC listesi güncellendi:', data.length, 'kayıt');
             }
           } catch (error) {
-            console.error('❌ MCC listesi güncellenirken hata:', error);
+            debugError('❌ MCC listesi güncellenirken hata:', error);
           }
         }
       )
       .subscribe();
     
     return () => {
-      console.log('🛑 MCC Codes real-time subscription kapatılıyor...');
+      debugLog('🛑 MCC Codes real-time subscription kapatılıyor...');
       supabase.removeChannel(mccChannel);
     };
   }, [dataLoaded]);
 
   // 📥 REAL-TIME: Sales Representatives değişikliklerini dinle
   useEffect(() => {
-    if (!dataLoaded) return;
+    if (!dataLoaded || !FeatureFlags.ENABLE_REALTIME_SYNC) return;
     
-    console.log('🔄 Starting real-time subscription for Sales Representatives...');
+    debugLog('🔄 Starting real-time subscription for Sales Representatives...');
     
     const salesRepsChannel = supabase
       .channel('sales-reps-realtime')
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'sales_representatives' },
         async (payload) => {
-          console.log('📥 Satış Temsilcisi değişikliği algılandı:', payload);
+          debugLog('📥 Satış Temsilcisi değişikliği algılandı:', payload);
           try {
             const { data } = await salesRepsApi.getAll();
             if (data) {
               setSalesReps(data);
-              console.log('✅ Satış Temsilcileri listesi güncellendi:', data.length, 'kayıt');
+              debugLog('✅ Satış Temsilcileri listesi güncellendi:', data.length, 'kayıt');
             }
           } catch (error) {
-            console.error('❌ Satış Temsilcileri listesi güncellenirken hata:', error);
+            debugError('❌ Satış Temsilcileri listesi güncellenirken hata:', error);
           }
         }
       )
       .subscribe();
     
     return () => {
-      console.log('🛑 Sales Representatives real-time subscription kapatılıyor...');
+      debugLog('🛑 Sales Representatives real-time subscription kapatılıyor...');
       supabase.removeChannel(salesRepsChannel);
     };
   }, [dataLoaded]);
 
   // 📥 REAL-TIME: Job Titles değişikliklerini dinle
   useEffect(() => {
-    if (!dataLoaded) return;
+    if (!dataLoaded || !FeatureFlags.ENABLE_REALTIME_SYNC) return;
     
-    console.log('🔄 Starting real-time subscription for Job Titles...');
+    debugLog('🔄 Starting real-time subscription for Job Titles...');
     
     const jobTitlesChannel = supabase
       .channel('job-titles-realtime')
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'job_titles' },
         async (payload) => {
-          console.log('📥 Ünvan değişikliği algılandı:', payload);
+          debugLog('📥 Ünvan değişikliği algılandı:', payload);
           try {
             const { data } = await jobTitlesApi.getAll();
             if (data) {
               setJobTitles(data);
-              console.log('✅ Ünvanlar listesi güncellendi:', data.length, 'kayıt');
+              debugLog('✅ Ünvanlar listesi güncellendi:', data.length, 'kayıt');
             }
           } catch (error) {
-            console.error('❌ Ünvanlar listesi güncellenirken hata:', error);
+            debugError('❌ Ünvanlar listesi güncellenirken hata:', error);
           }
         }
       )
       .subscribe();
     
     return () => {
-      console.log('🛑 Job Titles real-time subscription kapatılıyor...');
+      debugLog('🛑 Job Titles real-time subscription kapatılıyor...');
       supabase.removeChannel(jobTitlesChannel);
     };
   }, [dataLoaded]);
 
   // 📥 REAL-TIME: Partnerships değişikliklerini dinle
   useEffect(() => {
-    if (!dataLoaded) return;
+    if (!dataLoaded || !FeatureFlags.ENABLE_REALTIME_SYNC) return;
     
-    console.log('🔄 Starting real-time subscription for Partnerships...');
+    debugLog('🔄 Starting real-time subscription for Partnerships...');
     
     const partnershipsChannel = supabase
       .channel('partnerships-realtime')
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'partnerships' },
         async (payload) => {
-          console.log('📥 Ortaklık değişikliği algılandı:', payload);
+          debugLog('📥 Ortaklık değişikliği algılandı:', payload);
           try {
             const { data } = await partnershipsApi.getAll();
             if (data) {
               setPartnerships(data);
-              console.log('✅ Ortaklıklar listesi güncellendi:', data.length, 'kayıt');
+              debugLog('✅ Ortaklıklar listesi güncellendi:', data.length, 'kayıt');
             }
           } catch (error) {
-            console.error('❌ Ortaklıklar listesi güncellenirken hata:', error);
+            debugError('❌ Ortaklıklar listesi güncellenirken hata:', error);
           }
         }
       )
       .subscribe();
     
     return () => {
-      console.log('🛑 Partnerships real-time subscription kapatılıyor...');
+      debugLog('🛑 Partnerships real-time subscription kapatılıyor...');
       supabase.removeChannel(partnershipsChannel);
     };
   }, [dataLoaded]);
 
   // 📥 REAL-TIME: Sharing değişikliklerini dinle
   useEffect(() => {
-    if (!dataLoaded) return;
+    if (!dataLoaded || !FeatureFlags.ENABLE_REALTIME_SYNC) return;
     
-    console.log('🔄 Starting real-time subscription for Sharing...');
+    debugLog('🔄 Starting real-time subscription for Sharing...');
     
     const sharingChannel = supabase
       .channel('sharing-realtime')
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'sharing' },
         async (payload) => {
-          console.log('📥 Paylaşım değişikliği algılandı:', payload);
+          debugLog('📥 Paylaşım değişikliği algılandı:', payload);
           try {
             const { data } = await sharingApi.getAll();
             if (data) {
               setSharings(data);
-              console.log('✅ Paylaşımlar listesi güncellendi:', data.length, 'kayıt');
+              debugLog('✅ Paylaşımlar listesi güncellendi:', data.length, 'kayıt');
             }
           } catch (error) {
-            console.error('❌ Paylaşımlar listesi güncellenirken hata:', error);
+            debugError('❌ Paylaşımlar listesi güncellenirken hata:', error);
           }
         }
       )
       .subscribe();
     
     return () => {
-      console.log('🛑 Sharing real-time subscription kapatılıyor...');
+      debugLog('🛑 Sharing real-time subscription kapatılıyor...');
       supabase.removeChannel(sharingChannel);
     };
   }, [dataLoaded]);
 
   // 📥 REAL-TIME: Kart Program değişikliklerini dinle
   useEffect(() => {
-    if (!dataLoaded) return;
+    if (!dataLoaded || !FeatureFlags.ENABLE_REALTIME_SYNC) return;
     
-    console.log('🔄 Starting real-time subscription for Kart Program...');
+    debugLog('🔄 Starting real-time subscription for Kart Program...');
     
     const kartProgramChannel = supabase
       .channel('kart-program-realtime')
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'kart_program' },
         async (payload) => {
-          console.log('📥 Kart Program değişikliği algılandı:', payload);
+          debugLog('📥 Kart Program değişikliği algılandı:', payload);
           try {
             const { data } = await kartProgramApi.getAll();
             if (data) {
               setKartProgramlar(data);
-              console.log('✅ Kart Programlar listesi güncellendi:', data.length, 'kayıt');
+              debugLog('✅ Kart Programlar listesi güncellendi:', data.length, 'kayıt');
             }
           } catch (error) {
-            console.error('❌ Kart Programlar listesi güncellenirken hata:', error);
+            debugError('❌ Kart Programlar listesi güncellenirken hata:', error);
           }
         }
       )
       .subscribe();
     
     return () => {
-      console.log('🛑 Kart Program real-time subscription kapatılıyor...');
+      debugLog('🛑 Kart Program real-time subscription kapatılıyor...');
       supabase.removeChannel(kartProgramChannel);
     };
   }, [dataLoaded]);
 
   // 📥 REAL-TIME: Suspension Reasons değişikliklerini dinle
   useEffect(() => {
-    if (!dataLoaded) return;
+    if (!dataLoaded || !FeatureFlags.ENABLE_REALTIME_SYNC) return;
     
-    console.log('🔄 Starting real-time subscription for Suspension Reasons...');
+    debugLog('🔄 Starting real-time subscription for Suspension Reasons...');
     
     const suspensionChannel = supabase
       .channel('suspension-reasons-realtime')
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'suspension_reasons' },
         async (payload) => {
-          console.log('📥 Tatil Nedeni değişikliği algılandı:', payload);
+          debugLog('📥 Tatil Nedeni değişikliği algılandı:', payload);
           try {
             const { data } = await suspensionReasonApi.getAll();
             if (data) {
               setSuspensionReasons(data);
-              console.log('✅ Tatil Nedenleri listesi güncellendi:', data.length, 'kayıt');
+              debugLog('✅ Tatil Nedenleri listesi güncellendi:', data.length, 'kayıt');
             }
           } catch (error) {
-            console.error('❌ Tatil Nedenleri listesi güncellenirken hata:', error);
+            debugError('❌ Tatil Nedenleri listesi güncellenirken hata:', error);
           }
         }
       )
       .subscribe();
     
     return () => {
-      console.log('🛑 Suspension Reasons real-time subscription kapatılıyor...');
+      debugLog('🛑 Suspension Reasons real-time subscription kapatılıyor...');
       supabase.removeChannel(suspensionChannel);
     };
   }, [dataLoaded]);
 
   // 📥 REAL-TIME: Domain Mappings değişikliklerini dinle
   useEffect(() => {
-    if (!dataLoaded) return;
+    if (!dataLoaded || !FeatureFlags.ENABLE_REALTIME_SYNC) return;
     
-    console.log('🔄 Starting real-time subscription for Domain Mappings...');
+    debugLog('🔄 Starting real-time subscription for Domain Mappings...');
     
     const domainChannel = supabase
       .channel('domain-mappings-realtime')
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'domain_mappings' },
         async (payload) => {
-          console.log('📥 Domain Mapping değişikliği algılandı:', payload);
+          debugLog('📥 Domain Mapping değişikliği algılandı:', payload);
           try {
             const { data } = await domainMappingApi.getAll();
             if (data) {
               setDomainMappings(data);
-              console.log('✅ Domain Mappings listesi güncellendi:', data.length, 'kayıt');
+              debugLog('✅ Domain Mappings listesi güncellendi:', data.length, 'kayıt');
             }
           } catch (error) {
-            console.error('❌ Domain Mappings listesi güncellenirken hata:', error);
+            debugError('❌ Domain Mappings listesi güncellenirken hata:', error);
           }
         }
       )
       .subscribe();
     
     return () => {
-      console.log('🛑 Domain Mappings real-time subscription kapatılıyor...');
+      debugLog('🛑 Domain Mappings real-time subscription kapatılıyor...');
       supabase.removeChannel(domainChannel);
     };
   }, [dataLoaded]);
 
   // 📥 REAL-TIME: Signs değişikliklerini dinle
   useEffect(() => {
-    if (!dataLoaded) return;
+    if (!dataLoaded || !FeatureFlags.ENABLE_REALTIME_SYNC) return;
     
-    console.log('🔄 Starting real-time subscription for Signs...');
+    debugLog('🔄 Starting real-time subscription for Signs...');
     
     const signsChannel = supabase
       .channel('signs-realtime')
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'signs' },
         async (payload) => {
-          console.log('📥 Tabela değişikliği algılandı:', payload);
+          debugLog('📥 Tabela değişikliği algılandı:', payload);
           try {
             const { data } = await signApi.getAll();
             if (data) {
               setSigns(data);
-              console.log('✅ Tabelalar listesi güncellendi:', data.length, 'kayıt');
+              debugLog('✅ Tabelalar listesi güncellendi:', data.length, 'kayıt');
             }
           } catch (error) {
-            console.error('❌ Tabelalar listesi güncellenirken hata:', error);
+            debugError('❌ Tabelalar listesi güncellenirken hata:', error);
           }
         }
       )
       .subscribe();
     
     return () => {
-      console.log('🛑 Signs real-time subscription kapatılıyor...');
+      debugLog('🛑 Signs real-time subscription kapatılıyor...');
       supabase.removeChannel(signsChannel);
     };
   }, [dataLoaded]);
 
   // 📥 REAL-TIME: Customers değişikliklerini dinle
   useEffect(() => {
-    if (!dataLoaded) return;
+    if (!dataLoaded || !FeatureFlags.ENABLE_REALTIME_SYNC) return;
     
-    console.log('🔄 Starting real-time subscription for Customers...');
+    debugLog('🔄 Starting real-time subscription for Customers...');
     
     const customersChannel = supabase
       .channel('customers-realtime')
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'customers' },
         async (payload) => {
-          console.log('📥 Müşteri değişikliği algılandı:', payload);
+          debugLog('📥 Müşteri değişikliği algılandı:', payload);
           try {
             const { data } = await customerApi.getAll();
             if (data) {
               setCustomers(data);
-              console.log('✅ Müşteriler listesi güncellendi:', data.length, 'kayıt');
+              debugLog('✅ Müşteriler listesi güncellendi:', data.length, 'kayıt');
             }
           } catch (error) {
-            console.error('❌ Müşteriler listesi güncellenirken hata:', error);
+            debugError('❌ Müşteriler listesi güncellenirken hata:', error);
           }
         }
       )
       .subscribe();
     
     return () => {
-      console.log('🛑 Customers real-time subscription kapatılıyor...');
+      debugLog('🛑 Customers real-time subscription kapatılıyor...');
       supabase.removeChannel(customersChannel);
     };
   }, [dataLoaded]);
 
   // 📥 REAL-TIME: Products değişikliklerini dinle
   useEffect(() => {
-    if (!dataLoaded) return;
+    if (!dataLoaded || !FeatureFlags.ENABLE_REALTIME_SYNC) return;
     
-    console.log('🔄 Starting real-time subscription for Products...');
+    debugLog('🔄 Starting real-time subscription for Products...');
     
     const productsChannel = supabase
       .channel('products-realtime')
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'products' },
         async (payload) => {
-          console.log('📥 Ürün değişikliği algılandı:', payload);
+          debugLog('📥 Ürün değişikliği algılandı:', payload);
           try {
             const { data } = await productApi.getAll();
             if (data) {
               setPayterProducts(data);
-              console.log('✅ Ürünler listesi güncellendi:', data.length, 'kayıt');
+              debugLog('✅ Ürünler listesi güncellendi:', data.length, 'kayıt');
             }
           } catch (error) {
-            console.error('❌ Ürünler listesi güncellenirken hata:', error);
+            debugError('❌ Ürünler listesi güncellenirken hata:', error);
           }
         }
       )
       .subscribe();
     
     return () => {
-      console.log('🛑 Products real-time subscription kapatılıyor...');
+      debugLog('🛑 Products real-time subscription kapatılıyor...');
       supabase.removeChannel(productsChannel);
     };
   }, [dataLoaded]);
 
   // 📥 REAL-TIME: Bank Accounts (BankPF) değişikliklerini dinle
   useEffect(() => {
-    if (!dataLoaded) return;
+    if (!dataLoaded || !FeatureFlags.ENABLE_REALTIME_SYNC) return;
     
-    console.log('🔄 Starting real-time subscription for Bank Accounts...');
+    debugLog('🔄 Starting real-time subscription for Bank Accounts...');
     
     const bankAccountsChannel = supabase
       .channel('bank-accounts-realtime')
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'bank_accounts' },
         async (payload) => {
-          console.log('📥 Banka Hesap değişikliği algılandı:', payload);
+          debugLog('📥 Banka Hesap değişikliği algılandı:', payload);
           try {
             const { data } = await bankPFApi.getAll();
             if (data) {
               setBankPFRecords(data);
-              console.log('✅ Banka Hesapları listesi güncellendi:', data.length, 'kayıt');
+              debugLog('✅ Banka Hesapları listesi güncellendi:', data.length, 'kayıt');
             }
           } catch (error) {
-            console.error('❌ Banka Hesapları listesi güncellenirken hata:', error);
+            debugError('❌ Banka Hesapları listesi güncellenirken hata:', error);
           }
         }
       )
       .subscribe();
     
     return () => {
-      console.log('🛑 Bank Accounts real-time subscription kapatılıyor...');
+      debugLog('🛑 Bank Accounts real-time subscription kapatılıyor...');
       supabase.removeChannel(bankAccountsChannel);
     };
   }, [dataLoaded]);
@@ -1346,7 +1365,7 @@ export default function App() {
         
         if (totalDeleted > 0) {
           // Show detailed results
-          console.log('📊 Cleanup Results:', result.results);
+          debugLog('📊 Cleanup Results:', result.results);
           
           toast.success(
             `✅ ${totalDeleted} duplicate kayıt silindi!`,
@@ -1371,7 +1390,7 @@ export default function App() {
       }
     } catch (error: any) {
       toast.dismiss(loadingToast);
-      console.error('❌ Deduplication error:', error);
+      debugError('❌ Deduplication error:', error);
       toast.error('Temizleme sırasında hata oluştu', {
         description: error.message || 'Bilinmeyen hata',
       });
@@ -1447,7 +1466,7 @@ export default function App() {
               : `✅ Import başarılı! (v${importVersion})`
           );
         } catch (error) {
-          console.error('❌ JSON import hatası:', error);
+          debugError('❌ JSON import hatası:', error);
           toast.error(`JSON dosyası okunamadı: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`);
         }
       };
@@ -2042,14 +2061,6 @@ export default function App() {
                 <span className="text-xs bg-blue-100 text-blue-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md font-medium hidden sm:block">
                   v{CURRENT_APP_VERSION}
                 </span>
-                {/* 🔐 User Badge */}
-                <span className={`text-xs px-2 py-1 rounded-md font-medium ${
-                  userInfo.role === 'admin' 
-                    ? 'bg-green-100 text-green-700' 
-                    : 'bg-gray-100 text-gray-700'
-                }`} title={`Kullanıcı: ${userInfo.username}`}>
-                  {userInfo.role === 'admin' ? '👤 Admin' : '👁️ Görüntüleyici'}
-                </span>
               </div>
               
               {/* Activity Log Button - Desktop Only */}
@@ -2164,6 +2175,36 @@ export default function App() {
                 <span>Tanımlar</span>
               </Button>
             </nav>
+            
+            {/* User Info & Logout */}
+            <div className="flex items-center gap-2 ml-auto border-l border-gray-200 pl-4">
+              {/* Role Badge */}
+              <Badge 
+                variant={isAdmin ? "default" : "secondary"}
+                className={isAdmin ? "bg-red-500 hover:bg-red-600" : "bg-gray-400 hover:bg-gray-500"}
+              >
+                {isAdmin ? "👤 Admin" : "👁️ Görüntüleyici"}
+              </Badge>
+              
+              {/* User Email - Hidden on mobile */}
+              <span className="hidden md:inline text-xs text-gray-600 truncate max-w-[150px]">
+                {user?.email}
+              </span>
+              
+              {/* Logout Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  await signOut();
+                  toast.success('Başarıyla çıkış yapıldı');
+                }}
+                className="gap-2 h-8 text-xs hover:bg-red-50 hover:text-red-600 hover:border-red-300"
+              >
+                <X size={14} />
+                <span className="hidden sm:inline">Çıkış</span>
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -2609,21 +2650,23 @@ export default function App() {
                         try {
                           const importData = JSON.parse(event.target?.result as string);
                           
-                          console.log('📦 JSON Import başlıyor...');
-                          console.log('📄 Dosya adı:', file.name);
-                          console.log('🔖 Import edilen versiyon:', importData.version || '(Bilinmiyor)');
-                          console.log('🔖 Mevcut uygulama versiyonu:', CURRENT_APP_VERSION);
+                          debugLog('📦 JSON Import başlıyor...');
+                          debugLog('📄 Dosya adı:', file.name);
+                          debugLog('🔖 Import edilen versiyon:', importData.version || '(Bilinmiyor)');
+                          debugLog('🔖 Mevcut uygulama versiyonu:', CURRENT_APP_VERSION);
                           
                           // ✅ 1. VALIDATION - Veri yapısını kontrol et
                           const validation = validateImportData(importData);
                           if (!validation.valid) {
-                            console.error('❌ Validasyon hataları:', validation.errors);
+                            debugError('❌ Validasyon hataları:', validation.errors);
                             toast.error(validation.errors[0]);
                             
                             // Detailed error log
-                            console.group('🔍 Validasyon Detayları');
-                            validation.errors.forEach(err => console.log(err));
-                            console.groupEnd();
+                            if (FeatureFlags.ENABLE_DEBUG_LOGS) {
+                              console.group('🔍 Validasyon Detayları');
+                              validation.errors.forEach(err => console.log(err));
+                              console.groupEnd();
+                            }
                             return;
                           }
                           
@@ -2632,18 +2675,18 @@ export default function App() {
                           const importVersion = importData.version || '1.0';
                           
                           if (importVersion !== CURRENT_APP_VERSION) {
-                            console.log(`🔄 Version mismatch detected: v${importVersion} → v${CURRENT_APP_VERSION}`);
-                            console.log('🔧 Migration başlatılıyor...');
+                            debugLog(`🔄 Version mismatch detected: v${importVersion} → v${CURRENT_APP_VERSION}`);
+                            debugLog('🔧 Migration başlatılıyor...');
                             
                             // Migration uygula
                             processedData = migrateData(importData, importVersion);
-                            console.log('✅ Migration tamamlandı');
+                            debugLog('✅ Migration tamamlandı');
                           } else {
-                            console.log('✅ Version match - Migration gerekmiyor');
+                            debugLog('✅ Version match - Migration gerekmiyor');
                           }
                           
                           // ✅ 3. DATA IMPORT - Verileri güncelle
-                          console.log('💾 Veriler state\'e aktarılıyor...');
+                          debugLog('💾 Veriler state\'e aktarılıyor...');
                           
                           const data = processedData.data;
                           let importedCount = 0;
@@ -2651,12 +2694,12 @@ export default function App() {
                           if (data.customers) { 
                             setCustomers(data.customers); 
                             importedCount++;
-                            console.log(`  ✓ Müşteriler: ${data.customers.length} kayıt`);
+                            debugLog(`  ✓ Müşteriler: ${data.customers.length} kayıt`);
                           }
                           if (data.payterProducts) { 
                             setPayterProducts(data.payterProducts); 
                             importedCount++;
-                            console.log(`  ✓ Payter Ürünleri: ${data.payterProducts.length} kayıt`);
+                            debugLog(`  ✓ Payter Ürünleri: ${data.payterProducts.length} kayıt`);
                           }
                           if (data.bankPFRecords) { 
                             setBankPFRecords(data.bankPFRecords); 
@@ -2664,75 +2707,75 @@ export default function App() {
                             const totalTabela = data.bankPFRecords.reduce((sum: number, r: BankPF) => 
                               sum + (r.tabelaRecords?.length || 0), 0
                             );
-                            console.log(`  ✓ Banka/PF: ${data.bankPFRecords.length} kayıt (${totalTabela} TABELA)`);
+                            debugLog(`  ✓ Banka/PF: ${data.bankPFRecords.length} kayıt (${totalTabela} TABELA)`);
                           }
                           if (data.hesapKalemleri) { 
                             setHesapKalemleri(data.hesapKalemleri); 
                             importedCount++;
-                            console.log(`  ✓ Hesap Kalemleri: ${data.hesapKalemleri.length} kayıt`);
+                            debugLog(`  ✓ Hesap Kalemleri: ${data.hesapKalemleri.length} kayıt`);
                           }
                           if (data.sabitKomisyonlar) { 
                             setSabitKomisyonlar(data.sabitKomisyonlar); 
                             importedCount++;
-                            console.log(`  ✓ Sabit Komisyonlar: ${data.sabitKomisyonlar.length} kayıt`);
+                            debugLog(`  ✓ Sabit Komisyonlar: ${data.sabitKomisyonlar.length} kayıt`);
                           }
                           if (data.ekGelirler) { 
                             setEkGelirler(data.ekGelirler); 
                             importedCount++;
-                            console.log(`  ✓ Ek Gelirler: ${data.ekGelirler.length} kayıt`);
+                            debugLog(`  ✓ Ek Gelirler: ${data.ekGelirler.length} kayıt`);
                           }
                           if (data.jobTitles) { 
                             setJobTitles(data.jobTitles); 
                             importedCount++;
-                            console.log(`  ✓ Görevler: ${data.jobTitles.length} kayıt`);
+                            debugLog(`  ✓ Görevler: ${data.jobTitles.length} kayıt`);
                           }
                           if (data.mccList) { 
                             setMCCList(data.mccList); 
                             importedCount++;
-                            console.log(`  ✓ MCC: ${data.mccList.length} kayıt`);
+                            debugLog(`  ✓ MCC: ${data.mccList.length} kayıt`);
                           }
                           if (data.banks) { 
                             setBanks(data.banks); 
                             importedCount++;
-                            console.log(`  ✓ Bankalar: ${data.banks.length} kayıt`);
+                            debugLog(`  ✓ Bankalar: ${data.banks.length} kayıt`);
                           }
                           if (data.epkList) { 
                             setEPKList(data.epkList); 
                             importedCount++;
-                            console.log(`  ✓ EPK: ${data.epkList.length} kayıt`);
+                            debugLog(`  ✓ EPK: ${data.epkList.length} kayıt`);
                           }
                           if (data.okList) { 
                             setOKList(data.okList); 
                             importedCount++;
-                            console.log(`  ✓ ÖK: ${data.okList.length} kayıt`);
+                            debugLog(`  ✓ ÖK: ${data.okList.length} kayıt`);
                           }
                           if (data.partnerships) { 
                             setPartnerships(data.partnerships); 
                             importedCount++;
-                            console.log(`  ✓ İşbirlikleri: ${data.partnerships.length} kayıt`);
+                            debugLog(`  ✓ İşbirlikleri: ${data.partnerships.length} kayıt`);
                           }
                           if (data.sharings) { 
                             setSharings(data.sharings); 
                             importedCount++;
-                            console.log(`  ✓ Gelir Modelleri: ${data.sharings.length} kayıt`);
+                            debugLog(`  ✓ Gelir Modelleri: ${data.sharings.length} kayıt`);
                           }
                           if (data.kartProgramlar) { 
                             setKartProgramlar(data.kartProgramlar); 
                             importedCount++;
-                            console.log(`  ✓ Kart Programları: ${data.kartProgramlar.length} kayıt`);
+                            debugLog(`  ✓ Kart Programları: ${data.kartProgramlar.length} kayıt`);
                           }
                           if (data.salesReps) { 
                             setSalesReps(data.salesReps); 
                             importedCount++;
-                            console.log(`  ✓ Satış Temsilcileri: ${data.salesReps.length} kayıt`);
+                            debugLog(`  ✓ Satış Temsilcileri: ${data.salesReps.length} kayıt`);
                           }
                           if (data.suspensionReasons) { 
                             setSuspensionReasons(data.suspensionReasons); 
                             importedCount++;
-                            console.log(`  ✓ Dondurma Sebepleri: ${data.suspensionReasons.length} kayıt`);
+                            debugLog(`  ✓ Dondurma Sebepleri: ${data.suspensionReasons.length} kayıt`);
                           }
                           
-                          console.log(`✅ ${importedCount} veri kategorisi başarıyla import edildi`);
+                          debugLog(`✅ ${importedCount} veri kategorisi başarıyla import edildi`);
                           
                           toast.success(
                             importVersion !== CURRENT_APP_VERSION
@@ -2740,7 +2783,7 @@ export default function App() {
                               : `✅ Import başarılı! (v${importVersion})`
                           );
                         } catch (error) {
-                          console.error('❌ JSON import hatası:', error);
+                          debugError('❌ JSON import hatası:', error);
                           toast.error(`JSON dosyası okunamadı: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`);
                         }
                       };
@@ -2812,67 +2855,63 @@ export default function App() {
                   <Search size={16} />
                   Verileri Kontrol Et
                 </Button>
-                {hasPermission('canDelete') && (
-                  <Button 
-                    variant="outline"
-                    size="sm"
-                    className="gap-2 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors"
-                    onClick={() => {
-                      if (confirm('⚠️ TÜM VERİLER SİLİNECEK!\n\nOnce export aldığınızdan emin olun.\n\nDevam etmek istiyor musunuz?')) {
-                        const keys = ['customers', 'payterProducts', 'bankPFRecords', 
-                                      'hesapKalemleri', 'sabitKomisyonlar', 'ekGelirler',
-                                      'jobTitles', 'mccList', 'banks', 'epkList', 'okList', 
-                                      'partnerships', 'sharings', 'kartProgramlar', 'salesReps'];
-                        keys.forEach(key => localStorage.removeItem(key));
-                        toast.success('Tüm veriler temizlendi. Sayfa yenileniyor...');
-                        setTimeout(() => window.location.reload(), 1000);
-                      }
-                    }}
-                  >
-                    <Trash2 size={16} />
-                    Tüm Verileri Temizle
-                  </Button>
-                )}
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors"
+                  onClick={() => {
+                    if (confirm('⚠️ TÜM VERİLER SİLİNECEK!\n\nOnce export aldığınızdan emin olun.\n\nDevam etmek istiyor musunuz?')) {
+                      const keys = ['customers', 'payterProducts', 'bankPFRecords', 
+                                    'hesapKalemleri', 'sabitKomisyonlar', 'ekGelirler',
+                                    'jobTitles', 'mccList', 'banks', 'epkList', 'okList', 
+                                    'partnerships', 'sharings', 'kartProgramlar', 'salesReps'];
+                      keys.forEach(key => localStorage.removeItem(key));
+                      toast.success('Tüm veriler temizlendi. Sayfa yenileniyor...');
+                      setTimeout(() => window.location.reload(), 1000);
+                    }
+                  }}
+                >
+                  <Trash2 size={16} />
+                  Tüm Verileri Temizle
+                </Button>
               </div>
             </div>
 
-            {/* Excel Data Manager - Only for users with create permission */}
-            {hasPermission('canCreate') && (
-              <Suspense fallback={<div className="text-center py-6 text-gray-500">Excel yönetici yükleniyor...</div>}>
-                <ExcelDataManager
-                customers={customers}
-                onCustomersChange={setCustomers}
-                payterProducts={payterProducts}
-                onPayterProductsChange={setPayterProducts}
-                bankPFRecords={bankPFRecords}
-                onBankPFRecordsChange={setBankPFRecords}
-                hesapKalemleri={hesapKalemleri}
-                onHesapKalemleriChange={setHesapKalemleri}
-                sabitKomisyonlar={sabitKomisyonlar}
-                onSabitKomisyonlarChange={setSabitKomisyonlar}
-                ekGelirler={ekGelirler}
-                onEkGelirlerChange={setEkGelirler}
-                jobTitles={jobTitles}
-                onJobTitlesChange={setJobTitles}
-                mccList={mccList}
-                onMCCListChange={setMCCList}
-                banks={banks}
-                onBanksChange={setBanks}
-                epkList={epkList}
-                onEPKListChange={setEPKList}
-                okList={okList}
-                onOKListChange={setOKList}
-                partnerships={partnerships}
-                onPartnershipsChange={setPartnerships}
-                sharings={sharings}
-                onSharingsChange={setSharings}
-                kartProgramlar={kartProgramlar}
-                onKartProgramlarChange={setKartProgramlar}
-                salesReps={salesReps}
-                onSalesRepsChange={setSalesReps}
-                />
-              </Suspense>
-            )}
+            {/* Excel Data Manager */}
+            <Suspense fallback={<div className="text-center py-6 text-gray-500">Excel yönetici yükleniyor...</div>}>
+              <ExcelDataManager
+              customers={customers}
+              onCustomersChange={setCustomers}
+              payterProducts={payterProducts}
+              onPayterProductsChange={setPayterProducts}
+              bankPFRecords={bankPFRecords}
+              onBankPFRecordsChange={setBankPFRecords}
+              hesapKalemleri={hesapKalemleri}
+              onHesapKalemleriChange={setHesapKalemleri}
+              sabitKomisyonlar={sabitKomisyonlar}
+              onSabitKomisyonlarChange={setSabitKomisyonlar}
+              ekGelirler={ekGelirler}
+              onEkGelirlerChange={setEkGelirler}
+              jobTitles={jobTitles}
+              onJobTitlesChange={setJobTitles}
+              mccList={mccList}
+              onMCCListChange={setMCCList}
+              banks={banks}
+              onBanksChange={setBanks}
+              epkList={epkList}
+              onEPKListChange={setEPKList}
+              okList={okList}
+              onOKListChange={setOKList}
+              partnerships={partnerships}
+              onPartnershipsChange={setPartnerships}
+              sharings={sharings}
+              onSharingsChange={setSharings}
+              kartProgramlar={kartProgramlar}
+              onKartProgramlarChange={setKartProgramlar}
+              salesReps={salesReps}
+              onSalesRepsChange={setSalesReps}
+              />
+            </Suspense>
 
             {/* YENİ DASHBOARD - Özelleştirilebilir Widget Sistemi */}
             <Suspense fallback={<ModuleLoadingFallback />}>
@@ -3029,7 +3068,6 @@ export default function App() {
         {dataLoaded && activeModule === 'customers' && (
           <Suspense fallback={<ModuleLoadingFallback />}>
             <CustomerModule 
-              userInfo={userInfo}
               mccList={activeMCCListForCustomer}
               customers={customers}
               onCustomersChange={setCustomers}
@@ -3041,13 +3079,13 @@ export default function App() {
               salesReps={activeSalesReps}
               suspensionReasons={suspensionReasons}
               onBankPFNavigate={handleBankPFNavigate}
+              isReadOnly={isViewer}
             />
           </Suspense>
         )}
         {dataLoaded && activeModule === 'bankpf' && (
           <Suspense fallback={<ModuleLoadingFallback />}>
             <BankPFModule 
-              userInfo={userInfo}
               gorevListesi={gorevListesiForBankPF}
               gelirModelleri={gelirModelleriForBankPF}
               ekGelirler={ekGelirler}
@@ -3061,13 +3099,13 @@ export default function App() {
               selectedBankPFId={selectedBankPFId}
               onClearSelectedBankPFId={handleClearSelectedBankPFId}
               onDeleteBankPF={handleDeleteBankPF}
+              isReadOnly={isViewer}
             />
           </Suspense>
         )}
         {dataLoaded && activeModule === 'reports' && (
           <Suspense fallback={<ModuleLoadingFallback />}>
             <ReportsModule
-              userInfo={userInfo}
               customers={customers}
               bankPFRecords={bankPFRecords}
               banks={banks}
@@ -3080,28 +3118,27 @@ export default function App() {
         {dataLoaded && activeModule === 'products' && (
           <Suspense fallback={<ModuleLoadingFallback />}>
             <ProductModule 
-              userInfo={userInfo}
               payterProducts={payterProducts}
               onPayterProductsChange={setPayterProducts}
               customers={customers}
+              isReadOnly={isViewer}
             />
           </Suspense>
         )}
         {dataLoaded && activeModule === 'revenue' && (
           <Suspense fallback={<ModuleLoadingFallback />}>
             <RevenueModule
-              userInfo={userInfo}
               customers={customers}
               payterProducts={payterProducts}
               onUpdateCustomer={handleUpdateCustomer}
               suspensionReasons={suspensionReasons}
+              isReadOnly={isViewer}
             />
           </Suspense>
         )}
         {dataLoaded && activeModule === 'definitions' && (
           <Suspense fallback={<ModuleLoadingFallback />}>
             <DefinitionsModule
-              userInfo={userInfo}
               jobTitles={jobTitles}
               onJobTitlesChange={setJobTitles}
               mccList={mccList}
@@ -3128,6 +3165,7 @@ export default function App() {
               onSalesRepsChange={setSalesReps}
               suspensionReasons={suspensionReasons}
               onSuspensionReasonsChange={setSuspensionReasons}
+              isReadOnly={isViewer}
             />
           </Suspense>
         )}
@@ -3157,42 +3195,6 @@ export default function App() {
       )}
       
       <Toaster position="top-right" />
-      
-      {/* 🔐 User Selection Prompt */}
-      {showPrompt && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-8 max-w-md mx-4 shadow-2xl">
-            <h2 className="mb-4 text-center">Hangi kullanıcı ile giriş yaptınız?</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6 text-center">
-              Yetkilerinizi belirlemek için kullanıcı adınızı seçin
-            </p>
-            <div className="flex gap-4 justify-center">
-              <button
-                onClick={() => selectUser('admin')}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                👤 Admin
-              </button>
-              <button
-                onClick={() => selectUser('viewer')}
-                className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                👁️ Viewer
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* 🔐 User Initialization Loading Overlay */}
-      {!isInitialized && !showPrompt && (
-        <div className="fixed inset-0 bg-white dark:bg-gray-900 z-50 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-400">Kullanıcı yetkileri kontrol ediliyor...</p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

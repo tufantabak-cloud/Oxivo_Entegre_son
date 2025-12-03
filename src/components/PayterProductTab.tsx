@@ -7,7 +7,7 @@ import { Badge } from './ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
 import { Alert, AlertDescription } from './ui/alert';
 import { Progress } from './ui/progress';
-import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
+// Tooltip removed - import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
 import { Checkbox } from './ui/checkbox';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
@@ -1054,25 +1054,9 @@ export function PayterProductTab({ products, onProductsChange, customers = [] }:
                                 const customerInfo = productCustomerMap.get(normalizedProductDomain);
                                 if (customerInfo) {
                                   return (
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Badge variant="outline" className="text-xs cursor-help">
-                                          {customerInfo.customer.cariAdi}
-                                        </Badge>
-                                      </TooltipTrigger>
-                                      <TooltipContent className="max-w-xs">
-                                        <div className="space-y-1">
-                                          <p className="font-medium">Müşteri Bilgisi</p>
-                                          <p className="text-xs">Bu cihaz "{customerInfo.customer.cariAdi}" müşterisine ait</p>
-                                          <p className="text-xs opacity-75">Domain: {product.domain}</p>
-                                          {customerInfo.customer.ignoreMainDomain && (
-                                            <p className="text-xs text-amber-600">
-                                              ℹ️ Alt domain eşleştirmesi aktif
-                                            </p>
-                                          )}
-                                        </div>
-                                      </TooltipContent>
-                                    </Tooltip>
+                                    <Badge variant="outline" className="text-xs">
+                                      {customerInfo.customer.cariAdi}
+                                    </Badge>
                                   );
                                 }
                                 return null;
