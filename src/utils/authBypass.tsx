@@ -86,10 +86,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     // Mark as logged out
+    console.log('🚪 [authBypass] signOut called');
+    
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('auth_logged_out', 'true');
+      console.log('🚪 [authBypass] Set sessionStorage.auth_logged_out = true');
     }
+    
     setUser(null);
+    console.log('🚪 [authBypass] Set user = null');
+    console.log('🚪 [authBypass] Current user state:', user);
   };
 
   const refreshSession = async () => {

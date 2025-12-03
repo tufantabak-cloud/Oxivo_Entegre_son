@@ -241,6 +241,15 @@ export default function App() {
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   const { user, loading: authLoading, isAdmin, isViewer, signOut } = useAuth();
 
+  // ✅ DEBUG: Watch user state changes
+  useEffect(() => {
+    console.log('🔵 [App.tsx] User state changed:', {
+      user: user?.email || 'null',
+      authLoading,
+      willShowLoginPage: !authLoading && !user
+    });
+  }, [user, authLoading]);
+
   // Show login page if not authenticated
   if (authLoading) {
     return (
@@ -2208,7 +2217,14 @@ export default function App() {
                 variant="outline"
                 size="sm"
                 onClick={async () => {
+                  console.log('🔴 [App.tsx] Çıkış butonuna tıklandı');
+                  console.log('🔴 [App.tsx] Current user before logout:', user?.email);
+                  
                   await signOut();
+                  
+                  console.log('🔴 [App.tsx] signOut() completed');
+                  console.log('🔴 [App.tsx] sessionStorage.auth_logged_out:', sessionStorage.getItem('auth_logged_out'));
+                  
                   toast.success('Başarıyla çıkış yapıldı');
                 }}
                 className="gap-2 h-8 text-xs hover:bg-red-50 hover:text-red-600 hover:border-red-300"
