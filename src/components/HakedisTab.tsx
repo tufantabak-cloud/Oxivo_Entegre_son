@@ -380,15 +380,26 @@ export function HakedisTab({
       return;
     }
     
-    // Formatlanmış değeri sayıya çevir
-    const numericValue = parseCurrency(value);
-    const sanitized = numericValue.replace(/[^0-9.]/g, '');
+    // Sadece sayı, nokta ve virgül kabul et
+    const cleanValue = value
+      .replace(/\s₺/g, '')        // ₺ sembolünü kaldır
+      .replace(/\./g, '')          // Binlik ayırıcıları kaldır
+      .replace(',', '.');          // Virgülü noktaya çevir
     
-    // Geçerli bir sayı ise kaydet
-    if (sanitized && !isNaN(parseFloat(sanitized))) {
+    // Geçerli bir sayı formatı mı kontrol et
+    const numericValue = cleanValue.replace(/[^0-9.]/g, '');
+    
+    // Geçerli bir sayı ise kaydet (state'e sadece sayısal değer kaydedilir)
+    if (numericValue && !isNaN(parseFloat(numericValue))) {
       setFormIslemHacmiMap(prev => ({
         ...prev,
-        [tabelaId]: sanitized
+        [tabelaId]: numericValue
+      }));
+    } else if (numericValue === '') {
+      // Boşsa sıfır olarak kaydet
+      setFormIslemHacmiMap(prev => ({
+        ...prev,
+        [tabelaId]: ''
       }));
     }
   };
@@ -1881,19 +1892,6 @@ export function HakedisTab({
                                 onChange={(e) => handleIslemHacmiChange(vadeKey, e.target.value)}
                                 placeholder="0,00 ₺"
                                 className="w-40 text-right bg-white"
-                                onFocus={(e) => {
-                                  // Focus'ta sadece sayıyı göster
-                                  if (formIslemHacmiMap[vadeKey]) {
-                                    const num = parseFloat(formIslemHacmiMap[vadeKey]);
-                                    e.target.value = num.toFixed(2).replace('.', ',');
-                                  }
-                                }}
-                                onBlur={(e) => {
-                                  // Blur'da formatı geri yükle
-                                  if (formIslemHacmiMap[vadeKey]) {
-                                    e.target.value = formatCurrency(formIslemHacmiMap[vadeKey]);
-                                  }
-                                }}
                               />
                             )}
                           </TableCell>
@@ -2453,19 +2451,6 @@ export function HakedisTab({
                                 onChange={(e) => handleIslemHacmiChange(record.id, e.target.value)}
                                 placeholder="0,00 ₺"
                                 className="w-40 text-right bg-white"
-                                onFocus={(e) => {
-                                  // Focus'ta sadece sayıyı göster
-                                  if (formIslemHacmiMap[record.id]) {
-                                    const num = parseFloat(formIslemHacmiMap[record.id]);
-                                    e.target.value = num.toFixed(2).replace('.', ',');
-                                  }
-                                }}
-                                onBlur={(e) => {
-                                  // Blur'da formatı geri yükle
-                                  if (formIslemHacmiMap[record.id]) {
-                                    e.target.value = formatCurrency(formIslemHacmiMap[record.id]);
-                                  }
-                                }}
                               />
                             )}
                           </TableCell>
