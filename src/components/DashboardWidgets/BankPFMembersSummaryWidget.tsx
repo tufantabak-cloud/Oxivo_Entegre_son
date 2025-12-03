@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+// Tooltip removed - import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Badge } from '../ui/badge';
 import { Building2, Maximize2, Minimize2, Users, Building, HardDrive, ExternalLink } from 'lucide-react';
 import type { Customer } from '../CustomerModule';
@@ -252,66 +252,16 @@ export const BankPFMembersSummaryWidget = React.memo(function BankPFMembersSumma
                             )}
                           </TableCell>
                           <TableCell className="text-center">
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span className="cursor-help text-indigo-700">
-                                    {summary.customerCount}
-                                  </span>
-                                </TooltipTrigger>
-                                <TooltipContent side="left" className="max-w-xs">
-                                  <div className="text-xs space-y-1">
-                                    <p className="font-semibold mb-1">Müşteriler:</p>
-                                    {summary.customers.slice(0, 6).map((c, idx) => (
-                                      <div key={idx} className="text-gray-700">
-                                        • {c.cariAdi}
-                                      </div>
-                                    ))}
-                                    {summary.customers.length > 6 && (
-                                      <p className="text-gray-500 italic mt-1">
-                                        +{summary.customers.length - 6} daha...
-                                      </p>
-                                    )}
-                                  </div>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
+                            <span className="text-indigo-700">
+                              {summary.customerCount}
+                            </span>
                           </TableCell>
                           <TableCell className="text-center">
                             {summary.deviceCount > 0 ? (
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <span className="cursor-help text-purple-700">
-                                      <HardDrive className="inline mr-1" size={14} />
-                                      {summary.deviceCount}
-                                    </span>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="left">
-                                    <div className="text-xs">
-                                      <p className="font-semibold mb-1">Cihaz Dağılımı:</p>
-                                      {summary.customers.map((customer, idx) => {
-                                        const assignment = customer.bankDeviceAssignments?.find(
-                                          a => a.bankId === summary.id || 
-                                               a.bankId === `bank-${summary.id}` || 
-                                               a.bankId === `ok-epk-${summary.id}` || 
-                                               a.bankId === `ok-ok-${summary.id}`
-                                        );
-                                        const deviceCount = assignment?.deviceIds?.length || 0;
-                                        
-                                        if (deviceCount === 0) return null;
-                                        
-                                        return (
-                                          <div key={idx} className="flex justify-between gap-3 text-gray-700">
-                                            <span>{customer.cariAdi}</span>
-                                            <span className="font-semibold">{deviceCount}</span>
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
+                              <span className="text-purple-700">
+                                <HardDrive className="inline mr-1" size={14} />
+                                {summary.deviceCount}
+                              </span>
                             ) : (
                               <span className="text-gray-400">-</span>
                             )}
