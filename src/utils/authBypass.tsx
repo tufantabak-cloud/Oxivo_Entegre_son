@@ -61,10 +61,17 @@ const defaultValue: AuthContextType = {
 const AuthContext = createContext<AuthContextType>(defaultValue);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(DEFAULT_USER);
+  // Check if user explicitly logged out
+  const hasLoggedOut = typeof window !== 'undefined' && sessionStorage.getItem('auth_logged_out') === 'true';
+  const [user, setUser] = useState<AuthUser | null>(hasLoggedOut ? null : DEFAULT_USER);
   const [loading, setLoading] = useState(false);
 
   const signIn = async (email: string, password: string) => {
+    // Clear logout flag
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('auth_logged_out');
+    }
+    
     // Mock sign in - switch user based on email
     if (email.includes('admin')) {
       setUser(MOCK_ADMIN);
@@ -78,6 +85,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    // Mark as logged out
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('auth_logged_out', 'true');
+    }
     setUser(null);
   };
 
@@ -112,6 +123,8 @@ export function useAuth(): AuthContextType {
 // Debug helper
 if (typeof window !== 'undefined') {
   (window as any).__AUTH_BYPASS_ACTIVE__ = true;
+  const hasLoggedOut = sessionStorage.getItem('auth_logged_out') === 'true';
   console.log('🔓 Auth Bypass Mode: Active');
   console.log('👤 Default User:', DEFAULT_USER.email, '/', DEFAULT_USER.role);
+  console.log('🚪 Logged Out:', hasLoggedOut ? 'Yes (will show login page)' : 'No (auto-login active)');
 }
