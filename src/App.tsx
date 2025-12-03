@@ -302,6 +302,8 @@ export default function App() {
   
   // ✅ NEW: Fetch ALL data from Supabase on mount
   useEffect(() => {
+    let isMounted = true; // ✅ Cleanup flag to prevent state updates after unmount
+    
     const fetchAllDataFromSupabase = async () => {
       try {
         logger.info('🔄 Fetching all data from Supabase...');
@@ -340,6 +342,9 @@ export default function App() {
           domainMappingApi.getAll(),
           signApi.getAll()
         ]);
+        
+        // ✅ Only update state if component is still mounted
+        if (!isMounted) return;
         
         // Update state with fetched data
         if (customersResult.success && customersResult.data) {
@@ -437,11 +442,18 @@ export default function App() {
       } catch (error) {
         logger.error('❌ Error fetching data from Supabase:', error);
         // Fallback to localStorage if Supabase fails
-        setSupabaseDataLoaded(true);
+        if (isMounted) {
+          setSupabaseDataLoaded(true);
+        }
       }
     };
     
     fetchAllDataFromSupabase();
+    
+    // ✅ Cleanup function to prevent state updates after unmount
+    return () => {
+      isMounted = false;
+    };
   }, []);
   
   // ⚡ Load data AFTER first paint (defer heavy localStorage reads)
