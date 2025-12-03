@@ -54,7 +54,7 @@ export function LoginPage() {
       <Card className="w-full max-w-md shadow-2xl border-0">
         <CardHeader className="space-y-3 text-center pb-6">
           <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-            <Lock className="w-8 h-8 text-white" />
+            <div className="text-white" style={{ fontWeight: 900, fontSize: '16px', letterSpacing: '1px', lineHeight: '1' }}>OXİVO</div>
           </div>
           <CardTitle className="text-2xl">Yönetim Paneli</CardTitle>
           <CardDescription>
@@ -134,29 +134,11 @@ export function LoginPage() {
           </form>
 
           {/* Demo Credentials */}
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-xs text-center text-gray-500 mb-3">
-              Demo hesaplar:
-            </p>
-            <div className="space-y-2 text-xs">
-              <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
-                <div className="font-medium text-blue-900 mb-1">👤 Admin</div>
-                <div className="text-blue-700 font-mono">
-                  admin@oxivo.com / admin123
-                </div>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                <div className="font-medium text-gray-900 mb-1">👁️ Görüntüleyici</div>
-                <div className="text-gray-700 font-mono">
-                  viewer@oxivo.com / viewer123
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* HIDDEN: Demo credentials removed for production */}
 
           {/* Footer */}
           <div className="mt-6 text-center text-xs text-gray-500">
-            <p>© 2024 Oxivo Yönetim Paneli</p>
+            <p>© 2026 Oxivo Yönetim Paneli</p>
           </div>
         </CardContent>
       </Card>

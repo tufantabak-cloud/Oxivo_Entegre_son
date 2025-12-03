@@ -193,10 +193,22 @@ export const customerApi = {
   async getAll() {
     console.log('🔍 Fetching customers from Supabase...');
     
-    const { data, error } = await supabase
-      .from('customers')
-      .select('*')
-      .order('created_at', { ascending: false });
+    let data, error;
+    try {
+      const result = await supabase
+        .from('customers')
+        .select('*')
+        .order('created_at', { ascending: false });
+      data = result.data;
+      error = result.error;
+    } catch (fetchError: any) {
+      console.error('❌ Network error during Supabase fetch:', fetchError);
+      return { 
+        success: false, 
+        error: 'Supabase bağlantısı kurulamadı. Lütfen internet bağlantınızı kontrol edin.',
+        data: [] 
+      };
+    }
 
     if (error) {
       console.error('❌ Error fetching customers:', error);
@@ -258,11 +270,22 @@ export const customerApi = {
    * Tek müşteri getirir
    */
   async getById(id: string) {
-    const { data, error } = await supabase
-      .from('customers')
-      .select('*')
-      .eq('id', id)
-      .single();
+    let data, error;
+    try {
+      const result = await supabase
+        .from('customers')
+        .select('*')
+        .eq('id', id)
+        .single();
+      data = result.data;
+      error = result.error;
+    } catch (fetchError: any) {
+      console.error('❌ Network error during Supabase fetch:', fetchError);
+      return { 
+        success: false, 
+        error: 'Supabase bağlantısı kurulamadı. Lütfen internet bağlantınızı kontrol edin.' 
+      };
+    }
 
     if (error) {
       console.error('❌ Error fetching customer:', error);
@@ -278,8 +301,9 @@ export const customerApi = {
   async create(customers: any | any[]) {
     console.log('📤 Creating customers in Supabase...');
     
-    // Convert to array
-    const customerArray = Array.isArray(customers) ? customers : [customers];
+    try {
+      // Convert to array
+      const customerArray = Array.isArray(customers) ? customers : [customers];
     
     // ✅ Step 1: Remove duplicates by 'id' before processing
     const uniqueRecords = Array.from(
@@ -479,10 +503,21 @@ export const customerApi = {
     }
     
     // ✅ UPSERT: Insert new records or update existing ones (based on 'id')
-    const { data, error } = await supabase
-      .from('customers')
-      .upsert(sanitizedRecords, { onConflict: 'id' })
-      .select();
+    let data, error;
+    try {
+      const result = await supabase
+        .from('customers')
+        .upsert(sanitizedRecords, { onConflict: 'id' })
+        .select();
+      data = result.data;
+      error = result.error;
+    } catch (fetchError: any) {
+      console.error('❌ Network error during Supabase fetch:', fetchError);
+      return { 
+        success: false, 
+        error: 'Supabase bağlantısı kurulamadı. Lütfen internet bağlantınızı kontrol edin veya daha sonra tekrar deneyin.' 
+      };
+    }
 
     if (error) {
       console.error('❌ Error upserting customers:', error);
@@ -563,18 +598,37 @@ export const customerApi = {
     });
     
     return { success: true, data: parsedData.map(objectToCamelCase), count: data.length };
+    
+    } catch (outerError: any) {
+      console.error('❌ Unexpected error in customerApi.create:', outerError);
+      return { 
+        success: false, 
+        error: outerError.message || 'Müşteri oluşturulurken beklenmeyen bir hata oluştu.' 
+      };
+    }
   },
 
   /**
    * Müşteri günceller
    */
   async update(id: string, updates: any) {
-    const { data, error } = await supabase
-      .from('customers')
-      .update(objectToSnakeCase(updates))
-      .eq('id', id)
-      .select()
-      .single();
+    let data, error;
+    try {
+      const result = await supabase
+        .from('customers')
+        .update(objectToSnakeCase(updates))
+        .eq('id', id)
+        .select()
+        .single();
+      data = result.data;
+      error = result.error;
+    } catch (fetchError: any) {
+      console.error('❌ Network error during Supabase fetch:', fetchError);
+      return { 
+        success: false, 
+        error: 'Supabase bağlantısı kurulamadı. Lütfen internet bağlantınızı kontrol edin.' 
+      };
+    }
 
     if (error) {
       console.error('❌ Error updating customer:', error);
@@ -589,10 +643,20 @@ export const customerApi = {
    * Müşteri siler
    */
   async delete(id: string) {
-    const { error } = await supabase
-      .from('customers')
-      .delete()
-      .eq('id', id);
+    let error;
+    try {
+      const result = await supabase
+        .from('customers')
+        .delete()
+        .eq('id', id);
+      error = result.error;
+    } catch (fetchError: any) {
+      console.error('❌ Network error during Supabase fetch:', fetchError);
+      return { 
+        success: false, 
+        error: 'Supabase bağlantısı kurulamadı. Lütfen internet bağlantınızı kontrol edin.' 
+      };
+    }
 
     if (error) {
       console.error('❌ Error deleting customer:', error);
