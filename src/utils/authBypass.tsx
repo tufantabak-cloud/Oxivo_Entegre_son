@@ -96,6 +96,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     console.log('🚪 [authBypass] Set user = null');
     console.log('🚪 [authBypass] Current user state:', user);
+    
+    // ✅ FORCE RELOAD: Ensures logout works even if state doesn't update
+    console.log('🚪 [authBypass] Force reloading page in 100ms...');
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
   };
 
   const refreshSession = async () => {
