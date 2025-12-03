@@ -2216,16 +2216,20 @@ export default function App() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={async () => {
-                  console.log('🔴 [App.tsx] Çıkış butonuna tıklandı');
-                  console.log('🔴 [App.tsx] Current user before logout:', user?.email);
+                onClick={() => {
+                  console.log('🔴 [App.tsx] Çıkış butonuna tıklandı - DIRECT LOGOUT');
                   
-                  await signOut();
-                  
-                  console.log('🔴 [App.tsx] signOut() completed');
-                  console.log('🔴 [App.tsx] sessionStorage.auth_logged_out:', sessionStorage.getItem('auth_logged_out'));
+                  // ✅ DIRECT LOGOUT - Bypass authBypass.tsx
+                  sessionStorage.setItem('auth_logged_out', 'true');
+                  console.log('🔴 [App.tsx] Set sessionStorage.auth_logged_out = true');
                   
                   toast.success('Başarıyla çıkış yapıldı');
+                  
+                  // ✅ FORCE RELOAD
+                  console.log('🔴 [App.tsx] Reloading page...');
+                  setTimeout(() => {
+                    window.location.reload();
+                  }, 500);
                 }}
                 className="gap-2 h-8 text-xs hover:bg-red-50 hover:text-red-600 hover:border-red-300"
               >
