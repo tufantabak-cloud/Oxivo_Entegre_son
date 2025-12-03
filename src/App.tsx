@@ -241,16 +241,27 @@ export default function App() {
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   const { user, loading: authLoading, isAdmin, isViewer, signOut } = useAuth();
 
+  // ✅ MANUAL LOGOUT CHECK: Override authBypass.tsx if needed
+  const hasLoggedOut = typeof window !== 'undefined' && 
+    sessionStorage.getItem('auth_logged_out') === 'true';
+
   // ✅ DEBUG: Watch user state changes
   useEffect(() => {
     console.log('🔵 [App.tsx] User state changed:', {
       user: user?.email || 'null',
       authLoading,
-      willShowLoginPage: !authLoading && !user
+      hasLoggedOut,
+      willShowLoginPage: hasLoggedOut || (!authLoading && !user)
     });
-  }, [user, authLoading]);
+  }, [user, authLoading, hasLoggedOut]);
 
-  // Show login page if not authenticated
+  // ✅ PRIORITY 1: If explicitly logged out, force LoginPage
+  if (hasLoggedOut) {
+    console.log('🔵 [App.tsx] hasLoggedOut=true, forcing LoginPage');
+    return <LoginPage />;
+  }
+
+  // ✅ PRIORITY 2: Show loading while checking auth
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -262,7 +273,9 @@ export default function App() {
     );
   }
 
+  // ✅ PRIORITY 3: If no user, show LoginPage
   if (!user) {
+    console.log('🔵 [App.tsx] user=null, showing LoginPage');
     return <LoginPage />;
   }
 
