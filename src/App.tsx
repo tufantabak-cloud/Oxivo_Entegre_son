@@ -72,6 +72,9 @@ const RevenueModule = lazy(() => import('./components/RevenueModule').then(m => 
 const DefinitionsModule = lazy(() => import('./components/DefinitionsModule').then(m => ({ default: m.DefinitionsModule })));
 // ⚡ CRITICAL FIX: Dashboard lazy load (14 widget components inside!)
 const DashboardHome = lazy(() => import('./components/DashboardHome').then(m => ({ default: m.DashboardHome })));
+// ⚡ DSYM Module - Dijital Sözleşme Yönetim Modülü
+const DSYMModule = lazy(() => import('./components/DSYMModule').then(m => ({ default: m.DSYMModule })));
+const ContractPublicView = lazy(() => import('./components/DSYM/ContractPublicView').then(m => ({ default: m.ContractPublicView })));
 
 // Type imports (not lazy loaded)
 import type { 
@@ -110,7 +113,7 @@ const GlobalSearch = lazy(() => import('./components/GlobalSearch').then(m => ({
 const ActivityLogViewer = lazy(() => import('./components/ActivityLogViewer').then(m => ({ default: m.ActivityLogViewer })));
 import { useGlobalSearch } from './hooks/useGlobalSearch';
 import { logActivity } from './utils/activityLog';
-import { Home, Users, Building2, Settings, Package, FileText, CheckCircle, XCircle, Filter, Euro, Download, Upload, Search, Trash2, CreditCard, TrendingUp, BarChart3, PieChart, DollarSign, Target, Award, Activity, Menu, X, RefreshCw } from 'lucide-react';
+import { Home, Users, Building2, Settings, Package, FileText, CheckCircle, XCircle, Filter, Euro, Download, Upload, Search, Trash2, CreditCard, TrendingUp, BarChart3, PieChart, DollarSign, Target, Award, Activity, Menu, X, RefreshCw, FileSignature, LogOut } from 'lucide-react';
 import { Toaster } from './components/ui/sonner';
 import { Button } from './components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './components/ui/sheet';
@@ -772,6 +775,10 @@ export default function App() {
           
         case 'definitions':
           setActiveModule('definitions');
+          break;
+          
+        case 'dsym':
+          setActiveModule('dsym');
           break;
           
         default:
@@ -1943,7 +1950,7 @@ export default function App() {
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
         <div className="max-w-[1400px] mx-auto px-3 md:px-4 lg:px-8">
           <div className="flex items-center justify-between h-14 md:h-16 gap-2 md:gap-4">
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex items-center gap-1.5 flex-shrink-0">
               {/* Mobile Menu Button - Visible only on mobile/tablet (< 1024px) */}
               <Button
                 variant="outline"
@@ -2086,56 +2093,59 @@ export default function App() {
                       <Settings size={18} className="flex-shrink-0" />
                       <span className="truncate">Tanımlar</span>
                     </Button>
+                    <Button
+                      variant="ghost"
+                      size="default"
+                      style={{ minHeight: '48px' }}
+                      onClick={() => {
+                        setActiveModule('dsym');
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`justify-start gap-3 ${
+                        activeModule === 'dsym'
+                          ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700 hover:text-white'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <FileSignature size={18} className="flex-shrink-0" />
+                      <span className="truncate">DSYM</span>
+                    </Button>
                   </nav>
                 </SheetContent>
               </Sheet>
 
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <h1 className="font-bold text-blue-600 text-sm sm:text-base">Oxivo</h1>
-                <span className="text-xs bg-blue-100 text-blue-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md font-medium hidden sm:block">
-                  v{CURRENT_APP_VERSION}
-                </span>
+              <div className="flex items-center gap-1 sm:gap-1.5">
+                <h1 className="font-bold text-blue-600 text-sm sm:text-base text-[32px]">Oxivo</h1>
               </div>
-              
-              {/* Activity Log Button - Desktop Only */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsActivityLogOpen(true)}
-                className="gap-2 h-8 text-xs hover:bg-purple-50 hover:text-purple-600 hover:border-purple-300 hidden sm:flex"
-              >
-                <Activity size={14} />
-                <span className="hidden md:inline">Aktivite</span>
-              </Button>
             </div>
             
             {/* Desktop Navigation - Hidden on Mobile */}
-            <nav className="hidden lg:flex items-center gap-1 overflow-x-auto scrollbar-hide">
+            <nav className="hidden lg:flex items-center gap-0.5 overflow-x-auto scrollbar-hide">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setActiveModule('home')}
-                className={`gap-2 ${
+                className={`gap-1 h-7 px-2 text-[10px] ${
                   activeModule === 'home'
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-200 hover:bg-blue-700 hover:text-white'
                     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
-                <Home size={16} />
-                <span>Ana Sayfa</span>
+                <Home size={13} />
+                <span>Ana</span>
               </Button>
               
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setActiveModule('reports')}
-                className={`gap-2 ${
+                className={`gap-1 h-7 px-2 text-[10px] ${
                   activeModule === 'reports'
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-200 hover:bg-blue-700 hover:text-white'
                     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
-                <FileText size={16} />
+                <FileText size={13} />
                 <span>Rapor</span>
               </Button>
               
@@ -2143,41 +2153,41 @@ export default function App() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setActiveModule('customers')}
-                className={`gap-2 ${
+                className={`gap-1 h-7 px-2 text-[10px] ${
                   activeModule === 'customers'
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-200 hover:bg-blue-700 hover:text-white'
                     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
-                <Users size={16} />
-                <span>Müşteriler</span>
+                <Users size={13} />
+                <span>Müşteri</span>
               </Button>
               
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setActiveModule('bankpf')}
-                className={`gap-2 ${
+                className={`gap-1 h-7 px-2 text-[10px] ${
                   activeModule === 'bankpf'
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-200 hover:bg-blue-700 hover:text-white'
                     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
-                <Building2 size={16} />
-                <span>Banka/PF</span>
+                <Building2 size={13} />
+                <span>Banka</span>
               </Button>
               
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setActiveModule('products')}
-                className={`gap-2 ${
+                className={`gap-1 h-7 px-2 text-[10px] ${
                   activeModule === 'products'
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-200 hover:bg-blue-700 hover:text-white'
                     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
-                <Package size={16} />
+                <Package size={13} />
                 <span>Ürün</span>
               </Button>
               
@@ -2185,13 +2195,13 @@ export default function App() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setActiveModule('revenue')}
-                className={`gap-2 ${
+                className={`gap-1 h-7 px-2 text-[10px] ${
                   activeModule === 'revenue'
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-200 hover:bg-blue-700 hover:text-white'
                     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
-                <Euro size={16} />
+                <Euro size={13} />
                 <span>Gelir</span>
               </Button>
               
@@ -2199,56 +2209,64 @@ export default function App() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setActiveModule('definitions')}
-                className={`gap-2 ${
+                className={`gap-1 h-7 px-2 text-[10px] ${
                   activeModule === 'definitions'
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-200 hover:bg-blue-700 hover:text-white'
                     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
-                <Settings size={16} />
-                <span>Tanımlar</span>
+                <Settings size={13} />
+                <span>Tanım</span>
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setActiveModule('dsym')}
+                className={`gap-1 h-7 px-2 text-[10px] ${
+                  activeModule === 'dsym'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-200 hover:bg-blue-700 hover:text-white'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                }`}
+              >
+                <FileSignature size={13} />
+                <span>DSYM</span>
               </Button>
             </nav>
             
             {/* User Info & Logout */}
-            <div className="flex items-center gap-2 ml-auto border-l border-gray-200 pl-4">
-              {/* Role Badge */}
-              <Badge 
-                variant={isAdmin ? "default" : "secondary"}
-                className={isAdmin ? "bg-red-500 hover:bg-red-600" : "bg-gray-400 hover:bg-gray-500"}
-              >
-                {isAdmin ? "👤 Admin" : "👁️ Görüntüleyici"}
-              </Badge>
-              
+            <div className="flex items-center gap-1.5 ml-auto border-l border-gray-200 pl-2.5">
               {/* User Email - Hidden on mobile */}
-              <span className="hidden md:inline text-xs text-gray-600 truncate max-w-[150px]">
+              <span className="hidden md:inline text-[10px] text-gray-600 truncate max-w-[120px]">
                 {user?.email}
               </span>
               
               {/* Logout Button */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  console.log('🔴 [App.tsx] Çıkış butonuna tıklandı - DIRECT LOGOUT');
-                  
-                  // ✅ DIRECT LOGOUT - Bypass authBypass.tsx
-                  sessionStorage.setItem('auth_logged_out', 'true');
-                  console.log('🔴 [App.tsx] Set sessionStorage.auth_logged_out = true');
-                  
-                  toast.success('Başarıyla çıkış yapıldı');
-                  
-                  // ✅ FORCE RELOAD
-                  console.log('🔴 [App.tsx] Reloading page...');
-                  setTimeout(() => {
-                    window.location.reload();
-                  }, 500);
-                }}
-                className="gap-2 h-8 text-xs hover:bg-red-50 hover:text-red-600 hover:border-red-300"
-              >
-                <X size={14} />
-                <span className="hidden sm:inline">Çıkış</span>
-              </Button>
+              <div className="flex flex-col items-center gap-0.5">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    console.log('🔴 [App.tsx] Çıkış butonuna tıklandı - DIRECT LOGOUT');
+                    
+                    // ✅ DIRECT LOGOUT - Bypass authBypass.tsx
+                    sessionStorage.setItem('auth_logged_out', 'true');
+                    console.log('🔴 [App.tsx] Set sessionStorage.auth_logged_out = true');
+                    
+                    toast.success('Başarıyla çıkış yapıldı');
+                    
+                    // ✅ FORCE RELOAD
+                    console.log('🔴 [App.tsx] Reloading page...');
+                    setTimeout(() => {
+                      window.location.reload();
+                    }, 500);
+                  }}
+                  className="h-7 w-7 p-0 hover:bg-red-50 hover:text-red-600 hover:border-red-300"
+                  aria-label="Çıkış"
+                >
+                  <LogOut size={14} />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -2887,11 +2905,15 @@ export default function App() {
                     // LocalStorage kontrolü
                     const storedData = localStorage.getItem('bankPFRecords');
                     if (storedData) {
-                      const parsed = JSON.parse(storedData);
-                      const storedTabela = parsed.reduce((sum: number, r: BankPF) => 
-                        sum + (r.tabelaRecords?.length || 0), 0
-                      );
-                      console.log('💾 LocalStorage\'da TA.BELA:', storedTabela);
+                      try {
+                        const parsed = JSON.parse(storedData);
+                        const storedTabela = parsed.reduce((sum: number, r: BankPF) => 
+                          sum + (r.tabelaRecords?.length || 0), 0
+                        );
+                        console.log('💾 LocalStorage\'da TA.BELA:', storedTabela);
+                      } catch (error) {
+                        console.error('❌ JSON parse hatası (bankPFRecords):', error);
+                      }
                     }
                     
                     toast.success(`Toplam ${totalTabelaRecords} TABELA kaydı - Detaylar konsolda`);
@@ -3061,11 +3083,15 @@ export default function App() {
                 // LocalStorage kontrolü
                 const storedData = localStorage.getItem('bankPFRecords');
                 if (storedData) {
-                  const parsed = JSON.parse(storedData);
-                  const storedTabela = parsed.reduce((sum: number, r: BankPF) => 
-                    sum + (r.tabelaRecords?.length || 0), 0
-                  );
-                  console.log('💾 LocalStorage\'da TABELA:', storedTabela);
+                  try {
+                    const parsed = JSON.parse(storedData);
+                    const storedTabela = parsed.reduce((sum: number, r: BankPF) => 
+                      sum + (r.tabelaRecords?.length || 0), 0
+                    );
+                    console.log('💾 LocalStorage\'da TABELA:', storedTabela);
+                  } catch (error) {
+                    console.error('❌ JSON parse hatası (bankPFRecords):', error);
+                  }
                 }
                 
                 toast.success(`Toplam ${totalTabelaRecords} TABELA kaydı - Detaylar konsolda`);
@@ -3212,6 +3238,11 @@ export default function App() {
               onSuspensionReasonsChange={setSuspensionReasons}
               isReadOnly={isViewer}
             />
+          </Suspense>
+        )}
+        {dataLoaded && activeModule === 'dsym' && (
+          <Suspense fallback={<ModuleLoadingFallback />}>
+            <DSYMModule />
           </Suspense>
         )}
       </main>
