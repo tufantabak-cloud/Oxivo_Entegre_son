@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import { Search, FileText, Clock, CheckCircle2, XCircle, AlertCircle, Download, Plus } from 'lucide-react';
-import { transactionApi, ContractTransaction } from '../../src/utils/contractApi';
+import { transactionApi, ContractTransaction } from '../../utils/contractApi';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { toast } from 'sonner';

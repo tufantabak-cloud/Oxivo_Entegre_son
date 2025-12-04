@@ -3,14 +3,15 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 import { useState, useEffect } from 'react';
-import { X, Send, Users, User, Calendar, FileText, Mail, MessageSquare, Search, Plus, Trash2, GripVertical, ChevronUp, ChevronDown } from 'lucide-react';
+import { FileSignature, X } from 'lucide-react';
+import { customerApi } from '../../utils/supabaseClient';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { toast } from 'sonner';
-import { transactionApi } from '../../src/utils/contractApi';
-import { templateApi } from '../../src/utils/contractApi';
-import { emailTemplateApi, smsTemplateApi } from '../../src/utils/contractApi';
+import { transactionApi } from '../../utils/contractApi';
+import { templateApi } from '../../utils/contractApi';
+import { emailTemplateApi, smsTemplateApi } from '../../utils/contractApi';
 
 interface SendContractModalProps {
   open: boolean;
@@ -69,7 +70,7 @@ export function SendContractModal({ open, onClose, onRefresh }: SendContractModa
       
       // Load customers from Supabase
       console.log('🔍 Fetching customers...');
-      const customersResult = await window.__OXIVO_SUPABASE__.apis.customerApi.getAll();
+      const customersResult = await customerApi.getAll();
       console.log('📦 Customers result:', customersResult);
       
       if (customersResult.success) {
@@ -353,7 +354,7 @@ export function SendContractModal({ open, onClose, onRefresh }: SendContractModa
                 }}
                 className="flex-1"
               >
-                <User size={16} className="mr-2" />
+                <FileSignature size={16} className="mr-2" />
                 Tekil Gönderim
               </Button>
               <Button
@@ -362,7 +363,7 @@ export function SendContractModal({ open, onClose, onRefresh }: SendContractModa
                 onClick={() => setMode('bulk')}
                 className="flex-1"
               >
-                <Users size={16} className="mr-2" />
+                <FileSignature size={16} className="mr-2" />
                 Toplu Gönderim
               </Button>
             </div>

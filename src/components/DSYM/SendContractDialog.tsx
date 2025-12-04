@@ -3,7 +3,8 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 import { useState, useEffect } from 'react';
-import { Send, Eye, X } from 'lucide-react';
+import { FileSignature, Send, Smartphone, Mail } from 'lucide-react';
+import { Customer } from '../CustomerModule';
 import {
   templateApi,
   emailTemplateApi,
@@ -14,7 +15,7 @@ import {
   ContractTemplate,
   EmailTemplate,
   SMSTemplate,
-} from '../../src/utils/contractApi';
+} from '../../utils/contractApi';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -25,7 +26,7 @@ import { toast } from 'sonner';
 interface SendContractDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  customer: any; // Müşteri bilgisi
+  customer: Customer; // Müşteri bilgisi
   onSuccess?: () => void;
 }
 

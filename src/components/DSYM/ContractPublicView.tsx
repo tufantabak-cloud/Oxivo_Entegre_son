@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import { CheckCircle2, Download, Eye, Smartphone, AlertCircle } from 'lucide-react';
-import { transactionApi, auditApi } from '../../src/utils/contractApi';
+import { transactionApi, auditApi } from '../../utils/contractApi';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Checkbox } from '../ui/checkbox';
