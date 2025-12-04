@@ -5,7 +5,7 @@
 import { useState, useEffect } from 'react';
 import { BarChart3, FileText, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import { transactionApi } from '../../src/utils/contractApi';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 export function ContractReports() {
   const [stats, setStats] = useState({

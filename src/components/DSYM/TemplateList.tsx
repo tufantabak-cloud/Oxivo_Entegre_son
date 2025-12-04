@@ -8,7 +8,7 @@ import { templateApi, ContractTemplate } from '../../src/utils/contractApi';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
 import { TemplateEditor } from './TemplateEditor';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 export function TemplateList() {
   const [templates, setTemplates] = useState<ContractTemplate[]>([]);

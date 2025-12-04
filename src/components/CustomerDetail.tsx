@@ -3,11 +3,14 @@ import { Customer, DomainNode, BankDeviceAssignment, ServiceFeeSettings, DeviceS
 import { PayterProduct } from './PayterProductTab';
 import { BankPF } from './BankPFModule';
 import { BankDeviceManagementTab } from './BankDeviceManagementTab';
-import { ArrowLeft, Save, Trash2, X, Plus, ChevronDown, ChevronRight, Edit2, Trash, Monitor, CheckCircle, XCircle, FileSpreadsheet, FileText, Download, FileDown, Calendar, AlertTriangle, Clock, Euro, Bell, Ban, Play, DollarSign } from 'lucide-react';
+import { SendContractDialog } from './DSYM/SendContractDialog';
+import { ArrowLeft, Save, Trash2, X, Plus, ChevronDown, ChevronRight, Edit2, Trash, Monitor, CheckCircle, XCircle, FileSpreadsheet, FileText, Download, FileDown, Calendar, AlertTriangle, Clock, Euro, Bell, Ban, Play, DollarSign, FileSignature, Upload, Folder, CheckCircle2, XOctagon } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Button } from './ui/button';
+import { documentApi } from '../utils/supabaseClient';
+import { toast } from 'sonner';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
@@ -447,7 +450,16 @@ export function CustomerDetail({
     deviceIndex: number;
   } | null>(null);
   const [selectedSuspensionReason, setSelectedSuspensionReason] = useState('');
+  
+  // DSYM (Dijital Sözleşme Yönetim Modülü) state
+  const [isDSYMDialogOpen, setIsDSYMDialogOpen] = useState(false);
+  const [dsymActiveTab, setDsymActiveTab] = useState<'documents' | 'contracts'>('documents');
   const [suspensionNotes, setSuspensionNotes] = useState('');
+  
+  // Document upload state
+  const [documents, setDocuments] = useState<any[]>([]);
+  const [uploadingDocument, setUploadingDocument] = useState<string | null>(null);
+  const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
   
   // Global dondurma sebepleri - Tanımlar modülünden gelen aktif sebepler
   const activeSuspensionReasons = (suspensionReasons || [])
@@ -836,6 +848,80 @@ export function CustomerDetail({
     // Sekme değiştirmeyi onayla
     setActiveTab(newTab);
     console.log('✅ Sekme değiştirildi:', activeTab, '->', newTab);
+  };
+
+  // Document functions
+  const fetchDocuments = async () => {
+    if (!formData.id) return;
+    
+    const result = await documentApi.getByCustomerId(formData.id);
+    if (result.success) {
+      setDocuments(result.data);
+    }
+  };
+
+  // Fetch documents when customer ID changes
+  useEffect(() => {
+    if (formData.id) {
+      fetchDocuments();
+    }
+  }, [formData.id]);
+
+  const handleDocumentUpload = async (documentType: 'vergi_levhasi' | 'ticaret_sicil_gazetesi' | 'faaliyet_belgesi') => {
+    const fileInput = fileInputRefs.current[documentType];
+    if (!fileInput || !fileInput.files || !fileInput.files[0]) return;
+    
+    const file = fileInput.files[0];
+    
+    if (!formData.id) {
+      toast.error('Önce müşteriyi kaydedin!');
+      return;
+    }
+
+    setUploadingDocument(documentType);
+
+    const isRequired = documentType === 'vergi_levhasi' || documentType === 'ticaret_sicil_gazetesi';
+
+    const result = await documentApi.upload({
+      customerId: formData.id,
+      documentType,
+      file,
+      isRequired,
+      uploadedBy: 'current-user-id' // TODO: Get from auth context
+    });
+
+    setUploadingDocument(null);
+
+    if (result.success) {
+      toast.success(result.message || 'Evrak başarıyla yüklendi');
+      fetchDocuments();
+      // Clear file input
+      if (fileInput) fileInput.value = '';
+    } else {
+      toast.error(result.error || 'Evrak yüklenirken hata oluştu');
+    }
+  };
+
+  const handleDeleteDocument = async (documentId: string) => {
+    if (!confirm('Bu evrakı silmek istediğinizden emin misiniz?')) return;
+
+    const result = await documentApi.delete(documentId);
+    
+    if (result.success) {
+      toast.success('Evrak silindi');
+      fetchDocuments();
+    } else {
+      toast.error(result.error || 'Evrak silinirken hata oluştu');
+    }
+  };
+
+  const getDocumentStatus = (documentType: string) => {
+    const doc = documents.find(d => d.documentType === documentType);
+    return doc ? doc.status : null;
+  };
+
+  const getDocument = (documentType: string) => {
+    return documents.find(d => d.documentType === documentType);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -1848,12 +1934,13 @@ export function CustomerDetail({
       <div id="customer-detail-form" className="space-y-6">
         {/* Tabs Yapısı - SEVIYE 1 FIX: Controlled State */}
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="grid w-full max-w-4xl grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1">
+          <TabsList className="grid w-full max-w-5xl grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-1">
             <TabsTrigger value="genel">Genel Bilgiler</TabsTrigger>
             <TabsTrigger value="domain">🌐 Domain</TabsTrigger>
             <TabsTrigger value="payter">📱 Payter</TabsTrigger>
             <TabsTrigger value="bankpf">🏦 Banka/PF</TabsTrigger>
             <TabsTrigger value="hizmetbedeli">💰 Hizmet Bedeli</TabsTrigger>
+            <TabsTrigger value="dsym">📝 DSYM</TabsTrigger>
           </TabsList>
 
           {/* Genel Bilgiler Sekmesi */}
@@ -3937,6 +4024,486 @@ export function CustomerDetail({
               })()}
             </div>
           </TabsContent>
+
+          {/* DSYM (Dijital Sözleşme Yönetim Modülü) Sekmesi */}
+          <TabsContent value="dsym" className="mt-6">
+            <div className="space-y-6">
+              {/* Bilgilendirme Card */}
+              <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
+                <CardContent className="pt-6">
+                  <div className="flex gap-3">
+                    <div className="text-2xl">📝</div>
+                    <div className="flex-1 space-y-2">
+                      <p className="text-sm text-purple-900">
+                        <strong>Dijital Sözleşme Yönetim Sistemi (DSYM):</strong>
+                      </p>
+                      <div className="text-xs text-purple-800 space-y-1">
+                        <p>✓ <strong>Evraklar:</strong> Müşterinin teslim etmesi gereken zorunlu evrakları takip edin</p>
+                        <p>✓ <strong>Sözleşmeler:</strong> Gönderilen sözleşmeleri ve onay durumlarını izleyin</p>
+                        <p>✓ Dijital onay + SMS doğrulama + Hard copy takibi yapılır</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* Nested Tabs: Evraklar ve Sözleşmeler */}
+              <Tabs value={dsymActiveTab} onValueChange={(value) => setDsymActiveTab(value as 'documents' | 'contracts')} className="w-full">
+                <TabsList className="grid w-full max-w-md grid-cols-2 gap-2">
+                  <TabsTrigger value="documents">📁 Evraklar</TabsTrigger>
+                  <TabsTrigger value="contracts">📄 Sözleşmeler</TabsTrigger>
+                </TabsList>
+
+                {/* Evraklar Sekmesi */}
+                <TabsContent value="documents" className="mt-6">
+                  <div className="space-y-6">
+                    {!formData.id ? (
+                      <Card className="border-yellow-300 bg-yellow-50">
+                        <CardContent className="pt-6">
+                          <div className="flex items-start gap-3">
+                            <AlertTriangle className="text-yellow-600 flex-shrink-0" size={24} />
+                            <div>
+                              <p className="text-yellow-900 mb-2">
+                                <strong>Önce Müşteriyi Kaydedin!</strong>
+                              </p>
+                              <p className="text-yellow-700 text-sm">
+                                Evrak yükleyebilmek için önce bu müşteriyi kaydetmelisiniz.
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <>
+                        {/* Zorunlu Evraklar */}
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                              <Folder size={20} className="text-red-600" />
+                              Zorunlu Evraklar
+                            </CardTitle>
+                            <p className="text-sm text-gray-600 mt-1">
+                              Müşterinin teslim etmesi gereken zorunlu belgeler
+                            </p>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-4">
+                              {/* Vergi Levhası */}
+                              <div className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3 flex-1">
+                                    <FileText className="text-blue-600" size={24} />
+                                    <div className="flex-1">
+                                      <h4 className="text-sm">Vergi Levhası</h4>
+                                      <p className="text-xs text-gray-500 mt-1">
+                                        Müşterinin güncel vergi levhası belgesi (PDF/JPG)
+                                      </p>
+                                      {getDocument('vergi_levhasi') && (
+                                        <p className="text-xs text-blue-600 mt-1">
+                                          📎 {getDocument('vergi_levhasi').fileName}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant="outline" className="bg-red-50 text-red-700 border-red-300">
+                                      Zorunlu
+                                    </Badge>
+                                    {getDocumentStatus('vergi_levhasi') === 'approved' && (
+                                      <Badge className="bg-green-100 text-green-700 border-green-300">
+                                        <CheckCircle2 size={12} className="mr-1" />
+                                        Onaylandı
+                                      </Badge>
+                                    )}
+                                    {getDocumentStatus('vergi_levhasi') === 'pending' && (
+                                      <Badge variant="outline" className="bg-yellow-100 text-yellow-700 border-yellow-300">
+                                        <Clock size={12} className="mr-1" />
+                                        Bekliyor
+                                      </Badge>
+                                    )}
+                                    {!getDocumentStatus('vergi_levhasi') && (
+                                      <Badge variant="outline" className="bg-gray-100">
+                                        Yüklenmedi
+                                      </Badge>
+                                    )}
+                                    <input
+                                      type="file"
+                                      accept=".pdf,.jpg,.jpeg,.png"
+                                      ref={(el) => (fileInputRefs.current['vergi_levhasi'] = el)}
+                                      onChange={() => handleDocumentUpload('vergi_levhasi')}
+                                      className="hidden"
+                                    />
+                                    {getDocument('vergi_levhasi') ? (
+                                      <Button 
+                                        size="sm" 
+                                        variant="outline"
+                                        onClick={() => handleDeleteDocument(getDocument('vergi_levhasi').id)}
+                                        disabled={uploadingDocument === 'vergi_levhasi'}
+                                      >
+                                        <Trash size={16} className="mr-2 text-red-600" />
+                                        Sil
+                                      </Button>
+                                    ) : (
+                                      <Button 
+                                        size="sm" 
+                                        variant="outline"
+                                        onClick={() => fileInputRefs.current['vergi_levhasi']?.click()}
+                                        disabled={uploadingDocument === 'vergi_levhasi'}
+                                      >
+                                        {uploadingDocument === 'vergi_levhasi' ? (
+                                          <>
+                                            <Clock size={16} className="mr-2 animate-spin" />
+                                            Yükleniyor...
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Upload size={16} className="mr-2" />
+                                            Yükle
+                                          </>
+                                        )}
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Ticaret Sicil Gazetesi */}
+                              <div className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3 flex-1">
+                                    <FileText className="text-blue-600" size={24} />
+                                    <div className="flex-1">
+                                      <h4 className="text-sm">Ticaret Sicil Gazetesi</h4>
+                                      <p className="text-xs text-gray-500 mt-1">
+                                        Şirketin resmi ticaret sicil kayıt belgesi
+                                      </p>
+                                      {getDocument('ticaret_sicil_gazetesi') && (
+                                        <p className="text-xs text-blue-600 mt-1">
+                                          📎 {getDocument('ticaret_sicil_gazetesi').fileName}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant="outline" className="bg-red-50 text-red-700 border-red-300">
+                                      Zorunlu
+                                    </Badge>
+                                    {getDocumentStatus('ticaret_sicil_gazetesi') === 'approved' && (
+                                      <Badge className="bg-green-100 text-green-700 border-green-300">
+                                        <CheckCircle2 size={12} className="mr-1" />
+                                        Onaylandı
+                                      </Badge>
+                                    )}
+                                    {getDocumentStatus('ticaret_sicil_gazetesi') === 'pending' && (
+                                      <Badge variant="outline" className="bg-yellow-100 text-yellow-700 border-yellow-300">
+                                        <Clock size={12} className="mr-1" />
+                                        Bekliyor
+                                      </Badge>
+                                    )}
+                                    {!getDocumentStatus('ticaret_sicil_gazetesi') && (
+                                      <Badge variant="outline" className="bg-gray-100">
+                                        Yüklenmedi
+                                      </Badge>
+                                    )}
+                                    <input
+                                      type="file"
+                                      accept=".pdf,.jpg,.jpeg,.png"
+                                      ref={(el) => (fileInputRefs.current['ticaret_sicil_gazetesi'] = el)}
+                                      onChange={() => handleDocumentUpload('ticaret_sicil_gazetesi')}
+                                      className="hidden"
+                                    />
+                                    {getDocument('ticaret_sicil_gazetesi') ? (
+                                      <Button 
+                                        size="sm" 
+                                        variant="outline"
+                                        onClick={() => handleDeleteDocument(getDocument('ticaret_sicil_gazetesi').id)}
+                                        disabled={uploadingDocument === 'ticaret_sicil_gazetesi'}
+                                      >
+                                        <Trash size={16} className="mr-2 text-red-600" />
+                                        Sil
+                                      </Button>
+                                    ) : (
+                                      <Button 
+                                        size="sm" 
+                                        variant="outline"
+                                        onClick={() => fileInputRefs.current['ticaret_sicil_gazetesi']?.click()}
+                                        disabled={uploadingDocument === 'ticaret_sicil_gazetesi'}
+                                      >
+                                        {uploadingDocument === 'ticaret_sicil_gazetesi' ? (
+                                          <>
+                                            <Clock size={16} className="mr-2 animate-spin" />
+                                            Yükleniyor...
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Upload size={16} className="mr-2" />
+                                            Yükle
+                                          </>
+                                        )}
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {/* Opsiyonel Evraklar */}
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                              <Folder size={20} className="text-blue-600" />
+                              Opsiyonel Evraklar
+                            </CardTitle>
+                            <p className="text-sm text-gray-600 mt-1">
+                              Müşterinin durumuna göre istenebilecek belgeler
+                            </p>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-4">
+                              {/* Faaliyet Belgesi */}
+                              <div className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3 flex-1">
+                                    <FileText className="text-green-600" size={24} />
+                                    <div className="flex-1">
+                                      <h4 className="text-sm">Faaliyet Belgesi</h4>
+                                      <p className="text-xs text-gray-500 mt-1">
+                                        İşletmenin faaliyet alanını belgeleyen resmi doküman
+                                      </p>
+                                      {getDocument('faaliyet_belgesi') && (
+                                        <p className="text-xs text-blue-600 mt-1">
+                                          📎 {getDocument('faaliyet_belgesi').fileName}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-300">
+                                      Opsiyonel
+                                    </Badge>
+                                    {getDocumentStatus('faaliyet_belgesi') === 'approved' && (
+                                      <Badge className="bg-green-100 text-green-700 border-green-300">
+                                        <CheckCircle2 size={12} className="mr-1" />
+                                        Onaylandı
+                                      </Badge>
+                                    )}
+                                    {getDocumentStatus('faaliyet_belgesi') === 'pending' && (
+                                      <Badge variant="outline" className="bg-yellow-100 text-yellow-700 border-yellow-300">
+                                        <Clock size={12} className="mr-1" />
+                                        Bekliyor
+                                      </Badge>
+                                    )}
+                                    {!getDocumentStatus('faaliyet_belgesi') && (
+                                      <Badge variant="outline" className="bg-gray-100">
+                                        Yüklenmedi
+                                      </Badge>
+                                    )}
+                                    <input
+                                      type="file"
+                                      accept=".pdf,.jpg,.jpeg,.png"
+                                      ref={(el) => (fileInputRefs.current['faaliyet_belgesi'] = el)}
+                                      onChange={() => handleDocumentUpload('faaliyet_belgesi')}
+                                      className="hidden"
+                                    />
+                                    {getDocument('faaliyet_belgesi') ? (
+                                      <Button 
+                                        size="sm" 
+                                        variant="outline"
+                                        onClick={() => handleDeleteDocument(getDocument('faaliyet_belgesi').id)}
+                                        disabled={uploadingDocument === 'faaliyet_belgesi'}
+                                      >
+                                        <Trash size={16} className="mr-2 text-red-600" />
+                                        Sil
+                                      </Button>
+                                    ) : (
+                                      <Button 
+                                        size="sm" 
+                                        variant="outline"
+                                        onClick={() => fileInputRefs.current['faaliyet_belgesi']?.click()}
+                                        disabled={uploadingDocument === 'faaliyet_belgesi'}
+                                      >
+                                        {uploadingDocument === 'faaliyet_belgesi' ? (
+                                          <>
+                                            <Clock size={16} className="mr-2 animate-spin" />
+                                            Yükleniyor...
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Upload size={16} className="mr-2" />
+                                            Yükle
+                                          </>
+                                        )}
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {/* Evrak Durumu Bilgisi */}
+                        <Card className="bg-blue-50 border-blue-200">
+                          <CardContent className="pt-6">
+                            <h4 className="text-blue-900 mb-3">📋 Evrak Yükleme Kuralları</h4>
+                            <div className="space-y-2 text-sm text-blue-800">
+                              <p>• <strong>Desteklenen formatlar:</strong> PDF, JPG, PNG (Max 5MB)</p>
+                              <p>• <strong>Zorunlu evraklar:</strong> Müşteri kaydı tamamlanması için gereklidir</p>
+                              <p>• <strong>Opsiyonel evraklar:</strong> İhtiyaca göre sonradan yüklenebilir</p>
+                              <p>• <strong>Güncelleme:</strong> Mevcut evrakların üzerine yeni versiyon yüklenebilir</p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </>
+                    )}
+                  </div>
+                </TabsContent>
+
+                {/* Sözleşmeler Sekmesi */}
+                <TabsContent value="contracts" className="mt-6">
+                  <div className="space-y-6">
+                    {!formData.id ? (
+                      <Card className="border-yellow-300 bg-yellow-50">
+                        <CardContent className="pt-6">
+                          <div className="flex items-start gap-3">
+                            <AlertTriangle className="text-yellow-600 flex-shrink-0" size={24} />
+                            <div>
+                              <p className="text-yellow-900 mb-2">
+                                <strong>Önce Müşteriyi Kaydedin!</strong>
+                              </p>
+                              <p className="text-yellow-700 text-sm">
+                                Sözleşme gönderebilmek için önce bu müşteriyi kaydetmelisiniz.
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <>
+                        {/* Yeni Sözleşme Gönder Card */}
+                        <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
+                          <CardContent className="pt-6">
+                            <div className="flex items-center gap-3">
+                              <FileSignature className="text-green-600" size={32} />
+                              <div className="flex-1">
+                                <h4 className="text-green-900">Yeni Sözleşme Paketi Gönder</h4>
+                                <p className="text-sm text-green-700 mt-1">
+                                  Müşteriye sözleşme, protokol ve aydınlatma metinlerini gönderin
+                                </p>
+                              </div>
+                              <Button
+                                type="button"
+                                onClick={() => setIsDSYMDialogOpen(true)}
+                                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                              >
+                                <Plus size={18} className="mr-2" />
+                                Sözleşme Gönder
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {/* Müşteri Bilgileri Özeti */}
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-sm flex items-center gap-2">
+                              <FileSignature size={16} className="text-blue-600" />
+                              Müşteri Bilgileri
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                              <div>
+                                <p className="text-xs text-gray-500">Ünvan</p>
+                                <p className="text-gray-900 mt-1">{formData.cariAdi || '-'}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-gray-500">Vergi No</p>
+                                <p className="text-gray-900 mt-1">{formData.vergiNo || '-'}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-gray-500">Telefon</p>
+                                <p className="text-gray-900 mt-1">{formData.tel || '-'}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-gray-500">Email</p>
+                                <p className="text-gray-900 mt-1">{formData.email || '-'}</p>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {/* Gönderilen Sözleşmeler */}
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                              <FileText size={20} className="text-purple-600" />
+                              Sözleşme Geçmişi
+                            </CardTitle>
+                            <p className="text-sm text-gray-600 mt-1">
+                              Bu müşteriye gönderilen tüm sözleşmeler
+                            </p>
+                          </CardHeader>
+                          <CardContent>
+                            {/* TODO: Supabase'den veri çekilecek */}
+                            <div className="text-center py-12">
+                              <FileText className="mx-auto text-gray-400 mb-3" size={48} />
+                              <p className="text-gray-600 mb-2">Henüz sözleşme gönderilmemiş</p>
+                              <p className="text-sm text-gray-500">
+                                Yukarıdaki &quot;Sözleşme Gönder&quot; butonuna tıklayarak ilk sözleşmeyi gönderin
+                              </p>
+                            </div>
+                            
+                            {/* Örnek sözleşme listesi (veri varsa gösterilecek)
+                            <div className="space-y-3">
+                              <div className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3 flex-1">
+                                    <FileText size={24} className="text-blue-600" />
+                                    <div>
+                                      <h4 className="text-sm">Hizmet Sözleşmesi</h4>
+                                      <p className="text-xs text-gray-500 mt-1">
+                                        Gönderim: 15.12.2024 • İşlem No: #DSYM-2024-001
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Badge className="bg-green-100 text-green-700 border-green-300">
+                                      ✓ Onaylandı
+                                    </Badge>
+                                    <Button size="sm" variant="outline">
+                                      Detay
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            */}
+                          </CardContent>
+                        </Card>
+
+                        {/* Bilgilendirme */}
+                        <Card className="bg-blue-50 border-blue-200">
+                          <CardContent className="pt-6">
+                            <h4 className="text-blue-900 mb-3">📋 Sözleşme Takibi</h4>
+                            <div className="space-y-2 text-sm text-blue-800">
+                              <p>• <strong>Bekliyor:</strong> Müşteri henüz sözleşmeyi açmadı</p>
+                              <p>• <strong>Görüntülendi:</strong> Müşteri sözleşmeyi okudu, onay bekliyor</p>
+                              <p>• <strong>Onaylandı:</strong> Dijital onay + SMS doğrulama tamamlandı</p>
+                              <p>• <strong>Hard Copy Bekliyor:</strong> Islak imzalı kopya bekleniyor (5 gün)</p>
+                              <p>• <strong>Tamamlandı:</strong> Tüm süreç başarıyla tamamlandı</p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </>
+                    )}
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+          </TabsContent>
         </Tabs>
 
         {/* Actions - Alt kısımda da görünür */}
@@ -4047,6 +4614,29 @@ export function CustomerDetail({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* DSYM - Sözleşme Gönderme Dialog */}
+      {formData.id && (
+        <SendContractDialog
+          isOpen={isDSYMDialogOpen}
+          onClose={() => setIsDSYMDialogOpen(false)}
+          customer={{
+            id: formData.id,
+            unvan: formData.cariAdi,
+            vergi_no: formData.vergiNo,
+            vergi_dairesi: formData.vergiDairesi,
+            adres: formData.adres,
+            telefon: formData.tel,
+            gsm: formData.tel,
+            email: formData.email,
+            yetkili_adi: formData.yetkili,
+          }}
+          onSuccess={() => {
+            toast.success('Sözleşme başarıyla gönderildi!');
+            setIsDSYMDialogOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }

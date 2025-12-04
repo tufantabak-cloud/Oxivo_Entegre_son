@@ -7,7 +7,7 @@ import { X, Send, Users, User, Calendar, FileText, Mail, MessageSquare, Search, 
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { transactionApi } from '../../src/utils/contractApi';
 import { templateApi } from '../../src/utils/contractApi';
 import { emailTemplateApi, smsTemplateApi } from '../../src/utils/contractApi';

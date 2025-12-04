@@ -7,7 +7,7 @@ import { Search, FileText, Clock, CheckCircle2, XCircle, AlertCircle, Download, 
 import { transactionApi, ContractTransaction } from '../../src/utils/contractApi';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { SendContractModal } from './SendContractModal';
 
 type StatusFilter = 'all' | 'draft' | 'sent' | 'digital_signed' | 'hard_copy_waiting' | 'completed' | 'expired';
