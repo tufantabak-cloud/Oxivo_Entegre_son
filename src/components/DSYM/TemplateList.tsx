@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import { Plus, FileText, Edit, Copy, Eye, Trash2 } from 'lucide-react';
-import { templateApi, ContractTemplate } from '../../src/utils/contractApi';
+import { templateApi, ContractTemplate } from '../../utils/contractApi';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
 import { TemplateEditor } from './TemplateEditor';

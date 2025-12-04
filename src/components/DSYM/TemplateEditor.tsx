@@ -22,7 +22,7 @@ import {
   Save,
   X,
 } from 'lucide-react';
-import { ContractTemplate } from '../../src/utils/contractApi';
+import { ContractTemplate } from '../../utils/contractApi';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';

@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import { Plus, MessageSquare, Edit, Trash2, ArrowLeft } from 'lucide-react';
-import { smsTemplateApi, SMSTemplate } from '../../src/utils/contractApi';
+import { smsTemplateApi, SMSTemplate } from '../../utils/contractApi';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';

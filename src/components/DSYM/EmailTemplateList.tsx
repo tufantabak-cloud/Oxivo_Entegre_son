@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import { Plus, Mail, Edit, Trash2, ArrowLeft } from 'lucide-react';
-import { emailTemplateApi, EmailTemplate } from '../../src/utils/contractApi';
+import { emailTemplateApi, EmailTemplate } from '../../utils/contractApi';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
