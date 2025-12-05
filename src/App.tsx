@@ -1,3 +1,9 @@
+// App v1.0.18 - TABELA Sütun Düzeni Optimizasyonu (2025-12-05):
+//   ✅ KLM SÜTUNU: TABELA tablolarında ilk sütuna taşındı
+//   ✅ CHECKBOX SÜTUNU: TABELA tablolarında son sütuna taşındı
+//   ✅ "Seçim" BAŞLIĞI: Checkbox sütununa metin başlık eklendi
+//   ✅ GENIŞLIK OPTIMIZASYONU: Tüm sütunlara w-X değerleri eklendi
+//   📊 Expected: Daha okunabilir ve tutarlı tablo düzeni
 // App v1.0.17 - SSR-SAFE & HYDRATION FIX (2025-11-16):
 //   ✅ BATCHED UPDATES: unstable_batchedUpdates for JSON import (hydration fix)
 //   ✅ SSR-SAFE: extractLeadingNumber() util (subtitle.split() NaN crash fix)
@@ -190,6 +196,11 @@ function extractLeadingNumber(text: string | undefined): number {
 //         - Terser minification enabled (console.log removed in production)
 //         - Manual chunk splitting for optimal caching
 //         - CSS optimized and cleaned up
+// v1.0.10 - TABELA Kayıtları tablosunda sütun düzeni optimize edildi:
+//         - KLM sütunu ilk sütun olarak başa taşındı
+//         - Checkbox "Seçim" sütunu son sütun olarak sona taşındı
+//         - Tüm sütunlara genişlik değerleri (w-X) eklendi
+//         - Hem ana tablo hem Ek Gelir Detayları tablosuna uygulandı
 // v1.0.9 - Hakediş manuel değer yönetimi:
 //         - ANA TABELA TOPLAM "Toplam İşlem Hacmi" hücresine manuel veri girişi eklendi
 //         - Excel export'ta manuel değerler "(MANUEL)" etiketi ile işaretleniyor
@@ -206,7 +217,7 @@ function extractLeadingNumber(text: string | undefined): number {
 // v1.0.3 - Hakediş sistemi yenilendi: Kayıt bazlı hakediş yönetimi (Oluştur-Kaydet-Arşiv)
 // v1.0.2 - Hakediş modülü eklendi (Banka/PF > İş Birliği > Hakediş)
 // v1.0.1 - Export/Import butonları header'a taşındı (tüm sayfalardan erişilebilir)
-const CURRENT_APP_VERSION = '1.0.17';
+const CURRENT_APP_VERSION = '1.0.18';
 
 // Version validation with fallback
 if (!CURRENT_APP_VERSION) {
