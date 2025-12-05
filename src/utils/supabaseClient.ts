@@ -458,10 +458,10 @@ export const customerApi = {
                 return value;
               });
               
-              // Check size before assigning
-              if (jsonString.length > 100000) {
-                console.warn(`⚠️ WARNING: ${field} JSON is very large (${jsonString.length} chars). Consider splitting data.`);
-              }
+              // Check size before assigning (disabled to prevent warnings)
+              // if (jsonString.length > 100000) {
+              //   console.warn(`⚠️ Large JSONB field: ${field} (${Math.round(jsonString.length / 1024)}KB)`);
+              // }
               
               sanitized[field] = jsonString;
             } catch (stringifyError) {
@@ -492,70 +492,74 @@ export const customerApi = {
       return sanitized;
     });
     
-    // Debug: Log first record's keys to verify conversion
-    if (sanitizedRecords.length > 0) {
-      console.log('🔍 Sample record keys (snake_case):', Object.keys(sanitizedRecords[0]).slice(0, 10).join(', '));
-      console.log('🔍 JSONB field sample (service_fee_settings):', 
-        typeof sanitizedRecords[0].service_fee_settings === 'string' 
-          ? 'STRING ✅' 
-          : `OBJECT ❌ (${typeof sanitizedRecords[0].service_fee_settings})`
-      );
+    // Debug: Log first record's keys to verify conversion (disabled)
+    // if (sanitizedRecords.length > 0) {
+    //   console.log('🔍 Sample record keys (snake_case):', Object.keys(sanitizedRecords[0]).slice(0, 10).join(', '));
+    // }
+    
+    // ✅ BATCH UPSERT: Process in chunks to avoid timeout
+    const BATCH_SIZE = 50; // Smaller batches for customers (they have large JSONB fields)
+    const batches = [];
+    
+    for (let i = 0; i < sanitizedRecords.length; i += BATCH_SIZE) {
+      batches.push(sanitizedRecords.slice(i, i + BATCH_SIZE));
     }
     
-    // ✅ UPSERT: Insert new records or update existing ones (based on 'id')
-    let data, error;
-    try {
-      const result = await supabase
-        .from('customers')
-        .upsert(sanitizedRecords, { onConflict: 'id' })
-        .select();
-      data = result.data;
-      error = result.error;
-    } catch (fetchError: any) {
-      console.error('❌ Network error during Supabase fetch:', fetchError);
-      return { 
-        success: false, 
-        error: 'Supabase bağlantısı kurulamadı. Lütfen internet bağlantınızı kontrol edin veya daha sonra tekrar deneyin.' 
-      };
-    }
-
-    if (error) {
-      console.error('❌ Error upserting customers:', error);
-      console.error('❌ Error details:', {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint,
-      });
+    console.log(`📦 Processing ${sanitizedRecords.length} customers in ${batches.length} batches...`);
+    
+    let totalUpserted = 0;
+    const allData: any[] = [];
+    
+    for (let i = 0; i < batches.length; i++) {
+      const batch = batches[i];
+      console.log(`📤 Batch ${i + 1}/${batches.length}: Upserting ${batch.length} customers...`);
       
-      // 🔍 DEBUG: Log ALL problematic records with their service_fee_settings
-      if (sanitizedRecords.length > 0) {
-        console.error(`🔍 Total records attempted: ${sanitizedRecords.length}`);
-        sanitizedRecords.forEach((rec, idx) => {
-          if (rec.service_fee_settings) {
-            const preview = typeof rec.service_fee_settings === 'string' 
-              ? rec.service_fee_settings.substring(0, 100) + '...'
-              : JSON.stringify(rec.service_fee_settings).substring(0, 100) + '...';
-            console.error(`🔍 Record ${idx + 1} (${rec.unvan || rec.id}): service_fee_settings = ${preview}`);
-          }
+      let data, error;
+      try {
+        const result = await supabase
+          .from('customers')
+          .upsert(batch, { onConflict: 'id' })
+          .select();
+        data = result.data;
+        error = result.error;
+      } catch (fetchError: any) {
+        console.error(`❌ Network error during batch ${i + 1}:`, fetchError);
+        return { 
+          success: false, 
+          error: 'Supabase bağlantısı kurulamadı. Lütfen internet bağlantınızı kontrol edin veya daha sonra tekrar deneyin.' 
+        };
+      }
+
+      if (error) {
+        console.error(`❌ Error upserting batch ${i + 1}/${batches.length}:`, error);
+        console.error('❌ Error details:', {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
         });
+        
+        // Extra debugging for common errors
+        if (error.code === 'PGRST204') {
+          console.error('💡 Table not found! Run /SUPABASE_CUSTOMERS_FIX.sql in Supabase Dashboard');
+        } else if (error.code === '42703') {
+          console.error('💡 Column mismatch! Check that table schema matches Customer interface');
+        } else if (error.code === '22P02') {
+          console.error('💡 Invalid JSON syntax! Check JSONB fields (bankDeviceAssignments, serviceFeeSettings, etc.)');
+        } else if (error.message.includes('UTF8') || error.message.includes('encoding')) {
+          console.error('💡 UTF8 encoding error! Check for invalid characters in string fields');
+        }
+        
+        return { success: false, error: `Batch ${i + 1} failed: ${error.message}` };
       }
       
-      // Extra debugging for common errors
-      if (error.code === 'PGRST204') {
-        console.error('💡 Table not found! Run /SUPABASE_CUSTOMERS_FIX.sql in Supabase Dashboard');
-      } else if (error.code === '42703') {
-        console.error('💡 Column mismatch! Check that table schema matches Customer interface');
-      } else if (error.code === '22P02') {
-        console.error('💡 Invalid JSON syntax! Check JSONB fields (bankDeviceAssignments, serviceFeeSettings, etc.)');
-      } else if (error.message.includes('UTF8') || error.message.includes('encoding')) {
-        console.error('💡 UTF8 encoding error! Check for invalid characters in string fields');
-      }
-      
-      return { success: false, error: error.message };
+      totalUpserted += data.length;
+      allData.push(...data);
+      console.log(`✅ Batch ${i + 1}/${batches.length}: ${data.length} customers upserted (Total: ${totalUpserted}/${sanitizedRecords.length})`);
     }
 
-    console.log(`✅ Upserted ${data.length} customers in Supabase`);
+    console.log(`✅ All batches completed! Total upserted: ${totalUpserted} customers`);
+    const data = allData;
     
     // ✅ FIX: Parse JSONB strings back to objects when reading
     const parsedData = data.map(record => {
@@ -780,26 +784,47 @@ export const productApi = {
       return sanitized;
     });
     
-    // ✅ UPSERT: Insert new records or update existing ones (based on 'id')
-    const { data, error } = await supabase
-      .from('products')
-      .upsert(sanitizedRecords, { onConflict: 'id' })
-      .select();
+    // ✅ BATCH UPSERT: Process in chunks to avoid timeout
+    const BATCH_SIZE = 100; // Reduced from unlimited to 100 records per batch
+    const batches = [];
+    
+    for (let i = 0; i < sanitizedRecords.length; i += BATCH_SIZE) {
+      batches.push(sanitizedRecords.slice(i, i + BATCH_SIZE));
+    }
+    
+    console.log(`📦 Processing ${sanitizedRecords.length} products in ${batches.length} batches...`);
+    
+    let totalUpserted = 0;
+    const allData: any[] = [];
+    
+    for (let i = 0; i < batches.length; i++) {
+      const batch = batches[i];
+      console.log(`📤 Batch ${i + 1}/${batches.length}: Upserting ${batch.length} products...`);
+      
+      const { data, error } = await supabase
+        .from('products')
+        .upsert(batch, { onConflict: 'id' })
+        .select();
 
-    if (error) {
-      console.error('❌ Error upserting products:', error);
-      console.error('🔍 Error details:', {
-        message: error.message,
-        hint: error.hint,
-        details: error.details,
-        code: error.code
-      });
-      console.error('🔍 Failed record sample (sanitized):', sanitizedRecords[0]);
-      return { success: false, error: error.message };
+      if (error) {
+        console.error(`❌ Error upserting batch ${i + 1}/${batches.length}:`, error);
+        console.error('🔍 Error details:', {
+          message: error.message,
+          hint: error.hint,
+          details: error.details,
+          code: error.code
+        });
+        console.error('🔍 Failed record sample (sanitized):', batch[0]);
+        return { success: false, error: `Batch ${i + 1} failed: ${error.message}` };
+      }
+      
+      totalUpserted += data.length;
+      allData.push(...data);
+      console.log(`✅ Batch ${i + 1}/${batches.length}: ${data.length} products upserted (Total: ${totalUpserted}/${sanitizedRecords.length})`);
     }
 
-    console.log(`✅ Upserted ${data.length} products in Supabase`);
-    return { success: true, data: data.map(objectToCamelCase), count: data.length };
+    console.log(`✅ All batches completed! Total upserted: ${totalUpserted} products`);
+    return { success: true, data: allData.map(objectToCamelCase), count: totalUpserted };
   },
 
   /**
@@ -2078,6 +2103,236 @@ export const signApi = {
 };
 
 // ========================================
+// CUSTOMER DOCUMENTS API (Müşteri Evrakları)
+// ========================================
+
+export const documentApi = {
+  /**
+   * Get all documents for a specific customer
+   */
+  async getByCustomerId(customerId: string) {
+    const { data, error } = await supabase
+      .from('customer_documents')
+      .select('*')
+      .eq('customer_id', customerId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('❌ Error fetching customer documents:', error);
+      return { success: false, error: error.message, data: [] };
+    }
+
+    console.log(`✅ Fetched ${data.length} documents for customer ${customerId}`);
+    return { success: true, data: data.map(objectToCamelCase) || [] };
+  },
+
+  /**
+   * Upload a document to Supabase Storage and create database record
+   */
+  async upload(params: {
+    customerId: string;
+    documentType: 'vergi_levhasi' | 'ticaret_sicil_gazetesi' | 'faaliyet_belgesi' | 'imza_sirküleri' | 'other';
+    file: File;
+    isRequired?: boolean;
+    uploadedBy?: string;
+  }) {
+    try {
+      console.log('📤 Uploading document to Supabase Storage...');
+      
+      const { customerId, documentType, file, isRequired = false, uploadedBy } = params;
+      
+      // Validate file size (max 5MB)
+      const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+      if (file.size > MAX_FILE_SIZE) {
+        return { 
+          success: false, 
+          error: 'Dosya boyutu 5MB\'ı aşamaz' 
+        };
+      }
+
+      // Validate file type
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+      if (!allowedTypes.includes(file.type)) {
+        return { 
+          success: false, 
+          error: 'Sadece PDF, JPG ve PNG dosyaları yüklenebilir' 
+        };
+      }
+
+      // Generate unique file path
+      const fileExt = file.name.split('.').pop();
+      const timestamp = Date.now();
+      const filePath = `${customerId}/${documentType}_${timestamp}.${fileExt}`;
+
+      // Upload to Supabase Storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('customer-documents')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) {
+        console.error('❌ Storage upload error:', uploadError);
+        return { success: false, error: uploadError.message };
+      }
+
+      console.log('✅ File uploaded to storage:', uploadData.path);
+
+      // Create database record
+      const documentRecord = {
+        customer_id: customerId,
+        document_type: documentType,
+        file_name: file.name,
+        file_path: uploadData.path,
+        file_size: file.size,
+        file_type: file.type,
+        is_required: isRequired,
+        status: 'pending',
+        uploaded_by: uploadedBy || null
+      };
+
+      const { data: dbData, error: dbError } = await supabase
+        .from('customer_documents')
+        .insert([documentRecord])
+        .select()
+        .single();
+
+      if (dbError) {
+        console.error('❌ Database insert error:', dbError);
+        // Clean up uploaded file if DB insert fails
+        await supabase.storage
+          .from('customer-documents')
+          .remove([uploadData.path]);
+        return { success: false, error: dbError.message };
+      }
+
+      console.log('✅ Document record created:', dbData.id);
+      return { 
+        success: true, 
+        data: objectToCamelCase(dbData),
+        message: 'Evrak başarıyla yüklendi'
+      };
+
+    } catch (error: any) {
+      console.error('❌ Exception in documentApi.upload:', error);
+      return { success: false, error: error.message || 'Bilinmeyen hata' };
+    }
+  },
+
+  /**
+   * Update document status (approve/reject)
+   */
+  async updateStatus(params: {
+    documentId: string;
+    status: 'pending' | 'approved' | 'rejected' | 'expired';
+    notes?: string;
+    reviewedBy?: string;
+  }) {
+    const { documentId, status, notes, reviewedBy } = params;
+    
+    const updateData: any = {
+      status,
+      reviewed_at: new Date().toISOString(),
+    };
+    
+    if (notes) updateData.notes = notes;
+    if (reviewedBy) updateData.reviewed_by = reviewedBy;
+
+    const { data, error } = await supabase
+      .from('customer_documents')
+      .update(updateData)
+      .eq('id', documentId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('❌ Error updating document status:', error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`✅ Document ${documentId} status updated to ${status}`);
+    return { success: true, data: objectToCamelCase(data) };
+  },
+
+  /**
+   * Delete document (from both storage and database)
+   */
+  async delete(documentId: string) {
+    try {
+      console.log(`🗑️ Deleting document ${documentId}...`);
+      
+      // First, get the document to find the file path
+      const { data: doc, error: fetchError } = await supabase
+        .from('customer_documents')
+        .select('file_path')
+        .eq('id', documentId)
+        .single();
+
+      if (fetchError) {
+        console.error('❌ Error fetching document:', fetchError);
+        return { success: false, error: fetchError.message };
+      }
+
+      // Delete from storage
+      const { error: storageError } = await supabase.storage
+        .from('customer-documents')
+        .remove([doc.file_path]);
+
+      if (storageError) {
+        console.warn('⚠️ Storage delete warning:', storageError);
+        // Continue with DB deletion even if storage delete fails
+      }
+
+      // Delete from database
+      const { error: dbError } = await supabase
+        .from('customer_documents')
+        .delete()
+        .eq('id', documentId);
+
+      if (dbError) {
+        console.error('❌ Database delete error:', dbError);
+        return { success: false, error: dbError.message };
+      }
+
+      console.log(`✅ Document ${documentId} deleted`);
+      return { success: true };
+
+    } catch (error: any) {
+      console.error('❌ Exception in documentApi.delete:', error);
+      return { success: false, error: error.message || 'Bilinmeyen hata' };
+    }
+  },
+
+  /**
+   * Get public URL for a document (for viewing)
+   */
+  async getPublicUrl(filePath: string) {
+    const { data } = supabase.storage
+      .from('customer-documents')
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  },
+
+  /**
+   * Download document
+   */
+  async download(filePath: string) {
+    const { data, error } = await supabase.storage
+      .from('customer-documents')
+      .download(filePath);
+
+    if (error) {
+      console.error('❌ Download error:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data };
+  }
+};
+
+// ========================================
 // DUPLICATE CLEANUP API (SQL Functions)
 // ========================================
 
@@ -2211,7 +2466,8 @@ if (typeof window !== 'undefined') {
       kartProgramApi,
       suspensionReasonApi,
       domainMappingApi,
-      signApi
+      signApi,
+      documentApi
     }
   };
   console.log('✅ All APIs available at window.__OXIVO_SUPABASE__.apis');

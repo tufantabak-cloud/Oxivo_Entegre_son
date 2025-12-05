@@ -1,0 +1,10 @@
+Ignore node_modules cache to force fresh install
+node_modules/
+.cache/
+*.log
+.DS_Store
+.env.local
+.env.*.local
+coverage/
+.vscode/
+.idea/
