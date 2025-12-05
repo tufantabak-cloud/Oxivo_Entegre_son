@@ -4,6 +4,8 @@ import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  root: '.', // Explicitly set root to current directory
+  publicDir: 'public', // Public assets directory
   plugins: [react()],
   resolve: {
     alias: {

@@ -20,13 +20,8 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
 
-    /* Path Mapping */
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./*"],
-      "@/components/*": ["./components/*"],
-      "@/utils/*": ["./utils/*"]
-    }
+    /* Path Mapping - Removed, using Vite resolve.alias instead */
+    "baseUrl": "."
   },
   "include": ["*.ts", "*.tsx", "**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules", "dist"]
