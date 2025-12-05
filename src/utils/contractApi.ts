@@ -191,6 +191,7 @@ export const templateApi = {
 export const transactionApi = {
   // Tüm işlemleri listele
   async list(filters?: { status?: string; customer_id?: string }) {
+    // İlk olarak JOIN ile dene
     let query = supabase
       .from('contract_transactions')
       .select(`
@@ -208,10 +209,38 @@ export const transactionApi = {
     }
 
     const { data, error } = await query;
-    if (error) throw error;
+    
+    // Eğer JOIN hatası varsa (400 Bad Request), fallback yap
+    if (error) {
+      console.warn('⚠️ [contractApi] JOIN query failed, falling back to simple query:', error.message);
+      
+      // Fallback: JOIN olmadan basit query
+      let fallbackQuery = supabase
+        .from('contract_transactions')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (filters?.status) {
+        fallbackQuery = fallbackQuery.eq('status', filters.status);
+      }
+      if (filters?.customer_id) {
+        fallbackQuery = fallbackQuery.eq('customer_id', filters.customer_id);
+      }
+
+      const { data: fallbackData, error: fallbackError } = await fallbackQuery;
+      if (fallbackError) throw fallbackError;
+      
+      // Basit veri döndür (JOIN yok)
+      return (fallbackData || []).map((tx: any) => ({
+        ...tx,
+        customers: null, // JOIN başarısız oldu
+        contract_transaction_documents: [],
+        document_count: 0,
+      }));
+    }
     
     // Doküman sayısını ekle
-    return data.map((tx: any) => ({
+    return (data || []).map((tx: any) => ({
       ...tx,
       document_count: tx.contract_transaction_documents?.length || 0,
     }));
@@ -225,7 +254,29 @@ export const transactionApi = {
       .eq('id', id)
       .single();
 
-    if (txError) throw txError;
+    if (txError) {
+      // Fallback: JOIN olmadan basit query
+      console.warn('⚠️ [contractApi.get] JOIN query failed, using fallback');
+      const { data: fallbackTx, error: fallbackError } = await supabase
+        .from('contract_transactions')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (fallbackError) throw fallbackError;
+      
+      const { data: documents, error: docError } = await supabase
+        .from('contract_transaction_documents')
+        .select('*')
+        .eq('transaction_id', id)
+        .order('display_order', { ascending: true });
+
+      return {
+        ...fallbackTx,
+        customers: null,
+        documents: documents || [],
+      };
+    }
 
     const { data: documents, error: docError } = await supabase
       .from('contract_transaction_documents')
@@ -233,7 +284,19 @@ export const transactionApi = {
       .eq('transaction_id', id)
       .order('display_order', { ascending: true });
 
-    if (docError) throw docError;
+    if (docError) {
+      // Fallback for documents JOIN
+      const { data: fallbackDocs } = await supabase
+        .from('contract_transaction_documents')
+        .select('*')
+        .eq('transaction_id', id)
+        .order('display_order', { ascending: true });
+      
+      return {
+        ...transaction,
+        documents: fallbackDocs || [],
+      };
+    }
 
     return {
       ...transaction,
@@ -467,7 +530,7 @@ export const transactionApi = {
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // DOCUMENT API
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━���━━━━━━━━━━━━━━━━━━━
 
 export const documentApi = {
   // Döküman oluştur
