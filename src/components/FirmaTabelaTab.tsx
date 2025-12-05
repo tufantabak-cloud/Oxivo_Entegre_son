@@ -1,4 +1,4 @@
-// TABELA Kayıtları - KLM sütunu başa, Checkbox "Seçim" sütunu sona taşındı (v2.3 - DEPLOYMENT FIX)
+// TABELA Kayıtları - Checkbox sütunu kaldırıldı (v2.4 - CLEAN UI)
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
@@ -8,7 +8,6 @@ import { Textarea } from './ui/textarea';
 import { ModernFormSelect, FormSelectOption } from './ModernFormSelect';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Badge } from './ui/badge';
-import { Checkbox } from './ui/checkbox';
 import { Switch } from './ui/switch';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
 // Tooltip removed - import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
@@ -1005,26 +1004,6 @@ export function FirmaTabelaTab({
                 <div>İşlemler</div>
                 <div className="text-xs opacity-70">Aktif</div>
               </TableHead>
-              <TableHead className="w-12 text-center">
-                <div className="mb-1" style={{ fontSize: '13px', fontWeight: '500' }}>Seçim</div>
-                <Checkbox
-                  checked={
-                    filteredRecords.length > 0 && 
-                    filteredRecords.filter(r => !isRecordGrouped(r.id)).length > 0 &&
-                    filteredRecords.filter(r => !isRecordGrouped(r.id)).every(r => selectedRecordsForGroup.includes(r.id))
-                  }
-                  onCheckedChange={(checked) => {
-                    saveScrollPosition();
-                    if (checked) {
-                      const ungroupedRecords = filteredRecords.filter(r => !isRecordGrouped(r.id));
-                      setSelectedRecordsForGroup(ungroupedRecords.map(r => r.id));
-                    } else {
-                      setSelectedRecordsForGroup([]);
-                    }
-                    restoreScrollPosition();
-                  }}
-                />
-              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -1046,7 +1025,7 @@ export function FirmaTabelaTab({
                     className="bg-gradient-to-r from-blue-100 to-blue-50 border-t-2 border-blue-300 hover:from-blue-200 hover:to-blue-100 cursor-pointer"
                     onClick={() => toggleGroupCollapse(group.id)}
                   >
-                    <TableCell colSpan={12} className="py-3">
+                    <TableCell colSpan={11} className="py-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           {isCollapsed ? (
@@ -1352,7 +1331,24 @@ export function FirmaTabelaTab({
                       </Button>
                     )}
                   </div>
-                  </TableCell>
+                </TableCell>
+                {/* Checkbox - En sona taşındı */}
+                <TableCell className="py-4 w-12">
+                  <Checkbox
+                    checked={selectedRecordsForGroup.includes(record.id)}
+                    disabled={isGrouped}
+                    onCheckedChange={(checked) => {
+                      saveScrollPosition();
+                      if (checked) {
+                        setSelectedRecordsForGroup([...selectedRecordsForGroup, record.id]);
+                      } else {
+                        setSelectedRecordsForGroup(selectedRecordsForGroup.filter(id => id !== record.id));
+                      }
+                      restoreScrollPosition();
+                    }}
+                    title={isGrouped ? `Bu kayıt "${recordGroup?.name}" grubuna aittir` : ''}
+                  />
+                </TableCell>
               </TableRow>
             );
             })}
@@ -1378,7 +1374,7 @@ export function FirmaTabelaTab({
                     className="bg-gradient-to-r from-gray-100 to-gray-50 border-t-2 border-gray-300 hover:from-gray-200 hover:to-gray-100 cursor-pointer"
                     onClick={() => toggleGroupCollapse('UNGROUPED')}
                   >
-                    <TableCell colSpan={12} className="py-3">
+                    <TableCell colSpan={11} className="py-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           {isCollapsed ? (
@@ -1652,6 +1648,23 @@ export function FirmaTabelaTab({
                             )}
                           </div>
                         </TableCell>
+                        {/* Checkbox - En sona taşındı */}
+                        <TableCell className="py-4 w-12">
+                          <Checkbox
+                            checked={selectedRecordsForGroup.includes(record.id)}
+                            disabled={isGrouped}
+                            onCheckedChange={(checked) => {
+                              saveScrollPosition();
+                              if (checked) {
+                                setSelectedRecordsForGroup([...selectedRecordsForGroup, record.id]);
+                              } else {
+                                setSelectedRecordsForGroup(selectedRecordsForGroup.filter(id => id !== record.id));
+                              }
+                              restoreScrollPosition();
+                            }}
+                            title={isGrouped ? `Bu kayıt "${recordGroup?.name}" grubuna aittir` : ''}
+                          />
+                        </TableCell>
                       </TableRow>
                     );
                   })}
@@ -1693,9 +1706,6 @@ export function FirmaTabelaTab({
                   <TableHead className="text-right w-20">OX %</TableHead>
                   <TableHead className="text-right w-24">OX TL</TableHead>
                   <TableHead className="text-center w-32">İşlemler</TableHead>
-                  <TableHead className="w-12 text-center">
-                    <div style={{ fontSize: '13px', fontWeight: '500' }}>Seçim</div>
-                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1717,7 +1727,7 @@ export function FirmaTabelaTab({
                         className="bg-gradient-to-r from-purple-100 to-purple-50 border-t-2 border-purple-300 hover:from-purple-200 hover:to-purple-100 cursor-pointer"
                         onClick={() => toggleGroupCollapse(group.id)}
                       >
-                        <TableCell colSpan={14} className="py-3">
+                        <TableCell colSpan={13} className="py-3">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               {isCollapsed ? (
@@ -1955,6 +1965,23 @@ export function FirmaTabelaTab({
                           </Button>
                         </div>
                       </TableCell>
+                      {/* Checkbox - En sona taşındı */}
+                      <TableCell className="py-4 w-12 text-center">
+                        <Checkbox
+                          checked={selectedRecordsForGroup.includes(record.id)}
+                          disabled={!!recordGroup}
+                          onCheckedChange={(checked) => {
+                            saveScrollPosition();
+                            if (checked) {
+                              setSelectedRecordsForGroup([...selectedRecordsForGroup, record.id]);
+                            } else {
+                              setSelectedRecordsForGroup(selectedRecordsForGroup.filter(id => id !== record.id));
+                            }
+                            restoreScrollPosition();
+                          }}
+                          title={recordGroup ? `Bu kayıt "${recordGroup?.name}" grubuna aittir` : ''}
+                        />
+                      </TableCell>
                     </TableRow>
                     );
                   })}
@@ -1980,7 +2007,7 @@ export function FirmaTabelaTab({
                         className="bg-gradient-to-r from-gray-100 to-gray-50 border-t-2 border-gray-300 hover:from-gray-200 hover:to-gray-100 cursor-pointer"
                         onClick={() => toggleGroupCollapse('UNGROUPED')}
                       >
-                        <TableCell colSpan={14} className="py-3">
+                        <TableCell colSpan={13} className="py-3">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               {isCollapsed ? (
@@ -2200,6 +2227,23 @@ export function FirmaTabelaTab({
                                   <Trash2 size={14} />
                                 </Button>
                               </div>
+                            </TableCell>
+                            {/* Checkbox - En sona taşındı */}
+                            <TableCell className="py-4 w-12 text-center">
+                              <Checkbox
+                                checked={selectedRecordsForGroup.includes(record.id)}
+                                disabled={!!recordGroup}
+                                onCheckedChange={(checked) => {
+                                  saveScrollPosition();
+                                  if (checked) {
+                                    setSelectedRecordsForGroup([...selectedRecordsForGroup, record.id]);
+                                  } else {
+                                    setSelectedRecordsForGroup(selectedRecordsForGroup.filter(id => id !== record.id));
+                                  }
+                                  restoreScrollPosition();
+                                }}
+                                title={recordGroup ? `Bu kayıt "${recordGroup?.name}" grubuna aittir` : ''}
+                              />
                             </TableCell>
                           </TableRow>
                         );
