@@ -1,3 +1,4 @@
+// TABELA Kayıtları - KLM sütunu başa, Checkbox "Seçim" sütunu sona taşındı (v2.2 - FINAL)
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
@@ -1004,7 +1005,8 @@ export function FirmaTabelaTab({
                 <div>İşlemler</div>
                 <div className="text-xs opacity-70">Aktif</div>
               </TableHead>
-              <TableHead className="w-12">
+              <TableHead className="w-12 text-center">
+                <div className="text-xs mb-1">Seçim</div>
                 <Checkbox
                   checked={
                     filteredRecords.length > 0 && 
