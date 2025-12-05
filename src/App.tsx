@@ -1,6 +1,6 @@
-// App v1.0.20 - TABELA Seçim Başlığı DEBUG TEST (2025-12-05):
-//   🔍 DEBUG: TEST123 ve TEST456 eklendi (hangi tablo render ediliyor?)
-//   🎯 AMAÇ: Ekranda TEST kelimesi görünecek mi test ediliyor
+// App v1.0.21 - TABELA Seçim Başlığı FİNAL (2025-12-05):
+//   ✅ ÇÖZÜLDÜ: "Seçim" başlığı görünür boyutta (13px, font-weight 500)
+//   🎯 Sorun: Orijinal text-xs (12px) çok küçüktü, inline style ile düzeltildi
 // App v1.0.18 - TABELA Sütun Düzeni Optimizasyonu (2025-12-05):
 //   ✅ KLM SÜTUNU: TABELA tablolarında ilk sütuna taşındı
 //   ✅ CHECKBOX SÜTUNU: TABELA tablolarında son sütuna taşındı

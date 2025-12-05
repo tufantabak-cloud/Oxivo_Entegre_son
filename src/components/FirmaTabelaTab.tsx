@@ -1006,7 +1006,7 @@ export function FirmaTabelaTab({
                 <div className="text-xs opacity-70">Aktif</div>
               </TableHead>
               <TableHead className="w-12 text-center">
-                <div className="text-xs mb-1" style={{ color: 'red', fontWeight: 'bold', fontSize: '16px' }}>TEST123</div>
+                <div className="mb-1" style={{ fontSize: '13px', fontWeight: '500' }}>Seçim</div>
                 <Checkbox
                   checked={
                     filteredRecords.length > 0 && 
@@ -1728,7 +1728,7 @@ export function FirmaTabelaTab({
                   <TableHead className="text-right w-24">OX TL</TableHead>
                   <TableHead className="text-center w-32">İşlemler</TableHead>
                   <TableHead className="w-12 text-center">
-                    <div style={{ color: 'red', fontWeight: 'bold', fontSize: '16px' }}>TEST456</div>
+                    <div style={{ fontSize: '13px', fontWeight: '500' }}>Seçim</div>
                   </TableHead>
                 </TableRow>
               </TableHeader>
