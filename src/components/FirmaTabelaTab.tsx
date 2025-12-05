@@ -1,4 +1,4 @@
-// TABELA Kayıtları - Checkbox sütunu kaldırıldı (v2.4 - CLEAN UI)
+// TABELA Kayıtları - REFACTORED: State Consolidated, Type-Safe (v3.0)
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
@@ -16,29 +16,16 @@ import { toast } from 'sonner';
 import { TabelaRecord, TabelaGroup } from './TabelaTab';
 import { EkGelir } from './RevenueModelsTab';
 import { kisaltUrunAdi } from '../utils/formatters';
+import { TabelaFormData, GroupFormData, FirmaTabelaTabProps } from './tabela/types';
+import { TabelaGroupDialog } from './tabela/TabelaGroupDialog';
 
-// Vade listesi
-const vadeListesi = [
+// ✅ Vade listesi - Artık props olarak alınıyor (Hardcoded değerler düzeltildi)
+const DEFAULT_VADE_LISTESI = [
   'D+1',
   'D+7',
   'D+14',
   'D+31',
 ];
-
-interface FirmaTabelaTabProps {
-  firmaId: string;
-  firmaAdi: string;
-  firmaTipi: 'Banka' | 'PF';
-  odemeKurulusuTipi?: 'ÖK' | 'EPK' | '';
-  gelirModelleri?: Array<{ id: string; ad: string; aktif: boolean }>;
-  ekGelirler?: EkGelir[];
-  banks?: Array<{ id: string; kod: string; bankaAdi: string; aktif: boolean }>;
-  kartProgramlar?: Array<{ id: string; kartAdi: string; aktif: boolean }>;
-  tabelaRecords?: TabelaRecord[];
-  tabelaGroups?: TabelaGroup[];
-  onTabelaRecordsChange?: (records: TabelaRecord[]) => void;
-  onTabelaGroupsChange?: (groups: TabelaGroup[]) => void;
-}
 
 export function FirmaTabelaTab({
   firmaId,
@@ -53,6 +40,7 @@ export function FirmaTabelaTab({
   tabelaGroups = [],
   onTabelaRecordsChange,
   onTabelaGroupsChange,
+  vadeListesi = DEFAULT_VADE_LISTESI, // ✅ Artık props olarak alınıyor
 }: FirmaTabelaTabProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const scrollPositionRef = useRef<number>(0);
@@ -65,43 +53,34 @@ export function FirmaTabelaTab({
   
   // Gruplama state'leri
   const [showGroupDialog, setShowGroupDialog] = useState(false);
-  const [selectedRecordsForGroup, setSelectedRecordsForGroup] = useState<string[]>([]);
-  const [groupName, setGroupName] = useState('');
-  const [groupStartDate, setGroupStartDate] = useState('');
-  const [groupEndDate, setGroupEndDate] = useState('');
-  const [groupAktif, setGroupAktif] = useState(true); // Grup aktif/pasif durumu
   const [editingGroup, setEditingGroup] = useState<TabelaGroup | null>(null);
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set()); // Daraltılmış gruplar
-  const [showHierarchyDialog, setShowHierarchyDialog] = useState(false); // Hiyerarşi dialog
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const [showHierarchyDialog, setShowHierarchyDialog] = useState(false);
 
-  // Form state - 0. adımdan başlıyor (Kısa Açıklama)
-  const [kisaAciklama, setKisaAciklama] = useState('');
-  const [urun, setUrun] = useState<'UnattendedPOS' | 'AttendedPOS' | 'SoftPOS' | 'SanalPOS' | ''>('');
-  const [kartTipi, setKartTipi] = useState<'Credit' | 'Debit' | 'Paçal' | ''>('');
-  const [gelirModeliId, setGelirModeliId] = useState('');
-  const [selectedEkGelirId, setSelectedEkGelirId] = useState('NONE'); // Seçilen ek gelir ID
-  const [selectedKartProgramIds, setSelectedKartProgramIds] = useState<string[]>([]);
-  const [yurtIciDisi, setYurtIciDisi] = useState<'Yurt İçi' | 'Yurt Dışı' | ''>('');
-  const [komisyonOranları, setKomisyonOranları] = useState<{ 
-    vade: string; 
-    oran: string;
-    alisTL?: string;
-    satisTL?: string;
-    karTL?: string;
-    aktif: boolean;
-  }[]>(
-    vadeListesi.map(v => ({ vade: v, oran: '', alisTL: '', satisTL: '', karTL: '', aktif: true }))
-  );
-  const [kurulusOrani, setKurulusOrani] = useState('');
-  const [oxivoOrani, setOxivoOrani] = useState('');
-  const [aciklama, setAciklama] = useState('');
-  const [fotograf, setFotograf] = useState('');
-  
-  // Hazine Geliri için state
-  const [hazineGeliri, setHazineGeliri] = useState({
-    tutarTL: '',
-    oxivoYuzde: '',
-    kazancTL: ''
+  // ✅ FORM STATE - Tek objede birleştirildi (State Karmaşası Çözüldü!)
+  const [formData, setFormData] = useState<TabelaFormData>({
+    kisaAciklama: '',
+    urun: '',
+    kartTipi: '',
+    gelirModeliId: '',
+    selectedEkGelirId: 'NONE',
+    selectedKartProgramIds: [],
+    yurtIciDisi: '',
+    komisyonOranları: vadeListesi.map(v => ({ vade: v, oran: '', alisTL: '', satisTL: '', karTL: '', aktif: true })),
+    kurulusOrani: '',
+    oxivoOrani: '',
+    aciklama: '',
+    fotograf: '',
+    hazineGeliri: { tutarTL: '', oxivoYuzde: '', kazancTL: '' },
+  });
+
+  // ✅ GROUP FORM STATE - Birleştirildi
+  const [groupFormData, setGroupFormData] = useState<GroupFormData>({
+    selectedRecordsForGroup: [],
+    groupName: '',
+    groupStartDate: '',
+    groupEndDate: '',
+    groupAktif: true,
   });
 
   const aktifGelirModelleri = gelirModelleri.filter(g => g.aktif);
@@ -109,8 +88,8 @@ export function FirmaTabelaTab({
   const aktifBankalar = banks.filter(b => b.aktif);
   const aktifKartProgramlar = kartProgramlar.filter(k => k.aktif);
   
-  // Seçili gelir modelini bul
-  const selectedGelirModeli = gelirModelleri.find(g => g.id === gelirModeliId);
+  // ✅ Seçili gelir modelini bul (formData kullanarak)
+  const selectedGelirModeli = gelirModelleri.find(g => g.id === formData.gelirModeliId);
   const isPacalGelirModeli = selectedGelirModeli?.ad?.toLowerCase().includes('paçal') || false;
   
   // Scroll pozisyonunu kaydet
@@ -143,10 +122,10 @@ export function FirmaTabelaTab({
 
   // Paçal gelir modeli seçildiğinde kart tipini otomatik Paçal yap
   useEffect(() => {
-    if (isPacalGelirModeli && kartTipi !== 'Paçal') {
+    if (isPacalGelirModeli && formData.kartTipi !== 'Paçal') {
       console.log('🔒 Paçal gelir modeli algılandı:', selectedGelirModeli?.ad);
       console.log('🎯 Kart tipi otomatik "Paçal" olarak ayarlandı');
-      setKartTipi('Paçal');
+      setFormData(prev => ({ ...prev, kartTipi: 'Paçal' }));
       toast.info('Kart tipi otomatik olarak "Paçal" olarak ayarlandı');
     }
   }, [isPacalGelirModeli]);
@@ -156,47 +135,60 @@ export function FirmaTabelaTab({
     restoreScrollPosition();
   }, [tabelaRecords]);
 
+  // ✅ RESET FORM - Çok daha temiz! (Tek state update)
   const resetForm = () => {
-    setKisaAciklama('');
-    setUrun('');
-    setKartTipi('');
-    setGelirModeliId('');
-    setSelectedEkGelirId('NONE');
-    setSelectedKartProgramIds([]);
-    setYurtIciDisi('');
-    setKomisyonOranları(vadeListesi.map(v => ({ vade: v, oran: '', alisTL: '', satisTL: '', karTL: '', aktif: true })));
-    setKurulusOrani('');
-    setOxivoOrani('');
-    setAciklama('');
-    setFotograf('');
-    setHazineGeliri({ tutarTL: '', oxivoYuzde: '', kazancTL: '' });
+    setFormData({
+      kisaAciklama: '',
+      urun: '',
+      kartTipi: '',
+      gelirModeliId: '',
+      selectedEkGelirId: 'NONE',
+      selectedKartProgramIds: [],
+      yurtIciDisi: '',
+      komisyonOranları: vadeListesi.map(v => ({ vade: v, oran: '', alisTL: '', satisTL: '', karTL: '', aktif: true })),
+      kurulusOrani: '',
+      oxivoOrani: '',
+      aciklama: '',
+      fotograf: '',
+      hazineGeliri: { tutarTL: '', oxivoYuzde: '', kazancTL: '' },
+    });
     setCurrentStep(0);
     setEditingRecord(null);
   };
 
+  // ✅ TYPE-SAFE: (record as any) kullanımı kaldırıldı
   const handleOpenDialog = (record?: TabelaRecord) => {
     if (record) {
       setEditingRecord(record);
-      setKisaAciklama((record as any).kisaAciklama || '');
-      setUrun(record.urun || '');
-      setKartTipi(record.kartTipi);
-      setGelirModeliId(record.gelirModeli.id);
-      // Eski kayıtlarda bankIds varsa kartProgramIds'e çevir (geçici backward compatibility)
-      setSelectedKartProgramIds(record.kartProgramIds || record.bankIds || []);
-      setYurtIciDisi(record.yurtIciDisi);
       
       // Komisyon oranlarını yükle - kayıtlı olanlar + eksik vadeler
       const loadedKomisyonlar = vadeListesi.map(vade => {
         const existing = record.komisyonOranları.find(k => k.vade === vade);
-        return existing || { vade, oran: '', alisTL: '', satisTL: '', karTL: '', aktif: false };
+        return existing ? {
+          vade: existing.vade,
+          oran: existing.oran || '',
+          alisTL: typeof existing.alisTL === 'number' ? existing.alisTL.toString() : (existing.alisTL || ''),
+          satisTL: typeof existing.satisTL === 'number' ? existing.satisTL.toString() : (existing.satisTL || ''),
+          karTL: typeof existing.karTL === 'number' ? existing.karTL.toString() : (existing.karTL || ''),
+          aktif: existing.aktif !== false
+        } : { vade, oran: '', alisTL: '', satisTL: '', karTL: '', aktif: false };
       });
-      setKomisyonOranları(loadedKomisyonlar);
       
-      setKurulusOrani(record.paylaşımOranları.kurulusOrani);
-      setOxivoOrani(record.paylaşımOranları.oxivoOrani);
-      setAciklama(record.aciklama || '');
-      setFotograf(record.fotograf || '');
-      setHazineGeliri(record.hazineGeliri || { tutarTL: '', oxivoYuzde: '', kazancTL: '' });
+      setFormData({
+        kisaAciklama: record.kisaAciklama || '',
+        urun: record.urun || '',
+        kartTipi: record.kartTipi,
+        gelirModeliId: record.gelirModeli.id,
+        selectedEkGelirId: 'NONE',
+        selectedKartProgramIds: record.kartProgramIds || record.bankIds || [],
+        yurtIciDisi: record.yurtIciDisi,
+        komisyonOranları: loadedKomisyonlar,
+        kurulusOrani: record.paylaşımOranları.kurulusOrani,
+        oxivoOrani: record.paylaşımOranları.oxivoOrani,
+        aciklama: record.aciklama || '',
+        fotograf: record.fotograf || '',
+        hazineGeliri: record.hazineGeliri || { tutarTL: '', oxivoYuzde: '', kazancTL: '' },
+      });
       setCurrentStep(0);
     } else {
       resetForm();
@@ -209,95 +201,102 @@ export function FirmaTabelaTab({
     resetForm();
   };
 
-  // Hazine Geliri hesaplama fonksiyonları
+  // ✅ Hazine Geliri hesaplama fonksiyonları - formData kullanıyor
   const handleHazineTutarTLChange = (value: string) => {
     const tutarTL = value;
-    const oxivoYuzde = hazineGeliri.oxivoYuzde;
+    const oxivoYuzde = formData.hazineGeliri.oxivoYuzde;
     
     if (tutarTL && oxivoYuzde) {
       const tutar = parseFloat(tutarTL);
       const yuzde = parseFloat(oxivoYuzde);
       if (!isNaN(tutar) && !isNaN(yuzde)) {
         const kazanc = (tutar * yuzde) / 100;
-        setHazineGeliri({
-          tutarTL,
-          oxivoYuzde,
-          kazancTL: kazanc.toFixed(2)
-        });
+        setFormData(prev => ({
+          ...prev,
+          hazineGeliri: { tutarTL, oxivoYuzde, kazancTL: kazanc.toFixed(2) }
+        }));
         return;
       }
     }
     
-    setHazineGeliri({ ...hazineGeliri, tutarTL });
+    setFormData(prev => ({
+      ...prev,
+      hazineGeliri: { ...prev.hazineGeliri, tutarTL }
+    }));
   };
 
   const handleHazineOxivoYuzdeChange = (value: string) => {
     const oxivoYuzde = value;
-    const tutarTL = hazineGeliri.tutarTL;
+    const tutarTL = formData.hazineGeliri.tutarTL;
     
     if (tutarTL && oxivoYuzde) {
       const tutar = parseFloat(tutarTL);
       const yuzde = parseFloat(oxivoYuzde);
       if (!isNaN(tutar) && !isNaN(yuzde)) {
         const kazanc = (tutar * yuzde) / 100;
-        setHazineGeliri({
-          tutarTL,
-          oxivoYuzde,
-          kazancTL: kazanc.toFixed(2)
-        });
+        setFormData(prev => ({
+          ...prev,
+          hazineGeliri: { tutarTL, oxivoYuzde, kazancTL: kazanc.toFixed(2) }
+        }));
         return;
       }
     }
     
-    setHazineGeliri({ ...hazineGeliri, oxivoYuzde });
+    setFormData(prev => ({
+      ...prev,
+      hazineGeliri: { ...prev.hazineGeliri, oxivoYuzde }
+    }));
   };
 
   const handleHazineKazancTLChange = (value: string) => {
     const kazancTL = value;
-    const tutarTL = hazineGeliri.tutarTL;
+    const tutarTL = formData.hazineGeliri.tutarTL;
     
     if (tutarTL && kazancTL) {
       const tutar = parseFloat(tutarTL);
       const kazanc = parseFloat(kazancTL);
       if (!isNaN(tutar) && !isNaN(kazanc) && tutar !== 0) {
         const yuzde = (kazanc / tutar) * 100;
-        setHazineGeliri({
-          tutarTL,
-          oxivoYuzde: yuzde.toFixed(2),
-          kazancTL
-        });
+        setFormData(prev => ({
+          ...prev,
+          hazineGeliri: { tutarTL, oxivoYuzde: yuzde.toFixed(2), kazancTL }
+        }));
         return;
       }
     }
     
-    setHazineGeliri({ ...hazineGeliri, kazancTL });
+    setFormData(prev => ({
+      ...prev,
+      hazineGeliri: { ...prev.hazineGeliri, kazancTL }
+    }));
   };
 
+  // ✅ formData kullanıyor
   const handleNextStep = () => {
     // Step 1: Ürün ve Gelir Modeli
     if (currentStep === 1) {
-      if (!urun) {
+      if (!formData.urun) {
         toast.error('❌ Lütfen ürün seçiniz');
         return;
       }
-      if (!gelirModeliId) {
+      if (!formData.gelirModeliId) {
         toast.error('❌ Lütfen gelir modeli seçiniz');
         return;
       }
       
       // Seçilen gelir modelinin gerçekten var olduğunu kontrol et
-      const gelirModeli = aktifGelirModelleri.find(g => g.id === gelirModeliId);
+      const gelirModeli = aktifGelirModelleri.find(g => g.id === formData.gelirModeliId);
       if (!gelirModeli) {
         toast.error('❌ Seçilen gelir modeli bulunamadı');
         return;
       }
       
-      toast.success(`✅ Ürün: ${urun}, Gelir Modeli: ${gelirModeli.ad}`);
+      toast.success(`✅ Ürün: ${formData.urun}, Gelir Modeli: ${gelirModeli.ad}`);
       
       // ÖNEMLİ: Eğer "Hazine Geliri + Yurt İçi" veya "Hazine Geliri + Yurt Dışı" seçildiyse, 
       // direkt kayıt oluştur (başka adım sorma)
-      if (selectedEkGelirId && selectedEkGelirId !== 'NONE') {
-        const selectedEkGelir = aktifEkGelirler.find(eg => eg.id === selectedEkGelirId);
+      if (formData.selectedEkGelirId && formData.selectedEkGelirId !== 'NONE') {
+        const selectedEkGelir = aktifEkGelirler.find(eg => eg.id === formData.selectedEkGelirId);
         if (selectedEkGelir && selectedEkGelir.gelirTuru === 'Hazine Geliri') {
           // Hazine Geliri için direkt TABELA kaydı oluştur
           handleQuickSaveWithEkGelir(selectedEkGelir);
@@ -308,36 +307,36 @@ export function FirmaTabelaTab({
     }
     // Step 2: Kart Program Seçimi
     if (currentStep === 2) {
-      if (selectedKartProgramIds.length === 0) {
+      if (formData.selectedKartProgramIds.length === 0) {
         toast.error('❌ Lütfen en az bir kart programı seçiniz');
         return;
       }
-      toast.success(`✅ ${selectedKartProgramIds.includes('ALL') ? 'Tüm kart programları' : selectedKartProgramIds.length + ' kart programı'} seçildi`);
+      toast.success(`✅ ${formData.selectedKartProgramIds.includes('ALL') ? 'Tüm kart programları' : formData.selectedKartProgramIds.length + ' kart programı'} seçildi`);
     }
     // Step 3: Yurt İçi/Dışı
     if (currentStep === 3) {
-      if (!yurtIciDisi) {
+      if (!formData.yurtIciDisi) {
         toast.error('❌ Lütfen yurt içi veya yurt dışı seçiniz');
         return;
       }
-      toast.success(`✅ ${yurtIciDisi} seçildi`);
+      toast.success(`✅ ${formData.yurtIciDisi} seçildi`);
     }
     // Step 4: Kart Tipi
     if (currentStep === 4) {
-      if (!kartTipi) {
+      if (!formData.kartTipi) {
         toast.error('❌ Lütfen kart tipi seçiniz');
         return;
       }
-      toast.success(`✅ Kart Tipi: ${kartTipi}`);
+      toast.success(`✅ Kart Tipi: ${formData.kartTipi}`);
     }
     // Step 5, 6, 7, 8, 9 için ek validasyon gerekmez (opsiyonel alanlar)
     
     setCurrentStep(prev => prev + 1);
   };
   
-  // Hızlı kayıt - Ek Gelir ile
+  // ✅ Hızlı kayıt - Ek Gelir ile (formData kullanıyor)
   const handleQuickSaveWithEkGelir = (ekGelir: EkGelir) => {
-    const gelirModeli = gelirModelleri.find(g => g.id === gelirModeliId);
+    const gelirModeli = gelirModelleri.find(g => g.id === formData.gelirModeliId);
     if (!gelirModeli) return;
     
     const kurulusTip = firmaTipi === 'Banka' ? 'EPK' : (odemeKurulusuTipi as 'EPK' | 'OK');
@@ -349,7 +348,7 @@ export function FirmaTabelaTab({
         id: firmaId,
         ad: firmaAdi,
       },
-      urun,
+      urun: formData.urun,
       kartTipi: ekGelir.kartTipi as 'Credit' | 'Debit' | 'Paçal',
       gelirModeli: {
         id: gelirModeli.id,
@@ -392,6 +391,7 @@ export function FirmaTabelaTab({
     setCurrentStep(prev => prev - 1);
   };
 
+  // ✅ formData kullanıyor
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -409,7 +409,7 @@ export function FirmaTabelaTab({
 
       const reader = new FileReader();
       reader.onload = () => {
-        setFotograf(reader.result as string);
+        setFormData(prev => ({ ...prev, fotograf: reader.result as string }));
         toast.success('Fotoğraf yüklendi');
       };
       reader.onerror = () => {
@@ -419,30 +419,31 @@ export function FirmaTabelaTab({
     }
   };
 
+  // ✅ TYPE-SAFE: as any kullanımı kaldırıldı, formData kullanıyor
   const handleSave = () => {
     // Validasyon
-    if (!urun) {
+    if (!formData.urun) {
       toast.error('Ürün seçmelisiniz');
       return;
     }
-    if (!gelirModeliId) {
+    if (!formData.gelirModeliId) {
       toast.error('Gelir modeli seçmelisiniz');
       return;
     }
-    if (selectedKartProgramIds.length === 0) {
+    if (formData.selectedKartProgramIds.length === 0) {
       toast.error('En az bir kart programı seçmelisiniz');
       return;
     }
-    if (!yurtIciDisi) {
+    if (!formData.yurtIciDisi) {
       toast.error('Yurt içi/dışı seçmelisiniz');
       return;
     }
-    if (!kartTipi) {
+    if (!formData.kartTipi) {
       toast.error('Lütfen kart tipi seçiniz');
       return;
     }
     
-    const gelirModeli = gelirModelleri.find(g => g.id === gelirModeliId);
+    const gelirModeli = gelirModelleri.find(g => g.id === formData.gelirModeliId);
     if (!gelirModeli) return;
 
     // Kuruluş bilgisi otomatik - firmadan geliyor
@@ -455,26 +456,34 @@ export function FirmaTabelaTab({
         id: firmaId,
         ad: firmaAdi,
       },
-      urun,
-      kartTipi: kartTipi as 'Credit' | 'Debit' | 'Paçal',
+      urun: formData.urun,
+      kartTipi: formData.kartTipi,
       gelirModeli: {
         id: gelirModeli.id,
         ad: gelirModeli.ad,
       },
-      kartProgramIds: selectedKartProgramIds,
-      yurtIciDisi,
-      komisyonOranları: komisyonOranları.filter(k => k.aktif), // Sadece aktif olanları kaydet
+      kartProgramIds: formData.selectedKartProgramIds,
+      yurtIciDisi: formData.yurtIciDisi,
+      komisyonOranları: formData.komisyonOranları.filter(k => k.aktif).map(k => ({
+        vade: k.vade,
+        oran: k.oran,
+        alisTL: k.alisTL,
+        satisTL: k.satisTL,
+        karTL: k.karTL,
+        aktif: k.aktif,
+      })),
       paylaşımOranları: {
-        kurulusOrani: kurulusOrani || '50', // Girilen değer veya default
-        oxivoOrani: oxivoOrani || '50',
+        kurulusOrani: formData.kurulusOrani || '50',
+        oxivoOrani: formData.oxivoOrani || '50',
       },
-      kisaAciklama: kisaAciklama || undefined,
-      aciklama: aciklama || undefined,
-      fotograf: fotograf || undefined,
+      kisaAciklama: formData.kisaAciklama || undefined,
+      aciklama: formData.aciklama || undefined,
+      fotograf: formData.fotograf || undefined,
+      hazineGeliri: formData.hazineGeliri.tutarTL ? formData.hazineGeliri : undefined,
       olusturmaTarihi: editingRecord?.olusturmaTarihi || new Date().toLocaleDateString('tr-TR'),
       kapanmaTarihi: editingRecord?.kapanmaTarihi,
       aktif: editingRecord?.aktif ?? true,
-    } as any;
+    };
 
     saveScrollPosition();
     if (editingRecord) {
@@ -528,15 +537,20 @@ export function FirmaTabelaTab({
     setClosingRecord(null);
   };
 
+  // ✅ Komisyon değiştirme fonksiyonları - formData kullanıyor
   const handleKomisyonChange = (vade: string, value: string) => {
-    setKomisyonOranları(
-      komisyonOranları.map(k => (k.vade === vade ? { ...k, oran: value } : k))
-    );
+    setFormData(prev => ({
+      ...prev,
+      komisyonOranları: prev.komisyonOranları.map(k => 
+        k.vade === vade ? { ...k, oran: value } : k
+      )
+    }));
   };
 
   const handleAlisTLChange = (vade: string, value: string) => {
-    setKomisyonOranları(prevOranlar =>
-      prevOranlar.map(k => {
+    setFormData(prev => ({
+      ...prev,
+      komisyonOranları: prev.komisyonOranları.map(k => {
         if (k.vade === vade) {
           const alisTL = parseFloat(value) || 0;
           const satisTL = parseFloat(k.satisTL || '0') || 0;
@@ -545,18 +559,22 @@ export function FirmaTabelaTab({
         }
         return k;
       })
-    );
+    }));
   };
 
   const handleVadeAktifChange = (vade: string, aktif: boolean) => {
-    setKomisyonOranları(prevOranlar =>
-      prevOranlar.map(k => k.vade === vade ? { ...k, aktif } : k)
-    );
+    setFormData(prev => ({
+      ...prev,
+      komisyonOranları: prev.komisyonOranları.map(k => 
+        k.vade === vade ? { ...k, aktif } : k
+      )
+    }));
   };
 
   const handleSatisTLChange = (vade: string, value: string) => {
-    setKomisyonOranları(prevOranlar =>
-      prevOranlar.map(k => {
+    setFormData(prev => ({
+      ...prev,
+      komisyonOranları: prev.komisyonOranları.map(k => {
         if (k.vade === vade) {
           const alisTL = parseFloat(k.alisTL || '0') || 0;
           const satisTL = parseFloat(value) || 0;
@@ -565,7 +583,7 @@ export function FirmaTabelaTab({
         }
         return k;
       })
-    );
+    }));
   };
 
   // Hazine Geliri hesaplama fonksiyonları
@@ -582,27 +600,29 @@ export function FirmaTabelaTab({
     return ((kazancNum / tutarNum) * 100).toFixed(2);
   };
 
-  // Gruplama fonksiyonları
+  // ✅ Gruplama fonksiyonları - groupFormData kullanıyor
   const handleOpenGroupDialog = () => {
-    setSelectedRecordsForGroup([]);
-    setGroupName('');
-    setGroupStartDate('');
-    setGroupEndDate('');
-    setGroupAktif(true); // Yeni grup için varsayılan aktif
+    setGroupFormData({
+      selectedRecordsForGroup: [],
+      groupName: '',
+      groupStartDate: '',
+      groupEndDate: '',
+      groupAktif: true,
+    });
     setEditingGroup(null);
     setShowGroupDialog(true);
   };
 
   const handleCreateGroup = () => {
-    if (selectedRecordsForGroup.length === 0) {
+    if (groupFormData.selectedRecordsForGroup.length === 0) {
       toast.error('Lütfen en az bir TABELA kaydı seçiniz');
       return;
     }
-    if (!groupName.trim()) {
+    if (!groupFormData.groupName.trim()) {
       toast.error('Lütfen grup ismi giriniz');
       return;
     }
-    if (!groupStartDate) {
+    if (!groupFormData.groupStartDate) {
       toast.error('Lütfen geçerlilik başlangıç tarihi giriniz');
       return;
     }
@@ -610,12 +630,12 @@ export function FirmaTabelaTab({
     saveScrollPosition();
     const newGroup: TabelaGroup = {
       id: editingGroup?.id || Date.now().toString(),
-      name: groupName,
-      gecerlilikBaslangic: groupStartDate,
-      gecerlilikBitis: groupEndDate || undefined,
-      recordIds: selectedRecordsForGroup,
+      name: groupFormData.groupName,
+      gecerlilikBaslangic: groupFormData.groupStartDate,
+      gecerlilikBitis: groupFormData.groupEndDate || undefined,
+      recordIds: groupFormData.selectedRecordsForGroup,
       pinned: editingGroup?.pinned || false,
-      aktif: groupAktif,
+      aktif: groupFormData.groupAktif,
     };
 
     if (editingGroup) {
@@ -628,22 +648,26 @@ export function FirmaTabelaTab({
     }
 
     setShowGroupDialog(false);
-    setSelectedRecordsForGroup([]);
-    setGroupName('');
-    setGroupStartDate('');
-    setGroupEndDate('');
-    setGroupAktif(true);
+    setGroupFormData({
+      selectedRecordsForGroup: [],
+      groupName: '',
+      groupStartDate: '',
+      groupEndDate: '',
+      groupAktif: true,
+    });
     setEditingGroup(null);
     restoreScrollPosition();
   };
 
   const handleEditGroup = (group: TabelaGroup) => {
     setEditingGroup(group);
-    setSelectedRecordsForGroup(group.recordIds || []);
-    setGroupName(group.name);
-    setGroupStartDate(group.gecerlilikBaslangic);
-    setGroupEndDate(group.gecerlilikBitis || '');
-    setGroupAktif(group.aktif !== undefined ? group.aktif : true); // Eski kayıtlar için default true
+    setGroupFormData({
+      selectedRecordsForGroup: group.recordIds || [],
+      groupName: group.name,
+      groupStartDate: group.gecerlilikBaslangic,
+      groupEndDate: group.gecerlilikBitis || '',
+      groupAktif: group.aktif !== undefined ? group.aktif : true,
+    });
     setShowGroupDialog(true);
   };
 
@@ -1058,15 +1082,24 @@ export function FirmaTabelaTab({
                   </TableRow>
                   
                   {/* Grup Kayıtları - Sadece açıksa ve grup aktifse göster */}
-                  {!isCollapsed && group.aktif !== false && groupRecords.map((record, indexInGroup) => {
+                  {!isCollapsed && group.aktif !== false && groupRecords.flatMap((record, indexInGroup) => {
               // Yeni ve eski kayıtları destekle
               const programIds = record.kartProgramIds || record.bankIds || [];
               const recordGroup = getRecordGroup(record.id);
               const isGrouped = !!recordGroup;
               
-              return (
+              // Aktif vadeleri al - Her vade için ayrı satır oluştur
+              const activeVadeler = record.komisyonOranları.filter(ko => ko.aktif !== false);
+              if (activeVadeler.length === 0) {
+                activeVadeler.push({ vade: '-', oran: '0', aktif: true });
+              }
+              
+              return activeVadeler.map((vadeInfo, vadeIndex) => {
+                const isFirstRow = vadeIndex === 0;
+                
+                return (
               <TableRow 
-                key={record.id}
+                key={`${record.id}-vade-${vadeIndex}`}
                 className="hover:bg-gray-50 bg-blue-50/20"
               >
                 {/* Checkbox sona taşındı */}
@@ -1086,183 +1119,153 @@ export function FirmaTabelaTab({
                     title={isGrouped ? `Bu kayıt "${recordGroup?.name}" grubuna aittir` : ''}
                   />
                 </TableCell> */}
-                {/* KLM - İlk sütun */}
-                <TableCell className="py-4 w-16">
-                  <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-300 font-mono text-xs">
-                    {String(indexInGroup + 1).padStart(2, '0')}
-                  </Badge>
-                </TableCell>
-                {/* Grup */}
-                <TableCell className="py-4 w-32">
-                  {isGrouped && recordGroup ? (
-                    <Badge variant="default" className="bg-blue-600 text-white">
-                      {getGroupAbbreviation(recordGroup.name)}
-                    </Badge>
-                  ) : (
-                    <span className="text-xs text-gray-400">-</span>
-                  )}
-                </TableCell>
-                {/* Kısa Açıklama */}
-                <TableCell className="py-4 w-36">
-                  {(record as any).kisaAciklama ? (
-                    <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300 text-xs">
-                      {(record as any).kisaAciklama}
-                    </Badge>
-                  ) : (
-                    <span className="text-xs text-gray-400">-</span>
-                  )}
-                </TableCell>
-                {/* Ürün */}
-                <TableCell className="py-4 w-40">
-                  {record.urun ? (
-                    <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-300">
-                      {kisaltUrunAdi(record.urun)}
-                    </Badge>
-                  ) : (
-                    <span className="text-xs text-gray-400">-</span>
-                  )}
-                </TableCell>
-                {/* Gelir Modeli */}
-                <TableCell className="py-4 w-36">
-                  <div className="flex items-center gap-2">
-                    <span>{record.gelirModeli.ad}</span>
-                    {record.gelirModeli.ad?.toLowerCase().includes('paçal') && (
-                      <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300 text-xs">
-                        Auto
+                {/* İlk satırda gösterilecek sütunlar (rowSpan ile) */}
+                {isFirstRow && (
+                  <>
+                    {/* KLM - İlk sütun */}
+                    <TableCell className="py-2 w-16" rowSpan={activeVadeler.length}>
+                      <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-300 font-mono text-xs">
+                        {String(indexInGroup + 1).padStart(2, '0')}
                       </Badge>
-                    )}
-                    {record.ekGelirDetay && (
-                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300 text-xs">
-                        {record.ekGelirDetay.gelirTuru}
-                      </Badge>
-                    )}
-                  </div>
-                </TableCell>
-                {/* Kart Programları sütunu kaldırıldı */}
-                <TableCell className="py-4 w-32">
-                  <Badge variant={record.yurtIciDisi === 'Yurt İçi' ? 'default' : 'secondary'}>
-                    {record.yurtIciDisi}
-                  </Badge>
-                </TableCell>
-                {/* Kart Tipi */}
-                <TableCell className="py-4 w-24">
-                  <Badge 
-                    variant={record.kartTipi === 'Credit' ? 'default' : record.kartTipi === 'Debit' ? 'secondary' : 'outline'}
-                    className={record.kartTipi?.includes('Paçal') ? 'bg-purple-100 text-purple-700 border-purple-300' : ''}
-                  >
-                    {record.kartTipi?.replace(' (Tüm Kart Tipleri)', '') || record.kartTipi}
-                  </Badge>
-                </TableCell>
-                {/* Vade */}
-                <TableCell className="py-4 w-20">
-                  <div className="space-y-2">
-                    {/* Sadece seçilen (aktif) vadeleri göster - Alt alta */}
-                    {record.komisyonOranları.filter(ko => ko.aktif !== false).length > 0 ? (
-                      <div className="flex flex-col gap-1">
-                        {record.komisyonOranları.filter(ko => ko.aktif !== false).map((ko, idx) => (
-                          <div key={idx} className="text-xs text-blue-700">
-                            {ko.vade.replace(' (Peşin)', '')}
-                          </div>
-                        ))}
+                    </TableCell>
+                    {/* Grup */}
+                    <TableCell className="py-2 w-32" rowSpan={activeVadeler.length}>
+                      {isGrouped && recordGroup ? (
+                        <Badge variant="default" className="bg-blue-600 text-white">
+                          {getGroupAbbreviation(recordGroup.name)}
+                        </Badge>
+                      ) : (
+                        <span className="text-xs text-gray-400">-</span>
+                      )}
+                    </TableCell>
+                    {/* Kısa Açıklama */}
+                    <TableCell className="py-2 w-36" rowSpan={activeVadeler.length}>
+                      {record.kisaAciklama ? (
+                        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300 text-xs">
+                          {record.kisaAciklama}
+                        </Badge>
+                      ) : (
+                        <span className="text-xs text-gray-400">-</span>
+                      )}
+                    </TableCell>
+                    {/* Ürün */}
+                    <TableCell className="py-2 w-40" rowSpan={activeVadeler.length}>
+                      {record.urun ? (
+                        <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-300">
+                          {kisaltUrunAdi(record.urun)}
+                        </Badge>
+                      ) : (
+                        <span className="text-xs text-gray-400">-</span>
+                      )}
+                    </TableCell>
+                    {/* Gelir Modeli */}
+                    <TableCell className="py-2 w-36" rowSpan={activeVadeler.length}>
+                      <div className="flex items-center gap-2">
+                        <span>{record.gelirModeli.ad}</span>
+                        {record.gelirModeli.ad?.toLowerCase().includes('paçal') && (
+                          <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300 text-xs">
+                            Auto
+                          </Badge>
+                        )}
+                        {record.ekGelirDetay && (
+                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300 text-xs">
+                            {record.ekGelirDetay.gelirTuru}
+                          </Badge>
+                        )}
                       </div>
-                    ) : (
-                      <span className="text-xs text-gray-400">-</span>
-                    )}
+                    </TableCell>
+                    {/* Yurt İçi/Dışı */}
+                    <TableCell className="py-2 w-32" rowSpan={activeVadeler.length}>
+                      <Badge variant={record.yurtIciDisi === 'Yurt İçi' ? 'default' : 'secondary'}>
+                        {record.yurtIciDisi}
+                      </Badge>
+                    </TableCell>
+                    {/* Kart Tipi */}
+                    <TableCell className="py-2 w-24" rowSpan={activeVadeler.length}>
+                      <Badge 
+                        variant={record.kartTipi === 'Credit' ? 'default' : record.kartTipi === 'Debit' ? 'secondary' : 'outline'}
+                        className={record.kartTipi?.includes('Paçal') ? 'bg-purple-100 text-purple-700 border-purple-300' : ''}
+                      >
+                        {record.kartTipi?.replace(' (Tüm Kart Tipleri)', '') || record.kartTipi}
+                      </Badge>
+                    </TableCell>
+                  </>
+                )}
+                
+                {/* Her vade satırında gösterilecek sütunlar */}
+                {/* Vade */}
+                <TableCell className="py-2 w-20">
+                  <div className="text-xs text-blue-700">
+                    {vadeInfo.vade.replace(' (Peşin)', '')}
                   </div>
                 </TableCell>
                 {/* Oran */}
-                <TableCell className="py-4 w-40">
-                  <div className="text-xs space-y-2">
+                <TableCell className="py-2 w-40">
+                  <div className="text-xs space-y-0.5">
                     {record.gelirModeli.ad === 'Hazine Geliri' ? (
-                      <div className="flex items-center justify-between gap-2 bg-blue-50 px-2 py-2 rounded">
-                        <span className="text-gray-700">Kazanç:</span>
-                        <span className="text-blue-700">{parseFloat(record.hazineGeliri?.kazancTL || '0').toFixed(2)}₺</span>
-                      </div>
+                      <>
+                        <div className="text-gray-500">Kazanç:</div>
+                        <div className="text-blue-700">{parseFloat(record.hazineGeliri?.kazancTL || '0').toFixed(2)}₺</div>
+                      </>
                     ) : record.gelirModeli.ad === 'Gelir Ortaklığı' ? (
-                      // Gelir Ortaklığı: Alış (kırmızı), Satış (yeşil), Kazanç (mavi)
-                      <div className="flex flex-col gap-2">
-                        {record.komisyonOranları.filter(ko => ko.aktif !== false).map((ko, idx) => {
-                          const formatPercent = (val: string | undefined) => {
-                            if (!val || val === '') return '0,00';
-                            return parseFloat(val).toFixed(2).replace('.', ',');
-                          };
-                          
-                          return (
-                            <div key={idx} className="flex flex-col gap-1 px-2 py-2 rounded bg-gray-50">
-                              <div className="flex items-center justify-between gap-2">
-                                <span className="text-gray-600">Alış:</span>
-                                <span className="text-red-600">%{formatPercent(ko.alisTL)}</span>
-                              </div>
-                              <div className="flex items-center justify-between gap-2">
-                                <span className="text-gray-600">Satış:</span>
-                                <span className="text-green-600">%{formatPercent(ko.satisTL)}</span>
-                              </div>
-                              <div className="flex items-center justify-between gap-2">
-                                <span className="text-gray-600">Kazanç:</span>
-                                <span className="text-blue-600">%{formatPercent(ko.karTL)}</span>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                      <>
+                        <div className="text-gray-500">Alış: <span className="text-red-600">{parseFloat(vadeInfo.alisTL || '0').toFixed(2)}</span></div>
+                        <div className="text-gray-500">Satış: <span className="text-green-600">{parseFloat(vadeInfo.satisTL || '0').toFixed(2)}</span></div>
+                        <div className="text-gray-500">Kar: <span className="text-blue-600">{parseFloat(vadeInfo.karTL || '0').toFixed(2)}</span></div>
+                      </>
                     ) : (
-                      // Sabit Komisyon: Komisyon oranı yüzdesi göster - Alt alta
-                      <div className="flex flex-col gap-1">
-                        {record.komisyonOranları.filter(ko => ko.aktif !== false).map((ko, idx) => {
-                          const vadeLabel = ko.vade.replace(' (Peşin)', '');
-                          
-                          return (
-                            <div key={idx} className="text-blue-700">
-                              {vadeLabel}:%{ko.oran}
-                            </div>
-                          );
-                        })}
+                      <div className="text-blue-700">
+                        %{vadeInfo.oran}
                       </div>
                     )}
                   </div>
                 </TableCell>
-                {/* Paylaşım */}
-                <TableCell className="py-4 w-36">
-                  <div className="text-xs space-y-2">
-                    <div className="flex items-center justify-between gap-2 bg-green-50 px-2 py-2 rounded">
-                      <span className="text-gray-700">{record.kurulus.ad}</span>
-                      <span className="text-green-700">%{record.paylaşımOranları.kurulusOrani}</span>
-                    </div>
-                    <div className="flex items-center justify-between gap-2 bg-blue-50 px-2 py-2 rounded">
-                      <span className="text-gray-700">OXİVO</span>
-                      <span className="text-blue-700">%{record.paylaşımOranları.oxivoOrani}</span>
-                    </div>
-                  </div>
-                </TableCell>
-                {/* Oluşturma */}
-                <TableCell className="py-4 w-36">
-                  <div className="text-xs text-gray-600">
-                    <div className="flex items-center gap-1">
-                      <span className="text-green-600">📅</span>
-                      <span>{record.olusturmaTarihi}</span>
-                    </div>
-                    {record.kapanmaTarihi && (
-                      <div className="flex items-center gap-1 mt-1 text-orange-600">
-                        <span>🔒</span>
-                        <span>{record.kapanmaTarihi}</span>
+                
+                {/* İlk satırda gösterilecek diğer sütunlar (rowSpan ile) */}
+                {isFirstRow && (
+                  <>
+                    {/* Paylaşım */}
+                    <TableCell className="py-2 w-36" rowSpan={activeVadeler.length}>
+                      <div className="text-xs space-y-2">
+                        <div className="flex items-center justify-between gap-2 bg-green-50 px-2 py-2 rounded">
+                          <span className="text-gray-700">{record.kurulus.ad}</span>
+                          <span className="text-green-700">%{record.paylaşımOranları.kurulusOrani}</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-2 bg-blue-50 px-2 py-2 rounded">
+                          <span className="text-gray-700">OXİVO</span>
+                          <span className="text-blue-700">%{record.paylaşımOranları.oxivoOrani}</span>
+                        </div>
                       </div>
-                    )}
-                    <div className="flex items-center gap-1 mt-1">
-                      {record.aciklama && (
-                        <Badge variant="outline" className="text-xs">
-                          📝
-                        </Badge>
-                      )}
-                      {record.fotograf && (
-                        <Badge variant="outline" className="text-xs">
-                          📷
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                </TableCell>
-                {/* İşlemler */}
-                <TableCell className="py-4 w-32" onClick={(e) => e.stopPropagation()}>
+                    </TableCell>
+                    {/* Oluşturma */}
+                    <TableCell className="py-2 w-36" rowSpan={activeVadeler.length}>
+                      <div className="text-xs text-gray-600">
+                        <div className="flex items-center gap-1">
+                          <span className="text-green-600">📅</span>
+                          <span>{record.olusturmaTarihi}</span>
+                        </div>
+                        {record.kapanmaTarihi && (
+                          <div className="flex items-center gap-1 mt-1 text-orange-600">
+                            <span>🔒</span>
+                            <span>{record.kapanmaTarihi}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1 mt-1">
+                          {record.aciklama && (
+                            <Badge variant="outline" className="text-xs">
+                              📝
+                            </Badge>
+                          )}
+                          {record.fotograf && (
+                            <Badge variant="outline" className="text-xs">
+                              📷
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </TableCell>
+                    {/* İşlemler */}
+                    <TableCell className="py-2 w-32" rowSpan={activeVadeler.length} onClick={(e) => e.stopPropagation()}>
                   <div className="flex flex-col gap-2">
                     {record.aktif ? (
                       <Button
@@ -1332,6 +1335,91 @@ export function FirmaTabelaTab({
                     )}
                   </div>
                 </TableCell>
+                  </>
+                )}
+              </TableRow>
+                );
+              });
+            })}
+                </React.Fragment>
+              );
+            })}
+            
+            {/* Gruplanmamış Kayıtlar */}
+            {(() => {
+              const ungroupedRecords = filteredRecords.filter(r => 
+                !r.ekGelirDetay && !getRecordGroup(r.id)
+              );
+              
+              if (ungroupedRecords.length === 0) return null;
+              
+              const isCollapsed = collapsedGroups.has('UNGROUPED');
+              
+              return (
+                <React.Fragment key="ungrouped-section">
+                  {/* Gruplanmamış Kayıtlar Başlığı */}
+                  <TableRow 
+                    key="ungrouped-header"
+                    className="bg-gradient-to-r from-gray-100 to-gray-50 border-t-2 border-gray-300 hover:from-gray-200 hover:to-gray-100 cursor-pointer"
+                    onClick={() => toggleGroupCollapse('UNGROUPED')}
+                  >
+                    <TableCell colSpan={11} className="py-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          {isCollapsed ? (
+                            <ChevronRight size={20} className="text-gray-700" />
+                          ) : (
+                            <ChevronDown size={20} className="text-gray-700" />
+                          )}
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="bg-gray-200 text-gray-700 border-gray-400">
+                              Gruplanmamış Kayıtlar
+                            </Badge>
+                            <span className="text-sm text-gray-600">
+                              {ungroupedRecords.length} kayıt
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                  
+                  {/* Gruplanmamış Kayıtlar - Sadece açıksa göster */}
+                  {!isCollapsed && ungroupedRecords.flatMap((record, indexInUngrouped) => {
+                    const programIds = record.kartProgramIds || record.bankIds || [];
+                    const recordGroup = getRecordGroup(record.id);
+                    const isGrouped = !!recordGroup;
+                    
+                    // Aktif vadeleri al - Her vade için ayrı satır oluştur
+                    const activeVadeler = record.komisyonOranları.filter(ko => ko.aktif !== false);
+                    if (activeVadeler.length === 0) {
+                      activeVadeler.push({ vade: '-', oran: '0', aktif: true });
+                    }
+                    
+                    return activeVadeler.map((vadeInfo, vadeIndex) => {
+                      const isFirstRow = vadeIndex === 0;
+                      
+                      return (
+                      <TableRow 
+                        key={`${record.id}-vade-${vadeIndex}`}
+                        className="hover:bg-gray-50"
+                      >
+                        {/* Checkbox sona taşındı */}
+                        {/* <TableCell className="py-4">
+                          <Checkbox
+                            checked={selectedRecordsForGroup.includes(record.id)}
+                            disabled={isGrouped}
+                            onCheckedChange={(checked) => {
+                      if (checked) {
+                        setSelectedRecordsForGroup([...selectedRecordsForGroup, record.id]);
+                      } else {
+                        setSelectedRecordsForGroup(selectedRecordsForGroup.filter(id => id !== record.id));
+                      }
+                      restoreScrollPosition();
+                    }}
+                    title={isGrouped ? `Bu kayıt "${recordGroup?.name}" grubuna aittir` : ''}
+                  />
+                </TableCell>
               </TableRow>
             );
             })}
@@ -1379,14 +1467,23 @@ export function FirmaTabelaTab({
                   </TableRow>
                   
                   {/* Gruplanmamış Kayıtlar - Sadece açıksa göster */}
-                  {!isCollapsed && ungroupedRecords.map((record, indexInUngrouped) => {
+                  {!isCollapsed && ungroupedRecords.flatMap((record, indexInUngrouped) => {
                     const programIds = record.kartProgramIds || record.bankIds || [];
                     const recordGroup = getRecordGroup(record.id);
                     const isGrouped = !!recordGroup;
                     
-                    return (
+                    // Aktif vadeleri al - Her vade için ayrı satır oluştur
+                    const activeVadeler = record.komisyonOranları.filter(ko => ko.aktif !== false);
+                    if (activeVadeler.length === 0) {
+                      activeVadeler.push({ vade: '-', oran: '0', aktif: true });
+                    }
+                    
+                    return activeVadeler.map((vadeInfo, vadeIndex) => {
+                      const isFirstRow = vadeIndex === 0;
+                      
+                      return (
                       <TableRow 
-                        key={record.id}
+                        key={`${record.id}-vade-${vadeIndex}`}
                         className="hover:bg-gray-50"
                       >
                         {/* Checkbox sona taşındı */}
@@ -1406,162 +1503,136 @@ export function FirmaTabelaTab({
                             title={isGrouped ? `Bu kayıt \"${recordGroup?.name}\" grubuna aittir` : ''}
                           />
                         </TableCell> */}
-                        {/* KLM - İlk sütun */}
-                        <TableCell className="py-4 w-16">
-                          <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-300 font-mono text-xs">
-                            {String(indexInUngrouped + 1).padStart(2, '0')}
-                          </Badge>
-                        </TableCell>
-                        {/* Grup */}
-                        <TableCell className="py-4 w-32">
-                          <span className="text-xs text-gray-400">-</span>
-                        </TableCell>
-                        {/* Kısa Açıklama */}
-                        <TableCell className="py-4 w-36">
-                          {(record as any).kisaAciklama ? (
-                            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300 text-xs">
-                              {(record as any).kisaAciklama}
-                            </Badge>
-                          ) : (
-                            <span className="text-xs text-gray-400">-</span>
-                          )}
-                        </TableCell>
-                        {/* Ürün */}
-                        <TableCell className="py-4 w-40">
-                          {record.urun ? (
-                            <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-300">
-                              {kisaltUrunAdi(record.urun)}
-                            </Badge>
-                          ) : (
-                            <span className="text-xs text-gray-400">-</span>
-                          )}
-                        </TableCell>
-                        {/* Gelir Modeli */}
-                        <TableCell className="py-4 w-36">
-                          <div className="flex items-center gap-2">
-                            <span>{record.gelirModeli.ad}</span>
-                            {record.gelirModeli.ad?.toLowerCase().includes('paçal') && (
-                              <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300 text-xs">
-                                Auto
+                        
+                        {/* İlk satırda gösterilecek sütunlar (rowSpan ile) */}
+                        {isFirstRow && (
+                          <>
+                            {/* KLM - İlk sütun */}
+                            <TableCell className="py-2 w-16" rowSpan={activeVadeler.length}>
+                              <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-300 font-mono text-xs">
+                                {String(indexInUngrouped + 1).padStart(2, '0')}
                               </Badge>
-                            )}
-                            {record.ekGelirDetay && (
-                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300 text-xs">
-                                {record.ekGelirDetay.gelirTuru}
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                        {/* Kart Programları sütunu kaldırıldı */}
-                        {/* Yurt İçi/Dışı */}
-                        <TableCell className="py-4 w-32">
-                          <Badge variant={record.yurtIciDisi === 'Yurt İçi' ? 'default' : 'secondary'}>
-                            {record.yurtIciDisi}
-                          </Badge>
-                        </TableCell>
-                        {/* Kart Tipi */}
-                        <TableCell className="py-4 w-24">
-                          <Badge 
-                            variant={record.kartTipi === 'Credit' ? 'default' : record.kartTipi === 'Debit' ? 'secondary' : 'outline'}
-                            className={record.kartTipi?.includes('Paçal') ? 'bg-purple-100 text-purple-700 border-purple-300' : ''}
-                          >
-                            {record.kartTipi?.replace(' (Tüm Kart Tipleri)', '') || record.kartTipi}
-                          </Badge>
-                        </TableCell>
-                        {/* Vade */}
-                        <TableCell className="py-4 w-20">
-                          <div className="space-y-2">
-                            {record.komisyonOranları.filter(ko => ko.aktif !== false).length > 0 ? (
-                              <div className="flex flex-col gap-1">
-                                {record.komisyonOranları.filter(ko => ko.aktif !== false).map((ko, idx) => (
-                                  <div key={idx} className="text-xs text-blue-700">
-                                    {ko.vade.replace(' (Peşin)', '')}
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
+                            </TableCell>
+                            {/* Grup */}
+                            <TableCell className="py-2 w-32" rowSpan={activeVadeler.length}>
                               <span className="text-xs text-gray-400">-</span>
-                            )}
+                            </TableCell>
+                            {/* Kısa Açıklama */}
+                            <TableCell className="py-2 w-36" rowSpan={activeVadeler.length}>
+                              {record.kisaAciklama ? (
+                                <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300 text-xs">
+                                  {record.kisaAciklama}
+                                </Badge>
+                              ) : (
+                                <span className="text-xs text-gray-400">-</span>
+                              )}
+                            </TableCell>
+                            {/* Ürün */}
+                            <TableCell className="py-2 w-40" rowSpan={activeVadeler.length}>
+                              {record.urun ? (
+                                <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-300">
+                                  {kisaltUrunAdi(record.urun)}
+                                </Badge>
+                              ) : (
+                                <span className="text-xs text-gray-400">-</span>
+                              )}
+                            </TableCell>
+                            {/* Gelir Modeli */}
+                            <TableCell className="py-2 w-36" rowSpan={activeVadeler.length}>
+                              <div className="flex items-center gap-2">
+                                <span>{record.gelirModeli.ad}</span>
+                                {record.gelirModeli.ad?.toLowerCase().includes('paçal') && (
+                                  <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300 text-xs">
+                                    Auto
+                                  </Badge>
+                                )}
+                                {record.ekGelirDetay && (
+                                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300 text-xs">
+                                    {record.ekGelirDetay.gelirTuru}
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            {/* Yurt İçi/Dışı */}
+                            <TableCell className="py-2 w-32" rowSpan={activeVadeler.length}>
+                              <Badge variant={record.yurtIciDisi === 'Yurt İçi' ? 'default' : 'secondary'}>
+                                {record.yurtIciDisi}
+                              </Badge>
+                            </TableCell>
+                            {/* Kart Tipi */}
+                            <TableCell className="py-2 w-24" rowSpan={activeVadeler.length}>
+                              <Badge 
+                                variant={record.kartTipi === 'Credit' ? 'default' : record.kartTipi === 'Debit' ? 'secondary' : 'outline'}
+                                className={record.kartTipi?.includes('Paçal') ? 'bg-purple-100 text-purple-700 border-purple-300' : ''}
+                              >
+                                {record.kartTipi?.replace(' (Tüm Kart Tipleri)', '') || record.kartTipi}
+                              </Badge>
+                            </TableCell>
+                          </>
+                        )}
+                        
+                        {/* Her vade satırında gösterilecek sütunlar */}
+                        {/* Vade */}
+                        <TableCell className="py-2 w-20">
+                          <div className="text-xs text-blue-700">
+                            {vadeInfo.vade.replace(' (Peşin)', '')}
                           </div>
                         </TableCell>
                         {/* Oran */}
                         <TableCell className="py-4 w-40">
-                          <div className="text-xs space-y-2">
+                          <div className="text-xs space-y-1">
                             {record.gelirModeli.ad === 'Hazine Geliri' ? (
-                              <div className="flex items-center justify-between gap-2 bg-blue-50 px-2 py-2 rounded">
-                                <span className="text-gray-700">Kazanç:</span>
-                                <span className="text-blue-700">{parseFloat(record.hazineGeliri?.kazancTL || '0').toFixed(2)}₺</span>
+                              <div className="flex flex-col gap-0.5">
+                                <div className="text-gray-500">Kazanç:</div>
+                                <div className="text-blue-700">{parseFloat(record.hazineGeliri?.kazancTL || '0').toFixed(2)}₺</div>
                               </div>
                             ) : record.gelirModeli.ad === 'Gelir Ortaklığı' ? (
-                              <div className="flex flex-col gap-2">
-                                {record.komisyonOranları.filter(ko => ko.aktif !== false).map((ko, idx) => {
-                                  const formatPercent = (val: string | undefined) => {
-                                    if (!val || val === '') return '0,00';
-                                    return parseFloat(val).toFixed(2).replace('.', ',');
-                                  };
-                                  
-                                  return (
-                                    <div key={idx} className="flex flex-col gap-1 px-2 py-2 rounded bg-gray-50">
-                                      <div className="flex items-center justify-between gap-2">
-                                        <span className="text-gray-600">Alış:</span>
-                                        <span className="text-red-600">%{formatPercent(ko.alisTL)}</span>
-                                      </div>
-                                      <div className="flex items-center justify-between gap-2">
-                                        <span className="text-gray-600">Satış:</span>
-                                        <span className="text-green-600">%{formatPercent(ko.satisTL)}</span>
-                                      </div>
-                                      <div className="flex items-center justify-between gap-2 border-t pt-0.5">
-                                        <span className="text-gray-600">Kazanç:</span>
-                                        <span className="text-blue-600">%{formatPercent(ko.karTL)}</span>
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
+                              <>
+                                <div className="text-gray-500">Alış: <span className="text-red-600">{parseFloat(vadeInfo.alisTL || '0').toFixed(2)}</span></div>
+                                <div className="text-gray-500">Satış: <span className="text-green-600">{parseFloat(vadeInfo.satisTL || '0').toFixed(2)}</span></div>
+                                <div className="text-gray-500">Kar: <span className="text-blue-600">{parseFloat(vadeInfo.karTL || '0').toFixed(2)}</span></div>
+                              </>
                             ) : (
-                              <div className="flex flex-col gap-1">
-                                {record.komisyonOranları.filter(ko => ko.aktif !== false).map((ko, idx) => {
-                                  const vadeLabel = ko.vade.replace(' (Peşin)', '');
-                                  return (
-                                    <div key={idx} className="text-blue-700">
-                                      {vadeLabel}:%{ko.oran}
-                                    </div>
-                                  );
-                                })}
+                              <div className="text-blue-700">
+                                %{vadeInfo.oran}
                               </div>
                             )}
                           </div>
                         </TableCell>
-                        {/* Paylaşım */}
-                        <TableCell className="py-4 w-36">
-                          <div className="text-xs space-y-1">
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="text-gray-600">{firmaAdi}:</span>
-                              <span className="text-blue-700">%{record.paylaşımOranları.kurulusOrani}</span>
-                            </div>
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="text-gray-600">OXİVO:</span>
-                              <span className="text-indigo-700">%{record.paylaşımOranları.oxivoOrani}</span>
-                            </div>
-                          </div>
-                        </TableCell>
-                        {/* Oluşturma */}
-                        <TableCell className="py-4 w-36">
-                          <div className="text-xs space-y-1">
-                            <div className="text-gray-600">
-                              {new Date(record.olusturmaTarihi).toLocaleDateString('tr-TR')}
-                            </div>
-                            {record.kapanmaTarihi && (
-                              <div>
-                                <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-300 text-xs">
-                                  Kapanış: {new Date(record.kapanmaTarihi).toLocaleDateString('tr-TR')}
-                                </Badge>
+                        
+                        {/* İlk satırda gösterilecek diğer sütunlar (rowSpan ile) */}
+                        {isFirstRow && (
+                          <>
+                            {/* Paylaşım */}
+                            <TableCell className="py-2 w-36" rowSpan={activeVadeler.length}>
+                              <div className="text-xs space-y-1">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="text-gray-600">{firmaAdi}:</span>
+                                  <span className="text-blue-700">%{record.paylaşımOranları.kurulusOrani}</span>
+                                </div>
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="text-gray-600">OXİVO:</span>
+                                  <span className="text-indigo-700">%{record.paylaşımOranları.oxivoOrani}</span>
+                                </div>
                               </div>
-                            )}
-                          </div>
-                        </TableCell>
-                        {/* İşlemler */}
-                        <TableCell className="py-4 w-32" onClick={(e) => e.stopPropagation()}>
+                            </TableCell>
+                            {/* Oluşturma */}
+                            <TableCell className="py-2 w-36" rowSpan={activeVadeler.length}>
+                              <div className="text-xs space-y-1">
+                                <div className="text-gray-600">
+                                  {new Date(record.olusturmaTarihi).toLocaleDateString('tr-TR')}
+                                </div>
+                                {record.kapanmaTarihi && (
+                                  <div>
+                                    <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-300 text-xs">
+                                      Kapanış: {new Date(record.kapanmaTarihi).toLocaleDateString('tr-TR')}
+                                    </Badge>
+                                  </div>
+                                )}
+                              </div>
+                            </TableCell>
+                            {/* İşlemler */}
+                            <TableCell className="py-2 w-32" rowSpan={activeVadeler.length} onClick={(e) => e.stopPropagation()}>
                           <div className="flex flex-col gap-2">
                             {record.aktif ? (
                               <Button
@@ -1629,7 +1700,120 @@ export function FirmaTabelaTab({
                                 <Trash2 size={14} />
                               </Button>
                             )}
+                              </div>
+                            </TableCell>
+                          </>
+                        )}
+                      </TableRow>
+                      );
+                    });
+                  })}
+                </React.Fragment>
+              );
+            })()}
+          </TableBody>
+        </Table>
+      )}
+
+      {/* Ek Gelir Detayları Bölümü */}
+      {filteredRecords.filter(r => r.ekGelirDetay).length > 0 && (
+        <div className="mt-8 space-y-4">
+          <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-4">
+            <h3 className="text-purple-900 flex items-center gap-2">
+              <span className="text-xl">💰</span>
+              Ek Gelir Detayları
+            </h3>
+            <p className="text-sm text-purple-700 mt-1">
+              Aşağıdaki tabloda ek geliri olan TABELA kayıtları gösterilmektedir
+            </p>
+          </div>
+
+          <div className="border rounded-lg overflow-hidden bg-white">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-50">
+                  <TableHead className="w-16">KLM</TableHead>
+                  <TableHead className="w-32">Grup</TableHead>
+                  <TableHead className="w-36">Kısa Açıklama</TableHead>
+                  <TableHead className="w-40">Ürün</TableHead>
+                  <TableHead className="w-32">Gelir Modeli</TableHead>
+                  <TableHead className="w-24">Gelir Türü</TableHead>
+                  <TableHead className="w-24">Kullanım</TableHead>
+                  <TableHead className="w-24">Kart Tipi</TableHead>
+                  <TableHead className="text-right w-24">Tutar</TableHead>
+                  <TableHead className="text-right w-20">PF%</TableHead>
+                  <TableHead className="text-right w-24">PF-TL</TableHead>
+                  <TableHead className="text-right w-20">OX %</TableHead>
+                  <TableHead className="text-right w-24">OX TL</TableHead>
+                  <TableHead className="text-center w-32">İşlemler</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {/* Gruplu Ek Gelir kayıtlarını render et */}
+                {tabelaGroups.map((group) => {
+                  const groupEkGelirRecords = filteredRecords.filter(r => 
+                    r.ekGelirDetay && getRecordGroup(r.id)?.id === group.id
+                  );
+                  
+                  if (groupEkGelirRecords.length === 0) return null;
+                  
+                  const isCollapsed = collapsedGroups.has(group.id);
+                  
+                  return (
+                    <React.Fragment key={`ekgelir-group-${group.id}`}>
+                      {/* Ek Gelir Grup Başlığı */}
+                      <TableRow 
+                        key={`ekgelir-group-header-${group.id}`}
+                        className="bg-gradient-to-r from-purple-100 to-purple-50 border-t-2 border-purple-300 hover:from-purple-200 hover:to-purple-100 cursor-pointer"
+                        onClick={() => toggleGroupCollapse(group.id)}
+                      >
+                        <TableCell colSpan={13} className="py-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              {isCollapsed ? (
+                                <ChevronRight size={20} className="text-purple-700" />
+                              ) : (
+                                <ChevronDown size={20} className="text-purple-700" />
+                              )}
+                              <div className="flex items-center gap-2">
+                                <Badge variant="default" className="bg-purple-600 text-white">
+                                  {group.name}
+                                </Badge>
+                                <span className="text-sm text-purple-800">
+                                  {groupEkGelirRecords.length} ek gelir kaydı
+                                </span>
+                                {!group.aktif && (
+                                  <Badge variant="secondary" className="bg-gray-400 text-white text-xs">
+                                    Pasif
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
                           </div>
+                        </TableCell>
+                      </TableRow>
+                      
+                      {/* Ek Gelir Grup Kayıtları - Sadece açıksa ve grup aktifse göster */}
+                      {!isCollapsed && group.aktif !== false && groupEkGelirRecords.map((record, indexInGroup) => {
+                        const recordGroup = getRecordGroup(record.id);
+                        return (
+                        <TableRow key={record.id} className="hover:bg-gray-50 bg-purple-50/20">
+                      {/* Checkbox sona taşındı */}
+                      {/* <TableCell className="py-4">
+                        <Checkbox
+                          checked={selectedRecordsForGroup.includes(record.id)}
+                          disabled={!!recordGroup}
+                          onCheckedChange={(checked) => {
+                              saveScrollPosition();
+                              if (checked) {
+                                setSelectedRecordsForGroup([...selectedRecordsForGroup, record.id]);
+                              } else {
+                                setSelectedRecordsForGroup(selectedRecordsForGroup.filter(id => id !== record.id));
+                              }
+                              restoreScrollPosition();
+                            }}
+                            title={isGrouped ? `Bu kayıt "${recordGroup?.name}" grubuna aittir` : ''}
+                          />
                         </TableCell>
                       </TableRow>
                     );
@@ -1759,9 +1943,9 @@ export function FirmaTabelaTab({
                       </TableCell>
                       {/* Kısa Açıklama */}
                       <TableCell className="py-4 w-36">
-                        {(record as any).kisaAciklama ? (
+                        {record.kisaAciklama ? (
                           <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300 text-xs">
-                            {(record as any).kisaAciklama}
+                            {record.kisaAciklama}
                           </Badge>
                         ) : (
                           <span className="text-xs text-gray-400">-</span>
@@ -1931,6 +2115,23 @@ export function FirmaTabelaTab({
                           </Button>
                         </div>
                       </TableCell>
+                      {/* Checkbox - En sona taşındı */}
+                      <TableCell className="py-4 w-12 text-center">
+                        <Checkbox
+                          checked={selectedRecordsForGroup.includes(record.id)}
+                          disabled={!!recordGroup}
+                          onCheckedChange={(checked) => {
+                            saveScrollPosition();
+                            if (checked) {
+                              setSelectedRecordsForGroup([...selectedRecordsForGroup, record.id]);
+                            } else {
+                              setSelectedRecordsForGroup(selectedRecordsForGroup.filter(id => id !== record.id));
+                            }
+                            restoreScrollPosition();
+                          }}
+                          title={recordGroup ? `Bu kayıt "${recordGroup?.name}" grubuna aittir` : ''}
+                        />
+                      </TableCell>
                     </TableRow>
                     );
                   })}
@@ -2011,9 +2212,9 @@ export function FirmaTabelaTab({
                             </TableCell>
                             {/* Kısa Açıklama */}
                             <TableCell className="py-4 w-36">
-                              {(record as any).kisaAciklama ? (
+                              {record.kisaAciklama ? (
                                 <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300 text-xs">
-                                  {(record as any).kisaAciklama}
+                                  {record.kisaAciklama}
                                 </Badge>
                               ) : (
                                 <span className="text-xs text-gray-400">-</span>
@@ -2177,6 +2378,23 @@ export function FirmaTabelaTab({
                                 </Button>
                               </div>
                             </TableCell>
+                            {/* Checkbox - En sona taşındı */}
+                            <TableCell className="py-4 w-12 text-center">
+                              <Checkbox
+                                checked={selectedRecordsForGroup.includes(record.id)}
+                                disabled={!!recordGroup}
+                                onCheckedChange={(checked) => {
+                                  saveScrollPosition();
+                                  if (checked) {
+                                    setSelectedRecordsForGroup([...selectedRecordsForGroup, record.id]);
+                                  } else {
+                                    setSelectedRecordsForGroup(selectedRecordsForGroup.filter(id => id !== record.id));
+                                  }
+                                  restoreScrollPosition();
+                                }}
+                                title={recordGroup ? `Bu kayıt "${recordGroup?.name}" grubuna aittir` : ''}
+                              />
+                            </TableCell>
                           </TableRow>
                         );
                       })}
@@ -2245,18 +2463,18 @@ export function FirmaTabelaTab({
                 <div className="space-y-2">
                   <Label>Açıklama (Opsiyonel - Maksimum 15 karakter)</Label>
                   <Input
-                    value={kisaAciklama}
+                    value={formData.kisaAciklama}
                     onChange={(e) => {
                       const value = e.target.value;
                       if (value.length <= 15) {
-                        setKisaAciklama(value);
+                        setFormData(prev => ({ ...prev, kisaAciklama: value }));
                       }
                     }}
                     placeholder="açıklamanız varsa"
                     maxLength={15}
                   />
                   <p className="text-xs text-gray-500">
-                    {kisaAciklama.length}/15 karakter
+                    {formData.kisaAciklama.length}/15 karakter
                   </p>
                 </div>
 
@@ -2287,8 +2505,8 @@ export function FirmaTabelaTab({
                     { value: 'SoftPOS', label: 'SoftPOS' },
                     { value: 'SanalPOS', label: 'SanalPOS' }
                   ]}
-                  value={urun}
-                  onChange={(value: any) => setUrun(value)}
+                  value={formData.urun}
+                  onChange={(value: any) => setFormData(prev => ({ ...prev, urun: value }))}
                   placeholder="Ürün seçiniz"
                   disabled={isEditingGroupedRecord}
                   error={isEditingGroupedRecord ? '🔒 Bu alan gruplanmış kayıt olduğu için değiştirilemez' : undefined}
@@ -2353,17 +2571,17 @@ export function FirmaTabelaTab({
                             ? 'Alış-satış farkı bazlı gelir modeli'
                             : 'Komisyon oranı bazlı gelir modeli'
                         }))}
-                        value={gelirModeliId}
-                        onChange={setGelirModeliId}
+                        value={formData.gelirModeliId}
+                        onChange={(value) => setFormData(prev => ({ ...prev, gelirModeliId: value }))}
                         placeholder="Gelir modeli seçiniz"
                         disabled={isEditingGroupedRecord}
                         error={isEditingGroupedRecord ? '🔒 Bu alan gruplanmış kayıt olduğu için değiştirilemez' : undefined}
                         required
                       />
                       
-                      {gelirModeliId && !isEditingGroupedRecord && (
+                      {formData.gelirModeliId && !isEditingGroupedRecord && (
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700">
-                          💡 Seçilen: <strong>{aktifGelirModelleri.find(g => g.id === gelirModeliId)?.ad}</strong>
+                          💡 Seçilen: <strong>{aktifGelirModelleri.find(g => g.id === formData.gelirModeliId)?.ad}</strong>
                         </div>
                       )}
                     </div>
@@ -2376,15 +2594,15 @@ export function FirmaTabelaTab({
                 </div>
 
                 {/* Ek Gelirler - Gelir Modeline Ait */}
-                {gelirModeliId && urun && (() => {
+                {formData.gelirModeliId && formData.urun && (() => {
                   // Seçilen gelir modelini bul
-                  const selectedGelirModel = aktifGelirModelleri.find(g => g.id === gelirModeliId);
+                  const selectedGelirModel = aktifGelirModelleri.find(g => g.id === formData.gelirModeliId);
                   if (!selectedGelirModel) return null;
 
                   // Bu gelir modeline ve ürüne uygun ek gelirleri filtrele
                   const ilgiliEkGelirler = aktifEkGelirler.filter(eg => 
                     eg.gelirModeli === selectedGelirModel.ad && 
-                    eg.urun === urun
+                    eg.urun === formData.urun
                   );
 
                   if (ilgiliEkGelirler.length === 0) return null;
@@ -2400,13 +2618,13 @@ export function FirmaTabelaTab({
                             label: `${ekGelir.gelirTuru} + ${ekGelir.kullanim}`
                           }))
                         ]}
-                        value={selectedEkGelirId}
-                        onChange={setSelectedEkGelirId}
+                        value={formData.selectedEkGelirId}
+                        onChange={(value) => setFormData(prev => ({ ...prev, selectedEkGelirId: value }))}
                         placeholder="Ek gelir seçmek isterseniz buradan seçin"
                         disabled={isEditingGroupedRecord}
                         error={isEditingGroupedRecord ? '🔒 Bu alan gruplanmış kayıt olduğu için değiştirilemez' : undefined}
                       />
-                      {selectedEkGelirId && selectedEkGelirId !== 'NONE' && (
+                      {formData.selectedEkGelirId && formData.selectedEkGelirId !== 'NONE' && (
                         <p className="text-xs text-green-600 mt-1">
                           ✓ Ek gelir seçildi
                         </p>
@@ -2434,13 +2652,13 @@ export function FirmaTabelaTab({
                   <div className={`flex items-center gap-2 p-3 border rounded-lg ${isEditingGroupedRecord ? 'bg-orange-50 border-orange-300' : 'bg-blue-50 border-blue-200'}`}>
                     <Checkbox
                       id="all-kart-programs"
-                      checked={selectedKartProgramIds.includes('ALL')}
+                      checked={formData.selectedKartProgramIds.includes('ALL')}
                       disabled={isEditingGroupedRecord}
                       onCheckedChange={(checked) => {
                         if (checked) {
-                          setSelectedKartProgramIds(['ALL']);
+                          setFormData(prev => ({ ...prev, selectedKartProgramIds: ['ALL'] }));
                         } else {
-                          setSelectedKartProgramIds([]);
+                          setFormData(prev => ({ ...prev, selectedKartProgramIds: [] }));
                         }
                       }}
                     />
@@ -2461,13 +2679,19 @@ export function FirmaTabelaTab({
                         <div key={program.id} className={`flex items-center gap-2 p-3 ${isEditingGroupedRecord ? 'bg-orange-50/50' : 'hover:bg-gray-50'}`}>
                           <Checkbox
                             id={`kart-program-${program.id}`}
-                            checked={selectedKartProgramIds.includes(program.id) && !selectedKartProgramIds.includes('ALL')}
-                            disabled={selectedKartProgramIds.includes('ALL') || isEditingGroupedRecord}
+                            checked={formData.selectedKartProgramIds.includes(program.id) && !formData.selectedKartProgramIds.includes('ALL')}
+                            disabled={formData.selectedKartProgramIds.includes('ALL') || isEditingGroupedRecord}
                             onCheckedChange={(checked) => {
                               if (checked) {
-                                setSelectedKartProgramIds([...selectedKartProgramIds.filter(id => id !== 'ALL'), program.id]);
+                                setFormData(prev => ({ 
+                                  ...prev, 
+                                  selectedKartProgramIds: [...prev.selectedKartProgramIds.filter(id => id !== 'ALL'), program.id] 
+                                }));
                               } else {
-                                setSelectedKartProgramIds(selectedKartProgramIds.filter(id => id !== program.id));
+                                setFormData(prev => ({ 
+                                  ...prev, 
+                                  selectedKartProgramIds: prev.selectedKartProgramIds.filter(id => id !== program.id) 
+                                }));
                               }
                             }}
                           />
@@ -2481,9 +2705,9 @@ export function FirmaTabelaTab({
                     </div>
                   )}
 
-                  {selectedKartProgramIds.length > 0 && (
+                  {formData.selectedKartProgramIds.length > 0 && (
                     <div className={`text-sm p-2 rounded ${isEditingGroupedRecord ? 'text-orange-600 bg-orange-50' : 'text-green-600 bg-green-50'}`}>
-                      {isEditingGroupedRecord ? '🔒' : '✓'} {selectedKartProgramIds.includes('ALL') ? 'Tüm kart programları' : `${selectedKartProgramIds.length} kart programı`} seçildi
+                      {isEditingGroupedRecord ? '🔒' : '✓'} {formData.selectedKartProgramIds.includes('ALL') ? 'Tüm kart programları' : `${formData.selectedKartProgramIds.length} kart programı`} seçildi
                       {isEditingGroupedRecord && ' (değiştirilemez)'}
                     </div>
                   )}
@@ -2502,8 +2726,8 @@ export function FirmaTabelaTab({
                     { value: 'Yurt İçi', label: 'Yurt İçi' },
                     { value: 'Yurt Dışı', label: 'Yurt Dışı' }
                   ]}
-                  value={yurtIciDisi}
-                  onChange={v => setYurtIciDisi(v as 'Yurt İçi' | 'Yurt Dışı')}
+                  value={formData.yurtIciDisi}
+                  onChange={(v) => setFormData(prev => ({ ...prev, yurtIciDisi: v as 'Yurt İçi' | 'Yurt Dışı' }))}
                   placeholder="Seçiniz"
                   disabled={isEditingGroupedRecord}
                   error={isEditingGroupedRecord ? '🔒 Bu alan gruplanmış kayıt olduğu için değiştirilemez' : undefined}
@@ -2513,7 +2737,7 @@ export function FirmaTabelaTab({
 
             {/* Step 4: Kart Tipi */}
             {currentStep === 4 && (() => {
-              const selectedGelirModeli = aktifGelirModelleri.find(g => g.id === gelirModeliId);
+              const selectedGelirModeli = aktifGelirModelleri.find(g => g.id === formData.gelirModeliId);
               
               return (
               <div className="space-y-4">
@@ -2548,8 +2772,8 @@ export function FirmaTabelaTab({
                     { value: 'Debit', label: 'Debit' },
                     { value: 'Paçal', label: 'Paçal' }
                   ]}
-                  value={kartTipi}
-                  onChange={v => setKartTipi(v as 'Credit' | 'Debit' | 'Paçal')}
+                  value={formData.kartTipi}
+                  onChange={(v) => setFormData(prev => ({ ...prev, kartTipi: v as 'Credit' | 'Debit' | 'Paçal' }))}
                   placeholder="Kart tipi seçiniz"
                   disabled={isPacalGelirModeli || isEditingGroupedRecord}
                   error={
@@ -2580,15 +2804,13 @@ export function FirmaTabelaTab({
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {komisyonOranları.map((item, idx) => (
+                        {formData.komisyonOranları.map((item, idx) => (
                           <TableRow key={idx} className={!item.aktif ? 'bg-gray-50' : ''}>
                             <TableCell className="text-center">
                               <Checkbox
                                 checked={item.aktif}
                                 onCheckedChange={(checked) => {
-                                  const updated = [...komisyonOranları];
-                                  updated[idx].aktif = checked === true;
-                                  setKomisyonOranları(updated);
+                                  handleVadeAktifChange(item.vade, checked === true);
                                 }}
                               />
                             </TableCell>
@@ -2631,7 +2853,7 @@ export function FirmaTabelaTab({
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                              {komisyonOranları.filter(k => k.aktif).map((item, idx) => (
+                              {formData.komisyonOranları.filter(k => k.aktif).map((item, idx) => (
                                 <TableRow key={idx}>
                                   <TableCell>{item.vade.replace(' (Peşin)', '')}</TableCell>
                                   <TableCell>
@@ -2643,10 +2865,7 @@ export function FirmaTabelaTab({
                                         placeholder="0,00"
                                         value={item.oran || ''}
                                         onChange={(e) => {
-                                          const updated = [...komisyonOranları];
-                                          const actualIdx = komisyonOranları.findIndex(k => k.vade === item.vade);
-                                          updated[actualIdx].oran = e.target.value;
-                                          setKomisyonOranları(updated);
+                                          handleKomisyonChange(item.vade, e.target.value);
                                         }}
                                         className="text-right pl-8 bg-green-50"
                                       />
@@ -2676,7 +2895,7 @@ export function FirmaTabelaTab({
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                              {komisyonOranları.filter(k => k.aktif).map((item, idx) => {
+                              {formData.komisyonOranları.filter(k => k.aktif).map((item, idx) => {
                                 // Kar otomatik hesaplama: Satış - Alış
                                 const alis = parseFloat(item.alisTL || '0');
                                 const satis = parseFloat(item.satisTL || '0');
@@ -2695,17 +2914,7 @@ export function FirmaTabelaTab({
                                           placeholder="0,00"
                                           value={item.alisTL || ''}
                                           onChange={(e) => {
-                                            const updated = [...komisyonOranları];
-                                            const actualIdx = komisyonOranları.findIndex(k => k.vade === item.vade);
-                                            updated[actualIdx].alisTL = e.target.value;
-                                            
-                                            // Kar otomatik hesapla ve kaydet
-                                            const newAlis = parseFloat(e.target.value || '0');
-                                            const newSatis = parseFloat(updated[actualIdx].satisTL || '0');
-                                            const newKar = newSatis - newAlis;
-                                            updated[actualIdx].karTL = newKar > 0 ? newKar.toFixed(2) : '0.00';
-                                            
-                                            setKomisyonOranları(updated);
+                                            handleAlisTLChange(item.vade, e.target.value);
                                           }}
                                           className="text-right pl-8"
                                         />
@@ -2720,8 +2929,7 @@ export function FirmaTabelaTab({
                                           placeholder="0,00"
                                           value={item.satisTL || ''}
                                           onChange={(e) => {
-                                            const updated = [...komisyonOranları];
-                                            const actualIdx = komisyonOranları.findIndex(k => k.vade === item.vade);
+                                            handleSatisTLChange(item.vade, e.target.value);
                                             updated[actualIdx].satisTL = e.target.value;
                                             
                                             // Kar otomatik hesapla ve kaydet
@@ -2776,8 +2984,8 @@ export function FirmaTabelaTab({
                       type="number"
                       step="0.01"
                       placeholder="50.00"
-                      value={kurulusOrani}
-                      onChange={(e) => setKurulusOrani(e.target.value)}
+                      value={formData.kurulusOrani}
+                      onChange={(e) => setFormData(prev => ({ ...prev, kurulusOrani: e.target.value }))}
                     />
                     <p className="text-xs text-gray-500">
                       Kuruluşa ait gelir paylaşım yüzdesi
@@ -2790,8 +2998,8 @@ export function FirmaTabelaTab({
                       type="number"
                       step="0.01"
                       placeholder="50.00"
-                      value={oxivoOrani}
-                      onChange={(e) => setOxivoOrani(e.target.value)}
+                      value={formData.oxivoOrani}
+                      onChange={(e) => setFormData(prev => ({ ...prev, oxivoOrani: e.target.value }))}
                     />
                     <p className="text-xs text-gray-500">
                       OXİVO'ya ait gelir paylaşım yüzdesi
@@ -2799,15 +3007,15 @@ export function FirmaTabelaTab({
                   </div>
                 </div>
 
-                {kurulusOrani && oxivoOrani && (
+                {formData.kurulusOrani && formData.oxivoOrani && (
                   <div className={`p-3 rounded text-sm ${
-                    (parseFloat(kurulusOrani) + parseFloat(oxivoOrani)) === 100
+                    (parseFloat(formData.kurulusOrani) + parseFloat(formData.oxivoOrani)) === 100
                       ? 'bg-green-50 text-green-700 border border-green-200'
                       : 'bg-orange-50 text-orange-700 border border-orange-200'
                   }`}>
-                    {(parseFloat(kurulusOrani) + parseFloat(oxivoOrani)) === 100
+                    {(parseFloat(formData.kurulusOrani) + parseFloat(formData.oxivoOrani)) === 100
                       ? '✓ Toplam: 100% - Doğru!'
-                      : `⚠️ Toplam: ${(parseFloat(kurulusOrani) + parseFloat(oxivoOrani)).toFixed(2)}% - Toplamın 100% olması önerilir`
+                      : `⚠️ Toplam: ${(parseFloat(formData.kurulusOrani) + parseFloat(formData.oxivoOrani)).toFixed(2)}% - Toplamın 100% olması önerilir`
                     }
                   </div>
                 )}
@@ -2823,8 +3031,8 @@ export function FirmaTabelaTab({
                   <Label>Açıklama / Not</Label>
                   <Textarea
                     placeholder="Bu TABELA kaydı ile ilgili notlarınızı buraya ekleyebilirsiniz..."
-                    value={aciklama}
-                    onChange={(e) => setAciklama(e.target.value)}
+                    value={formData.aciklama}
+                    onChange={(e) => setFormData(prev => ({ ...prev, aciklama: e.target.value }))}
                     rows={5}
                     className="resize-none"
                   />
@@ -2844,18 +3052,18 @@ export function FirmaTabelaTab({
                   <div className="space-y-2">
                     <Label>TABELA Fotoğrafı</Label>
                     <div className="border-2 border-dashed rounded-lg p-6 text-center">
-                      {fotograf ? (
+                      {formData.fotograf ? (
                         <div className="space-y-4">
                           <div className="relative inline-block">
                             <img 
-                              src={fotograf} 
+                              src={formData.fotograf} 
                               alt="TABELA Fotoğraf" 
                               className="max-h-64 rounded border"
                             />
                             <Button
                               size="sm"
                               variant="destructive"
-                              onClick={() => setFotograf('')}
+                              onClick={() => setFormData(prev => ({ ...prev, fotograf: '' }))}
                               className="absolute top-2 right-2"
                             >
                               <X size={16} />
@@ -2919,8 +3127,19 @@ export function FirmaTabelaTab({
         </DialogContent>
       </Dialog>
 
-      {/* Grup Oluştur/Düzenle Dialog */}
-      <Dialog open={showGroupDialog} onOpenChange={setShowGroupDialog}>
+      {/* Grup Oluştur/Düzenle Dialog - Refactored */}
+      <TabelaGroupDialog
+        isOpen={showGroupDialog}
+        onClose={() => setShowGroupDialog(false)}
+        groupFormData={groupFormData}
+        onGroupFormDataChange={(data) => setGroupFormData(prev => ({ ...prev, ...data }))}
+        onCreateGroup={handleCreateGroup}
+        editingGroup={editingGroup}
+        availableRecords={availableRecordsForGroup}
+      />
+
+      {/* OLD DIALOG - WILL BE REMOVED */}
+      <Dialog open={false} onOpenChange={setShowGroupDialog}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
