@@ -21,13 +21,13 @@
     "noFallthroughCasesInSwitch": true,
 
     /* Path Mapping */
-    "baseUrl": "./src",
+    "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
       "@/components/*": ["./components/*"],
       "@/utils/*": ["./utils/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "include": ["*.ts", "*.tsx", "**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules", "dist"]
 }
