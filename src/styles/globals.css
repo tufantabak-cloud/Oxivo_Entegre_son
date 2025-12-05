@@ -459,3 +459,194 @@ body {
     -webkit-text-size-adjust: 100%;
   }
 }
+
+/* ==== TIPTAP EDITOR STYLING ==== */
+/* TipTap prose styling for rich text editor */
+.prose {
+  max-width: 65ch;
+  color: hsl(222.2 84% 4.9%);
+}
+
+.prose p {
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+}
+
+.prose h1 {
+  font-size: 2.25em;
+  margin-top: 0;
+  margin-bottom: 0.8888889em;
+  line-height: 1.1111111;
+}
+
+.prose h2 {
+  font-size: 1.5em;
+  margin-top: 2em;
+  margin-bottom: 1em;
+  line-height: 1.3333333;
+}
+
+.prose h3 {
+  font-size: 1.25em;
+  margin-top: 1.6em;
+  margin-bottom: 0.6em;
+  line-height: 1.6;
+}
+
+.prose strong {
+  font-weight: 600;
+  color: hsl(222.2 84% 4.9%);
+}
+
+.prose em {
+  font-style: italic;
+}
+
+.prose ul {
+  list-style-type: disc;
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+  padding-left: 1.625em;
+}
+
+.prose ol {
+  list-style-type: decimal;
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+  padding-left: 1.625em;
+}
+
+.prose li {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.prose table {
+  width: 100%;
+  table-layout: auto;
+  text-align: left;
+  margin-top: 2em;
+  margin-bottom: 2em;
+  font-size: 0.875em;
+  line-height: 1.7142857;
+  border-collapse: collapse;
+  border: 1px solid hsl(214.3 31.8% 91.4%);
+}
+
+.prose thead {
+  border-bottom: 2px solid hsl(214.3 31.8% 91.4%);
+}
+
+.prose thead th {
+  font-weight: 600;
+  vertical-align: bottom;
+  padding: 0.5714286em;
+  background-color: hsl(210 40% 98%);
+  border: 1px solid hsl(214.3 31.8% 91.4%);
+}
+
+.prose tbody tr {
+  border-bottom: 1px solid hsl(214.3 31.8% 91.4%);
+}
+
+.prose tbody td {
+  vertical-align: baseline;
+  padding: 0.5714286em;
+  border: 1px solid hsl(214.3 31.8% 91.4%);
+}
+
+.prose-sm {
+  font-size: 0.875rem;
+  line-height: 1.7142857;
+}
+
+.prose-sm p {
+  margin-top: 1.1428571em;
+  margin-bottom: 1.1428571em;
+}
+
+.prose-sm table {
+  font-size: 0.8571429em;
+  line-height: 1.5;
+}
+
+.prose-sm thead th {
+  padding: 0.6666667em;
+}
+
+.prose-sm tbody td {
+  padding: 0.6666667em;
+}
+
+/* TipTap editor focus styles */
+.ProseMirror {
+  outline: none;
+}
+
+.ProseMirror:focus {
+  outline: none;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: hsl(215.4 16.3% 46.9%);
+  pointer-events: none;
+  height: 0;
+}
+
+/* Selected node styling in TipTap */
+.ProseMirror .selectedCell {
+  background-color: hsl(210 40% 96.1%);
+}
+
+.ProseMirror table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+.ProseMirror td,
+.ProseMirror th {
+  min-width: 1em;
+  border: 2px solid hsl(214.3 31.8% 91.4%);
+  padding: 3px 5px;
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.ProseMirror th {
+  font-weight: 600;
+  text-align: left;
+  background-color: hsl(210 40% 98%);
+}
+
+.ProseMirror .selectedCell:after {
+  z-index: 2;
+  position: absolute;
+  content: "";
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(200, 200, 255, 0.4);
+  pointer-events: none;
+}
+
+.ProseMirror .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: -2px;
+  width: 4px;
+  background-color: hsl(221.2 83.2% 53.3%);
+  pointer-events: none;
+}
+
+.ProseMirror.resize-cursor {
+  cursor: ew-resize;
+  cursor: col-resize;
+}
