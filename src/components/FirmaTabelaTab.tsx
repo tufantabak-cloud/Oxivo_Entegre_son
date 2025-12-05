@@ -988,7 +988,22 @@ export function FirmaTabelaTab({
       ) : (
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="bg-gray-50">
+              <TableHead className="w-16">KLM</TableHead>
+              <TableHead className="w-32">Grup</TableHead>
+              <TableHead className="w-36">Kısa Açıklama</TableHead>
+              <TableHead className="w-40">Ürün</TableHead>
+              <TableHead className="w-36">Gelir Modeli</TableHead>
+              <TableHead className="w-32">Yurt İçi/Dışı</TableHead>
+              <TableHead className="w-24">Kart Tipi</TableHead>
+              <TableHead className="w-20">Vade</TableHead>
+              <TableHead className="w-40">Oran</TableHead>
+              <TableHead className="w-36">Paylaşım</TableHead>
+              <TableHead className="w-36">Oluşturma</TableHead>
+              <TableHead className="w-32 text-center">
+                <div>İşlemler</div>
+                <div className="text-xs opacity-70">Aktif</div>
+              </TableHead>
               <TableHead className="w-12">
                 <Checkbox
                   checked={
@@ -1008,19 +1023,6 @@ export function FirmaTabelaTab({
                   }}
                 />
               </TableHead>
-              <TableHead>KLM</TableHead>
-              <TableHead>Grup</TableHead>
-              <TableHead>Kısa Açıklama</TableHead>
-              <TableHead>Ürün</TableHead>
-              <TableHead>Gelir Modeli</TableHead>
-              <TableHead>Kart Programları</TableHead>
-              <TableHead>Yurt İçi/Dışı</TableHead>
-              <TableHead>Kart Tipi</TableHead>
-              <TableHead>Vade</TableHead>
-              <TableHead>Kazanç</TableHead>
-              <TableHead>Paylaşım Oranları</TableHead>
-              <TableHead>Oluşturma</TableHead>
-              <TableHead>İşlemler</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -1042,7 +1044,7 @@ export function FirmaTabelaTab({
                     className="bg-gradient-to-r from-blue-100 to-blue-50 border-t-2 border-blue-300 hover:from-blue-200 hover:to-blue-100 cursor-pointer"
                     onClick={() => toggleGroupCollapse(group.id)}
                   >
-                    <TableCell colSpan={13} className="py-3">
+                    <TableCell colSpan={12} className="py-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           {isCollapsed ? (
@@ -1086,7 +1088,8 @@ export function FirmaTabelaTab({
                 key={record.id}
                 className="hover:bg-gray-50 bg-blue-50/20"
               >
-                <TableCell className="py-4">
+                {/* Checkbox sona taşındı */}
+                {/* <TableCell className="py-4">
                   <Checkbox
                     checked={selectedRecordsForGroup.includes(record.id)}
                     disabled={isGrouped}
@@ -1101,13 +1104,15 @@ export function FirmaTabelaTab({
                     }}
                     title={isGrouped ? `Bu kayıt "${recordGroup?.name}" grubuna aittir` : ''}
                   />
-                </TableCell>
-                <TableCell className="py-4">
+                </TableCell> */}
+                {/* KLM - İlk sütun */}
+                <TableCell className="py-4 w-16">
                   <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-300 font-mono text-xs">
                     {String(indexInGroup + 1).padStart(2, '0')}
                   </Badge>
                 </TableCell>
-                <TableCell className="py-4">
+                {/* Grup */}
+                <TableCell className="py-4 w-32">
                   {isGrouped && recordGroup ? (
                     <Badge variant="default" className="bg-blue-600 text-white">
                       {getGroupAbbreviation(recordGroup.name)}
@@ -1116,7 +1121,8 @@ export function FirmaTabelaTab({
                     <span className="text-xs text-gray-400">-</span>
                   )}
                 </TableCell>
-                <TableCell className="py-4">
+                {/* Kısa Açıklama */}
+                <TableCell className="py-4 w-36">
                   {(record as any).kisaAciklama ? (
                     <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300 text-xs">
                       {(record as any).kisaAciklama}
@@ -1125,7 +1131,8 @@ export function FirmaTabelaTab({
                     <span className="text-xs text-gray-400">-</span>
                   )}
                 </TableCell>
-                <TableCell className="py-4">
+                {/* Ürün */}
+                <TableCell className="py-4 w-40">
                   {record.urun ? (
                     <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-300">
                       {kisaltUrunAdi(record.urun)}
@@ -1134,7 +1141,8 @@ export function FirmaTabelaTab({
                     <span className="text-xs text-gray-400">-</span>
                   )}
                 </TableCell>
-                <TableCell className="py-4">
+                {/* Gelir Modeli */}
+                <TableCell className="py-4 w-36">
                   <div className="flex items-center gap-2">
                     <span>{record.gelirModeli.ad}</span>
                     {record.gelirModeli.ad?.toLowerCase().includes('paçal') && (
@@ -1149,41 +1157,14 @@ export function FirmaTabelaTab({
                     )}
                   </div>
                 </TableCell>
-                <TableCell className="py-4">
-                  {programIds.includes('ALL') ? (
-                    <Badge variant="default" className="bg-blue-600">Hepsi</Badge>
-                  ) : programIds.length > 0 ? (
-                    <div className="flex flex-wrap gap-1">
-                      {programIds.slice(0, 2).map(programId => {
-                        const program = kartProgramlar.find(k => k.id === programId);
-                        // Backward compatibility: Eski kayıtlarda banka kodu göster
-                        const bank = banks.find(b => b.id === programId);
-                        return program ? (
-                          <Badge key={programId} variant="outline" className="text-xs">
-                            {program.kartAdi}
-                          </Badge>
-                        ) : bank ? (
-                          <Badge key={programId} variant="outline" className="text-xs bg-yellow-50">
-                            {bank.kod}
-                          </Badge>
-                        ) : null;
-                      })}
-                      {programIds.length > 2 && (
-                        <Badge variant="secondary" className="text-xs">
-                          +{programIds.length - 2}
-                        </Badge>
-                      )}
-                    </div>
-                  ) : (
-                    <span className="text-xs text-gray-400">-</span>
-                  )}
-                </TableCell>
-                <TableCell className="py-4">
+                {/* Kart Programları sütunu kaldırıldı */}
+                <TableCell className="py-4 w-32">
                   <Badge variant={record.yurtIciDisi === 'Yurt İçi' ? 'default' : 'secondary'}>
                     {record.yurtIciDisi}
                   </Badge>
                 </TableCell>
-                <TableCell className="py-4">
+                {/* Kart Tipi */}
+                <TableCell className="py-4 w-24">
                   <Badge 
                     variant={record.kartTipi === 'Credit' ? 'default' : record.kartTipi === 'Debit' ? 'secondary' : 'outline'}
                     className={record.kartTipi?.includes('Paçal') ? 'bg-purple-100 text-purple-700 border-purple-300' : ''}
@@ -1191,7 +1172,8 @@ export function FirmaTabelaTab({
                     {record.kartTipi?.replace(' (Tüm Kart Tipleri)', '') || record.kartTipi}
                   </Badge>
                 </TableCell>
-                <TableCell className="py-4">
+                {/* Vade */}
+                <TableCell className="py-4 w-20">
                   <div className="space-y-2">
                     {/* Sadece seçilen (aktif) vadeleri göster - Alt alta */}
                     {record.komisyonOranları.filter(ko => ko.aktif !== false).length > 0 ? (
@@ -1207,7 +1189,8 @@ export function FirmaTabelaTab({
                     )}
                   </div>
                 </TableCell>
-                <TableCell className="py-4">
+                {/* Oran */}
+                <TableCell className="py-4 w-40">
                   <div className="text-xs space-y-2">
                     {record.gelirModeli.ad === 'Hazine Geliri' ? (
                       <div className="flex items-center justify-between gap-2 bg-blue-50 px-2 py-2 rounded">
@@ -1257,7 +1240,8 @@ export function FirmaTabelaTab({
                     )}
                   </div>
                 </TableCell>
-                <TableCell className="py-4">
+                {/* Paylaşım */}
+                <TableCell className="py-4 w-36">
                   <div className="text-xs space-y-2">
                     <div className="flex items-center justify-between gap-2 bg-green-50 px-2 py-2 rounded">
                       <span className="text-gray-700">{record.kurulus.ad}</span>
@@ -1269,7 +1253,8 @@ export function FirmaTabelaTab({
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="py-4">
+                {/* Oluşturma */}
+                <TableCell className="py-4 w-36">
                   <div className="text-xs text-gray-600">
                     <div className="flex items-center gap-1">
                       <span className="text-green-600">📅</span>
@@ -1295,7 +1280,8 @@ export function FirmaTabelaTab({
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="py-4" onClick={(e) => e.stopPropagation()}>
+                {/* İşlemler */}
+                <TableCell className="py-4 w-32" onClick={(e) => e.stopPropagation()}>
                   <div className="flex flex-col gap-2">
                     {record.aktif ? (
                       <Button
@@ -1365,6 +1351,23 @@ export function FirmaTabelaTab({
                     )}
                   </div>
                 </TableCell>
+                {/* Checkbox - En sona taşındı */}
+                <TableCell className="py-4 w-12">
+                  <Checkbox
+                    checked={selectedRecordsForGroup.includes(record.id)}
+                    disabled={isGrouped}
+                    onCheckedChange={(checked) => {
+                      saveScrollPosition();
+                      if (checked) {
+                        setSelectedRecordsForGroup([...selectedRecordsForGroup, record.id]);
+                      } else {
+                        setSelectedRecordsForGroup(selectedRecordsForGroup.filter(id => id !== record.id));
+                      }
+                      restoreScrollPosition();
+                    }}
+                    title={isGrouped ? `Bu kayıt "${recordGroup?.name}" grubuna aittir` : ''}
+                  />
+                </TableCell>
               </TableRow>
             );
             })}
@@ -1390,7 +1393,7 @@ export function FirmaTabelaTab({
                     className="bg-gradient-to-r from-gray-100 to-gray-50 border-t-2 border-gray-300 hover:from-gray-200 hover:to-gray-100 cursor-pointer"
                     onClick={() => toggleGroupCollapse('UNGROUPED')}
                   >
-                    <TableCell colSpan={13} className="py-3">
+                    <TableCell colSpan={12} className="py-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           {isCollapsed ? (
@@ -1412,7 +1415,7 @@ export function FirmaTabelaTab({
                   </TableRow>
                   
                   {/* Gruplanmamış Kayıtlar - Sadece açıksa göster */}
-                  {!isCollapsed && ungroupedRecords.map((record) => {
+                  {!isCollapsed && ungroupedRecords.map((record, indexInUngrouped) => {
                     const programIds = record.kartProgramIds || record.bankIds || [];
                     const recordGroup = getRecordGroup(record.id);
                     const isGrouped = !!recordGroup;
@@ -1422,7 +1425,8 @@ export function FirmaTabelaTab({
                         key={record.id}
                         className="hover:bg-gray-50"
                       >
-                        <TableCell className="py-4">
+                        {/* Checkbox sona taşındı */}
+                        {/* <TableCell className="py-4">
                           <Checkbox
                             checked={selectedRecordsForGroup.includes(record.id)}
                             disabled={isGrouped}
@@ -1437,14 +1441,19 @@ export function FirmaTabelaTab({
                             }}
                             title={isGrouped ? `Bu kayıt \"${recordGroup?.name}\" grubuna aittir` : ''}
                           />
+                        </TableCell> */}
+                        {/* KLM - İlk sütun */}
+                        <TableCell className="py-4 w-16">
+                          <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-300 font-mono text-xs">
+                            {String(indexInUngrouped + 1).padStart(2, '0')}
+                          </Badge>
                         </TableCell>
-                        <TableCell className="py-4">
+                        {/* Grup */}
+                        <TableCell className="py-4 w-32">
                           <span className="text-xs text-gray-400">-</span>
                         </TableCell>
-                        <TableCell className="py-4">
-                          <span className="text-xs text-gray-400">-</span>
-                        </TableCell>
-                        <TableCell className="py-4">
+                        {/* Kısa Açıklama */}
+                        <TableCell className="py-4 w-36">
                           {(record as any).kisaAciklama ? (
                             <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300 text-xs">
                               {(record as any).kisaAciklama}
@@ -1453,7 +1462,8 @@ export function FirmaTabelaTab({
                             <span className="text-xs text-gray-400">-</span>
                           )}
                         </TableCell>
-                        <TableCell className="py-4">
+                        {/* Ürün */}
+                        <TableCell className="py-4 w-40">
                           {record.urun ? (
                             <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-300">
                               {kisaltUrunAdi(record.urun)}
@@ -1462,7 +1472,8 @@ export function FirmaTabelaTab({
                             <span className="text-xs text-gray-400">-</span>
                           )}
                         </TableCell>
-                        <TableCell className="py-4">
+                        {/* Gelir Modeli */}
+                        <TableCell className="py-4 w-36">
                           <div className="flex items-center gap-2">
                             <span>{record.gelirModeli.ad}</span>
                             {record.gelirModeli.ad?.toLowerCase().includes('paçal') && (
@@ -1477,40 +1488,15 @@ export function FirmaTabelaTab({
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="py-4">
-                          {programIds.includes('ALL') ? (
-                            <Badge variant="default" className="bg-blue-600">Hepsi</Badge>
-                          ) : programIds.length > 0 ? (
-                            <div className="flex flex-wrap gap-1">
-                              {programIds.slice(0, 2).map(programId => {
-                                const program = kartProgramlar.find(k => k.id === programId);
-                                const bank = banks.find(b => b.id === programId);
-                                return program ? (
-                                  <Badge key={programId} variant="outline" className="text-xs">
-                                    {program.kartAdi}
-                                  </Badge>
-                                ) : bank ? (
-                                  <Badge key={programId} variant="outline" className="text-xs bg-yellow-50">
-                                    {bank.kod}
-                                  </Badge>
-                                ) : null;
-                              })}
-                              {programIds.length > 2 && (
-                                <Badge variant="secondary" className="text-xs">
-                                  +{programIds.length - 2}
-                                </Badge>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-xs text-gray-400">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="py-4">
+                        {/* Kart Programları sütunu kaldırıldı */}
+                        {/* Yurt İçi/Dışı */}
+                        <TableCell className="py-4 w-32">
                           <Badge variant={record.yurtIciDisi === 'Yurt İçi' ? 'default' : 'secondary'}>
                             {record.yurtIciDisi}
                           </Badge>
                         </TableCell>
-                        <TableCell className="py-4">
+                        {/* Kart Tipi */}
+                        <TableCell className="py-4 w-24">
                           <Badge 
                             variant={record.kartTipi === 'Credit' ? 'default' : record.kartTipi === 'Debit' ? 'secondary' : 'outline'}
                             className={record.kartTipi?.includes('Paçal') ? 'bg-purple-100 text-purple-700 border-purple-300' : ''}
@@ -1518,7 +1504,8 @@ export function FirmaTabelaTab({
                             {record.kartTipi?.replace(' (Tüm Kart Tipleri)', '') || record.kartTipi}
                           </Badge>
                         </TableCell>
-                        <TableCell className="py-4">
+                        {/* Vade */}
+                        <TableCell className="py-4 w-20">
                           <div className="space-y-2">
                             {record.komisyonOranları.filter(ko => ko.aktif !== false).length > 0 ? (
                               <div className="flex flex-col gap-1">
@@ -1533,7 +1520,8 @@ export function FirmaTabelaTab({
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="py-4">
+                        {/* Oran */}
+                        <TableCell className="py-4 w-40">
                           <div className="text-xs space-y-2">
                             {record.gelirModeli.ad === 'Hazine Geliri' ? (
                               <div className="flex items-center justify-between gap-2 bg-blue-50 px-2 py-2 rounded">
@@ -1580,7 +1568,8 @@ export function FirmaTabelaTab({
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="py-4">
+                        {/* Paylaşım */}
+                        <TableCell className="py-4 w-36">
                           <div className="text-xs space-y-1">
                             <div className="flex items-center justify-between gap-2">
                               <span className="text-gray-600">{firmaAdi}:</span>
@@ -1592,7 +1581,8 @@ export function FirmaTabelaTab({
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className="py-4">
+                        {/* Oluşturma */}
+                        <TableCell className="py-4 w-36">
                           <div className="text-xs space-y-1">
                             <div className="text-gray-600">
                               {new Date(record.olusturmaTarihi).toLocaleDateString('tr-TR')}
@@ -1606,7 +1596,8 @@ export function FirmaTabelaTab({
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="py-4" onClick={(e) => e.stopPropagation()}>
+                        {/* İşlemler */}
+                        <TableCell className="py-4 w-32" onClick={(e) => e.stopPropagation()}>
                           <div className="flex flex-col gap-2">
                             {record.aktif ? (
                               <Button
@@ -1676,6 +1667,23 @@ export function FirmaTabelaTab({
                             )}
                           </div>
                         </TableCell>
+                        {/* Checkbox - En sona taşındı */}
+                        <TableCell className="py-4 w-12">
+                          <Checkbox
+                            checked={selectedRecordsForGroup.includes(record.id)}
+                            disabled={isGrouped}
+                            onCheckedChange={(checked) => {
+                              saveScrollPosition();
+                              if (checked) {
+                                setSelectedRecordsForGroup([...selectedRecordsForGroup, record.id]);
+                              } else {
+                                setSelectedRecordsForGroup(selectedRecordsForGroup.filter(id => id !== record.id));
+                              }
+                              restoreScrollPosition();
+                            }}
+                            title={isGrouped ? `Bu kayıt "${recordGroup?.name}" grubuna aittir` : ''}
+                          />
+                        </TableCell>
                       </TableRow>
                     );
                   })}
@@ -1703,21 +1711,21 @@ export function FirmaTabelaTab({
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50">
-                  <TableHead className="w-12">Seçim</TableHead>
-                  <TableHead>KLM</TableHead>
-                  <TableHead>Grup</TableHead>
-                  <TableHead>Kısa Açıklama</TableHead>
-                  <TableHead>Ürün</TableHead>
-                  <TableHead>Gelir Modeli</TableHead>
-                  <TableHead>Gelir Türü</TableHead>
-                  <TableHead>Kullanım</TableHead>
-                  <TableHead>Kart Tipi</TableHead>
-                  <TableHead className="text-right">Tutar</TableHead>
-                  <TableHead className="text-right">PF%</TableHead>
-                  <TableHead className="text-right">PF-TL</TableHead>
-                  <TableHead className="text-right">OX %</TableHead>
-                  <TableHead className="text-right">OX TL</TableHead>
-                  <TableHead className="text-center">İşlemler</TableHead>
+                  <TableHead className="w-16">KLM</TableHead>
+                  <TableHead className="w-32">Grup</TableHead>
+                  <TableHead className="w-36">Kısa Açıklama</TableHead>
+                  <TableHead className="w-40">Ürün</TableHead>
+                  <TableHead className="w-32">Gelir Modeli</TableHead>
+                  <TableHead className="w-24">Gelir Türü</TableHead>
+                  <TableHead className="w-24">Kullanım</TableHead>
+                  <TableHead className="w-24">Kart Tipi</TableHead>
+                  <TableHead className="text-right w-24">Tutar</TableHead>
+                  <TableHead className="text-right w-20">PF%</TableHead>
+                  <TableHead className="text-right w-24">PF-TL</TableHead>
+                  <TableHead className="text-right w-20">OX %</TableHead>
+                  <TableHead className="text-right w-24">OX TL</TableHead>
+                  <TableHead className="text-center w-32">İşlemler</TableHead>
+                  <TableHead className="w-12 text-center">Seçim</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1739,7 +1747,7 @@ export function FirmaTabelaTab({
                         className="bg-gradient-to-r from-purple-100 to-purple-50 border-t-2 border-purple-300 hover:from-purple-200 hover:to-purple-100 cursor-pointer"
                         onClick={() => toggleGroupCollapse(group.id)}
                       >
-                        <TableCell colSpan={15} className="py-3">
+                        <TableCell colSpan={14} className="py-3">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               {isCollapsed ? (
@@ -1770,7 +1778,8 @@ export function FirmaTabelaTab({
                         const recordGroup = getRecordGroup(record.id);
                         return (
                         <TableRow key={record.id} className="hover:bg-gray-50 bg-purple-50/20">
-                      <TableCell className="py-4">
+                      {/* Checkbox sona taşındı */}
+                      {/* <TableCell className="py-4">
                         <Checkbox
                           checked={selectedRecordsForGroup.includes(record.id)}
                           disabled={!!recordGroup}
@@ -1785,13 +1794,15 @@ export function FirmaTabelaTab({
                           }}
                           title={recordGroup ? `Bu kayıt "${recordGroup?.name}" grubuna aittir` : ''}
                         />
-                      </TableCell>
-                      <TableCell className="py-4">
+                      </TableCell> */}
+                      {/* KLM - İlk sütun */}
+                      <TableCell className="py-4 w-16">
                         <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-300 font-mono text-xs">
-                          {String(indexInGroup + 10).padStart(2, '0')}
+                          {String(indexInGroup + 1).padStart(2, '0')}
                         </Badge>
                       </TableCell>
-                      <TableCell className="py-4">
+                      {/* Grup */}
+                      <TableCell className="py-4 w-32">
                         {recordGroup ? (
                           <Badge variant="default" className="bg-blue-600 text-white">
                             {getGroupAbbreviation(recordGroup.name)}
@@ -1800,7 +1811,8 @@ export function FirmaTabelaTab({
                           <span className="text-xs text-gray-400">-</span>
                         )}
                       </TableCell>
-                      <TableCell className="py-4">
+                      {/* Kısa Açıklama */}
+                      <TableCell className="py-4 w-36">
                         {(record as any).kisaAciklama ? (
                           <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300 text-xs">
                             {(record as any).kisaAciklama}
@@ -1809,25 +1821,30 @@ export function FirmaTabelaTab({
                           <span className="text-xs text-gray-400">-</span>
                         )}
                       </TableCell>
-                      <TableCell className="py-4">
+                      {/* Ürün */}
+                      <TableCell className="py-4 w-40">
                         <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-300">
                           {kisaltUrunAdi(record.urun || '')}
                         </Badge>
                       </TableCell>
-                      <TableCell className="py-4">
+                      {/* Gelir Modeli */}
+                      <TableCell className="py-4 w-32">
                         <span>{record.gelirModeli.ad}</span>
                       </TableCell>
-                      <TableCell className="py-4">
+                      {/* Gelir Türü */}
+                      <TableCell className="py-4 w-24">
                         <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300">
                           {record.ekGelirDetay?.gelirTuru}
                         </Badge>
                       </TableCell>
-                      <TableCell className="py-4">
+                      {/* Kullanım */}
+                      <TableCell className="py-4 w-24">
                         <Badge variant={record.ekGelirDetay?.kullanim === 'Yurt İçi' ? 'default' : 'secondary'}>
                           {record.ekGelirDetay?.kullanim}
                         </Badge>
                       </TableCell>
-                      <TableCell className="py-4">
+                      {/* Kart Tipi */}
+                      <TableCell className="py-4 w-24">
                         <Badge 
                           variant={record.ekGelirDetay?.kartTipi === 'Credit' ? 'default' : record.ekGelirDetay?.kartTipi === 'Debit' ? 'secondary' : 'outline'}
                           className={record.ekGelirDetay?.kartTipi?.includes('Paçal') ? 'bg-purple-100 text-purple-700 border-purple-300' : ''}
@@ -1835,12 +1852,14 @@ export function FirmaTabelaTab({
                           {record.ekGelirDetay?.kartTipi?.replace(' (Tüm Kart Tipleri)', '') || record.ekGelirDetay?.kartTipi}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right">
+                      {/* Tutar */}
+                      <TableCell className="text-right w-24">
                         <span className="text-sm bg-purple-50 px-2 py-1 rounded">
                           {parseFloat(record.ekGelirDetay?.tutar || '0').toFixed(2)}₺
                         </span>
                       </TableCell>
-                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                      {/* PF% */}
+                      <TableCell className="text-right w-20" onClick={(e) => e.stopPropagation()}>
                         <Input
                           type="number"
                           step="0.01"
@@ -1885,12 +1904,14 @@ export function FirmaTabelaTab({
                           className="w-24 text-right"
                         />
                       </TableCell>
-                      <TableCell className="text-right">
+                      {/* PF-TL */}
+                      <TableCell className="text-right w-24">
                         <span className="text-sm bg-green-50 px-2 py-1 rounded">
                           {parseFloat(record.ekGelirDetay?.pfTL || '0').toFixed(2)}₺
                         </span>
                       </TableCell>
-                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                      {/* OX % */}
+                      <TableCell className="text-right w-20" onClick={(e) => e.stopPropagation()}>
                         <Input
                           type="number"
                           step="0.01"
@@ -1935,12 +1956,14 @@ export function FirmaTabelaTab({
                           className="w-24 text-right"
                         />
                       </TableCell>
-                      <TableCell className="text-right">
+                      {/* OX TL */}
+                      <TableCell className="text-right w-24">
                         <span className="text-sm bg-blue-50 px-2 py-1 rounded">
                           {parseFloat(record.ekGelirDetay?.oxTL || '0').toFixed(2)}₺
                         </span>
                       </TableCell>
-                      <TableCell>
+                      {/* İşlemler */}
+                      <TableCell className="w-32">
                         <div className="flex items-center justify-center gap-2">
                           <Button
                             size="sm"
@@ -1961,6 +1984,23 @@ export function FirmaTabelaTab({
                             <Trash2 size={14} />
                           </Button>
                         </div>
+                      </TableCell>
+                      {/* Checkbox - En sona taşındı */}
+                      <TableCell className="py-4 w-12 text-center">
+                        <Checkbox
+                          checked={selectedRecordsForGroup.includes(record.id)}
+                          disabled={!!recordGroup}
+                          onCheckedChange={(checked) => {
+                            saveScrollPosition();
+                            if (checked) {
+                              setSelectedRecordsForGroup([...selectedRecordsForGroup, record.id]);
+                            } else {
+                              setSelectedRecordsForGroup(selectedRecordsForGroup.filter(id => id !== record.id));
+                            }
+                            restoreScrollPosition();
+                          }}
+                          title={recordGroup ? `Bu kayıt "${recordGroup?.name}" grubuna aittir` : ''}
+                        />
                       </TableCell>
                     </TableRow>
                     );
@@ -1987,7 +2027,7 @@ export function FirmaTabelaTab({
                         className="bg-gradient-to-r from-gray-100 to-gray-50 border-t-2 border-gray-300 hover:from-gray-200 hover:to-gray-100 cursor-pointer"
                         onClick={() => toggleGroupCollapse('UNGROUPED')}
                       >
-                        <TableCell colSpan={15} className="py-3">
+                        <TableCell colSpan={14} className="py-3">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               {isCollapsed ? (
@@ -2009,11 +2049,12 @@ export function FirmaTabelaTab({
                       </TableRow>
                       
                       {/* Gruplanmamı�� Ek Gelir Kayıtları - Sadece açıksa göster */}
-                      {!isCollapsed && ungroupedEkGelirRecords.map((record) => {
+                      {!isCollapsed && ungroupedEkGelirRecords.map((record, indexInUngrouped) => {
                         const recordGroup = getRecordGroup(record.id);
                         return (
                           <TableRow key={record.id} className="hover:bg-gray-50">
-                            <TableCell className="py-4">
+                            {/* Checkbox sona taşındı */}
+                            {/* <TableCell className="py-4">
                               <Checkbox
                                 checked={selectedRecordsForGroup.includes(record.id)}
                                 disabled={!!recordGroup}
@@ -2028,14 +2069,19 @@ export function FirmaTabelaTab({
                                 }}
                                 title={recordGroup ? `Bu kayıt \"${recordGroup?.name}\" grubuna aittir` : ''}
                               />
+                            </TableCell> */}
+                            {/* KLM - İlk sütun */}
+                            <TableCell className="py-4 w-16">
+                              <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-300 font-mono text-xs">
+                                {String(indexInUngrouped + 1).padStart(2, '0')}
+                              </Badge>
                             </TableCell>
-                            <TableCell className="py-4">
+                            {/* Grup */}
+                            <TableCell className="py-4 w-32">
                               <span className="text-xs text-gray-400">-</span>
                             </TableCell>
-                            <TableCell className="py-4">
-                              <span className="text-xs text-gray-400">-</span>
-                            </TableCell>
-                            <TableCell className="py-4">
+                            {/* Kısa Açıklama */}
+                            <TableCell className="py-4 w-36">
                               {(record as any).kisaAciklama ? (
                                 <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300 text-xs">
                                   {(record as any).kisaAciklama}
@@ -2044,7 +2090,8 @@ export function FirmaTabelaTab({
                                 <span className="text-xs text-gray-400">-</span>
                               )}
                             </TableCell>
-                            <TableCell className="py-4">
+                            {/* Ürün */}
+                            <TableCell className="py-4 w-40">
                               {record.urun ? (
                                 <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-300">
                                   {kisaltUrunAdi(record.urun)}
@@ -2053,35 +2100,42 @@ export function FirmaTabelaTab({
                                 <span className="text-xs text-gray-400">-</span>
                               )}
                             </TableCell>
-                            <TableCell className="py-4">
+                            {/* Gelir Modeli */}
+                            <TableCell className="py-4 w-32">
                               <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
                                 {record.gelirModeli.ad}
                               </Badge>
                             </TableCell>
-                            <TableCell className="py-4">
+                            {/* Gelir Türü */}
+                            <TableCell className="py-4 w-24">
                               <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300">
                                 {record.ekGelirDetay?.gelirTuru || '-'}
                               </Badge>
                             </TableCell>
-                            <TableCell className="py-4">
+                            {/* Kullanım */}
+                            <TableCell className="py-4 w-24">
                               <Badge variant={record.ekGelirDetay?.kullanim === 'Yurt İçi' ? 'default' : 'secondary'}>
                                 {record.ekGelirDetay?.kullanim || '-'}
                               </Badge>
                             </TableCell>
-                            <TableCell className="py-4">
+                            {/* Kart Tipi */}
+                            <TableCell className="py-4 w-24">
                               <Badge variant="outline" className="bg-purple-100 text-purple-700 border-purple-300">
                                 {record.ekGelirDetay?.kartTipi ? record.ekGelirDetay.kartTipi.split(' (')[0] : '-'}
                               </Badge>
                             </TableCell>
-                            <TableCell className="text-right">
+                            {/* Tutar */}
+                            <TableCell className="text-right w-24">
                               <span className="text-sm bg-purple-50 px-2 py-1 rounded">
                                 {parseFloat(record.ekGelirDetay?.tutar || '0').toFixed(2)}₺
                               </span>
                             </TableCell>
-                            <TableCell className="text-right">
+                            {/* PF% */}
+                            <TableCell className="text-right w-20">
                               <span className="text-xs">{parseFloat(record.ekGelirDetay?.pfYuzde || '0').toFixed(2)}%</span>
                             </TableCell>
-                            <TableCell className="text-right">
+                            {/* PF-TL */}
+                            <TableCell className="text-right w-24">
                               <Input
                                 type="number"
                                 step="0.01"
@@ -2124,12 +2178,8 @@ export function FirmaTabelaTab({
                                 className="w-24 text-right"
                               />
                             </TableCell>
-                            <TableCell className="text-right">
-                              <span className="text-sm bg-green-50 px-2 py-1 rounded">
-                                {parseFloat(record.ekGelirDetay?.pfTL || '0').toFixed(2)}₺
-                              </span>
-                            </TableCell>
-                            <TableCell className="text-right">
+                            {/* OX % */}
+                            <TableCell className="text-right w-20">
                               <Input
                                 type="number"
                                 step="0.01"
@@ -2169,12 +2219,14 @@ export function FirmaTabelaTab({
                                 className="w-24 text-right"
                               />
                             </TableCell>
-                            <TableCell className="text-right">
+                            {/* OX TL */}
+                            <TableCell className="text-right w-24">
                               <span className="text-sm bg-blue-50 px-2 py-1 rounded">
                                 {parseFloat(record.ekGelirDetay?.oxTL || '0').toFixed(2)}₺
                               </span>
                             </TableCell>
-                            <TableCell>
+                            {/* İşlemler */}
+                            <TableCell className="w-32">
                               <div className="flex items-center justify-center gap-2">
                                 <Button
                                   size="sm"
@@ -2195,6 +2247,23 @@ export function FirmaTabelaTab({
                                   <Trash2 size={14} />
                                 </Button>
                               </div>
+                            </TableCell>
+                            {/* Checkbox - En sona taşındı */}
+                            <TableCell className="py-4 w-12 text-center">
+                              <Checkbox
+                                checked={selectedRecordsForGroup.includes(record.id)}
+                                disabled={!!recordGroup}
+                                onCheckedChange={(checked) => {
+                                  saveScrollPosition();
+                                  if (checked) {
+                                    setSelectedRecordsForGroup([...selectedRecordsForGroup, record.id]);
+                                  } else {
+                                    setSelectedRecordsForGroup(selectedRecordsForGroup.filter(id => id !== record.id));
+                                  }
+                                  restoreScrollPosition();
+                                }}
+                                title={recordGroup ? `Bu kayıt "${recordGroup?.name}" grubuna aittir` : ''}
+                              />
                             </TableCell>
                           </TableRow>
                         );

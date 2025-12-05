@@ -1711,32 +1711,32 @@ export function HakedisTab({
                 <TableHeader>
                   <TableRow className="bg-gray-50">
                     {/* A: KLM - Mavi zemin */}
-                    {visibleColumns.klm && <TableHead className="bg-blue-100 text-blue-900 text-center">KLM</TableHead>}
+                    {visibleColumns.klm && <TableHead className="bg-blue-100 text-blue-900 text-center w-16">KLM</TableHead>}
                     {/* B: Grup - Mavi zemin */}
-                    {visibleColumns.grup && <TableHead className="bg-blue-100 text-blue-900">Grup</TableHead>}
+                    {visibleColumns.grup && <TableHead className="bg-blue-100 text-blue-900 w-32">Grup</TableHead>}
                     {/* C: Kısa Açıklama - Mavi zemin */}
-                    {visibleColumns.kisaAciklama && <TableHead className="bg-blue-100 text-blue-900">Kısa Açıklama</TableHead>}
+                    {visibleColumns.kisaAciklama && <TableHead className="bg-blue-100 text-blue-900 w-36">Kısa Açıklama</TableHead>}
                     {/* D: Ürün - Mavi zemin */}
-                    {visibleColumns.urun && <TableHead className="bg-blue-100 text-blue-900">Ürün</TableHead>}
+                    {visibleColumns.urun && <TableHead className="bg-blue-100 text-blue-900 w-40">Ürün</TableHead>}
                     {/* E: Gelir Modeli - Mavi zemin */}
-                    {visibleColumns.gelirModeli && <TableHead className="bg-blue-100 text-blue-900">Gelir Modeli</TableHead>}
+                    {visibleColumns.gelirModeli && <TableHead className="bg-blue-100 text-blue-900 w-36">Gelir Modeli</TableHead>}
                     {/* F: Kart Prog. - Mavi zemin */}
-                    {visibleColumns.kartProg && <TableHead className="bg-blue-100 text-blue-900">Kart Prog.</TableHead>}
+                    {visibleColumns.kartProg && <TableHead className="bg-blue-100 text-blue-900 w-28">Kart Prog.</TableHead>}
                     {/* G: Kullanım - Mavi zemin */}
-                    {visibleColumns.kullanim && <TableHead className="bg-blue-100 text-blue-900">Kullanım</TableHead>}
+                    {visibleColumns.kullanim && <TableHead className="bg-blue-100 text-blue-900 w-28">Kullanım</TableHead>}
                     {/* H: Kart Tipi - Mavi zemin */}
-                    {visibleColumns.kartTipi && <TableHead className="bg-blue-100 text-blue-900">Kart Tipi</TableHead>}
+                    {visibleColumns.kartTipi && <TableHead className="bg-blue-100 text-blue-900 w-24">Kart Tipi</TableHead>}
                     {/* I: İşlem Hacmi - Yeşil zemin (Manuel giriş) */}
-                    {visibleColumns.islemHacmi && <TableHead className="bg-green-100 text-green-900 text-center">
+                    {visibleColumns.islemHacmi && <TableHead className="bg-green-100 text-green-900 text-center w-44">
                       <div>İşlem Hacmi</div>
                       <div className="text-xs opacity-70">Manuel TL Giriş</div>
                     </TableHead>}
                     {/* J: Vade - Mavi zemin */}
-                    {visibleColumns.vade && <TableHead className="bg-blue-100 text-blue-900 text-center">Vade</TableHead>}
+                    {visibleColumns.vade && <TableHead className="bg-blue-100 text-blue-900 text-center w-20">Vade</TableHead>}
                     {/* K: Kar - Beyaz zemin (Sabit Komisyon için "Kar", Gelir Ortaklığı için gizli) */}
-                    {visibleColumns.kazancTL && <TableHead className="bg-white text-gray-900 text-right">Kar</TableHead>}
+                    {visibleColumns.kazancTL && <TableHead className="bg-white text-gray-900 text-right w-32">Kar</TableHead>}
                     {/* L: OXİVO Payı - Beyaz zemin */}
-                    {visibleColumns.oxivoPayi && <TableHead className="bg-white text-gray-900 text-right">OXİVO Payı</TableHead>}
+                    {visibleColumns.oxivoPayi && <TableHead className="bg-white text-gray-900 text-right w-32">OXİVO Payı</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1794,7 +1794,7 @@ export function HakedisTab({
                             <TableRow key={vadeKey} className="hover:bg-gray-50">
                             {/* A: KLM */}
                             {visibleColumns.klm && (
-                              <TableCell className="bg-blue-50/30 text-center">
+                              <TableCell className="bg-blue-50/30 text-center w-16">
                                 <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-300 font-mono text-xs">
                                   {String(globalRecordIndex + 1).padStart(2, '0')}
                                 </Badge>
@@ -1803,7 +1803,7 @@ export function HakedisTab({
                         
                         {/* B: Grup */}
                         {visibleColumns.grup && (
-                          <TableCell className="bg-blue-50/30">
+                          <TableCell className="bg-blue-50/30 w-32">
                             {selectedGroup ? (
                               <Badge variant="default" className="bg-blue-600 text-white text-xs">
                                 {selectedGroup.name}
@@ -1816,7 +1816,7 @@ export function HakedisTab({
                         
                         {/* C: Kısa Açıklama */}
                         {visibleColumns.kisaAciklama && (
-                          <TableCell className="bg-blue-50/30">
+                          <TableCell className="bg-blue-50/30 w-36">
                             {(record as any).kisaAciklama ? (
                               <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300 text-xs">
                                 {(record as any).kisaAciklama}
@@ -1829,7 +1829,7 @@ export function HakedisTab({
                         
                         {/* D: Ürün */}
                         {visibleColumns.urun && (
-                          <TableCell className="bg-blue-50/30">
+                          <TableCell className="bg-blue-50/30 w-40">
                             <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-300 text-xs">
                               {kisaltUrunAdi(record.urun || '-')}
                             </Badge>
@@ -1838,14 +1838,14 @@ export function HakedisTab({
                         
                         {/* E: Gelir Modeli */}
                         {visibleColumns.gelirModeli && (
-                          <TableCell className="bg-blue-50/30">
+                          <TableCell className="bg-blue-50/30 w-36">
                             <span className="text-xs">{record.gelirModeli.ad}</span>
                           </TableCell>
                         )}
                         
                         {/* F: Kart Prog. */}
                         {visibleColumns.kartProg && (
-                          <TableCell className="bg-blue-50/30">
+                          <TableCell className="bg-blue-50/30 w-28">
                             <span className="text-xs">
                               {record.kartProgramIds?.includes('ALL') 
                                 ? 'Hepsi' 
@@ -1856,7 +1856,7 @@ export function HakedisTab({
                         
                         {/* G: Kullanım */}
                         {visibleColumns.kullanim && (
-                          <TableCell className="bg-blue-50/30">
+                          <TableCell className="bg-blue-50/30 w-28">
                             <Badge variant={record.yurtIciDisi === 'Yurt İçi' ? 'default' : 'secondary'} className="text-xs">
                               {record.yurtIciDisi}
                             </Badge>
@@ -1865,7 +1865,7 @@ export function HakedisTab({
                         
                         {/* H: Kart Tipi */}
                         {visibleColumns.kartTipi && (
-                          <TableCell className="bg-blue-50/30">
+                          <TableCell className="bg-blue-50/30 w-24">
                             <Badge 
                               variant={record.kartTipi === 'Credit' ? 'default' : record.kartTipi === 'Debit' ? 'secondary' : 'outline'}
                               className={`text-xs ${record.kartTipi === 'Paçal' ? 'bg-purple-100 text-purple-700 border-purple-300' : ''}`}
@@ -1877,7 +1877,7 @@ export function HakedisTab({
                         
                         {/* I: İşlem Hacmi - Yeşil zemin (Manuel giriş) */}
                         {visibleColumns.islemHacmi && (
-                          <TableCell className="bg-green-50/50">
+                          <TableCell className="bg-green-50/50 w-44">
                             {view === 'view' ? (
                               <div className="text-right pr-3">
                                 <span className={`text-sm ${islemHacmi > 0 ? 'text-gray-900' : 'text-gray-400'}`}>
@@ -1899,7 +1899,7 @@ export function HakedisTab({
                         
                         {/* J: Vade */}
                         {visibleColumns.vade && (
-                          <TableCell className="bg-blue-50/30 text-center">
+                          <TableCell className="bg-blue-50/30 text-center w-20">
                             <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-300 text-xs">
                               {vadeData.vade.replace(' (Peşin)', '')}
                             </Badge>
@@ -1908,7 +1908,7 @@ export function HakedisTab({
                         
                         {/* K: Kar - Beyaz zemin (Sabit Komisyon için komisyon oranı, Gelir Ortaklığı için detaylı) */}
                         {visibleColumns.kazancTL && (
-                          <TableCell className="bg-white text-right">
+                          <TableCell className="bg-white text-right w-32">
                             {isSabitKomisyon ? (
                               // Sabit Komisyon: Komisyon oranını göster
                               <div className="text-sm text-blue-700">
@@ -1933,7 +1933,7 @@ export function HakedisTab({
                         
                         {/* L: OXİVO Payı - Beyaz zemin */}
                         {visibleColumns.oxivoPayi && (
-                          <TableCell className="bg-white text-right">
+                          <TableCell className="bg-white text-right w-32">
                             <span className={`text-sm ${
                               islemHacmi === 0 ? 'text-gray-400' : 
                               oxivoPayi < 0 ? 'text-red-600 font-bold' : 

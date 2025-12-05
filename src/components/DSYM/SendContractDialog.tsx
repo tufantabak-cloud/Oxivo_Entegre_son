@@ -3,7 +3,7 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 import { useState, useEffect } from 'react';
-import { FileSignature, Send, Smartphone, Mail } from 'lucide-react';
+import { FileSignature, Send, Smartphone, Mail, X } from 'lucide-react';
 import { Customer } from '../CustomerModule';
 import {
   templateApi,
