@@ -1352,24 +1352,7 @@ export function FirmaTabelaTab({
                       </Button>
                     )}
                   </div>
-                </TableCell>
-                {/* Checkbox - En sona taşındı */}
-                <TableCell className="py-4 w-12">
-                  <Checkbox
-                    checked={selectedRecordsForGroup.includes(record.id)}
-                    disabled={isGrouped}
-                    onCheckedChange={(checked) => {
-                      saveScrollPosition();
-                      if (checked) {
-                        setSelectedRecordsForGroup([...selectedRecordsForGroup, record.id]);
-                      } else {
-                        setSelectedRecordsForGroup(selectedRecordsForGroup.filter(id => id !== record.id));
-                      }
-                      restoreScrollPosition();
-                    }}
-                    title={isGrouped ? `Bu kayıt "${recordGroup?.name}" grubuna aittir` : ''}
-                  />
-                </TableCell>
+                  </TableCell>
               </TableRow>
             );
             })}
@@ -1668,23 +1651,6 @@ export function FirmaTabelaTab({
                               </Button>
                             )}
                           </div>
-                        </TableCell>
-                        {/* Checkbox - En sona taşındı */}
-                        <TableCell className="py-4 w-12">
-                          <Checkbox
-                            checked={selectedRecordsForGroup.includes(record.id)}
-                            disabled={isGrouped}
-                            onCheckedChange={(checked) => {
-                              saveScrollPosition();
-                              if (checked) {
-                                setSelectedRecordsForGroup([...selectedRecordsForGroup, record.id]);
-                              } else {
-                                setSelectedRecordsForGroup(selectedRecordsForGroup.filter(id => id !== record.id));
-                              }
-                              restoreScrollPosition();
-                            }}
-                            title={isGrouped ? `Bu kayıt "${recordGroup?.name}" grubuna aittir` : ''}
-                          />
                         </TableCell>
                       </TableRow>
                     );
@@ -1989,23 +1955,6 @@ export function FirmaTabelaTab({
                           </Button>
                         </div>
                       </TableCell>
-                      {/* Checkbox - En sona taşındı */}
-                      <TableCell className="py-4 w-12 text-center">
-                        <Checkbox
-                          checked={selectedRecordsForGroup.includes(record.id)}
-                          disabled={!!recordGroup}
-                          onCheckedChange={(checked) => {
-                            saveScrollPosition();
-                            if (checked) {
-                              setSelectedRecordsForGroup([...selectedRecordsForGroup, record.id]);
-                            } else {
-                              setSelectedRecordsForGroup(selectedRecordsForGroup.filter(id => id !== record.id));
-                            }
-                            restoreScrollPosition();
-                          }}
-                          title={recordGroup ? `Bu kayıt "${recordGroup?.name}" grubuna aittir` : ''}
-                        />
-                      </TableCell>
                     </TableRow>
                     );
                   })}
@@ -2251,23 +2200,6 @@ export function FirmaTabelaTab({
                                   <Trash2 size={14} />
                                 </Button>
                               </div>
-                            </TableCell>
-                            {/* Checkbox - En sona taşındı */}
-                            <TableCell className="py-4 w-12 text-center">
-                              <Checkbox
-                                checked={selectedRecordsForGroup.includes(record.id)}
-                                disabled={!!recordGroup}
-                                onCheckedChange={(checked) => {
-                                  saveScrollPosition();
-                                  if (checked) {
-                                    setSelectedRecordsForGroup([...selectedRecordsForGroup, record.id]);
-                                  } else {
-                                    setSelectedRecordsForGroup(selectedRecordsForGroup.filter(id => id !== record.id));
-                                  }
-                                  restoreScrollPosition();
-                                }}
-                                title={recordGroup ? `Bu kayıt "${recordGroup?.name}" grubuna aittir` : ''}
-                              />
                             </TableCell>
                           </TableRow>
                         );
