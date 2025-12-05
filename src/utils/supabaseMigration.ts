@@ -226,7 +226,7 @@ export async function migrateAllToSupabase(): Promise<MigrationResult> {
       localStorage.setItem('supabase_migration_date', new Date().toISOString());
       logger.info(`✅ Migration completed successfully in ${duration}ms`, { migratedCounts });
     } else {
-      logger.error(`❌ Migration completed with errors in ${duration}ms`, { errors, migratedCounts });
+      logger.error(`Migration completed with errors in ${duration}ms`, { errors, migratedCounts });
     }
 
     return {

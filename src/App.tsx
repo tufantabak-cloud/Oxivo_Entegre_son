@@ -39,6 +39,7 @@ import { syncToSupabase } from './utils/supabaseSync';
 import { syncAllData } from './utils/autoSync';
 import { cleanupAllDuplicatesSQL, checkDuplicatesSQL, supabase } from './utils/supabaseClient';
 import { FeatureFlags, debugLog, debugWarn, debugError } from './utils/featureFlags';
+import { isSilentMode } from './utils/environmentDetection';
 
 // ✅ CRITICAL: Import Supabase API helpers
 import { 
@@ -465,7 +466,7 @@ export default function App() {
         logger.info('✅ All Supabase data loaded successfully');
         
       } catch (error) {
-        logger.error('❌ Error fetching data from Supabase:', error);
+        logger.error('Error fetching data from Supabase:', error);
         // Fallback to localStorage if Supabase fails
         if (isMounted) {
           setSupabaseDataLoaded(true);
@@ -499,7 +500,9 @@ export default function App() {
       }
       
       // ⚠️ FALLBACK: Only load from localStorage if Supabase returned no data
-      logger.warn('⚠️ No Supabase data found, loading from localStorage as fallback');
+      if (!isSilentMode()) {
+        logger.warn('⚠️ No Supabase data found, loading from localStorage as fallback');
+      }
       
       const storedCustomers = getStoredData<Customer[]>('customers', []);
       // ✅ CRITICAL FIX: Extra null/undefined check before .map()
@@ -782,7 +785,7 @@ export default function App() {
           break;
           
         default:
-          logger.warn('❌ Unknown module:', route.module);
+          logger.warn('Unknown module:', route.module);
       }
     }
   }, [route, dataLoaded, customers, bankPFRecords]);

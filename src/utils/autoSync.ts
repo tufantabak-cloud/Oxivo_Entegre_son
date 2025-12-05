@@ -70,6 +70,25 @@ import {
 } from './supabaseClient';
 
 // ========================================
+// FIGMA MAKE ENVIRONMENT DETECTION
+// ========================================
+
+const IS_FIGMA_MAKE = typeof window !== 'undefined' && (
+  window.location.hostname.includes('figma.com') ||
+  window.location.hostname.includes('figmaiframepreview') ||
+  window.location.protocol === 'blob:'
+);
+
+/**
+ * Silent error logger - respects Figma Make environment
+ */
+function logError(message: string, error?: any) {
+  if (!IS_FIGMA_MAKE) {
+    console.error(message, error || '');
+  }
+}
+
+// ========================================
 // TYPE DEFINITIONS
 // ========================================
 
@@ -124,11 +143,11 @@ export async function syncCustomers(customers: any[]): Promise<SyncResult> {
       console.log(`✅ Customers synced: ${result.count} records`);
       return { success: true, type: 'customers', count: result.count };
     } else {
-      console.error(`❌ Customers sync failed:`, result.error);
+      console.warn(`⚠️ Customers sync failed:`, result.error);
       return { success: false, type: 'customers', error: result.error };
     }
   } catch (err: any) {
-    console.error(`❌ Customers sync error:`, err);
+    logError(`⚠️ Customers sync error:`, err.message);
     return { success: false, type: 'customers', error: err.message || 'Unknown error' };
   }
 }
@@ -151,11 +170,11 @@ export async function syncProducts(products: any[]): Promise<SyncResult> {
       console.log(`✅ Products synced: ${result.count} records`);
       return { success: true, type: 'products', count: result.count };
     } else {
-      console.error(`❌ Products sync failed:`, result.error);
+      console.warn(`⚠️ Products sync failed:`, result.error);
       return { success: false, type: 'products', error: result.error };
     }
   } catch (err: any) {
-    console.error(`❌ Products sync error:`, err);
+    logError(`⚠️ Products sync error:`, err.message);
     return { success: false, type: 'products', error: err.message || 'Unknown error' };
   }
 }
@@ -178,11 +197,11 @@ export async function syncBankPF(bankPF: any[]): Promise<SyncResult> {
       console.log(`✅ BankPF records synced: ${result.count} records`);
       return { success: true, type: 'bankPF', count: result.count };
     } else {
-      console.error(`❌ BankPF sync failed:`, result.error);
+      logError(`❌ BankPF sync failed:`, result.error);
       return { success: false, type: 'bankPF', error: result.error };
     }
   } catch (err: any) {
-    console.error(`❌ BankPF sync error:`, err);
+    logError(`❌ BankPF sync error:`, err);
     return { success: false, type: 'bankPF', error: err.message || 'Unknown error' };
   }
 }
@@ -205,11 +224,11 @@ export async function syncMCCCodes(mccCodes: any[]): Promise<SyncResult> {
       console.log(`✅ MCC Codes synced: ${result.count} records`);
       return { success: true, type: 'mccCodes', count: result.count };
     } else {
-      console.error(`❌ MCC Codes sync failed:`, result.error);
+      logError(`❌ MCC Codes sync failed:`, result.error);
       return { success: false, type: 'mccCodes', error: result.error };
     }
   } catch (err: any) {
-    console.error(`❌ MCC Codes sync error:`, err);
+    logError(`❌ MCC Codes sync error:`, err);
     return { success: false, type: 'mccCodes', error: err.message || 'Unknown error' };
   }
 }
@@ -242,11 +261,11 @@ export async function syncBanks(banks: any[]): Promise<SyncResult> {
       console.log(`✅ Banks synced: ${result.count} records`);
       return { success: true, type: 'banks', count: result.count };
     } else {
-      console.error(`❌ Banks sync failed:`, result.error);
+      logError(`❌ Banks sync failed:`, result.error);
       return { success: false, type: 'banks', error: result.error };
     }
   } catch (err: any) {
-    console.error(`❌ Banks sync error:`, err);
+    logError(`❌ Banks sync error:`, err);
     return { success: false, type: 'banks', error: err.message || 'Unknown error' };
   }
 }
@@ -279,11 +298,11 @@ export async function syncEPKList(epkList: any[]): Promise<SyncResult> {
       console.log(`✅ EPK List synced: ${result.count} records`);
       return { success: true, type: 'epkList', count: result.count };
     } else {
-      console.error(`❌ EPK List sync failed:`, result.error);
+      logError(`❌ EPK List sync failed:`, result.error);
       return { success: false, type: 'epkList', error: result.error };
     }
   } catch (err: any) {
-    console.error(`❌ EPK List sync error:`, err);
+    logError(`❌ EPK List sync error:`, err);
     return { success: false, type: 'epkList', error: err.message || 'Unknown error' };
   }
 }
@@ -316,11 +335,11 @@ export async function syncOKList(okList: any[]): Promise<SyncResult> {
       console.log(`✅ OK List synced: ${result.count} records`);
       return { success: true, type: 'okList', count: result.count };
     } else {
-      console.error(`❌ OK List sync failed:`, result.error);
+      logError(`❌ OK List sync failed:`, result.error);
       return { success: false, type: 'okList', error: result.error };
     }
   } catch (err: any) {
-    console.error(`❌ OK List sync error:`, err);
+    logError(`❌ OK List sync error:`, err);
     return { success: false, type: 'okList', error: err.message || 'Unknown error' };
   }
 }
@@ -343,11 +362,11 @@ export async function syncSalesReps(salesReps: any[]): Promise<SyncResult> {
       console.log(`✅ Sales Representatives synced: ${result.count} records`);
       return { success: true, type: 'salesReps', count: result.count };
     } else {
-      console.error(`❌ Sales Representatives sync failed:`, result.error);
+      logError(`❌ Sales Representatives sync failed:`, result.error);
       return { success: false, type: 'salesReps', error: result.error };
     }
   } catch (err: any) {
-    console.error(`❌ Sales Representatives sync error:`, err);
+    logError(`❌ Sales Representatives sync error:`, err);
     return { success: false, type: 'salesReps', error: err.message || 'Unknown error' };
   }
 }
@@ -370,11 +389,11 @@ export async function syncJobTitles(jobTitles: any[]): Promise<SyncResult> {
       console.log(`✅ Job Titles synced: ${result.count} records`);
       return { success: true, type: 'jobTitles', count: result.count };
     } else {
-      console.error(`❌ Job Titles sync failed:`, result.error);
+      logError(`❌ Job Titles sync failed:`, result.error);
       return { success: false, type: 'jobTitles', error: result.error };
     }
   } catch (err: any) {
-    console.error(`❌ Job Titles sync error:`, err);
+    logError(`❌ Job Titles sync error:`, err);
     return { success: false, type: 'jobTitles', error: err.message || 'Unknown error' };
   }
 }
@@ -397,11 +416,11 @@ export async function syncPartnerships(partnerships: any[]): Promise<SyncResult>
       console.log(`✅ Partnerships synced: ${result.count} records`);
       return { success: true, type: 'partnerships', count: result.count };
     } else {
-      console.error(`❌ Partnerships sync failed:`, result.error);
+      logError(`❌ Partnerships sync failed:`, result.error);
       return { success: false, type: 'partnerships', error: result.error };
     }
   } catch (err: any) {
-    console.error(`❌ Partnerships sync error:`, err);
+    logError(`❌ Partnerships sync error:`, err);
     return { success: false, type: 'partnerships', error: err.message || 'Unknown error' };
   }
 }
@@ -429,11 +448,11 @@ export async function syncAccountItems(accountItems: any[]): Promise<SyncResult>
       console.log(`✅ Account Items synced: ${result.count} records`);
       return { success: true, type: 'accountItems', count: result.count };
     } else {
-      console.error(`❌ Account Items sync failed:`, result.error);
+      logError(`❌ Account Items sync failed:`, result.error);
       return { success: false, type: 'accountItems', error: result.error };
     }
   } catch (err: any) {
-    console.error(`❌ Account Items sync error:`, err);
+    logError(`❌ Account Items sync error:`, err);
     return { success: false, type: 'accountItems', error: err.message || 'Unknown error' };
   }
   */
@@ -462,11 +481,11 @@ export async function syncFixedCommissions(fixedCommissions: any[]): Promise<Syn
       console.log(`✅ Fixed Commissions synced: ${result.count} records`);
       return { success: true, type: 'fixedCommissions', count: result.count };
     } else {
-      console.error(`❌ Fixed Commissions sync failed:`, result.error);
+      logError(`❌ Fixed Commissions sync failed:`, result.error);
       return { success: false, type: 'fixedCommissions', error: result.error };
     }
   } catch (err: any) {
-    console.error(`❌ Fixed Commissions sync error:`, err);
+    logError(`❌ Fixed Commissions sync error:`, err);
     return { success: false, type: 'fixedCommissions', error: err.message || 'Unknown error' };
   }
   */
@@ -495,11 +514,11 @@ export async function syncAdditionalRevenues(additionalRevenues: any[]): Promise
       console.log(`✅ Additional Revenues synced: ${result.count} records`);
       return { success: true, type: 'additionalRevenues', count: result.count };
     } else {
-      console.error(`❌ Additional Revenues sync failed:`, result.error);
+      logError(`❌ Additional Revenues sync failed:`, result.error);
       return { success: false, type: 'additionalRevenues', error: result.error };
     }
   } catch (err: any) {
-    console.error(`❌ Additional Revenues sync error:`, err);
+    logError(`❌ Additional Revenues sync error:`, err);
     return { success: false, type: 'additionalRevenues', error: err.message || 'Unknown error' };
   }
   */
@@ -523,11 +542,11 @@ export async function syncSharing(sharing: any[]): Promise<SyncResult> {
       console.log(`✅ Sharing synced: ${result.count} records`);
       return { success: true, type: 'sharing', count: result.count };
     } else {
-      console.error(`❌ Sharing sync failed:`, result.error);
+      logError(`❌ Sharing sync failed:`, result.error);
       return { success: false, type: 'sharing', error: result.error };
     }
   } catch (err: any) {
-    console.error(`❌ Sharing sync error:`, err);
+    logError(`❌ Sharing sync error:`, err);
     return { success: false, type: 'sharing', error: err.message || 'Unknown error' };
   }
 }
@@ -550,11 +569,11 @@ export async function syncKartProgram(kartProgram: any[]): Promise<SyncResult> {
       console.log(`✅ Kart Program synced: ${result.count} records`);
       return { success: true, type: 'kartProgram', count: result.count };
     } else {
-      console.error(`❌ Kart Program sync failed:`, result.error);
+      logError(`❌ Kart Program sync failed:`, result.error);
       return { success: false, type: 'kartProgram', error: result.error };
     }
   } catch (err: any) {
-    console.error(`❌ Kart Program sync error:`, err);
+    logError(`❌ Kart Program sync error:`, err);
     return { success: false, type: 'kartProgram', error: err.message || 'Unknown error' };
   }
 }
@@ -577,11 +596,11 @@ export async function syncSuspensionReason(suspensionReason: any[]): Promise<Syn
       console.log(`✅ Suspension Reason synced: ${result.count} records`);
       return { success: true, type: 'suspensionReason', count: result.count };
     } else {
-      console.error(`❌ Suspension Reason sync failed:`, result.error);
+      logError(`❌ Suspension Reason sync failed:`, result.error);
       return { success: false, type: 'suspensionReason', error: result.error };
     }
   } catch (err: any) {
-    console.error(`❌ Suspension Reason sync error:`, err);
+    logError(`❌ Suspension Reason sync error:`, err);
     return { success: false, type: 'suspensionReason', error: err.message || 'Unknown error' };
   }
 }
@@ -604,11 +623,11 @@ export async function syncDomainMappings(domainMappings: any[]): Promise<SyncRes
       console.log(`✅ Domain Mappings synced: ${result.count} records`);
       return { success: true, type: 'domainMappings', count: result.count };
     } else {
-      console.error(`❌ Domain Mappings sync failed:`, result.error);
+      logError(`❌ Domain Mappings sync failed:`, result.error);
       return { success: false, type: 'domainMappings', error: result.error };
     }
   } catch (err: any) {
-    console.error(`❌ Domain Mappings sync error:`, err);
+    logError(`❌ Domain Mappings sync error:`, err);
     return { success: false, type: 'domainMappings', error: err.message || 'Unknown error' };
   }
 }
@@ -631,11 +650,11 @@ export async function syncSigns(signs: any[]): Promise<SyncResult> {
       console.log(`✅ Signs synced: ${result.count} records`);
       return { success: true, type: 'signs', count: result.count };
     } else {
-      console.error(`❌ Signs sync failed:`, result.error);
+      logError(`❌ Signs sync failed:`, result.error);
       return { success: false, type: 'signs', error: result.error };
     }
   } catch (err: any) {
-    console.error(`❌ Signs sync error:`, err);
+    logError(`❌ Signs sync error:`, err);
     return { success: false, type: 'signs', error: err.message || 'Unknown error' };
   }
 }
@@ -677,6 +696,12 @@ export async function syncSigns(signs: any[]): Promise<SyncResult> {
  * ```
  */
 export async function syncAllData(options: SyncDataOptions): Promise<SyncResult[]> {
+  // ✅ Skip Supabase sync in Figma Make environment
+  if (IS_FIGMA_MAKE) {
+    console.log('🎨 Figma Make environment detected - Skipping Supabase sync');
+    return [];
+  }
+
   console.log('🚀 Starting batch sync to Supabase...');
   console.log('📊 Data summary:', {
     customers: options.customers?.length || 0,
