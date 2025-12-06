@@ -10,10 +10,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Textarea } from './ui/textarea';
 import { Checkbox } from './ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-// Tooltip removed - import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { TabelaRecord, TabelaGroup } from './TabelaTab';
 import { HakedisRecord } from './BankPFModule';
-import { Calendar, Download, Printer, Calculator, Plus, Eye, Edit, Trash2, Save, Archive, FileText, Columns3, Info, HelpCircle } from 'lucide-react';
+import { Calendar, Download, Calculator, Plus, Eye, Edit, Trash2, Save, Archive, Columns3, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { kisaltUrunAdi } from '../utils/formatters';
 import { earningsApi } from '../utils/supabaseClient';
@@ -57,8 +56,14 @@ export function HakedisTab({
   const [formPFIslemHacmi, setFormPFIslemHacmi] = useState('');
   const [formOxivoIslemHacmi, setFormOxivoIslemHacmi] = useState('');
   
-  // Manuel Ek Gelir OXİVO Payı toplam değeri
-  const [manualEkGelirOxivoTotal, setManualEkGelirOxivoTotal] = useState<string>('');
+  // ✅ YENİ: Ek Gelir/Kesinti Alanları
+  const [ekGelirAciklama, setEkGelirAciklama] = useState('');
+  const [ekGelirPFTL, setEkGelirPFTL] = useState<number | ''>('');
+  const [ekGelirOXTL, setEkGelirOXTL] = useState<number | ''>('');
+  
+  const [ekKesintiAciklama, setEkKesintiAciklama] = useState('');
+  const [ekKesintiPFTL, setEkKesintiPFTL] = useState<number | ''>('');
+  const [ekKesintiOXTL, setEkKesintiOXTL] = useState<number | ''>('');
   
   // Manuel Ana TABELA OXİVO Payı toplam değeri
   const [manualAnaTabelaOxivoTotal, setManualAnaTabelaOxivoTotal] = useState<string>('');
@@ -73,9 +78,6 @@ export function HakedisTab({
   // Silme onay dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [hakedisToDelete, setHakedisToDelete] = useState<HakedisRecord | null>(null);
-  
-  // Hiyerarşi dialog
-  const [showHierarchyDialog, setShowHierarchyDialog] = useState(false);
   
   // Sütun görünürlük kontrolü - Ana TABELA
   const [visibleColumns, setVisibleColumns] = useState({
@@ -95,23 +97,6 @@ export function HakedisTab({
   
   const toggleColumn = (column: keyof typeof visibleColumns) => {
     setVisibleColumns(prev => ({ ...prev, [column]: !prev[column] }));
-  };
-  
-  // Sütun görünürlük kontrolü - Ek Gelir
-  const [visibleEkGelirColumns, setVisibleEkGelirColumns] = useState({
-    klm: true,
-    grup: true,
-    kisaAciklama: true,
-    urun: true,
-    gelirModeli: true,
-    kartProg: true,
-    kullanim: true,
-    kartTipi: true,
-    islemHacmi: true
-  });
-  
-  const toggleEkGelirColumn = (column: keyof typeof visibleEkGelirColumns) => {
-    setVisibleEkGelirColumns(prev => ({ ...prev, [column]: !prev[column] }));
   };
   
   // Eksi değerleri toplama dahil et/etme (varsayılan: false - eksi değerler hariç tutulur)
@@ -135,13 +120,9 @@ export function HakedisTab({
     );
   }, [tabelaRecords, tabelaGroups, formTabelaGroupId]);
 
-  // Ana TABELA ve Ek Gelir kayıtlarını ayır
+  // ✅ Sadece normal TABELA kayıtları
   const normalRecords = useMemo(() => {
     return aktifTabelaRecords.filter(r => !r.ekGelirDetay);
-  }, [aktifTabelaRecords]);
-
-  const ekGelirRecords = useMemo(() => {
-    return aktifTabelaRecords.filter(r => r.ekGelirDetay);
   }, [aktifTabelaRecords]);
 
   // Yılları çıkar (filtreleme için)
@@ -190,7 +171,12 @@ export function HakedisTab({
     setFormDurum('Taslak');
     setFormPFIslemHacmi('');
     setFormOxivoIslemHacmi('');
-    setManualEkGelirOxivoTotal('');
+    setEkGelirAciklama('');
+    setEkGelirPFTL('');
+    setEkGelirOXTL('');
+    setEkKesintiAciklama('');
+    setEkKesintiPFTL('');
+    setEkKesintiOXTL('');
     setManualAnaTabelaOxivoTotal('');
     setManualAnaTabelaIslemHacmi('');
     setView('selectGroup');
@@ -216,7 +202,12 @@ export function HakedisTab({
     setFormDurum(hakedis.durum);
     setFormPFIslemHacmi(hakedis.pfIslemHacmi || '');
     setFormOxivoIslemHacmi(hakedis.oxivoIslemHacmi || '');
-    setManualEkGelirOxivoTotal((hakedis as any).manualEkGelirOxivoTotal || '');
+    setEkGelirAciklama(hakedis.ekGelirAciklama || '');
+    setEkGelirPFTL(hakedis.ekGelirPFTL || '');
+    setEkGelirOXTL(hakedis.ekGelirOXTL || '');
+    setEkKesintiAciklama(hakedis.ekKesintiAciklama || '');
+    setEkKesintiPFTL(hakedis.ekKesintiPFTL || '');
+    setEkKesintiOXTL(hakedis.ekKesintiOXTL || '');
     setManualAnaTabelaOxivoTotal((hakedis as any).manualAnaTabelaOxivoTotal || '');
     setManualAnaTabelaIslemHacmi((hakedis as any).manualAnaTabelaIslemHacmi || '');
     setView('view');
@@ -233,7 +224,12 @@ export function HakedisTab({
     setFormDurum(hakedis.durum);
     setFormPFIslemHacmi(hakedis.pfIslemHacmi || '');
     setFormOxivoIslemHacmi(hakedis.oxivoIslemHacmi || '');
-    setManualEkGelirOxivoTotal((hakedis as any).manualEkGelirOxivoTotal || '');
+    setEkGelirAciklama(hakedis.ekGelirAciklama || '');
+    setEkGelirPFTL(hakedis.ekGelirPFTL || '');
+    setEkGelirOXTL(hakedis.ekGelirOXTL || '');
+    setEkKesintiAciklama(hakedis.ekKesintiAciklama || '');
+    setEkKesintiPFTL(hakedis.ekKesintiPFTL || '');
+    setEkKesintiOXTL(hakedis.ekKesintiOXTL || '');
     setManualAnaTabelaOxivoTotal((hakedis as any).manualAnaTabelaOxivoTotal || '');
     setManualAnaTabelaIslemHacmi((hakedis as any).manualAnaTabelaIslemHacmi || '');
     setView('edit');
@@ -243,12 +239,11 @@ export function HakedisTab({
   const handleSave = async (durum: 'Taslak' | 'Kesinleşmiş' = formDurum) => {
     // Kesinleştirme sırasında manuel değer uyarısı
     if (durum === 'Kesinleşmiş') {
-      const hasManualValues = manualAnaTabelaIslemHacmi || manualAnaTabelaOxivoTotal || manualEkGelirOxivoTotal;
+      const hasManualValues = manualAnaTabelaIslemHacmi || manualAnaTabelaOxivoTotal;
       if (hasManualValues) {
         const manualFields: string[] = [];
         if (manualAnaTabelaIslemHacmi) manualFields.push('Ana TABELA Toplam İşlem Hacmi');
         if (manualAnaTabelaOxivoTotal) manualFields.push('Ana TABELA OXİVO Payı');
-        if (manualEkGelirOxivoTotal) manualFields.push('Ek Gelir OXİVO Payı');
         
         const confirmMessage = `⚠️ MANUEL DEĞER UYARISI\n\nAşağıdaki alanlar manuel olarak girilmiş:\n${manualFields.map(f => `• ${f}`).join('\n')}\n\nBu değerler Excel export'ta "(MANUEL)" etiketi ile işaretlenecektir.\n\nKesinleştirmek istiyor musunuz?`;
         
@@ -282,13 +277,18 @@ export function HakedisTab({
         notlar: formNotlar || undefined,
         pfIslemHacmi: formPFIslemHacmi || undefined,
         oxivoIslemHacmi: formOxivoIslemHacmi || undefined,
-        manualEkGelirOxivoTotal: manualEkGelirOxivoTotal || undefined,
+        ekGelirAciklama: ekGelirAciklama || undefined,
+        ekGelirPFTL: ekGelirPFTL || undefined,
+        ekGelirOXTL: ekGelirOXTL || undefined,
+        ekKesintiAciklama: ekKesintiAciklama || undefined,
+        ekKesintiPFTL: ekKesintiPFTL || undefined,
+        ekKesintiOXTL: ekKesintiOXTL || undefined,
         manualAnaTabelaOxivoTotal: manualAnaTabelaOxivoTotal || undefined,
         manualAnaTabelaIslemHacmi: manualAnaTabelaIslemHacmi || undefined,
         // Hesaplanmış toplam değerleri kaydet
-        totalIslemHacmi: (manualAnaTabelaIslemHacmi ? parseFloat(manualAnaTabelaIslemHacmi) : totals.normalTotals.totalIslemHacmi) + totals.ekGelirTotals.totalIslemHacmi,
-        totalPFPay: totals.normalTotals.totalPFPay + totals.ekGelirTotals.totalPFTL,
-        totalOxivoPay: (manualAnaTabelaOxivoTotal ? parseFloat(manualAnaTabelaOxivoTotal) : totals.normalTotals.totalOxivoPay) + (manualEkGelirOxivoTotal ? parseFloat(manualEkGelirOxivoTotal) : totals.ekGelirTotals.totalOXTL),
+        totalIslemHacmi: manualAnaTabelaIslemHacmi ? parseFloat(manualAnaTabelaIslemHacmi) : totals.normalTotals.totalIslemHacmi,
+        totalPFPay: totals.normalTotals.totalPFPay + (ekGelirPFTL || 0) - (ekKesintiPFTL || 0),
+        totalOxivoPay: (manualAnaTabelaOxivoTotal ? parseFloat(manualAnaTabelaOxivoTotal) : totals.normalTotals.totalOxivoPay) + (ekGelirOXTL || 0) - (ekKesintiOXTL || 0),
       } as any;
       
       onHakedisRecordsChange([...hakedisRecords, newHakedis]);
@@ -331,14 +331,19 @@ export function HakedisTab({
         notlar: formNotlar || undefined,
         pfIslemHacmi: formPFIslemHacmi || undefined,
         oxivoIslemHacmi: formOxivoIslemHacmi || undefined,
-        manualEkGelirOxivoTotal: manualEkGelirOxivoTotal || undefined,
+        ekGelirAciklama: ekGelirAciklama || undefined,
+        ekGelirPFTL: ekGelirPFTL || undefined,
+        ekGelirOXTL: ekGelirOXTL || undefined,
+        ekKesintiAciklama: ekKesintiAciklama || undefined,
+        ekKesintiPFTL: ekKesintiPFTL || undefined,
+        ekKesintiOXTL: ekKesintiOXTL || undefined,
         manualAnaTabelaOxivoTotal: manualAnaTabelaOxivoTotal || undefined,
         manualAnaTabelaIslemHacmi: manualAnaTabelaIslemHacmi || undefined,
         guncellemeTarihi: new Date().toISOString(),
         // Hesaplanmış toplam değerleri kaydet
-        totalIslemHacmi: (manualAnaTabelaIslemHacmi ? parseFloat(manualAnaTabelaIslemHacmi) : totals.normalTotals.totalIslemHacmi) + totals.ekGelirTotals.totalIslemHacmi,
-        totalPFPay: totals.normalTotals.totalPFPay + totals.ekGelirTotals.totalPFTL,
-        totalOxivoPay: (manualAnaTabelaOxivoTotal ? parseFloat(manualAnaTabelaOxivoTotal) : totals.normalTotals.totalOxivoPay) + (manualEkGelirOxivoTotal ? parseFloat(manualEkGelirOxivoTotal) : totals.ekGelirTotals.totalOXTL),
+        totalIslemHacmi: manualAnaTabelaIslemHacmi ? parseFloat(manualAnaTabelaIslemHacmi) : totals.normalTotals.totalIslemHacmi,
+        totalPFPay: totals.normalTotals.totalPFPay + (ekGelirPFTL || 0) - (ekKesintiPFTL || 0),
+        totalOxivoPay: (manualAnaTabelaOxivoTotal ? parseFloat(manualAnaTabelaOxivoTotal) : totals.normalTotals.totalOxivoPay) + (ekGelirOXTL || 0) - (ekKesintiOXTL || 0),
       } as any;
       
       onHakedisRecordsChange(
@@ -403,12 +408,13 @@ export function HakedisTab({
     }) + ' ₺';
   };
   
-  const parseCurrency = (formatted: string): string => {
+  const parseCurrency = (formatted: string): number => {
     // "1.234,56 ₺" formatından "1234.56" sayısına dönüştür
-    return formatted
+    const cleaned = formatted
       .replace(/\s₺/g, '')        // ₺ sembolünü kaldır
       .replace(/\./g, '')          // Binlik ayırıcıları kaldır
       .replace(',', '.');          // Virgülü noktaya çevir
+    return parseFloat(cleaned);
   };
 
   // İşlem hacmi değişikliği
@@ -523,32 +529,6 @@ export function HakedisTab({
     };
   };
 
-  // Ek Gelir hesaplama - sadece PF ve OXİVO payı
-  const calculateEkGelirHakedis = (record: TabelaRecord, islemHacmiMap: Record<string, string>) => {
-    const islemHacmi = parseFloat(islemHacmiMap[record.id] || '0');
-    
-    if (islemHacmi === 0 || !record.ekGelirDetay) {
-      return {
-        pfTL: 0,
-        oxTL: 0,
-        toplamTutar: 0
-      };
-    }
-
-    const pfYuzde = parseFloat(record.ekGelirDetay.pfYuzde || '0');
-    const oxYuzde = parseFloat(record.ekGelirDetay.oxYuzde || '0');
-
-    const pfTL = islemHacmi * (pfYuzde / 100);
-    const oxTL = islemHacmi * (oxYuzde / 100);
-    const toplamTutar = pfTL + oxTL;
-
-    return {
-      pfTL,
-      oxTL,
-      toplamTutar
-    };
-  };
-
   // Toplam hesaplama
   const calculateTotals = (vade: string, islemHacmiMap: Record<string, string>) => {
     let normalTotalIslemHacmi = 0;
@@ -614,21 +594,7 @@ export function HakedisTab({
       });
     });
 
-    let ekGelirTotalIslemHacmi = 0;
-    let ekGelirTotalPFTL = 0;
-    let ekGelirTotalOXTL = 0;
-    let ekGelirTotalTutar = 0;
-
-    // ✅ NULL SAFETY: ekGelirRecords boş olabilir
-    (ekGelirRecords || []).forEach(record => {
-      const islemHacmi = parseFloat(islemHacmiMap[record.id] || '0');
-      const calc = calculateEkGelirHakedis(record, islemHacmiMap);
-      
-      ekGelirTotalIslemHacmi += islemHacmi;
-      ekGelirTotalPFTL += calc.pfTL;
-      ekGelirTotalOXTL += calc.oxTL;
-      ekGelirTotalTutar += calc.toplamTutar;
-    });
+    // ❌ EK GELİR ARTIK AYRI KAYIT DEĞİL - Ana TABELA tablosunda satır olarak gösterilecek
 
     return {
       normalTotals: {
@@ -640,18 +606,6 @@ export function HakedisTab({
         totalOxivoPay: normalTotalOxivoPay,
         excludedPFCount,
         excludedOxivoCount
-      },
-      ekGelirTotals: {
-        totalIslemHacmi: ekGelirTotalIslemHacmi,
-        totalPFTL: ekGelirTotalPFTL,
-        totalOXTL: ekGelirTotalOXTL,
-        totalTutar: ekGelirTotalTutar
-      },
-      grandTotal: {
-        totalIslemHacmi: normalTotalIslemHacmi + ekGelirTotalIslemHacmi,
-        totalKazanc: normalTotalKazanc,
-        totalPFPay: normalTotalPFPay + ekGelirTotalPFTL,
-        totalOxivoPay: normalTotalOxivoPay + ekGelirTotalOXTL
       }
     };
   };
@@ -715,35 +669,6 @@ export function HakedisTab({
         ].join(','));
       });
 
-      // Ek gelir kayıtları
-      // ✅ NULL SAFETY: ekGelirRecords boş olabilir
-      (ekGelirRecords || []).forEach(record => {
-        const islemHacmi = parseFloat(hakedis.islemHacmiMap[record.id] || '0');
-        const calc = calculateEkGelirHakedis(record, hakedis.islemHacmiMap);
-        
-        const kartTipi = record.ekGelirDetay?.kartTipi 
-          ? record.ekGelirDetay.kartTipi.split(' (')[0] 
-          : '-';
-        
-        rows.push([
-          'Ek Gelir',
-          kisaltUrunAdi(record.urun || '-'),
-          record.gelirModeli.ad,
-          record.ekGelirDetay?.gelirTuru || '-',
-          '-',
-          record.ekGelirDetay?.kullanim || '-',
-          kartTipi,
-          '-',
-          `${record.ekGelirDetay?.tutar || '0'}₺`,
-          islemHacmi.toFixed(2),
-          '-',
-          '-',
-          calc.toplamTutar.toFixed(2),
-          calc.pfTL.toFixed(2),
-          calc.oxTL.toFixed(2)
-        ].join(','));
-      });
-      
       // Toplam satırları
       rows.push('');
       
@@ -758,7 +683,7 @@ export function HakedisTab({
         : totals.normalTotals.totalOxivoPay;
       
       rows.push([
-        'ANA TABELA TOPLAM',
+        'Tabela Toplamı',
         '',
         '',
         '',
@@ -775,42 +700,69 @@ export function HakedisTab({
         `${oxivoPayValue.toFixed(2)}${manualAnaTabelaOxivoValue ? ' (MANUEL)' : ''}`
       ].join(','));
 
-      // ✅ NULL SAFETY: ekGelirRecords undefined olabilir
-      if ((ekGelirRecords || []).length > 0) {
-        const manualEkGelirOxivoValue = (hakedis as any).manualEkGelirOxivoTotal;
-        const ekGelirOxivoValue = manualEkGelirOxivoValue 
-          ? parseFloat(manualEkGelirOxivoValue) 
-          : totals.ekGelirTotals.totalOXTL;
-        
-        rows.push([
-          'EK GELİR TOPLAM',
-          '',
-          '',
-          '',
-          '',
-          '',
-          '',
-          '',
-          '',
-          totals.ekGelirTotals.totalIslemHacmi.toFixed(2),
-          '-',
-          '-',
-          totals.ekGelirTotals.totalTutar.toFixed(2),
-          totals.ekGelirTotals.totalPFTL.toFixed(2),
-          `${ekGelirOxivoValue.toFixed(2)}${manualEkGelirOxivoValue ? ' (MANUEL)' : ''}`
-        ].join(','));
-      }
-
       rows.push('');
       
-      // Genel toplam için manuel değerleri hesaba kat
-      const genelToplamIslemHacmi = islemHacmiValue + totals.ekGelirTotals.totalIslemHacmi;
-      // ✅ NULL SAFETY: ekGelirRecords undefined olabilir
-      const genelToplamOxivoPay = oxivoPayValue + ((ekGelirRecords || []).length > 0 ? (manualEkGelirOxivoValue ? parseFloat(manualEkGelirOxivoValue) : totals.ekGelirTotals.totalOXTL) : 0);
-      const hasManualValues = manualAnaTabelaIslemHacmiValue || manualAnaTabelaOxivoValue || manualEkGelirOxivoValue;
+      // Ek Gelir/Kesinti değerlerini al
+      const ekGelirAciklama = (hakedis as any).ekGelirAciklama || '';
+      const ekGelirPF = (hakedis as any).ekGelirPFTL || 0;
+      const ekGelirOX = (hakedis as any).ekGelirOXTL || 0;
+      const ekKesintiAciklama = (hakedis as any).ekKesintiAciklama || '';
+      const ekKesintiPF = (hakedis as any).ekKesintiPFTL || 0;
+      const ekKesintiOX = (hakedis as any).ekKesintiOXTL || 0;
+      
+      // Ek Gelir satırı (eğer girilmişse)
+      if (ekGelirAciklama || ekGelirPF || ekGelirOX) {
+        rows.push([
+          'Ek Gelir',
+          '',
+          '',
+          ekGelirAciklama,
+          '',
+          '',
+          '',
+          '',
+          '',
+          '-',
+          '-',
+          '-',
+          '-',
+          ekGelirPF.toFixed(2),
+          ekGelirOX.toFixed(2)
+        ].join(','));
+      }
+      
+      // Ek Kesinti satırı (eğer girilmişse)
+      if (ekKesintiAciklama || ekKesintiPF || ekKesintiOX) {
+        rows.push([
+          'Ek Kesinti',
+          '',
+          '',
+          ekKesintiAciklama,
+          '',
+          '',
+          '',
+          '',
+          '',
+          '-',
+          '-',
+          '-',
+          '-',
+          `-${ekKesintiPF.toFixed(2)}`,
+          `-${ekKesintiOX.toFixed(2)}`
+        ].join(','));
+      }
+      
+      rows.push('');
+      
+      // Genel toplam için manuel değerleri ve ek gelir/kesinti hesaba kat
+      const hasManualValues = manualAnaTabelaIslemHacmiValue || manualAnaTabelaOxivoValue;
+      
+      // Ana Tabela Toplam hesapla
+      const finalPFPay = totals.normalTotals.totalPFPay + ekGelirPF - ekKesintiPF;
+      const finalOXPay = oxivoPayValue + ekGelirOX - ekKesintiOX;
       
       rows.push([
-        'GENEL TOPLAM',
+        'ANA TABELA TOPLAM',
         '',
         '',
         '',
@@ -819,12 +771,12 @@ export function HakedisTab({
         '',
         '',
         '',
-        `${genelToplamIslemHacmi.toFixed(2)}${hasManualValues ? ' (İçerir: Manuel Değerler)' : ''}`,
+        `${islemHacmiValue.toFixed(2)}${hasManualValues ? ' (İçerir: Manuel Değerler)' : ''}`,
         '-',
         '-',
-        totals.grandTotal.totalKazanc.toFixed(2),
-        totals.grandTotal.totalPFPay.toFixed(2),
-        `${genelToplamOxivoPay.toFixed(2)}${hasManualValues ? ' (İçerir: Manuel Değerler)' : ''}`
+        totals.normalTotals.totalKazanc.toFixed(2),
+        finalPFPay.toFixed(2),
+        `${finalOXPay.toFixed(2)}${hasManualValues ? ' (İçerir: Manuel Değerler)' : ''}`
       ].join(','));
       
       const csv = [headers.join(','), ...rows].join('\n');
@@ -1009,7 +961,7 @@ export function HakedisTab({
                               </Badge>
                             )}
                             {(() => {
-                              const hasManualValues = (hakedis as any).manualAnaTabelaIslemHacmi || (hakedis as any).manualAnaTabelaOxivoTotal || (hakedis as any).manualEkGelirOxivoTotal;
+                              const hasManualValues = (hakedis as any).manualAnaTabelaIslemHacmi || (hakedis as any).manualAnaTabelaOxivoTotal;
                               if (hasManualValues) {
                                 return (
                                   <span className="inline-block">
@@ -1282,12 +1234,11 @@ export function HakedisTab({
                     {formatDonem(selectedHakedis.donem)}
                   </p>
                   {(() => {
-                    const hasManualValues = manualAnaTabelaIslemHacmi || manualAnaTabelaOxivoTotal || manualEkGelirOxivoTotal;
+                    const hasManualValues = manualAnaTabelaIslemHacmi || manualAnaTabelaOxivoTotal;
                     if (hasManualValues) {
                       const manualFields: string[] = [];
                       if (manualAnaTabelaIslemHacmi) manualFields.push('Ana TABELA Toplam İşlem Hacmi');
                       if (manualAnaTabelaOxivoTotal) manualFields.push('Ana TABELA OXİVO Payı');
-                      if (manualEkGelirOxivoTotal) manualFields.push('Ek Gelir OXİVO Payı');
                       
                       return (
                         <div className="mt-2 bg-purple-50 border border-purple-300 rounded px-3 py-2 text-xs text-purple-800">
@@ -1381,9 +1332,6 @@ export function HakedisTab({
                   <div className="text-sm bg-white px-3 py-1.5 rounded-md border border-indigo-200">
                     <div className="text-gray-700">
                       <strong>TABELA Kayıtları:</strong> {aktifTabelaRecords.length}
-                    </div>
-                    <div className="text-xs text-gray-600">
-                      {normalRecords.length} normal + {ekGelirRecords.length} ek gelir
                     </div>
                   </div>
                 )}
@@ -2045,9 +1993,7 @@ export function HakedisTab({
                       colSpan={
                        Object.values(visibleColumns).filter(Boolean).length - 
                         (visibleColumns.islemHacmi ? 1 : 0) - 
-                        (visibleColumns.kazanc ? 1 : 0) - 
                         (visibleColumns.kazancTL ? 1 : 0) - 
-                        (visibleColumns.pfPayi ? 1 : 0) - 
                         (visibleColumns.oxivoPayi ? 1 : 0)
                       } 
                       className="text-right"
@@ -2102,28 +2048,11 @@ export function HakedisTab({
                         )}
                       </TableCell>
                     )}
-                    {visibleColumns.kazanc && (
-                      <TableCell className="bg-gray-100 text-center">
-                        <strong className="text-gray-700 text-xs">-</strong>
-                      </TableCell>
-                    )}
                     {visibleColumns.kazancTL && (
                       <TableCell className="bg-green-100 text-right">
                         <strong className="text-green-800">
                           {totals.normalTotals.totalKazanc.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
                         </strong>
-                      </TableCell>
-                    )}
-                    {visibleColumns.pfPayi && (
-                      <TableCell className="bg-blue-100 text-right">
-                        <strong className="text-blue-800">
-                          {totals.normalTotals.totalPFPay.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
-                        </strong>
-                        {!includeNegativeValues && totals.normalTotals.excludedPFCount > 0 && (
-                          <div className="text-xs text-orange-600 mt-1">
-                            ({totals.normalTotals.excludedPFCount} eksi değer hariç)
-                          </div>
-                        )}
                       </TableCell>
                     )}
                     {visibleColumns.oxivoPayi && (
@@ -2202,401 +2131,202 @@ export function HakedisTab({
                       </TableCell>
                     )}
                   </TableRow>
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
-      {/* Ek Gelir Detayları Tablosu */}
-      {ekGelirRecords.length > 0 && (
-        <Card className="mt-8">
-          <CardHeader className="bg-gradient-to-r from-purple-50 to-blue-50 border-b border-purple-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-lg text-purple-900 flex items-center gap-2">
-                  <span className="text-xl">💰</span>
-                  Ek Gelir Detayları Tablosu
-                </CardTitle>
-                <p className="text-sm text-purple-700 mt-1">
-                  Ek geliri olan TABELA kayıtları ({ekGelirRecords.length} kayıt)
-                </p>
-                {view !== 'view' && (
-                  <p className="text-xs text-indigo-600 mt-2 bg-indigo-50 border border-indigo-200 rounded px-2 py-1">
-                    💡 <strong>OXİVO Payı Toplam:</strong> Otomatik hesaplanır, ancak manuel değer girebilirsiniz
-                  </p>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="default" className="bg-purple-600">
-                  {ekGelirRecords.length} Kayıt
-                </Badge>
-                
-                {/* Sütun Göster/Gizle Kontrolü - Ek Gelir */}
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-2">
-                      <Columns3 size={16} />
-                      Sütunlar
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="dropdown-panel w-72 p-0 max-h-[70vh]" align="end" style={{ display: 'flex', flexDirection: 'column' }}>
-                    <div className="p-4 flex-shrink-0">
-                      <div className="pb-2 border-b">
-                        <h4 className="text-sm text-gray-900">Sütun Görünürlüğü</h4>
-                        <p className="text-xs text-gray-500 mt-1">
-                          Görmek istediğiniz sütunları seçin
-                        </p>
-                      </div>
-                    </div>
-                      
-                    <div className="px-4 overflow-y-auto flex-1 min-h-0">
-                      <div className="grid grid-cols-2 gap-2 pb-3">
-                        <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-50 p-1.5 rounded">
-                          <Checkbox 
-                            checked={visibleEkGelirColumns.klm}
-                            onCheckedChange={() => toggleEkGelirColumn('klm')}
-                          />
-                          <span>KLM</span>
-                        </label>
-                        
-                        <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-50 p-1.5 rounded">
-                          <Checkbox 
-                            checked={visibleEkGelirColumns.grup}
-                            onCheckedChange={() => toggleEkGelirColumn('grup')}
-                          />
-                          <span>Grup</span>
-                        </label>
-                        
-                        <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-50 p-1.5 rounded">
-                          <Checkbox 
-                            checked={visibleEkGelirColumns.kisaAciklama}
-                            onCheckedChange={() => toggleEkGelirColumn('kisaAciklama')}
-                          />
-                          <span>Kısa Açıklama</span>
-                        </label>
-                        
-                        <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-50 p-1.5 rounded">
-                          <Checkbox 
-                            checked={visibleEkGelirColumns.urun}
-                            onCheckedChange={() => toggleEkGelirColumn('urun')}
-                          />
-                          <span>Ürün</span>
-                        </label>
-                        
-                        <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-50 p-1.5 rounded">
-                          <Checkbox 
-                            checked={visibleEkGelirColumns.gelirModeli}
-                            onCheckedChange={() => toggleEkGelirColumn('gelirModeli')}
-                          />
-                          <span>Gelir Modeli</span>
-                        </label>
-                        
-                        <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-50 p-1.5 rounded">
-                          <Checkbox 
-                            checked={visibleEkGelirColumns.kartProg}
-                            onCheckedChange={() => toggleEkGelirColumn('kartProg')}
-                          />
-                          <span>Kart Prog.</span>
-                        </label>
-                        
-                        <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-50 p-1.5 rounded">
-                          <Checkbox 
-                            checked={visibleEkGelirColumns.kullanim}
-                            onCheckedChange={() => toggleEkGelirColumn('kullanim')}
-                          />
-                          <span>Kullanım</span>
-                        </label>
-                        
-                        <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-50 p-1.5 rounded">
-                          <Checkbox 
-                            checked={visibleEkGelirColumns.kartTipi}
-                            onCheckedChange={() => toggleEkGelirColumn('kartTipi')}
-                          />
-                          <span>Kart Tipi</span>
-                        </label>
-                        
-                        <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-50 p-1.5 rounded">
-                          <Checkbox 
-                            checked={visibleEkGelirColumns.islemHacmi}
-                            onCheckedChange={() => toggleEkGelirColumn('islemHacmi')}
-                          />
-                          <span>İşlem Hacmi</span>
-                        </label>
-                      </div>
-                    </div>
-                      
-                    <div className="px-4 pb-4 pt-2 border-t flex gap-2 flex-shrink-0">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => setVisibleEkGelirColumns({
-                            klm: true, grup: true, kisaAciklama: true, urun: true,
-                            gelirModeli: true, kartProg: true, kullanim: true, kartTipi: true,
-                            islemHacmi: true
-                          })}
-                          className="flex-1 text-xs"
-                        >
-                          Tümünü Göster
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => setVisibleEkGelirColumns({
-                            klm: true, grup: false, kisaAciklama: false, urun: false,
-                            gelirModeli: false, kartProg: false, kullanim: false, kartTipi: false,
-                            islemHacmi: true
-                          })}
-                          className="flex-1 text-xs"
-                        >
-                          Özet Görünüm
-                        </Button>
-                      </div>
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="border rounded-lg overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-gray-50">
-                    {/* Mavi zemin: TABELA'dan gelen veriler */}
-                    {visibleEkGelirColumns.klm && <TableHead className="bg-blue-100 text-blue-900 text-center w-12">KLM</TableHead>}
-                    {visibleEkGelirColumns.grup && <TableHead className="bg-blue-100 text-blue-900">Grup</TableHead>}
-                    {visibleEkGelirColumns.kisaAciklama && <TableHead className="bg-blue-100 text-blue-900">Kısa Açıklama</TableHead>}
-                    {visibleEkGelirColumns.urun && <TableHead className="bg-blue-100 text-blue-900">Ürün</TableHead>}
-                    {visibleEkGelirColumns.gelirModeli && <TableHead className="bg-blue-100 text-blue-900">Gelir Modeli</TableHead>}
-                    {visibleEkGelirColumns.kartProg && <TableHead className="bg-blue-100 text-blue-900">Kart Prog.</TableHead>}
-                    {visibleEkGelirColumns.kullanim && <TableHead className="bg-blue-100 text-blue-900">Kullanım</TableHead>}
-                    {visibleEkGelirColumns.kartTipi && <TableHead className="bg-blue-100 text-blue-900">Kart Tipi</TableHead>}
-                    
-                    {/* Yeşil zemin: Manuel TL giriş */}
-                    {visibleEkGelirColumns.islemHacmi && <TableHead className="bg-green-100 text-green-900 text-center">
-                      <div className="space-y-0.5">
-                        <div>İşlem Hacmi</div>
-                        <div className="text-xs opacity-70">Manuel TL değer Girişi</div>
-                      </div>
-                    </TableHead>}
-                    
-                    {/* Beyaz zemin: Hesaplanan değerler */}
-                    <TableHead className="bg-white text-gray-900 text-right">
-                      <div className="space-y-0.5">
-                        <div>PF Payı</div>
-                        <div className="text-xs text-gray-500">I4*J2</div>
-                      </div>
-                    </TableHead>
-                    <TableHead className="bg-white text-gray-900 text-right">
-                      <div className="space-y-0.5">
-                        <div>OXİVO Payı</div>
-                        <div className="text-xs text-gray-500">I4*K2</div>
-                      </div>
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {ekGelirRecords.map((record, index) => {
-                    const islemHacmi = parseFloat(formIslemHacmiMap[record.id] || '0');
-                    const selectedGroup = tabelaGroups.find(g => g.id === formTabelaGroupId);
-                    
-                    // Hesaplamalar - PF Payı ve OXİVO Payı
-                    const pfOrani = parseFloat(record.ekGelirDetay?.pfYuzde || '0');
-                    const oxOrani = parseFloat(record.ekGelirDetay?.oxYuzde || '0');
-                    const pfPayi = islemHacmi * (pfOrani / 100);
-                    const oxPayi = islemHacmi * (oxOrani / 100);
-                    
-                    return (
-                      <TableRow key={record.id} className="hover:bg-gray-50">
-                        {/* Mavi zemin kolonlar */}
-                        {visibleEkGelirColumns.klm && (
-                          <TableCell className="bg-blue-50/30 text-center">
-                            <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-300 font-mono text-xs">
-                              {String(index + 10).padStart(2, '0')}
-                            </Badge>
+                      {/* ═══════════════════════════════════════════════════════════ */}
+                      {/* TABELA TOPLAMI SATIRI */}
+                      {/* ═══════════════════════════════════════════════════════════ */}
+                      <TableRow className="bg-blue-100 border-t-2 border-blue-400">
+                        <TableCell colSpan={visibleColumns.klm ? 1 : 0}></TableCell>
+                        {visibleColumns.grup && <TableCell></TableCell>}
+                        {visibleColumns.kisaAciklama && <TableCell></TableCell>}
+                        {visibleColumns.urun && <TableCell></TableCell>}
+                        {visibleColumns.gelirModeli && <TableCell></TableCell>}
+                        {visibleColumns.kartProg && <TableCell></TableCell>}
+                        {visibleColumns.kullanim && <TableCell></TableCell>}
+                        {visibleColumns.kartTipi && <TableCell></TableCell>}
+                        {visibleColumns.islemHacmi && <TableCell className="text-center font-bold">Tabela Toplamı</TableCell>}
+                        {visibleColumns.vade && <TableCell></TableCell>}
+                        {visibleColumns.kazancTL && (
+                          <TableCell className="text-right">
+                            <strong className="text-blue-800">
+                              {totals.normalTotals.totalKazanc.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
+                            </strong>
                           </TableCell>
                         )}
-                        {visibleEkGelirColumns.grup && (
-                          <TableCell className="bg-blue-50/30">
-                            {selectedGroup ? (
-                              <Badge variant="default" className="bg-blue-600 text-white text-xs">
-                                {selectedGroup.name}
-                              </Badge>
-                            ) : (
-                              <span className="text-xs text-gray-400">-</span>
-                            )}
+                        {visibleColumns.oxivoPayi && (
+                          <TableCell className="text-right">
+                            <strong className="text-blue-800">
+                              {totals.normalTotals.totalOxivoPay.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
+                            </strong>
                           </TableCell>
                         )}
-                        {visibleEkGelirColumns.kisaAciklama && (
-                          <TableCell className="bg-blue-50/30">
-                            {(record as any).kisaAciklama ? (
-                              <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300 text-xs">
-                                {(record as any).kisaAciklama}
-                              </Badge>
-                            ) : (
-                              <span className="text-xs text-gray-400">-</span>
-                            )}
-                          </TableCell>
-                        )}
-                        {visibleEkGelirColumns.urun && (
-                          <TableCell className="bg-blue-50/30">
-                            <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-300">
-                              {kisaltUrunAdi(record.urun || '-')}
-                            </Badge>
-                          </TableCell>
-                        )}
-                        {visibleEkGelirColumns.gelirModeli && (
-                          <TableCell className="bg-blue-50/30">
-                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
-                              {record.gelirModeli.ad}
-                            </Badge>
-                          </TableCell>
-                        )}
-                        {visibleEkGelirColumns.kartProg && (
-                          <TableCell className="bg-blue-50/30">
-                            <span className="text-xs text-gray-600">Hesap</span>
-                          </TableCell>
-                        )}
-                        {visibleEkGelirColumns.kullanim && (
-                          <TableCell className="bg-blue-50/30">
-                            <Badge variant={record.ekGelirDetay?.kullanim === 'Yurt İçi' ? 'default' : 'secondary'}>
-                              {record.ekGelirDetay?.kullanim || '-'}
-                            </Badge>
-                          </TableCell>
-                        )}
-                        {visibleEkGelirColumns.kartTipi && (
-                          <TableCell className="bg-blue-50/30">
-                            <Badge 
-                              variant="outline"
-                              className="bg-purple-100 text-purple-700 border-purple-300"
-                            >
-                              {record.ekGelirDetay?.kartTipi ? record.ekGelirDetay.kartTipi.split(' (')[0] : '-'}
-                            </Badge>
-                          </TableCell>
-                        )}
-                        
-                        {/* Yeşil zemin: Manuel TL giriş */}
-                        {visibleEkGelirColumns.islemHacmi && (
-                          <TableCell className="bg-green-50/50">
+                        <TableCell></TableCell>
+                      </TableRow>
+
+                      {/* ═══════════════════════════════════════════════════════════ */}
+                      {/* EK GELİR SATIRI */}
+                      {/* ═══════════════════════════════════════════════════════════ */}
+                      <TableRow className="bg-green-50 border-t border-green-300">
+                        <TableCell colSpan={visibleColumns.klm ? 1 : 0}></TableCell>
+                        {visibleColumns.grup && <TableCell></TableCell>}
+                        {visibleColumns.kisaAciklama && <TableCell></TableCell>}
+                        {visibleColumns.urun && <TableCell></TableCell>}
+                        {visibleColumns.gelirModeli && <TableCell></TableCell>}
+                        {visibleColumns.kartProg && <TableCell></TableCell>}
+                        {visibleColumns.kullanim && <TableCell></TableCell>}
+                        {visibleColumns.kartTipi && <TableCell></TableCell>}
+                        {visibleColumns.islemHacmi && (
+                          <TableCell className="text-left">
                             {view === 'view' ? (
-                              <div className="text-right pr-3">
-                                <span className={`text-sm ${islemHacmi > 0 ? 'text-gray-900' : 'text-gray-400'}`}>
-                                  {islemHacmi.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
-                                </span>
-                              </div>
+                              <span className="text-green-700">{ekGelirAciklama || '—'}</span>
                             ) : (
                               <Input
                                 type="text"
-                                inputMode="decimal"
-                                value={formIslemHacmiMap[record.id] ? formatCurrency(formIslemHacmiMap[record.id]) : ''}
-                                onChange={(e) => handleIslemHacmiChange(record.id, e.target.value)}
-                                placeholder="0,00 ₺"
-                                className="w-40 text-right bg-white"
+                                value={ekGelirAciklama}
+                                onChange={(e) => setEkGelirAciklama(e.target.value)}
+                                placeholder="Açıklama (örn: Merchant Fee)"
+                                className="w-full text-sm bg-white"
                               />
                             )}
                           </TableCell>
                         )}
-                        
-                        {/* Beyaz zemin: Hesaplanan değerler */}
-                        <TableCell className="text-right">
-                          <span className={`text-sm ${islemHacmi > 0 ? 'text-blue-700' : 'text-gray-400'}`}>
-                            {pfPayi.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <span className={`text-sm ${islemHacmi > 0 ? 'text-indigo-700' : 'text-gray-400'}`}>
-                            {oxPayi.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-
-                  {/* EK GELİR TOPLAM Satırı */}
-                  <TableRow className="bg-gradient-to-r from-purple-100 to-purple-50 border-t-2 border-purple-300">
-                    <TableCell 
-                      colSpan={Object.values(visibleEkGelirColumns).filter(Boolean).length - 1}
-                      className="text-right"
-                    >
-                      <strong className="text-purple-900">EK GELİR TOPLAM</strong>
-                    </TableCell>
-                    {visibleEkGelirColumns.islemHacmi && (
-                      <TableCell className="bg-green-100 text-right">
-                        <strong className="text-green-800">
-                          {totals.ekGelirTotals.totalIslemHacmi.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
-                        </strong>
-                      </TableCell>
-                    )}
-                    <TableCell className="bg-blue-100 text-right">
-                      <strong className="text-blue-800">
-                        {totals.ekGelirTotals.totalPFTL.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
-                      </strong>
-                    </TableCell>
-                    <TableCell className="bg-indigo-100 text-right">
-                      {view === 'view' ? (
-                        <div className="flex flex-col items-end gap-1">
-                          <strong className="text-indigo-800">
-                            {(manualEkGelirOxivoTotal ? parseFloat(manualEkGelirOxivoTotal) : totals.ekGelirTotals.totalOXTL).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
-                          </strong>
-                          {manualEkGelirOxivoTotal && (
-                            <span className="text-xs text-indigo-600">
-                              (Manuel Değer)
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 justify-end">
-                          <div className="flex flex-col gap-1 flex-1">
-                            <Input
-                              type="text"
-                              inputMode="decimal"
-                              value={manualEkGelirOxivoTotal ? formatCurrency(manualEkGelirOxivoTotal) : ''}
-                              onChange={(e) => {
-                                const value = e.target.value;
-                                if (value === '') {
-                                  setManualEkGelirOxivoTotal('');
-                                  return;
-                                }
-                                const numericValue = parseCurrency(value);
-                                const sanitized = numericValue.replace(/[^0-9.]/g, '');
-                                if (sanitized && !isNaN(parseFloat(sanitized))) {
-                                  setManualEkGelirOxivoTotal(sanitized);
-                                }
-                              }}
-                              placeholder={`Otomatik: ${totals.ekGelirTotals.totalOXTL.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺`}
-                              className="w-44 text-right bg-white text-sm"
-                              onFocus={(e) => {
-                                if (manualEkGelirOxivoTotal) {
-                                  const num = parseFloat(manualEkGelirOxivoTotal);
-                                  e.target.value = num.toFixed(2).replace('.', ',');
-                                }
-                              }}
-                              onBlur={(e) => {
-                                if (manualEkGelirOxivoTotal) {
-                                  e.target.value = formatCurrency(manualEkGelirOxivoTotal);
-                                }
-                              }}
-                            />
-                            {manualEkGelirOxivoTotal && (
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="text-indigo-600">
-                                  Otomatik: {totals.ekGelirTotals.totalOXTL.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() => setManualEkGelirOxivoTotal('')}
-                                  className="text-red-600 hover:text-red-800 underline"
-                                >
-                                  Temizle
-                                </button>
-                              </div>
+                        {visibleColumns.vade && <TableCell></TableCell>}
+                        {visibleColumns.kazancTL && (
+                          <TableCell className="text-right">
+                            {view === 'view' ? (
+                              <span className="text-green-700">
+                                {ekGelirPFTL ? `${(ekGelirPFTL || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺` : '—'}
+                              </span>
+                            ) : (
+                              <Input
+                                type="number"
+                                value={ekGelirPFTL}
+                                onChange={(e) => setEkGelirPFTL(e.target.value ? parseFloat(e.target.value) : '')}
+                                placeholder="0,00"
+                                className="w-32 text-right text-sm bg-white"
+                                step="0.01"
+                              />
                             )}
-                          </div>
-                        </div>
-                      )}
-                    </TableCell>
-                  </TableRow>
+                          </TableCell>
+                        )}
+                        {visibleColumns.oxivoPayi && (
+                          <TableCell className="text-right">
+                            {view === 'view' ? (
+                              <span className="text-green-700">
+                                {ekGelirOXTL ? `${(ekGelirOXTL || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺` : '—'}
+                              </span>
+                            ) : (
+                              <Input
+                                type="number"
+                                value={ekGelirOXTL}
+                                onChange={(e) => setEkGelirOXTL(e.target.value ? parseFloat(e.target.value) : '')}
+                                placeholder="0,00"
+                                className="w-32 text-right text-sm bg-white"
+                                step="0.01"
+                              />
+                            )}
+                          </TableCell>
+                        )}
+                        <TableCell className="text-center text-xs text-green-600">Ek Gelir</TableCell>
+                      </TableRow>
+
+                      {/* ═══════════════════════════════════════════════════════════ */}
+                      {/* EK KESİNTİ SATIRI */}
+                      {/* ═══════════════════════════════════════════════════════════ */}
+                      <TableRow className="bg-red-50 border-t border-red-300">
+                        <TableCell colSpan={visibleColumns.klm ? 1 : 0}></TableCell>
+                        {visibleColumns.grup && <TableCell></TableCell>}
+                        {visibleColumns.kisaAciklama && <TableCell></TableCell>}
+                        {visibleColumns.urun && <TableCell></TableCell>}
+                        {visibleColumns.gelirModeli && <TableCell></TableCell>}
+                        {visibleColumns.kartProg && <TableCell></TableCell>}
+                        {visibleColumns.kullanim && <TableCell></TableCell>}
+                        {visibleColumns.kartTipi && <TableCell></TableCell>}
+                        {visibleColumns.islemHacmi && (
+                          <TableCell className="text-left">
+                            {view === 'view' ? (
+                              <span className="text-red-700">{ekKesintiAciklama || '—'}</span>
+                            ) : (
+                              <Input
+                                type="text"
+                                value={ekKesintiAciklama}
+                                onChange={(e) => setEkKesintiAciklama(e.target.value)}
+                                placeholder="Açıklama (örn: Ceza kesintisi)"
+                                className="w-full text-sm bg-white"
+                              />
+                            )}
+                          </TableCell>
+                        )}
+                        {visibleColumns.vade && <TableCell></TableCell>}
+                        {visibleColumns.kazancTL && (
+                          <TableCell className="text-right">
+                            {view === 'view' ? (
+                              <span className="text-red-700">
+                                {ekKesintiPFTL ? `${(ekKesintiPFTL || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺` : '—'}
+                              </span>
+                            ) : (
+                              <Input
+                                type="number"
+                                value={ekKesintiPFTL}
+                                onChange={(e) => setEkKesintiPFTL(e.target.value ? parseFloat(e.target.value) : '')}
+                                placeholder="0,00"
+                                className="w-32 text-right text-sm bg-white"
+                                step="0.01"
+                              />
+                            )}
+                          </TableCell>
+                        )}
+                        {visibleColumns.oxivoPayi && (
+                          <TableCell className="text-right">
+                            {view === 'view' ? (
+                              <span className="text-red-700">
+                                {ekKesintiOXTL ? `${(ekKesintiOXTL || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺` : '—'}
+                              </span>
+                            ) : (
+                              <Input
+                                type="number"
+                                value={ekKesintiOXTL}
+                                onChange={(e) => setEkKesintiOXTL(e.target.value ? parseFloat(e.target.value) : '')}
+                                placeholder="0,00"
+                                className="w-32 text-right text-sm bg-white"
+                                step="0.01"
+                              />
+                            )}
+                          </TableCell>
+                        )}
+                        <TableCell className="text-center text-xs text-red-600">Ek Kesinti</TableCell>
+                      </TableRow>
+
+                      {/* ═══════════════════════════════════════════════════════════ */}
+                      {/* ANA TABELA TOPLAM SATIRI */}
+                      {/* ═══════════════════════════════════════════════════════════ */}
+                      <TableRow className="bg-purple-100 border-t-4 border-purple-500">
+                        <TableCell colSpan={visibleColumns.klm ? 1 : 0}></TableCell>
+                        {visibleColumns.grup && <TableCell></TableCell>}
+                        {visibleColumns.kisaAciklama && <TableCell></TableCell>}
+                        {visibleColumns.urun && <TableCell></TableCell>}
+                        {visibleColumns.gelirModeli && <TableCell></TableCell>}
+                        {visibleColumns.kartProg && <TableCell></TableCell>}
+                        {visibleColumns.kullanim && <TableCell></TableCell>}
+                        {visibleColumns.kartTipi && <TableCell></TableCell>}
+                        {visibleColumns.islemHacmi && <TableCell className="text-center font-bold text-purple-900">ANA TABELA TOPLAM</TableCell>}
+                        {visibleColumns.vade && <TableCell></TableCell>}
+                        {visibleColumns.kazancTL && (
+                          <TableCell className="text-right">
+                            <strong className="text-purple-900 text-base">
+                              {(totals.normalTotals.totalKazanc + (ekGelirPFTL || 0) - (ekKesintiPFTL || 0)).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
+                            </strong>
+                          </TableCell>
+                        )}
+                        {visibleColumns.oxivoPayi && (
+                          <TableCell className="text-right">
+                            <strong className="text-purple-900 text-base">
+                              {((manualAnaTabelaOxivoTotal ? parseFloat(manualAnaTabelaOxivoTotal) : totals.normalTotals.totalOxivoPay) + (ekGelirOXTL || 0) - (ekKesintiOXTL || 0)).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
+                            </strong>
+                          </TableCell>
+                        )}
+                        <TableCell></TableCell>
+                      </TableRow>
                 </TableBody>
               </Table>
             </div>
@@ -2622,23 +2352,25 @@ export function HakedisTab({
         
         <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-300">
           <CardContent className="pt-6 text-center">
-            <div className="text-sm text-green-800 mb-1">Toplam Kazanç</div>
+            <div className="text-sm text-green-800 mb-1">Toplam Kazanç (Tabela)</div>
             <div className="text-2xl text-green-900">{totals.normalTotals.totalKazanc.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺</div>
           </CardContent>
         </Card>
         
         <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-300">
           <CardContent className="pt-6 text-center">
-            <div className="text-sm text-blue-800 mb-1">Toplam PF Payı</div>
-            <div className="text-2xl text-blue-900">{totals.normalTotals.totalPFPay.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺</div>
+            <div className="text-sm text-blue-800 mb-1">ANA TABELA TOPLAM (PF Payı)</div>
+            <div className="text-2xl text-blue-900">
+              {(totals.normalTotals.totalPFPay + (ekGelirPFTL || 0) - (ekKesintiPFTL || 0)).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
+            </div>
           </CardContent>
         </Card>
         
         <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-300">
           <CardContent className="pt-6 text-center">
-            <div className="text-sm text-indigo-800 mb-1">Toplam OXİVO Payı</div>
+            <div className="text-sm text-indigo-800 mb-1">ANA TABELA TOPLAM (OXİVO Payı)</div>
             <div className="text-2xl text-indigo-900">
-              {(manualAnaTabelaOxivoTotal ? parseFloat(manualAnaTabelaOxivoTotal) : totals.normalTotals.totalOxivoPay).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
+              {((manualAnaTabelaOxivoTotal ? parseFloat(manualAnaTabelaOxivoTotal) : totals.normalTotals.totalOxivoPay) + (ekGelirOXTL || 0) - (ekKesintiOXTL || 0)).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
             </div>
             {manualAnaTabelaOxivoTotal && (
               <div className="text-xs text-indigo-700 mt-1">
@@ -2661,7 +2393,7 @@ export function HakedisTab({
                   <li><strong>Gelir Ortaklığı:</strong> Kazanç = (İşlem Hacmi × Satış %) - (İşlem Hacmi × Alış %)</li>
                   <li><strong>Sabit Komisyon:</strong> Maliyet = İşlem Hacmi × Komisyon %</li>
                   <li><strong>Hazne Geliri:</strong> Kazanç = (İşlem Sayısı × Birim Tutar) × OXİVO %</li>
-                  <li><strong>Ek Gelir:</strong> Tutar = İşlem Hacmi × Birim Tutar, PF/OX payları hesaplanır</li>
+                  <li><strong>Ek Gelir/Kesinti:</strong> Ana TABELA tablosunun altında manuel giriş olarak eklenir</li>
                   <li><strong>Paylaşım:</strong> PF/OXİVO payları kazanç üzerinden hesaplanır</li>
                   <li><strong>Grup:</strong> Sadece "{tabelaGroups.find(g => g.id === formTabelaGroupId)?.name}" grubuna ait aktif TABELA kayıtları gösteriliyor</li>
                 </ul>
