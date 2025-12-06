@@ -1,4 +1,5 @@
 import { Switch } from './ui/switch';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
 import { Plus, Pencil, Trash2, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -629,7 +630,7 @@ export function TabelaTab({
                     currentStep === 2 ? 'Gelir modeli seçiniz' :
                     currentStep === 3 ? 'Ek gelir bilgilerini giriniz (opsiyonel)' :
                     currentStep === 4 ? 'Yurt içi/dışı belirleyiniz' :
-                    'Son adım: Kart tipi veya hazine geliri bilgilerini giriniz'
+                    'Son adım: Kart tipi seçiniz'
                   }`
               }
             </DialogDescription>
@@ -1011,95 +1012,38 @@ export function TabelaTab({
               </div>
             )}
 
-            {/* Step 5: Hazine Geliri Hesaplama / Kart Tipi */}
-            {currentStep === 5 && (() => {
-              const selectedGelirModeli = aktifGelirModelleri.find(g => g.id === gelirModeliId);
-              const isHazineGeliri = selectedGelirModeli?.ad === 'Hazine Geliri';
-              
-              return (
+            {/* Step 5: Kart Tipi Seçimi */}
+            {currentStep === 5 && (
               <div className="space-y-4">
                 <h4 className="text-lg font-semibold">
-                  Adım 5/5: {isHazineGeliri ? 'Hazine Geliri Hesaplama' : 'Kart Tipi Seçimi'}
+                  Adım 5/5: Kart Tipi Seçimi
                 </h4>
                 <p className="text-sm text-gray-600">
-                  {isHazineGeliri 
-                    ? 'Hazine geliri tutarı ve OXİVO payını belirleyiniz' 
-                    : 'İşlemlerde kullanılacak kart tipini seçiniz'}
+                  İşlemlerde kullanılacak kart tipini seçiniz
                 </p>
 
-                {isHazineGeliri ? (
-                  // Hazine Geliri Formu
-                  <div className="space-y-4">
-                    <div className="bg-purple-50 border border-purple-200 rounded p-4">
-                      <div className="grid grid-cols-3 gap-4">
-                        <div className="space-y-2">
-                          <Label className="text-sm">Tutar TL</Label>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            placeholder="0,00 TL"
-                            value={hazineGeliri.tutarTL}
-                            onChange={e => handleHazineTutarTLChange(e.target.value)}
-                            className="bg-white"
-                          />
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label className="text-sm">OXiVO %</Label>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            placeholder="%0.00"
-                            value={hazineGeliri.oxivoYuzde}
-                            onChange={e => handleHazineOxivoYuzdeChange(e.target.value)}
-                            className="bg-white"
-                          />
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label className="text-sm">Kazanç TL</Label>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            placeholder="0,00 TL"
-                            value={hazineGeliri.kazancTL}
-                            onChange={e => handleHazineKazancTLChange(e.target.value)}
-                            className="bg-white"
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="mt-4 bg-blue-50 border border-blue-200 rounded p-3 text-sm text-blue-700">
-                        💡 İpucu: OXiVO % veya Kazanç TL alanlarından birini girdiğinizde, diğeri otomatik hesaplanır.
-                      </div>
+                <div className="space-y-2">
+                  <ModernFormSelect
+                    label="Kart Tipi"
+                    options={[
+                      { value: 'Credit', label: 'Credit', description: 'Kredi kartı işlemleri' },
+                      { value: 'Debit', label: 'Debit', description: 'Banka kartı işlemleri' },
+                      { value: 'Paçal', label: 'Paçal', description: 'Tüm kart tipleri (birleşik)' }
+                    ]}
+                    value={kartTipi}
+                    onChange={v => setKartTipi(v as 'Credit' | 'Debit' | 'Paçal')}
+                    placeholder="Kart tipi seçiniz"
+                    required
+                  />
+                  
+                  {kartTipi && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700">
+                      💡 Seçilen: <strong>{kartTipi}</strong>
                     </div>
-                  </div>
-                ) : (
-                  // Kart Tipi Seçimi (Diğer gelir modelleri için)
-                  <div className="space-y-2">
-                    <ModernFormSelect
-                      label="Kart Tipi"
-                      options={[
-                        { value: 'Credit', label: 'Credit', description: 'Kredi kartı işlemleri' },
-                        { value: 'Debit', label: 'Debit', description: 'Banka kartı işlemleri' },
-                        { value: 'Paçal', label: 'Paçal', description: 'Tüm kart tipleri (birleşik)' }
-                      ]}
-                      value={kartTipi}
-                      onChange={v => setKartTipi(v as 'Credit' | 'Debit' | 'Paçal')}
-                      placeholder="Kart tipi seçiniz"
-                      required
-                    />
-                    
-                    {kartTipi && (
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700">
-                        💡 Seçilen: <strong>{kartTipi}</strong>
-                      </div>
-                    )}
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-              );
-            })}
+            )}
 
 
           </div>
