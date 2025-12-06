@@ -191,14 +191,10 @@ export const templateApi = {
 export const transactionApi = {
   // Tüm işlemleri listele
   async list(filters?: { status?: string; customer_id?: string }) {
-    // İlk olarak JOIN ile dene
+    // ✅ FIX: Basit query kullan (JOIN requires foreign key relationships)
     let query = supabase
       .from('contract_transactions')
-      .select(`
-        *,
-        customers(unvan, vergi_no),
-        contract_transaction_documents(id)
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
 
     if (filters?.status) {
@@ -210,121 +206,75 @@ export const transactionApi = {
 
     const { data, error } = await query;
     
-    // Eğer JOIN hatası varsa (400 Bad Request), fallback yap
     if (error) {
-      console.warn('⚠️ [contractApi] JOIN query failed, falling back to simple query:', error.message);
-      
-      // Fallback: JOIN olmadan basit query
-      let fallbackQuery = supabase
-        .from('contract_transactions')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (filters?.status) {
-        fallbackQuery = fallbackQuery.eq('status', filters.status);
-      }
-      if (filters?.customer_id) {
-        fallbackQuery = fallbackQuery.eq('customer_id', filters.customer_id);
-      }
-
-      const { data: fallbackData, error: fallbackError } = await fallbackQuery;
-      if (fallbackError) throw fallbackError;
-      
-      // Basit veri döndür (JOIN yok)
-      return (fallbackData || []).map((tx: any) => ({
-        ...tx,
-        customers: null, // JOIN başarısız oldu
-        contract_transaction_documents: [],
-        document_count: 0,
-      }));
+      console.error('❌ [contractApi] Query failed:', error.message);
+      throw error;
     }
     
-    // Doküman sayısını ekle
+    // ✅ Basit veri döndür (JOIN yok - foreign key relationships kurulmamış)
     return (data || []).map((tx: any) => ({
       ...tx,
-      document_count: tx.contract_transaction_documents?.length || 0,
+      customers: null, // TODO: Foreign key relationship kurulduktan sonra JOIN eklenebilir
+      contract_transaction_documents: [],
+      document_count: 0,
     }));
   },
 
   // Tek işlem getir (dökümanlar ile birlikte)
   async get(id: string) {
+    // ✅ FIX: Basit query kullan (JOIN requires foreign key relationships)
     const { data: transaction, error: txError } = await supabase
       .from('contract_transactions')
-      .select('*, customers(unvan, vergi_no, adres, telefon, email)')
+      .select('*')
       .eq('id', id)
       .single();
+    
+    if (txError) throw txError;
 
-    if (txError) {
-      // Fallback: JOIN olmadan basit query
-      console.warn('⚠️ [contractApi.get] JOIN query failed, using fallback');
-      const { data: fallbackTx, error: fallbackError } = await supabase
-        .from('contract_transactions')
-        .select('*')
-        .eq('id', id)
-        .single();
-      
-      if (fallbackError) throw fallbackError;
-      
-      const { data: documents, error: docError } = await supabase
-        .from('contract_transaction_documents')
-        .select('*')
-        .eq('transaction_id', id)
-        .order('display_order', { ascending: true });
-
-      return {
-        ...fallbackTx,
-        customers: null,
-        documents: documents || [],
-      };
-    }
-
+    // Dökümanları ayrı sorgula
     const { data: documents, error: docError } = await supabase
       .from('contract_transaction_documents')
-      .select('*, contract_templates(name, category)')
+      .select('*')
       .eq('transaction_id', id)
       .order('display_order', { ascending: true });
 
     if (docError) {
-      // Fallback for documents JOIN
-      const { data: fallbackDocs } = await supabase
-        .from('contract_transaction_documents')
-        .select('*')
-        .eq('transaction_id', id)
-        .order('display_order', { ascending: true });
-      
-      return {
-        ...transaction,
-        documents: fallbackDocs || [],
-      };
+      console.warn('⚠️ [contractApi.get] Documents query failed:', docError.message);
     }
 
     return {
       ...transaction,
-      documents,
+      customers: null, // TODO: Foreign key relationship kurulduktan sonra eklenebilir
+      documents: documents || [],
     };
   },
 
   // Token ile getir (public endpoint için)
   async getByToken(token: string) {
+    // ✅ FIX: Basit query kullan (JOIN requires foreign key relationships)
     const { data: transaction, error: txError } = await supabase
       .from('contract_transactions')
-      .select('*, customers(unvan, vergi_no, adres, telefon)')
+      .select('*')
       .eq('unique_token', token)
       .single();
 
     if (txError) throw txError;
 
+    // Dökümanları ayrı sorgula
     const { data: documents, error: docError } = await supabase
       .from('contract_transaction_documents')
-      .select('*, contract_templates(name, category, requires_hard_copy)')
+      .select('*')
       .eq('transaction_id', transaction.id)
       .order('display_order', { ascending: true });
 
-    if (docError) throw docError;
+    if (docError) {
+      console.warn('⚠️ [contractApi.getByToken] Documents query failed:', docError.message);
+    }
 
     return {
       ...transaction,
-      documents,
+      customers: null, // TODO: Foreign key relationship kurulduktan sonra eklenebilir
+      documents: documents || [],
     };
   },
 
@@ -530,7 +480,7 @@ export const transactionApi = {
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // DOCUMENT API
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━���━━━━━━━━━━━━━━━━━━━
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 export const documentApi = {
   // Döküman oluştur
@@ -567,14 +517,19 @@ export const documentApi = {
 
   // İşleme ait tüm dökümanları getir
   async listByTransaction(transactionId: string) {
+    // ✅ FIX: Basit query kullan (JOIN requires foreign key relationships)
     const { data, error } = await supabase
       .from('contract_transaction_documents')
-      .select('*, contract_templates(name, category)')
+      .select('*')
       .eq('transaction_id', transactionId)
       .order('display_order', { ascending: true });
 
-    if (error) throw error;
-    return data;
+    if (error) {
+      console.warn('⚠️ [documentApi.listByTransaction] Query failed:', error.message);
+      throw error;
+    }
+    
+    return data || [];
   },
 };
 
