@@ -17,7 +17,7 @@ import { TabelaRecord, TabelaGroup } from './TabelaTab';
 import { EkGelir } from './RevenueModelsTab';
 import { kisaltUrunAdi } from '../utils/formatters';
 import { TabelaFormData, GroupFormData, FirmaTabelaTabProps } from './tabela/types';
-import { TabelaGroupDialog } from './tabela/TabelaGroupDialog';
+import TabelaGroupDialog from './tabela/TabelaGroupDialog';
 
 // ✅ Vade listesi
 const DEFAULT_VADE_LISTESI = [

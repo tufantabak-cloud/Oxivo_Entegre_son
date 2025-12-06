@@ -1,5 +1,4 @@
 // TABELA Grup Dialog Bileşeni
-import React from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Label } from '../ui/label';
@@ -8,7 +7,7 @@ import { Switch } from '../ui/switch';
 import { Badge } from '../ui/badge';
 import { TabelaGroupDialogProps } from './types';
 
-export function TabelaGroupDialog({
+export default function TabelaGroupDialog({
   isOpen,
   onClose,
   groupFormData,
