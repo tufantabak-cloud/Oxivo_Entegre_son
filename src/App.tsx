@@ -70,7 +70,8 @@ import {
   kartProgramApi,
   suspensionReasonApi,
   domainMappingApi,
-  signApi
+  signApi,
+  earningsApi
 } from './utils/supabaseClient';
 
 // ⚡ PHASE 3: Code Splitting - Lazy load heavy modules
@@ -337,6 +338,7 @@ export default function App() {
   const [bankPFRecords, setBankPFRecords] = useState<BankPF[]>([]);
   const [domainMappings, setDomainMappings] = useState<any[]>([]);
   const [signs, setSigns] = useState<any[]>([]);
+  const [earnings, setEarnings] = useState<any[]>([]);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [supabaseDataLoaded, setSupabaseDataLoaded] = useState(false);
   
@@ -364,7 +366,8 @@ export default function App() {
           kartProgramResult,
           suspensionReasonResult,
           domainMappingsResult,
-          signsResult
+          signsResult,
+          earningsResult
         ] = await Promise.all([
           customerApi.getAll(),
           productApi.getAll(),
@@ -380,7 +383,8 @@ export default function App() {
           kartProgramApi.getAll(),
           suspensionReasonApi.getAll(),
           domainMappingApi.getAll(),
-          signApi.getAll()
+          signApi.getAll(),
+          earningsApi.getAll()
         ]);
         
         // ✅ Only update state if component is still mounted
@@ -474,6 +478,11 @@ export default function App() {
         if (signsResult.success && signsResult.data) {
           setSigns(signsResult.data);
           logger.info(`✅ Loaded ${signsResult.data.length} signs from Supabase`);
+        }
+        
+        if (earningsResult.success && earningsResult.data) {
+          setEarnings(earningsResult.data);
+          logger.info(`✅ Loaded ${earningsResult.data.length} earnings from Supabase`);
         }
         
         setSupabaseDataLoaded(true);
@@ -633,6 +642,26 @@ export default function App() {
       
       setBankPFRecords(processedRecords);
       
+      // Load Signs (TABELA) from localStorage
+      const storedSigns = getStoredData<any[]>('signs', []);
+      const safeSigns = Array.isArray(storedSigns) ? storedSigns : [];
+      if (safeSigns.length > 0) {
+        setSigns(safeSigns);
+        logger.debug('Signs (TABELA) yüklendi (localStorage fallback)', {
+          total: safeSigns.length
+        });
+      }
+      
+      // Load Earnings (HAKEDİŞ) from localStorage
+      const storedEarnings = getStoredData<any[]>('earnings', []);
+      const safeEarnings = Array.isArray(storedEarnings) ? storedEarnings : [];
+      if (safeEarnings.length > 0) {
+        setEarnings(safeEarnings);
+        logger.debug('Earnings (HAKEDİŞ) yüklendi (localStorage fallback)', {
+          total: safeEarnings.length
+        });
+      }
+      
       // Auto-fix removed - Legacy recovery utils deleted
       
       setDataLoaded(true);
@@ -672,6 +701,10 @@ export default function App() {
   useEffect(() => { 
     if (dataLoaded) setStoredData('signs', signs); 
   }, [signs, dataLoaded]);
+  
+  useEffect(() => { 
+    if (dataLoaded) setStoredData('earnings', earnings); 
+  }, [earnings, dataLoaded]);
 
   // ✅ NEW: Auto-sync ALL data types to Supabase (runs when ANY data changes)
   useEffect(() => {
@@ -716,7 +749,8 @@ export default function App() {
         kartProgram: kartProgramlar,
         suspensionReason: suspensionReasons,
         domainMappings: domainMappings,
-        signs: signs
+        signs: signs,
+        earnings: earnings
       });
     }, 2000);
 
@@ -740,6 +774,7 @@ export default function App() {
     suspensionReasons,
     domainMappings,
     signs,
+    earnings,
     dataLoaded
   ]);
 
@@ -1179,6 +1214,138 @@ export default function App() {
       supabase.removeChannel(signsChannel);
     };
   }, [dataLoaded]);
+
+  // 📥 REAL-TIME: Earnings değişikliklerini dinle
+  useEffect(() => {
+    if (!dataLoaded || !FeatureFlags.ENABLE_REALTIME_SYNC) return;
+    
+    debugLog('🔄 Starting real-time subscription for Earnings...');
+    
+    const earningsChannel = supabase
+      .channel('earnings-realtime')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'earnings' },
+        async (payload) => {
+          debugLog('📥 Hakediş değişikliği algılandı:', payload);
+          try {
+            const { data } = await earningsApi.getAll();
+            if (data) {
+              setEarnings(data);
+              debugLog('✅ Hakediş listesi güncellendi:', data.length, 'kayıt');
+            }
+          } catch (error) {
+            debugError('❌ Hakediş listesi güncellenirken hata:', error);
+          }
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      debugLog('🛑 Earnings real-time subscription kapatılıyor...');
+      supabase.removeChannel(earningsChannel);
+    };
+  }, [dataLoaded]);
+
+  // ✅ SYNC: Signs -> BankPFRecords tabelaRecords senkronizasyonu
+  useEffect(() => {
+    if (!signs || signs.length === 0 || !bankPFRecords || bankPFRecords.length === 0) return;
+    
+    debugLog('🔄 Syncing signs to bankPFRecords.tabelaRecords...', {
+      signsCount: signs.length,
+      bankPFCount: bankPFRecords.length
+    });
+
+    // Her firma için signs'dan ilgili tabelaRecords'u filtrele ve ekle
+    const updatedBankPFRecords = bankPFRecords.map(firma => {
+      const firmaSigns = signs.filter((sign: any) => sign.firmaId === firma.id);
+      
+      if (firmaSigns.length > 0) {
+        debugLog(`✅ Firma ${firma.firmaUnvan} için ${firmaSigns.length} TABELA kaydı bulundu`);
+        return {
+          ...firma,
+          tabelaRecords: firmaSigns
+        };
+      }
+      
+      return firma;
+    });
+
+    setBankPFRecords(updatedBankPFRecords);
+    debugLog('✅ Signs -> BankPFRecords senkronizasyonu tamamlandı');
+  }, [signs]);
+
+  // ✅ SYNC: BankPFRecords tabelaRecords -> Signs (ters yön senkronizasyonu)
+  useEffect(() => {
+    if (!bankPFRecords || bankPFRecords.length === 0) return;
+    
+    // Tüm firmalardan tabelaRecords'u topla
+    const allTabelaRecords: any[] = [];
+    bankPFRecords.forEach(firma => {
+      if (firma.tabelaRecords && firma.tabelaRecords.length > 0) {
+        allTabelaRecords.push(...firma.tabelaRecords);
+      }
+    });
+
+    if (allTabelaRecords.length > 0) {
+      setSigns(allTabelaRecords);
+      debugLog('✅ BankPFRecords -> Signs senkronizasyonu tamamlandı', {
+        totalRecords: allTabelaRecords.length
+      });
+    }
+  }, [bankPFRecords]);
+
+  // ✅ SYNC: Earnings -> BankPFRecords hakedisRecords senkronizasyonu
+  useEffect(() => {
+    if (!earnings || earnings.length === 0 || !bankPFRecords || bankPFRecords.length === 0) return;
+    
+    debugLog('🔄 Syncing earnings to bankPFRecords.hakedisRecords...', {
+      earningsCount: earnings.length,
+      bankPFCount: bankPFRecords.length
+    });
+
+    // Her firma için earnings'dan ilgili hakedisRecords'u filtrele ve ekle
+    const updatedBankPFRecords = bankPFRecords.map(firma => {
+      const firmaEarnings = earnings.filter((earning: any) => earning.firmaId === firma.id);
+      
+      if (firmaEarnings.length > 0) {
+        debugLog(`✅ Firma ${firma.firmaUnvan} için ${firmaEarnings.length} HAKEDİŞ kaydı bulundu`);
+        return {
+          ...firma,
+          hakedisRecords: firmaEarnings
+        };
+      }
+      
+      return firma;
+    });
+
+    setBankPFRecords(updatedBankPFRecords);
+    debugLog('✅ Earnings -> BankPFRecords senkronizasyonu tamamlandı');
+  }, [earnings]);
+
+  // ✅ SYNC: BankPFRecords hakedisRecords -> Earnings (ters yön senkronizasyonu)
+  useEffect(() => {
+    if (!bankPFRecords || bankPFRecords.length === 0) return;
+    
+    // Tüm firmalardan hakedisRecords'u topla
+    const allHakedisRecords: any[] = [];
+    bankPFRecords.forEach(firma => {
+      if (firma.hakedisRecords && firma.hakedisRecords.length > 0) {
+        // Her hakediş kaydına firmaId ekle
+        const recordsWithFirmaId = firma.hakedisRecords.map(h => ({
+          ...h,
+          firmaId: firma.id
+        }));
+        allHakedisRecords.push(...recordsWithFirmaId);
+      }
+    });
+
+    if (allHakedisRecords.length > 0) {
+      setEarnings(allHakedisRecords);
+      debugLog('✅ BankPFRecords -> Earnings senkronizasyonu tamamlandı', {
+        totalRecords: allHakedisRecords.length
+      });
+    }
+  }, [bankPFRecords]);
 
   // 📥 REAL-TIME: Customers değişikliklerini dinle
   useEffect(() => {
@@ -2149,7 +2316,7 @@ export default function App() {
                 }`}
               >
                 <Home size={13} />
-                <span>Ana</span>
+                <span className="text-[11px]" className="text-[12px]" className="text-[13px]" className="text-[14px]">Ana</span>
               </Button>
               
               <Button
@@ -2163,7 +2330,7 @@ export default function App() {
                 }`}
               >
                 <FileText size={13} />
-                <span>Rapor</span>
+                <span className="text-[14px]">Rapor</span>
               </Button>
               
               <Button
@@ -2177,7 +2344,7 @@ export default function App() {
                 }`}
               >
                 <Users size={13} />
-                <span>Müşteri</span>
+                <span className="text-[11px]" className="text-[12px]" className="text-[13px]" className="text-[14px]">Müşteri</span>
               </Button>
               
               <Button
@@ -2191,7 +2358,7 @@ export default function App() {
                 }`}
               >
                 <Building2 size={13} />
-                <span>Banka</span>
+                <span className="text-[14px]">Banka</span>
               </Button>
               
               <Button
@@ -2205,7 +2372,7 @@ export default function App() {
                 }`}
               >
                 <Package size={13} />
-                <span>Ürün</span>
+                <span className="text-[13px]">Ürün</span>
               </Button>
               
               <Button
@@ -2219,7 +2386,7 @@ export default function App() {
                 }`}
               >
                 <Euro size={13} />
-                <span>Gelir</span>
+                <span className="text-[11px]" className="text-[12px]" className="text-[13px]" className="text-[14px]">Gelir</span>
               </Button>
               
               <Button
@@ -2233,7 +2400,7 @@ export default function App() {
                 }`}
               >
                 <Settings size={13} />
-                <span>Tanım</span>
+                <span className="text-[14px]" className="text-[12px]" className="text-[13px]">Tanım</span>
               </Button>
               
               <Button

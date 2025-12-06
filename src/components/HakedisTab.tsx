@@ -16,6 +16,7 @@ import { HakedisRecord } from './BankPFModule';
 import { Calendar, Download, Printer, Calculator, Plus, Eye, Edit, Trash2, Save, Archive, FileText, Columns3, Info, HelpCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { kisaltUrunAdi } from '../utils/formatters';
+import { earningsApi } from '../utils/supabaseClient';
 
 interface HakedisTabProps {
   tabelaRecords: TabelaRecord[];
@@ -239,7 +240,7 @@ export function HakedisTab({
   };
 
   // Hakediş kaydetme (yeni veya düzenleme)
-  const handleSave = (durum: 'Taslak' | 'Kesinleşmiş' = formDurum) => {
+  const handleSave = async (durum: 'Taslak' | 'Kesinleşmiş' = formDurum) => {
     // Kesinleştirme sırasında manuel değer uyarısı
     if (durum === 'Kesinleşmiş') {
       const hasManualValues = manualAnaTabelaIslemHacmi || manualAnaTabelaOxivoTotal || manualEkGelirOxivoTotal;
@@ -291,6 +292,20 @@ export function HakedisTab({
       } as any;
       
       onHakedisRecordsChange([...hakedisRecords, newHakedis]);
+      
+      // ✅ Supabase'e kaydet
+      try {
+        const result = await earningsApi.create(newHakedis);
+        if (result.success) {
+          console.log(`✅ Hakediş kaydı Supabase'e kaydedildi: ${newHakedis.id}`);
+        } else {
+          console.warn(`⚠️ Hakediş Supabase'e kaydedilemedi: ${result.error}`);
+          toast.warning('Kayıt yerel olarak kaydedildi ancak Supabase senkronizasyonu başarısız');
+        }
+      } catch (error) {
+        console.error('❌ Hakediş Supabase kayıt hatası:', error);
+      }
+      
       toast.success(`${formDonem} dönemi hakediş kaydı ${durum === 'Taslak' ? 'taslak olarak' : ''} oluşturuldu`);
       setView('list');
     } else if (view === 'edit' && selectedHakedis) {
@@ -329,6 +344,20 @@ export function HakedisTab({
       onHakedisRecordsChange(
         hakedisRecords.map(h => h.id === selectedHakedis.id ? updatedHakedis : h)
       );
+      
+      // ✅ Supabase'e kaydet
+      try {
+        const result = await earningsApi.create(updatedHakedis);
+        if (result.success) {
+          console.log(`✅ Hakediş kaydı Supabase'de güncellendi: ${updatedHakedis.id}`);
+        } else {
+          console.warn(`⚠️ Hakediş Supabase'de güncellenemedi: ${result.error}`);
+          toast.warning('Kayıt yerel olarak güncellendi ancak Supabase senkronizasyonu başarısız');
+        }
+      } catch (error) {
+        console.error('❌ Hakediş Supabase güncelleme hatası:', error);
+      }
+      
       toast.success(`${formDonem} dönemi hakediş kaydı ${durum === 'Taslak' ? 'taslak olarak' : ''} güncellendi`);
       setView('list');
     }
@@ -340,9 +369,22 @@ export function HakedisTab({
     setDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (hakedisToDelete) {
       onHakedisRecordsChange(hakedisRecords.filter(h => h.id !== hakedisToDelete.id));
+      
+      // ✅ Supabase'den sil
+      try {
+        const result = await earningsApi.delete(hakedisToDelete.id);
+        if (result.success) {
+          console.log(`✅ Hakediş kaydı Supabase'den silindi: ${hakedisToDelete.id}`);
+        } else {
+          console.warn(`⚠️ Hakediş Supabase'den silinemedi: ${result.error}`);
+        }
+      } catch (error) {
+        console.error('❌ Hakediş Supabase silme hatası:', error);
+      }
+      
       toast.success(`${hakedisToDelete.donem} dönemi hakediş kaydı silindi`);
       setDeleteDialogOpen(false);
       setHakedisToDelete(null);

@@ -66,7 +66,8 @@ import {
   kartProgramApi,
   suspensionReasonApi,
   domainMappingApi,
-  signApi
+  signApi,
+  earningsApi
 } from './supabaseClient';
 
 // ========================================
@@ -112,6 +113,7 @@ export interface SyncDataOptions {
   suspensionReason?: any[];
   domainMappings?: any[];
   signs?: any[];
+  earnings?: any[];
 }
 
 export interface SyncResult {
@@ -659,6 +661,33 @@ export async function syncSigns(signs: any[]): Promise<SyncResult> {
   }
 }
 
+/**
+ * Sync Earnings (Hakediş) to Supabase
+ */
+export async function syncEarnings(earnings: any[]): Promise<SyncResult> {
+  if (!earnings || earnings.length === 0) {
+    console.log('⏭️ Skipping Earnings sync: No data');
+    return { success: true, type: 'earnings', count: 0 };
+  }
+
+  console.log(`☁️ Syncing ${earnings.length} Earnings to Supabase...`);
+
+  try {
+    const result = await earningsApi.create(earnings);
+    
+    if (result.success) {
+      console.log(`✅ Earnings synced: ${result.count} records`);
+      return { success: true, type: 'earnings', count: result.count };
+    } else {
+      logError(`❌ Earnings sync failed:`, result.error);
+      return { success: false, type: 'earnings', error: result.error };
+    }
+  } catch (err: any) {
+    logError(`❌ Earnings sync error:`, err);
+    return { success: false, type: 'earnings', error: err.message || 'Unknown error' };
+  }
+}
+
 // ========================================
 // BATCH SYNC FUNCTION
 // ========================================
@@ -814,6 +843,11 @@ export async function syncAllData(options: SyncDataOptions): Promise<SyncResult[
   // Sync Signs
   if (options.signs) {
     results.push(await syncSigns(options.signs));
+  }
+
+  // Sync Earnings
+  if (options.earnings) {
+    results.push(await syncEarnings(options.earnings));
   }
 
   // Summary

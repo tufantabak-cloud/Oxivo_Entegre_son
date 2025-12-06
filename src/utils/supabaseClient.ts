@@ -24,6 +24,7 @@ import {
   sanitizeKartProgram,
   sanitizeSuspensionReason
 } from './fieldSanitizer';
+import { isFigmaMakeEnvironment } from './environmentDetection';
 
 // ========================================
 // CASE CONVERTER UTILITIES (Inline to avoid import issues)
@@ -94,13 +95,21 @@ export function objectToCamelCase(obj: any): any {
 // SUPABASE CLIENT CONFIGURATION
 // ========================================
 
+// ✅ Detect Figma Make environment
+// ✅ Disable Supabase in Figma Make environment (CORS restrictions)
+const SUPABASE_ENABLED = !isFigmaMakeEnvironment();
+
+if (isFigmaMakeEnvironment()) {
+  console.log('🎨 Figma Make environment detected - Supabase disabled, using localStorage only');
+}
+
 // ✅ SIMPLIFIED: Use hard-coded credentials (for Figma Make environment)
 // These can be overridden via environment variables in production
 export const PROJECT_ID = "okgeyuhmumlkkcpoholh";
 export const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9rZ2V5dWhtdW1sa2tjcG9ob2xoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg0MDAyMjAsImV4cCI6MjA3Mzk3NjIyMH0.wICqJoMc9a2-S7OwW6VMwcs1-ApPjpnS2QMZ4BVZFpI";
 
 // Log credentials source for debugging
-if (typeof window !== 'undefined') {
+if (typeof window !== 'undefined' && SUPABASE_ENABLED) {
   console.log('🔧 Using Supabase credentials:', {
     projectId: PROJECT_ID,
     source: 'hard-coded (Figma Make environment)'
@@ -121,7 +130,12 @@ declare global {
  * Get or create Supabase client (singleton)
  * CRITICAL: This ensures only ONE instance exists globally
  */
-function getSupabaseClient(): SupabaseClient {
+function getSupabaseClient(): SupabaseClient | null {
+  // ✅ Figma Make: Skip Supabase entirely (CORS blocked)
+  if (isFigmaMakeEnvironment()) {
+    return null;
+  }
+
   // Server-side: create new client (no window)
   if (typeof window === 'undefined') {
     return createClient(`https://${PROJECT_ID}.supabase.co`, ANON_KEY);
@@ -164,6 +178,51 @@ function getSupabaseClient(): SupabaseClient {
 // Export singleton client
 export const supabase = getSupabaseClient();
 
+/**
+ * Helper to wrap Supabase calls with Figma Make detection
+ */
+async function safeSupabaseCall<T>(
+  operation: () => Promise<T>,
+  fallbackValue: T,
+  operationName: string = 'Supabase operation'
+): Promise<T> {
+  if (!SUPABASE_ENABLED) {
+    // Silent in Figma Make (no spam)
+    return fallbackValue;
+  }
+
+  try {
+    return await operation();
+  } catch (error: any) {
+    // Only log errors if NOT in Figma Make
+    if (!isFigmaMakeEnvironment()) {
+      console.warn(`⚠️ ${operationName} failed:`, error.message);
+    }
+    return fallbackValue;
+  }
+}
+
+/**
+ * Error logger that respects silent mode (Figma Make)
+ */
+function logError(message: string, error?: any) {
+  if (!isFigmaMakeEnvironment()) {
+    console.error(message, error || '');
+  }
+}
+
+/**
+ * Check if Supabase is available
+ * Returns fallback response if not available
+ */
+function checkSupabase() {
+  if (!supabase) {
+    // Silent in Figma Make
+    return { available: false, fallback: { success: false, error: 'Supabase not available', data: [] } };
+  }
+  return { available: true, fallback: null };
+}
+
 // Debug: Expose client to window for inspection
 if (typeof window !== 'undefined') {
   (window as any).__OXIVO_SUPABASE__ = supabase;
@@ -191,6 +250,12 @@ export const customerApi = {
    * Tüm müşterileri getirir
    */
   async getAll() {
+    // ✅ Skip Supabase in Figma Make environment
+    if (!SUPABASE_ENABLED) {
+      console.log('⏭️ Skipping Supabase fetch (Figma Make environment)');
+      return { success: false, error: 'Supabase disabled in Figma Make', data: [] };
+    }
+
     console.log('🔍 Fetching customers from Supabase...');
     
     let data, error;
@@ -202,22 +267,16 @@ export const customerApi = {
       data = result.data;
       error = result.error;
     } catch (fetchError: any) {
-      console.error('❌ Network error during Supabase fetch:', fetchError);
+      console.warn('⚠️ Supabase fetch failed, falling back to localStorage');
       return { 
         success: false, 
-        error: 'Supabase bağlantısı kurulamadı. Lütfen internet bağlantınızı kontrol edin.',
+        error: 'Supabase unavailable',
         data: [] 
       };
     }
 
     if (error) {
-      console.error('❌ Error fetching customers:', error);
-      console.error('❌ Error details:', {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint,
-      });
+      console.warn('⚠️ Supabase error, falling back to localStorage:', error.message);
       return { success: false, error: error.message, data: [] };
     }
 
@@ -288,7 +347,7 @@ export const customerApi = {
     }
 
     if (error) {
-      console.error('❌ Error fetching customer:', error);
+      logError('Error fetching customer:', error);
       return { success: false, error: error.message };
     }
 
@@ -689,42 +748,53 @@ export const productApi = {
    * Tüm ürünleri getirir
    */
   async getAll() {
-    // ✅ FIX: Supabase'in 1000 kayıt limitini aşmak için pagination
-    let allProducts: any[] = [];
-    let page = 0;
-    const pageSize = 1000;
-    let hasMore = true;
-
-    while (hasMore) {
-      const { data, error, count } = await supabase
-        .from('products')
-        .select('*', { count: 'exact' })
-        .order('created_at', { ascending: false })
-        .range(page * pageSize, (page + 1) * pageSize - 1);
-
-      if (error) {
-        console.error('❌ Error fetching products:', error);
-        return { success: false, error: error.message, data: [] };
-      }
-
-      if (data && data.length > 0) {
-        allProducts = [...allProducts, ...data];
-        console.log(`✅ Fetched page ${page + 1}: ${data.length} products (total: ${allProducts.length}/${count})`);
-      }
-
-      // Daha fazla veri var mı?
-      hasMore = data && data.length === pageSize;
-      page++;
-
-      // Güvenlik: Maksimum 10 sayfa (10,000 kayıt)
-      if (page >= 10) {
-        console.warn('⚠️ Reached maximum page limit (10). Some products may not be loaded.');
-        break;
-      }
+    // ✅ Skip Supabase in Figma Make environment
+    if (!SUPABASE_ENABLED) {
+      console.log('⏭️ Skipping products fetch (Figma Make environment)');
+      return { success: false, error: 'Supabase disabled', data: [] };
     }
 
-    console.log(`✅ Fetched total ${allProducts.length} products from Supabase`);
-    return { success: true, data: allProducts.map(objectToCamelCase) || [] };
+    try {
+      // ✅ FIX: Supabase'in 1000 kayıt limitini aşmak için pagination
+      let allProducts: any[] = [];
+      let page = 0;
+      const pageSize = 1000;
+      let hasMore = true;
+
+      while (hasMore) {
+        const { data, error, count } = await supabase
+          .from('products')
+          .select('*', { count: 'exact' })
+          .order('created_at', { ascending: false })
+          .range(page * pageSize, (page + 1) * pageSize - 1);
+
+        if (error) {
+          console.warn('⚠️ Error fetching products, falling back to localStorage');
+          return { success: false, error: error.message, data: [] };
+        }
+
+        if (data && data.length > 0) {
+          allProducts = [...allProducts, ...data];
+          console.log(`✅ Fetched page ${page + 1}: ${data.length} products (total: ${allProducts.length}/${count})`);
+        }
+
+        // Daha fazla veri var mı?
+        hasMore = data && data.length === pageSize;
+        page++;
+
+        // Güvenlik: Maksimum 10 sayfa (10,000 kayıt)
+        if (page >= 10) {
+          console.warn('⚠️ Reached maximum page limit (10). Some products may not be loaded.');
+          break;
+        }
+      }
+
+      console.log(`✅ Fetched total ${allProducts.length} products from Supabase`);
+      return { success: true, data: allProducts.map(objectToCamelCase) || [] };
+    } catch (error: any) {
+      console.warn('⚠️ Products fetch failed, falling back to localStorage');
+      return { success: false, error: 'Supabase unavailable', data: [] };
+    }
   },
 
   /**
@@ -850,13 +920,16 @@ export const bankPFApi = {
    * Tüm Bank/PF kayıtlarını getirir
    */
   async getAll() {
-    const { data, error } = await supabase
+    const check = checkSupabase();
+    if (!check.available) return check.fallback;
+
+    const { data, error } = await supabase!
       .from('bank_accounts')
       .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('❌ Error fetching bankPF records:', error);
+      logError('Error fetching bankPF records:', error);
       return { success: false, error: error.message, data: [] };
     }
 
@@ -947,13 +1020,16 @@ export const bankPFApi = {
 
 export const mccCodesApi = {
   async getAll() {
-    const { data, error } = await supabase
+    const check = checkSupabase();
+    if (!check.available) return check.fallback;
+
+    const { data, error } = await supabase!
       .from('mcc_codes')
       .select('*')
       .order('kod', { ascending: true });
 
     if (error) {
-      console.error('❌ Error fetching MCC codes:', error);
+      logError('Error fetching MCC codes:', error);
       return { success: false, error: error.message, data: [] };
     }
 
@@ -1027,13 +1103,16 @@ export const mccCodesApi = {
 
 export const banksApi = {
   async getAll() {
-    const { data, error } = await supabase
+    const check = checkSupabase();
+    if (!check.available) return check.fallback;
+
+    const { data, error } = await supabase!
       .from('banks')
       .select('*')
       .order('kod', { ascending: true });
 
     if (error) {
-      console.error('❌ Error fetching banks:', error);
+      logError('Error fetching banks:', error);
       return { success: false, error: error.message, data: [] };
     }
 
@@ -1123,13 +1202,16 @@ export const banksApi = {
 
 export const epkListApi = {
   async getAll() {
-    const { data, error } = await supabase
+    const check = checkSupabase();
+    if (!check.available) return check.fallback;
+
+    const { data, error } = await supabase!
       .from('epk_institutions')
       .select('*')
       .order('kod', { ascending: true });
 
     if (error) {
-      console.error('❌ Error fetching EPK list:', error);
+      logError('Error fetching EPK list:', error);
       return { success: false, error: error.message, data: [] };
     }
 
@@ -1219,13 +1301,16 @@ export const epkListApi = {
 
 export const okListApi = {
   async getAll() {
-    const { data, error } = await supabase
+    const check = checkSupabase();
+    if (!check.available) return check.fallback;
+
+    const { data, error } = await supabase!
       .from('ok_institutions')
       .select('*')
       .order('kod', { ascending: true });
 
     if (error) {
-      console.error('❌ Error fetching OK list:', error);
+      logError('Error fetching OK list:', error);
       return { success: false, error: error.message, data: [] };
     }
 
@@ -1315,13 +1400,16 @@ export const okListApi = {
 
 export const salesRepsApi = {
   async getAll() {
-    const { data, error } = await supabase
+    const check = checkSupabase();
+    if (!check.available) return check.fallback;
+
+    const { data, error } = await supabase!
       .from('sales_representatives')
       .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('❌ Error fetching sales reps:', error);
+      logError('Error fetching sales reps:', error);
       return { success: false, error: error.message, data: [] };
     }
 
@@ -1359,13 +1447,16 @@ export const salesRepsApi = {
 
 export const jobTitlesApi = {
   async getAll() {
-    const { data, error } = await supabase
+    const check = checkSupabase();
+    if (!check.available) return check.fallback;
+
+    const { data, error } = await supabase!
       .from('job_titles')
       .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('❌ Error fetching job titles:', error);
+      logError('Error fetching job titles:', error);
       return { success: false, error: error.message, data: [] };
     }
 
@@ -1403,13 +1494,16 @@ export const jobTitlesApi = {
 
 export const partnershipsApi = {
   async getAll() {
-    const { data, error } = await supabase
+    const check = checkSupabase();
+    if (!check.available) return check.fallback;
+
+    const { data, error } = await supabase!
       .from('partnerships')
       .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('❌ Error fetching partnerships:', error);
+      logError('Error fetching partnerships:', error);
       return { success: false, error: error.message, data: [] };
     }
 
@@ -1483,13 +1577,16 @@ export const partnershipsApi = {
 
 export const accountItemsApi = {
   async getAll() {
-    const { data, error } = await supabase
+    const check = checkSupabase();
+    if (!check.available) return check.fallback;
+
+    const { data, error } = await supabase!
       .from('account_items')
       .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('❌ Error fetching account items:', error);
+      logError('Error fetching account items:', error);
       return { success: false, error: error.message, data: [] };
     }
 
@@ -1527,13 +1624,16 @@ export const accountItemsApi = {
 
 export const fixedCommissionsApi = {
   async getAll() {
-    const { data, error } = await supabase
+    const check = checkSupabase();
+    if (!check.available) return check.fallback;
+
+    const { data, error } = await supabase!
       .from('fixed_commissions')
       .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('❌ Error fetching fixed commissions:', error);
+      logError('Error fetching fixed commissions:', error);
       return { success: false, error: error.message, data: [] };
     }
 
@@ -1571,13 +1671,16 @@ export const fixedCommissionsApi = {
 
 export const additionalRevenuesApi = {
   async getAll() {
-    const { data, error } = await supabase
+    const check = checkSupabase();
+    if (!check.available) return check.fallback;
+
+    const { data, error } = await supabase!
       .from('additional_revenues')
       .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('❌ Error fetching additional revenues:', error);
+      logError('Error fetching additional revenues:', error);
       return { success: false, error: error.message, data: [] };
     }
 
@@ -1615,13 +1718,16 @@ export const additionalRevenuesApi = {
 
 export const sharingApi = {
   async getAll() {
-    const { data, error } = await supabase
+    const check = checkSupabase();
+    if (!check.available) return check.fallback;
+
+    const { data, error } = await supabase!
       .from('sharings') // ✅ FIXED: 'sharing' → 'sharings' (plural)
       .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('❌ Error fetching sharing records:', error);
+      logError('Error fetching sharing records:', error);
       return { success: false, error: error.message, data: [] };
     }
 
@@ -1695,13 +1801,16 @@ export const sharingApi = {
 
 export const kartProgramApi = {
   async getAll() {
-    const { data, error } = await supabase
+    const check = checkSupabase();
+    if (!check.available) return check.fallback;
+
+    const { data, error } = await supabase!
       .from('card_programs') // ✅ FIXED: 'kart_program' → 'card_programs' (English + plural)
       .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('❌ Error fetching kart program records:', error);
+      logError('Error fetching kart program records:', error);
       return { success: false, error: error.message, data: [] };
     }
 
@@ -1775,13 +1884,16 @@ export const kartProgramApi = {
 
 export const suspensionReasonApi = {
   async getAll() {
-    const { data, error } = await supabase
+    const check = checkSupabase();
+    if (!check.available) return check.fallback;
+
+    const { data, error } = await supabase!
       .from('suspension_reasons') // ✅ FIXED: 'suspension_reason' → 'suspension_reasons' (plural)
       .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('❌ Error fetching suspension reason records:', error);
+      logError('Error fetching suspension reason records:', error);
       return { success: false, error: error.message, data: [] };
     }
 
@@ -1952,13 +2064,16 @@ export const suspensionReasonApi = {
 
 export const domainMappingApi = {
   async getAll() {
-    const { data, error } = await supabase
+    const check = checkSupabase();
+    if (!check.available) return check.fallback;
+
+    const { data, error } = await supabase!
       .from('domain_mappings')
       .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('❌ Error fetching domain mapping records:', error);
+      logError('Error fetching domain mapping records:', error);
       return { success: false, error: error.message, data: [] };
     }
 
@@ -2030,13 +2145,16 @@ export const domainMappingApi = {
 
 export const signApi = {
   async getAll() {
-    const { data, error } = await supabase
+    const check = checkSupabase();
+    if (!check.available) return check.fallback;
+
+    const { data, error } = await supabase!
       .from('signs')
       .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('❌ Error fetching sign records:', error);
+      logError('Error fetching sign records:', error);
       return { success: false, error: error.message, data: [] };
     }
 
@@ -2103,6 +2221,87 @@ export const signApi = {
 };
 
 // ========================================
+// EARNINGS (HAKEDİŞ) API
+// ========================================
+
+export const earningsApi = {
+  async getAll() {
+    const check = checkSupabase();
+    if (!check.available) return check.fallback;
+
+    const { data, error } = await supabase!
+      .from('earnings')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      logError('Error fetching earnings records:', error);
+      return { success: false, error: error.message, data: [] };
+    }
+
+    console.log(`✅ Fetched ${data.length} earnings records from Supabase`);
+    return { success: true, data: data.map(objectToCamelCase) || [] };
+  },
+
+  async create(records: any | any[]) {
+    console.log('📤 Creating earnings records in Supabase...');
+    
+    const recordsArray = Array.isArray(records) ? records : [records];
+    
+    // ✅ Step 1: Remove duplicates by 'id' before processing
+    const uniqueRecords = Array.from(
+      new Map(recordsArray.map(r => [r.id, r])).values()
+    );
+    
+    if (uniqueRecords.length < recordsArray.length) {
+      console.warn(`⚠️ Step 1: Removed ${recordsArray.length - uniqueRecords.length} duplicate earnings (by id)`);
+    }
+    
+    // ✅ Step 2: Apply transformations
+    const transformedItems = uniqueRecords.map(objectToSnakeCase);
+    
+    // ✅ Step 3: CRITICAL FIX - Remove duplicates AFTER sanitization
+    const finalItems = Array.from(
+      new Map(transformedItems.map(item => [item.id, item])).values()
+    );
+    
+    if (finalItems.length < transformedItems.length) {
+      console.warn(`⚠️ Step 3: Removed ${transformedItems.length - finalItems.length} duplicate earnings after sanitization`);
+    }
+    
+    const { data, error } = await supabase
+      .from('earnings')
+      .upsert(finalItems, { onConflict: 'id' })
+      .select();
+
+    if (error) {
+      console.error('❌ Error creating earnings:', error);
+      return { success: false, error: error.message, count: 0 };
+    }
+
+    console.log(`✅ Created/updated ${data.length} earnings records in Supabase`);
+    return { success: true, count: data.length };
+  },
+
+  async delete(id: string) {
+    console.log(`🗑️ Deleting earnings ${id} from Supabase...`);
+    
+    const { error } = await supabase
+      .from('earnings')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error(`❌ Error deleting earnings ${id}:`, error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`✅ Deleted earnings ${id} from Supabase`);
+    return { success: true };
+  },
+};
+
+// ========================================
 // CUSTOMER DOCUMENTS API (Müşteri Evrakları)
 // ========================================
 
@@ -2111,14 +2310,17 @@ export const documentApi = {
    * Get all documents for a specific customer
    */
   async getByCustomerId(customerId: string) {
-    const { data, error } = await supabase
+    const check = checkSupabase();
+    if (!check.available) return check.fallback;
+
+    const { data, error } = await supabase!
       .from('customer_documents')
       .select('*')
       .eq('customer_id', customerId)
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('❌ Error fetching customer documents:', error);
+      logError('Error fetching customer documents:', error);
       return { success: false, error: error.message, data: [] };
     }
 
@@ -2270,7 +2472,7 @@ export const documentApi = {
         .single();
 
       if (fetchError) {
-        console.error('❌ Error fetching document:', fetchError);
+        logError('Error fetching document:', fetchError);
         return { success: false, error: fetchError.message };
       }
 
