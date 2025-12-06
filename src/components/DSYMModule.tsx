@@ -108,3 +108,8 @@ function TabButton({ active, onClick, icon, label }: TabButtonProps) {
     </button>
   );
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// DEFAULT EXPORT (for lazy loading compatibility)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+export default DSYMModule;

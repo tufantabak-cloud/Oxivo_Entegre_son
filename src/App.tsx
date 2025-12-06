@@ -83,8 +83,8 @@ const DefinitionsModule = lazy(() => import('./components/DefinitionsModule').th
 // ⚡ CRITICAL FIX: Dashboard lazy load (14 widget components inside!)
 const DashboardHome = lazy(() => import('./components/DashboardHome').then(m => ({ default: m.DashboardHome })));
 // ⚡ DSYM Module - Dijital Sözleşme Yönetim Modülü
-const DSYMModule = lazy(() => import('./components/DSYMModule').then(m => ({ default: m.DSYMModule })));
-const ContractPublicView = lazy(() => import('./components/DSYM/ContractPublicView').then(m => ({ default: m.ContractPublicView })));
+const DSYMModule = lazy(() => import('./components/DSYMModule'));
+const ContractPublicView = lazy(() => import('./components/DSYM/ContractPublicView'));
 
 // Type imports (not lazy loaded)
 import type { 

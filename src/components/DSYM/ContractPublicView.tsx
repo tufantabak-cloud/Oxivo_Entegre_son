@@ -404,3 +404,6 @@ export function ContractPublicView({ token }: ContractPublicViewProps) {
     </div>
   );
 }
+
+// Default export for lazy loading
+export default ContractPublicView;
