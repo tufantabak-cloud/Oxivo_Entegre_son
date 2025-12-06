@@ -1395,13 +1395,13 @@ export function FirmaTabelaTab({
 
       {/* TabelaGroupDialog */}
       <TabelaGroupDialog
-        open={showGroupDialog}
-        onOpenChange={setShowGroupDialog}
+        isOpen={showGroupDialog}
+        onClose={() => setShowGroupDialog(false)}
         editingGroup={editingGroup}
         groupFormData={groupFormData}
-        setGroupFormData={setGroupFormData}
+        onGroupFormDataChange={(data) => setGroupFormData(prev => ({ ...prev, ...data }))}
         availableRecords={availableRecordsForGroup}
-        onSave={handleCreateGroup}
+        onCreateGroup={handleCreateGroup}
       />
     </div>
   );
