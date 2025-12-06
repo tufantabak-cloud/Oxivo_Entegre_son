@@ -56,12 +56,10 @@ export function HakedisTab({
   const [formPFIslemHacmi, setFormPFIslemHacmi] = useState('');
   const [formOxivoIslemHacmi, setFormOxivoIslemHacmi] = useState('');
   
-  // ✅ YENİ: Ek Gelir/Kesinti Alanları
-  const [ekGelirAciklama, setEkGelirAciklama] = useState('');
+  // ✅ YENİ: Ek Gelir/Kesinti Alanları (Açıklama alanları kaldırıldı)
   const [ekGelirPFTL, setEkGelirPFTL] = useState<number | ''>('');
   const [ekGelirOXTL, setEkGelirOXTL] = useState<number | ''>('');
   
-  const [ekKesintiAciklama, setEkKesintiAciklama] = useState('');
   const [ekKesintiPFTL, setEkKesintiPFTL] = useState<number | ''>('');
   const [ekKesintiOXTL, setEkKesintiOXTL] = useState<number | ''>('');
   
@@ -171,10 +169,8 @@ export function HakedisTab({
     setFormDurum('Taslak');
     setFormPFIslemHacmi('');
     setFormOxivoIslemHacmi('');
-    setEkGelirAciklama('');
     setEkGelirPFTL('');
     setEkGelirOXTL('');
-    setEkKesintiAciklama('');
     setEkKesintiPFTL('');
     setEkKesintiOXTL('');
     setManualAnaTabelaOxivoTotal('');
@@ -202,10 +198,8 @@ export function HakedisTab({
     setFormDurum(hakedis.durum);
     setFormPFIslemHacmi(hakedis.pfIslemHacmi || '');
     setFormOxivoIslemHacmi(hakedis.oxivoIslemHacmi || '');
-    setEkGelirAciklama(hakedis.ekGelirAciklama || '');
     setEkGelirPFTL(hakedis.ekGelirPFTL || '');
     setEkGelirOXTL(hakedis.ekGelirOXTL || '');
-    setEkKesintiAciklama(hakedis.ekKesintiAciklama || '');
     setEkKesintiPFTL(hakedis.ekKesintiPFTL || '');
     setEkKesintiOXTL(hakedis.ekKesintiOXTL || '');
     setManualAnaTabelaOxivoTotal((hakedis as any).manualAnaTabelaOxivoTotal || '');
@@ -224,10 +218,8 @@ export function HakedisTab({
     setFormDurum(hakedis.durum);
     setFormPFIslemHacmi(hakedis.pfIslemHacmi || '');
     setFormOxivoIslemHacmi(hakedis.oxivoIslemHacmi || '');
-    setEkGelirAciklama(hakedis.ekGelirAciklama || '');
     setEkGelirPFTL(hakedis.ekGelirPFTL || '');
     setEkGelirOXTL(hakedis.ekGelirOXTL || '');
-    setEkKesintiAciklama(hakedis.ekKesintiAciklama || '');
     setEkKesintiPFTL(hakedis.ekKesintiPFTL || '');
     setEkKesintiOXTL(hakedis.ekKesintiOXTL || '');
     setManualAnaTabelaOxivoTotal((hakedis as any).manualAnaTabelaOxivoTotal || '');
@@ -277,10 +269,10 @@ export function HakedisTab({
         notlar: formNotlar || undefined,
         pfIslemHacmi: formPFIslemHacmi || undefined,
         oxivoIslemHacmi: formOxivoIslemHacmi || undefined,
-        ekGelirAciklama: ekGelirAciklama || undefined,
+        ekGelirAciklama: undefined, // Açıklama alanı kaldırıldı
         ekGelirPFTL: ekGelirPFTL || undefined,
         ekGelirOXTL: ekGelirOXTL || undefined,
-        ekKesintiAciklama: ekKesintiAciklama || undefined,
+        ekKesintiAciklama: undefined, // Açıklama alanı kaldırıldı
         ekKesintiPFTL: ekKesintiPFTL || undefined,
         ekKesintiOXTL: ekKesintiOXTL || undefined,
         manualAnaTabelaOxivoTotal: manualAnaTabelaOxivoTotal || undefined,
@@ -331,10 +323,10 @@ export function HakedisTab({
         notlar: formNotlar || undefined,
         pfIslemHacmi: formPFIslemHacmi || undefined,
         oxivoIslemHacmi: formOxivoIslemHacmi || undefined,
-        ekGelirAciklama: ekGelirAciklama || undefined,
+        ekGelirAciklama: undefined, // Açıklama alanı kaldırıldı
         ekGelirPFTL: ekGelirPFTL || undefined,
         ekGelirOXTL: ekGelirOXTL || undefined,
-        ekKesintiAciklama: ekKesintiAciklama || undefined,
+        ekKesintiAciklama: undefined, // Açıklama alanı kaldırıldı
         ekKesintiPFTL: ekKesintiPFTL || undefined,
         ekKesintiOXTL: ekKesintiOXTL || undefined,
         manualAnaTabelaOxivoTotal: manualAnaTabelaOxivoTotal || undefined,
@@ -710,13 +702,13 @@ export function HakedisTab({
       const ekKesintiPF = (hakedis as any).ekKesintiPFTL || 0;
       const ekKesintiOX = (hakedis as any).ekKesintiOXTL || 0;
       
-      // Ek Gelir satırı (eğer girilmişse)
-      if (ekGelirAciklama || ekGelirPF || ekGelirOX) {
+      // Ek Gelir satırı (eğer tutar girilmişse)
+      if (ekGelirPF || ekGelirOX) {
         rows.push([
           'Ek Gelir',
           '',
           '',
-          ekGelirAciklama,
+          '',
           '',
           '',
           '',
@@ -731,13 +723,13 @@ export function HakedisTab({
         ].join(','));
       }
       
-      // Ek Kesinti satırı (eğer girilmişse)
-      if (ekKesintiAciklama || ekKesintiPF || ekKesintiOX) {
+      // Ek Kesinti satırı (eğer tutar girilmişse)
+      if (ekKesintiPF || ekKesintiOX) {
         rows.push([
           'Ek Kesinti',
           '',
           '',
-          ekKesintiAciklama,
+          '',
           '',
           '',
           '',
@@ -2177,17 +2169,7 @@ export function HakedisTab({
                         {visibleColumns.kartTipi && <TableCell></TableCell>}
                         {visibleColumns.islemHacmi && (
                           <TableCell className="text-left">
-                            {view === 'view' ? (
-                              <span className="text-green-700">{ekGelirAciklama || '—'}</span>
-                            ) : (
-                              <Input
-                                type="text"
-                                value={ekGelirAciklama}
-                                onChange={(e) => setEkGelirAciklama(e.target.value)}
-                                placeholder="Açıklama (örn: Merchant Fee)"
-                                className="w-full text-sm bg-white"
-                              />
-                            )}
+                            {/* Açıklama alanı kaldırıldı */}
                           </TableCell>
                         )}
                         {visibleColumns.vade && <TableCell></TableCell>}
@@ -2244,17 +2226,7 @@ export function HakedisTab({
                         {visibleColumns.kartTipi && <TableCell></TableCell>}
                         {visibleColumns.islemHacmi && (
                           <TableCell className="text-left">
-                            {view === 'view' ? (
-                              <span className="text-red-700">{ekKesintiAciklama || '—'}</span>
-                            ) : (
-                              <Input
-                                type="text"
-                                value={ekKesintiAciklama}
-                                onChange={(e) => setEkKesintiAciklama(e.target.value)}
-                                placeholder="Açıklama (örn: Ceza kesintisi)"
-                                className="w-full text-sm bg-white"
-                              />
-                            )}
+                            {/* Açıklama alanı kaldırıldı */}
                           </TableCell>
                         )}
                         {visibleColumns.vade && <TableCell></TableCell>}
