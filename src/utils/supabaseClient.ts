@@ -36,16 +36,14 @@ import { isFigmaMakeEnvironment } from './environmentDetection';
  */
 function toSnakeCase(str: string): string {
   const result = str
-    // Insert underscore before uppercase letter that follows a lowercase letter
-    .replace(/([a-z\d])([A-Z])/g, '$1_$2')
-    // Insert underscore before uppercase letter that follows another uppercase letter and is followed by lowercase
-    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1_$2')
+    // Insert underscore before uppercase letter that follows a lowercase letter (Türkçe destekli)
+    .replace(/([a-zıöüşğç\d])([A-ZİÖÜŞĞÇ])/g, '$1_$2')
+    // Insert underscore before uppercase letter that follows another uppercase letter and is followed by lowercase (Türkçe destekli)
+    .replace(/([A-ZİÖÜŞĞÇ]+)([A-ZİÖÜŞĞÇ][a-zıöüşğç])/g, '$1_$2')
+    // ✅ FIX: Türkçe İ ve I karakterlerini doğru dönüştür
+    .replace(/İ/g, 'i')
+    .replace(/I/g, 'ı')
     .toLowerCase();
-  
-  // 🔍 DEBUG: Log problematic keys
-  if (str === 'komisyonOranları' || str === 'paylaşımOranları' || str === 'komisyon_oranları' || str === 'paylasim_oranlari') {
-    console.log(`🔍 [toSnakeCase] "${str}" → "${result}"`);
-  }
   
   return result;
 }
