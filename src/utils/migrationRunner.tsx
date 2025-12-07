@@ -6,14 +6,12 @@ declare global {
     __OXIVO_SUPABASE__: {
       apis: {
         signApi: {
-          getById: (id: string) => Promise<{ data: any; error: any }>;
+          getAll: () => Promise<{ data: any; error: any }>;
           create: (data: any) => Promise<{ data: any; error: any }>;
-          update: (id: string, data: any) => Promise<{ data: any; error: any }>;
         };
         earningsApi: {
-          getById: (id: string) => Promise<{ data: any; error: any }>;
+          getAll: () => Promise<{ data: any; error: any }>;
           create: (data: any) => Promise<{ data: any; error: any }>;
-          update: (id: string, data: any) => Promise<{ data: any; error: any }>;
         };
       };
     };
@@ -54,43 +52,83 @@ export function MigrationRunner() {
       let successCount = 0;
       let errorCount = 0;
 
-      // TABELA Migration
-      addLog('📝 TABELA kayıtları işleniyor...');
-      for (const sign of signsData) {
+      // TABELA Migration - Toplu kayıt (getById yerine getAll + create/update)
+      if (signsData.length > 0) {
+        addLog('📝 TABELA kayıtları işleniyor...');
         try {
-          const existing = await signApi.getById(sign.id);
+          // Mevcut kayıtları al
+          const existing = await signApi.getAll();
+          const existingIds = new Set(existing.data?.map((r: any) => r.id) || []);
           
-          if (existing.data) {
-            await signApi.update(sign.id, sign);
-            addLog(`✅ TABELA güncellendi: ${sign.id}`);
-          } else {
-            await signApi.create(sign);
-            addLog(`✅ TABELA eklendi: ${sign.id}`);
+          // Yeni ve güncellenecekleri ayır
+          const toCreate = signsData.filter((s: any) => !existingIds.has(s.id));
+          const toUpdate = signsData.filter((s: any) => existingIds.has(s.id));
+          
+          // Toplu kayıt
+          if (toCreate.length > 0) {
+            const result = await signApi.create(toCreate);
+            if (result.success) {
+              addLog(`✅ ${toCreate.length} yeni TABELA kaydı eklendi`);
+              successCount += toCreate.length;
+            } else {
+              addLog(`❌ TABELA ekleme hatası: ${result.error}`);
+              errorCount += toCreate.length;
+            }
           }
-          successCount++;
+          
+          if (toUpdate.length > 0) {
+            const result = await signApi.create(toUpdate); // create = upsert
+            if (result.success) {
+              addLog(`✅ ${toUpdate.length} TABELA kaydı güncellendi`);
+              successCount += toUpdate.length;
+            } else {
+              addLog(`❌ TABELA güncelleme hatası: ${result.error}`);
+              errorCount += toUpdate.length;
+            }
+          }
         } catch (error) {
-          addLog(`❌ TABELA hatası: ${sign.id} - ${error}`);
-          errorCount++;
+          addLog(`❌ TABELA migration hatası: ${error}`);
+          errorCount += signsData.length;
         }
       }
 
-      // HAKEDİŞ Migration
-      addLog('💰 HAKEDİŞ kayıtları işleniyor...');
-      for (const earning of earningsData) {
+      // HAKEDİŞ Migration - Toplu kayıt
+      if (earningsData.length > 0) {
+        addLog('💰 HAKEDİŞ kayıtları işleniyor...');
         try {
-          const existing = await earningsApi.getById(earning.id);
+          // Mevcut kayıtları al
+          const existing = await earningsApi.getAll();
+          const existingIds = new Set(existing.data?.map((r: any) => r.id) || []);
           
-          if (existing.data) {
-            await earningsApi.update(earning.id, earning);
-            addLog(`✅ HAKEDİŞ güncellendi: ${earning.id}`);
-          } else {
-            await earningsApi.create(earning);
-            addLog(`✅ HAKEDİŞ eklendi: ${earning.id}`);
+          // Yeni ve güncellenecekleri ayır
+          const toCreate = earningsData.filter((e: any) => !existingIds.has(e.id));
+          const toUpdate = earningsData.filter((e: any) => existingIds.has(e.id));
+          
+          // Toplu kayıt
+          if (toCreate.length > 0) {
+            const result = await earningsApi.create(toCreate);
+            if (result.success) {
+              addLog(`✅ ${toCreate.length} yeni HAKEDİŞ kaydı eklendi`);
+              successCount += toCreate.length;
+            } else {
+              addLog(`❌ HAKEDİŞ ekleme hatası: ${result.error}`);
+              errorCount += toCreate.length;
+            }
           }
-          successCount++;
+          
+          if (toUpdate.length > 0) {
+            const result = await earningsApi.create(toUpdate); // create = upsert
+            if (result.success) {
+              addLog(`✅ ${toUpdate.length} HAKEDİŞ kaydı güncellendi`);
+              successCount += toUpdate.length;
+            } else {
+              addLog(`❌ HAKEDİŞ güncelleme hatası: ${result.error}`);
+              errorCount += toUpdate.length;
+            }
+          }
         } catch (error) {
-          addLog(`❌ HAKEDİŞ hatası: ${earning.id} - ${error}`);
-          errorCount++;
+          addLog(`❌ HAKEDİŞ migration hatası: ${error}`);
+          errorCount += earningsData.length;
         }
       }
 
