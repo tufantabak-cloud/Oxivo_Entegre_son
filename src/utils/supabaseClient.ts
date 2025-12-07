@@ -2193,8 +2193,20 @@ export const signApi = {
       return clean;
     });
     
-    // ✅ Step 3: Apply snake_case transformation
-    const transformedItems = sanitizedRecords.map(objectToSnakeCase);
+    // ✅ Step 3: Apply snake_case transformation + FIX Turkish characters
+    const transformedItems = sanitizedRecords.map(record => {
+      const snakeCased = objectToSnakeCase(record);
+      // CRITICAL: Fix Turkish characters in column names
+      if ('komisyon_oranları' in snakeCased) {
+        snakeCased.komisyon_oranlari = snakeCased.komisyon_oranları;
+        delete snakeCased.komisyon_oranları;
+      }
+      if ('paylaşım_oranları' in snakeCased) {
+        snakeCased.paylasim_oranlari = snakeCased.paylaşım_oranları;
+        delete snakeCased.paylaşım_oranları;
+      }
+      return snakeCased;
+    });
     
     // ✅ Step 4: Remove duplicates AFTER sanitization
     const finalItems = Array.from(
