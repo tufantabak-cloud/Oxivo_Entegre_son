@@ -313,13 +313,13 @@ export function FirmaTabelaTab({
         kisaAciklama: record.kisaAciklama || '',
         urun: record.urun || '',
         kartTipi: record.kartTipi,
-        gelirModeliId: record.gelirModeli.id,
+        gelirModeliId: record.gelirModeli?.id || '',
         selectedEkGelirId: 'NONE',
         selectedKartProgramIds: record.kartProgramIds || record.bankIds || [],
         yurtIciDisi: record.yurtIciDisi,
         komisyonOranları: loadedKomisyonlar,
-        kurulusOrani: record.paylaşımOranları.kurulusOrani,
-        oxivoOrani: record.paylaşımOranları.oxivoOrani,
+        kurulusOrani: record.paylaşımOranları?.kurulusOrani || '',
+        oxivoOrani: record.paylaşımOranları?.oxivoOrani || '',
         aciklama: record.aciklama || '',
         fotograf: record.fotograf || '',
         hazineGeliri: record.hazineGeliri || { tutarTL: '', oxivoYuzde: '', kazancTL: '' },
@@ -365,13 +365,20 @@ export function FirmaTabelaTab({
   };
 
   const handleSave = async () => {
+    // ✅ Validate gelirModeli before saving
+    const selectedGelirModeli = gelirModelleri.find(g => g.id === formData.gelirModeliId);
+    if (!selectedGelirModeli) {
+      toast.error('Lütfen bir gelir modeli seçin');
+      return;
+    }
+
     const newRecord: TabelaRecord = {
       id: editingRecord?.id || `rec-${Date.now()}`,
       firmaId,
       kisaAciklama: formData.kisaAciklama,
       urun: formData.urun,
       kartTipi: formData.kartTipi,
-      gelirModeli: gelirModelleri.find(g => g.id === formData.gelirModeliId)!,
+      gelirModeli: selectedGelirModeli,
       yurtIciDisi: formData.yurtIciDisi,
       komisyonOranları: formData.komisyonOranları,
       paylaşımOranları: {

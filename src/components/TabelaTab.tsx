@@ -153,14 +153,14 @@ export function TabelaTab({
   const handleOpenDialog = (record?: TabelaRecord) => {
     if (record) {
       setEditingRecord(record);
-      setKurulusTipi(record.kurulus.tip);
-      setKurulusId(record.kurulus.id);
+      setKurulusTipi(record.kurulus?.tip || '');
+      setKurulusId(record.kurulus?.id || '');
       setKartTipi(record.kartTipi);
-      setGelirModeliId(record.gelirModeli.id);
+      setGelirModeliId(record.gelirModeli?.id || '');
       setYurtIciDisi(record.yurtIciDisi);
       setKomisyonOranları(record.komisyonOranları);
-      setKurulusOrani(record.paylaşımOranları.kurulusOrani);
-      setOxivoOrani(record.paylaşımOranları.oxivoOrani);
+      setKurulusOrani(record.paylaşımOranları?.kurulusOrani || '');
+      setOxivoOrani(record.paylaşımOranları?.oxivoOrani || '');
       setHazineGeliri(record.hazineGeliri || { tutarTL: '', oxivoYuzde: '', kazancTL: '' });
       setEkGelir(record.ekGelirDetay || { kodNo: '', gelirTuru: '', kullanim: '', kartTipi: '', tutar: '', pfYuzde: '', pfTL: '', oxYuzde: '', oxTL: '' });
     } else {
