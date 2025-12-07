@@ -150,18 +150,6 @@ const isDev = (() => {
   }
 })();
 
-// Load debug tools in development mode only (dynamic import for production safety)
-if (isDev && typeof window !== 'undefined') {
-  import('./utils/debugHelpers')
-    .then(({ loadSupabaseDebugTools, loadDuplicateCleanupTools }) => {
-      loadSupabaseDebugTools();
-      loadDuplicateCleanupTools();
-    })
-    .catch((err) => {
-      logger.warn('⚠️ Debug tools not available:', err.message);
-    });
-}
-
 export default function App() {
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // AUTHENTICATION
