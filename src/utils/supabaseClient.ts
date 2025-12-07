@@ -2176,16 +2176,33 @@ export const signApi = {
       console.warn(`⚠️ Step 1: Removed ${recordsArray.length - uniqueRecords.length} duplicate signs (by id)`);
     }
     
-    // ✅ Step 2: Apply transformations
-    const transformedItems = uniqueRecords.map(objectToSnakeCase);
+    // ✅ Step 2: WHITELIST - Only allow valid Supabase columns
+    const VALID_FIELDS = [
+      'id', 'urun', 'aktif', 'kartTipi', 'yurtIciDisi', 'kisaAciklama',
+      'kartProgramIds', 'gelirModeli', 'komisyonOranları', 'paylaşımOranları',
+      'hazineGeliri', 'ekGelirDetay', 'createdAt', 'updatedAt'
+    ];
     
-    // ✅ Step 3: CRITICAL FIX - Remove duplicates AFTER sanitization
+    const sanitizedRecords = uniqueRecords.map(record => {
+      const clean: any = {};
+      VALID_FIELDS.forEach(field => {
+        if (field in record) {
+          clean[field] = record[field];
+        }
+      });
+      return clean;
+    });
+    
+    // ✅ Step 3: Apply snake_case transformation
+    const transformedItems = sanitizedRecords.map(objectToSnakeCase);
+    
+    // ✅ Step 4: Remove duplicates AFTER sanitization
     const finalItems = Array.from(
       new Map(transformedItems.map(item => [item.id, item])).values()
     );
     
     if (finalItems.length < transformedItems.length) {
-      console.warn(`⚠️ Step 3: Removed ${transformedItems.length - finalItems.length} duplicate signs after sanitization`);
+      console.warn(`⚠️ Step 4: Removed ${transformedItems.length - finalItems.length} duplicate signs after sanitization`);
     }
     
     const { data, error } = await supabase
