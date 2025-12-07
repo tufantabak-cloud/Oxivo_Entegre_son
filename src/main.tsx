@@ -3,6 +3,12 @@ import ReactDOM from 'react-dom/client'
 import App from './App'
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// PRODUCTION CONSOLE OVERRIDE - Must be FIRST
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+import { overrideConsoleInProduction } from './utils/consoleOverride';
+overrideConsoleInProduction();
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // CSS IMPORT ORDER - CRITICAL FOR PERFORMANCE & CLS PREVENTION
 // DO NOT CHANGE ORDER! Each file builds on the previous one.
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -25,9 +31,11 @@ import './styles/figma-fixes.css'
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 import { Toaster } from './components/ui/sonner'
-import { TooltipProvider } from './components/ui/tooltip'
+// Tooltip removed - import { TooltipProvider } from './components/ui/tooltip'
 import { ConnectionStatus } from './components/ConnectionStatus'
 import { ErrorBoundary } from './components/ErrorBoundary'
+// TEMPORARY: Using auth bypass until Supabase is configured
+import { AuthProvider } from './utils/authBypass'
 import { initStartupCheck } from './utils/startupCheck'
 import { cleanupSupabaseSession } from './utils/supabaseCleanup'
 
@@ -87,11 +95,11 @@ initStartupCheck().then((success) => {
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary>
-      <TooltipProvider>
+      <AuthProvider>
         <App />
         <ConnectionStatus />
         <Toaster />
-      </TooltipProvider>
+      </AuthProvider>
     </ErrorBoundary>
   </React.StrictMode>,
 )

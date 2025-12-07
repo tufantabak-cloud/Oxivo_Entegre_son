@@ -1,27 +1,32 @@
-import { useState } from 'react';
-import { toast } from 'sonner';
+import React, { useState } from 'react';
+import { Button } from '../components/ui/button';
+import { supabase } from './supabaseClient';
+import { ENV_CONFIG, assertDevelopmentOnly } from './environmentConfig';
 
-declare global {
-  interface Window {
-    __OXIVO_SUPABASE__: {
-      apis: {
-        signApi: {
-          getAll: () => Promise<{ data: any; error: any }>;
-          create: (data: any) => Promise<{ data: any; error: any }>;
-        };
-        earningsApi: {
-          getAll: () => Promise<{ data: any; error: any }>;
-          create: (data: any) => Promise<{ data: any; error: any }>;
-        };
-      };
-    };
-  }
+// ✅ SECURITY: Migration tool only available in development
+if (!ENV_CONFIG.enableMigrationTools) {
+  throw new Error('🚨 Migration tools are disabled in production');
+}
+
+interface MigrationStats {
+  signsMigrated: number;
+  earningsMigrated: number;
+  errors: number;
 }
 
 export function MigrationRunner() {
+  // ✅ RUNTIME CHECK: Prevent accidental usage in production
+  React.useEffect(() => {
+    assertDevelopmentOnly('Migration Runner');
+  }, []);
+
   const [isRunning, setIsRunning] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
-  const [stats, setStats] = useState({ success: 0, error: 0 });
+  const [stats, setStats] = useState<MigrationStats>({
+    signsMigrated: 0,
+    earningsMigrated: 0,
+    errors: 0,
+  });
 
   const addLog = (message: string) => {
     setLogs(prev => [...prev, message]);
@@ -29,15 +34,15 @@ export function MigrationRunner() {
   };
 
   const runMigration = async () => {
-    if (!window.__OXIVO_SUPABASE__?.apis) {
+    if (!supabase) {
       toast.error('Supabase API bulunamadı!');
-      addLog('❌ HATA: window.__OXIVO_SUPABASE__.apis bulunamadı');
+      addLog('❌ HATA: supabase bulunamadı');
       return;
     }
 
     setIsRunning(true);
     setLogs([]);
-    setStats({ success: 0, error: 0 });
+    setStats({ signsMigrated: 0, earningsMigrated: 0, errors: 0 });
 
     try {
       addLog('🚀 Migration başlatılıyor...');
@@ -48,7 +53,6 @@ export function MigrationRunner() {
 
       addLog(`📊 İstatistikler: ${signsData.length} TABELA, ${earningsData.length} HAKEDİŞ`);
 
-      const { signApi, earningsApi } = window.__OXIVO_SUPABASE__.apis;
       let successCount = 0;
       let errorCount = 0;
 
@@ -57,8 +61,13 @@ export function MigrationRunner() {
         addLog('📝 TABELA kayıtları işleniyor...');
         try {
           // Mevcut kayıtları al
-          const existing = await signApi.getAll();
-          const existingIds = new Set(existing.data?.map((r: any) => r.id) || []);
+          const { data: existing, error } = await supabase
+            .from('signs')
+            .select('id');
+          if (error) {
+            throw new Error(error.message);
+          }
+          const existingIds = new Set(existing?.map((r: any) => r.id) || []);
           
           // Yeni ve güncellenecekleri ayır
           const toCreate = signsData.filter((s: any) => !existingIds.has(s.id));
@@ -66,25 +75,25 @@ export function MigrationRunner() {
           
           // Toplu kayıt
           if (toCreate.length > 0) {
-            const result = await signApi.create(toCreate);
-            if (result.success) {
-              addLog(`✅ ${toCreate.length} yeni TABELA kaydı eklendi`);
-              successCount += toCreate.length;
-            } else {
-              addLog(`❌ TABELA ekleme hatası: ${result.error}`);
-              errorCount += toCreate.length;
+            const { data, error } = await supabase
+              .from('signs')
+              .insert(toCreate);
+            if (error) {
+              throw new Error(error.message);
             }
+            addLog(`✅ ${toCreate.length} yeni TABELA kaydı eklendi`);
+            successCount += toCreate.length;
           }
           
           if (toUpdate.length > 0) {
-            const result = await signApi.create(toUpdate); // create = upsert
-            if (result.success) {
-              addLog(`✅ ${toUpdate.length} TABELA kaydı güncellendi`);
-              successCount += toUpdate.length;
-            } else {
-              addLog(`❌ TABELA güncelleme hatası: ${result.error}`);
-              errorCount += toUpdate.length;
+            const { data, error } = await supabase
+              .from('signs')
+              .upsert(toUpdate);
+            if (error) {
+              throw new Error(error.message);
             }
+            addLog(`✅ ${toUpdate.length} TABELA kaydı güncellendi`);
+            successCount += toUpdate.length;
           }
         } catch (error) {
           addLog(`❌ TABELA migration hatası: ${error}`);
@@ -97,8 +106,13 @@ export function MigrationRunner() {
         addLog('💰 HAKEDİŞ kayıtları işleniyor...');
         try {
           // Mevcut kayıtları al
-          const existing = await earningsApi.getAll();
-          const existingIds = new Set(existing.data?.map((r: any) => r.id) || []);
+          const { data: existing, error } = await supabase
+            .from('earnings')
+            .select('id');
+          if (error) {
+            throw new Error(error.message);
+          }
+          const existingIds = new Set(existing?.map((r: any) => r.id) || []);
           
           // ✅ WHITELIST: Supabase'deki earnings tablosunda var olan alanlar
           const EARNINGS_VALID_FIELDS = [
@@ -126,25 +140,25 @@ export function MigrationRunner() {
           
           // Toplu kayıt
           if (toCreate.length > 0) {
-            const result = await earningsApi.create(toCreate);
-            if (result.success) {
-              addLog(`✅ ${toCreate.length} yeni HAKEDİŞ kaydı eklendi`);
-              successCount += toCreate.length;
-            } else {
-              addLog(`❌ HAKEDİŞ ekleme hatası: ${result.error}`);
-              errorCount += toCreate.length;
+            const { data, error } = await supabase
+              .from('earnings')
+              .insert(toCreate);
+            if (error) {
+              throw new Error(error.message);
             }
+            addLog(`✅ ${toCreate.length} yeni HAKEDİŞ kaydı eklendi`);
+            successCount += toCreate.length;
           }
           
           if (toUpdate.length > 0) {
-            const result = await earningsApi.create(toUpdate); // create = upsert
-            if (result.success) {
-              addLog(`✅ ${toUpdate.length} HAKEDİŞ kaydı güncellendi`);
-              successCount += toUpdate.length;
-            } else {
-              addLog(`❌ HAKEDİŞ güncelleme hatası: ${result.error}`);
-              errorCount += toUpdate.length;
+            const { data, error } = await supabase
+              .from('earnings')
+              .upsert(toUpdate);
+            if (error) {
+              throw new Error(error.message);
             }
+            addLog(`✅ ${toUpdate.length} HAKEDİŞ kaydı güncellendi`);
+            successCount += toUpdate.length;
           }
         } catch (error) {
           addLog(`❌ HAKEDİŞ migration hatası: ${error}`);
@@ -152,7 +166,7 @@ export function MigrationRunner() {
         }
       }
 
-      setStats({ success: successCount, error: errorCount });
+      setStats({ signsMigrated: successCount, earningsMigrated: successCount, errors: errorCount });
       addLog(`🎉 Migration tamamlandı! Başarılı: ${successCount}, Hatalı: ${errorCount}`);
       
       if (errorCount === 0) {
@@ -187,19 +201,19 @@ export function MigrationRunner() {
           </p>
         </div>
 
-        <button
+        <Button
           onClick={runMigration}
           disabled={isRunning}
           className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
           {isRunning ? '⏳ Migration çalışıyor...' : '🚀 Migration Başlat'}
-        </button>
+        </Button>
 
-        {stats.success > 0 || stats.error > 0 ? (
+        {stats.signsMigrated > 0 || stats.earningsMigrated > 0 || stats.errors > 0 ? (
           <div className="mt-4 p-4 bg-gray-50 rounded border">
             <div className="flex gap-4">
-              <span className="text-green-600">✅ Başarılı: {stats.success}</span>
-              <span className="text-red-600">❌ Hatalı: {stats.error}</span>
+              <span className="text-green-600">✅ Başarılı: {stats.signsMigrated + stats.earningsMigrated}</span>
+              <span className="text-red-600">❌ Hatalı: {stats.errors}</span>
             </div>
           </div>
         ) : null}

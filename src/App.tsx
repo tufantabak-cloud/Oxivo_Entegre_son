@@ -10,6 +10,7 @@ import { BankPF } from './components/BankPFModule';
 import { TabelaRecord, TabelaGroup } from './components/TabelaTab';
 import { PayterProduct } from './components/PayterProductTab';
 import { logger, createTimer } from './utils/logger';
+import { ENV_CONFIG, FEATURE_FLAGS } from './utils/environmentConfig';
 import { getStoredData, setStoredData } from './utils/storage';
 import { migrateData, validateImportData } from './utils/dataMigration';
 import { syncToSupabase } from './utils/supabaseSync';
@@ -54,8 +55,10 @@ const DashboardHome = lazy(() => import('./components/DashboardHome').then(m => 
 // ⚡ DSYM Module - Dijital Sözleşme Yönetim Modülü
 const DSYMModule = lazy(() => import('./components/DSYMModule'));
 const ContractPublicView = lazy(() => import('./components/DSYM/ContractPublicView'));
-// 🔧 Migration Tool
-const MigrationRunner = lazy(() => import('./utils/migrationRunner').then(m => ({ default: m.MigrationRunner })));
+// 🔧 Migration Tool (Development only)
+const MigrationRunner = ENV_CONFIG.enableMigrationTools 
+  ? lazy(() => import('./utils/migrationRunner').then(m => ({ default: m.MigrationRunner })))
+  : null;
 
 // Type imports (not lazy loaded)
 import type { 
@@ -107,6 +110,7 @@ import { Skeleton } from './components/ui/skeleton';
 // TEMPORARY: Using auth bypass until Supabase is configured
 import { useAuth } from './utils/authBypass';
 import { LoginPage } from './components/LoginPage';
+import { EnvironmentBadge } from './components/EnvironmentBadge';
 
 // ⚡ Loading fallback component for code splitting
 const ModuleLoadingFallback = () => (
@@ -2001,24 +2005,26 @@ export default function App() {
                       <FileSignature size={18} className="flex-shrink-0" />
                       <span className="truncate">DSYM</span>
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="default"
-                      style={{ minHeight: '48px' }}
-                      onClick={() => {
-                        setActiveModule('migration');
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className={`justify-start gap-3 ${
-                        activeModule === 'migration'
-                          ? 'bg-green-600 text-white shadow-md hover:bg-green-700 hover:text-white'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
-                      title="TABELA & HAKEDİŞ Migration Tool"
-                    >
-                      <Database size={18} className="flex-shrink-0" />
-                      <span className="truncate">Migration</span>
-                    </Button>
+                    {ENV_CONFIG.enableMigrationTools && (
+                      <Button
+                        variant="ghost"
+                        size="default"
+                        style={{ minHeight: '48px' }}
+                        onClick={() => {
+                          setActiveModule('migration');
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className={`justify-start gap-3 ${
+                          activeModule === 'migration'
+                            ? 'bg-green-600 text-white shadow-md hover:bg-green-700 hover:text-white'
+                            : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                        title="TABELA & HAKEDİŞ Migration Tool"
+                      >
+                        <Database size={18} className="flex-shrink-0" />
+                        <span className="truncate">Migration</span>
+                      </Button>
+                    )}
                   </nav>
                 </SheetContent>
               </Sheet>
@@ -2142,20 +2148,22 @@ export default function App() {
                 <span>DSYM</span>
               </Button>
               
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setActiveModule('migration')}
-                className={`gap-1 h-7 px-2 text-[10px] ${
-                  activeModule === 'migration'
-                    ? 'bg-green-600 text-white shadow-md shadow-green-200 hover:bg-green-700 hover:text-white'
-                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-                title="TABELA & HAKEDİŞ Migration Tool"
-              >
-                <Database size={13} />
-                <span>Migrate</span>
-              </Button>
+              {ENV_CONFIG.enableMigrationTools && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setActiveModule('migration')}
+                  className={`gap-1 h-7 px-2 text-[10px] ${
+                    activeModule === 'migration'
+                      ? 'bg-green-600 text-white shadow-md shadow-green-200 hover:bg-green-700 hover:text-white'
+                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                  }`}
+                  title="TABELA & HAKEDİŞ Migration Tool"
+                >
+                  <Database size={13} />
+                  <span>Migrate</span>
+                </Button>
+              )}
             </nav>
             
             {/* User Info & Logout */}
@@ -3162,7 +3170,7 @@ export default function App() {
             <DSYMModule />
           </Suspense>
         )}
-        {activeModule === 'migration' && (
+        {activeModule === 'migration' && ENV_CONFIG.enableMigrationTools && MigrationRunner && (
           <Suspense fallback={<ModuleLoadingFallback />}>
             <MigrationRunner />
           </Suspense>
@@ -3193,6 +3201,9 @@ export default function App() {
       )}
       
       <Toaster position="top-right" />
+      
+      {/* Environment Badge (Development/Preview only) */}
+      <EnvironmentBadge />
     </div>
   );
 }

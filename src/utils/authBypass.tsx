@@ -2,13 +2,21 @@
  * TEMPORARY: Auth Bypass for Testing
  * Remove this file once Supabase auth is properly set up
  * 
+ * ⚠️ SECURITY WARNING: This file should NEVER be active in production
+ * 
  * USAGE:
- * - Automatically logs in as admin@oxivo.com
- * - No login page required
+ * - Automatically logs in as admin@oxivo.com in DEVELOPMENT only
+ * - Production deployments will use real Supabase authentication
  * - To switch to viewer mode, change MOCK_ADMIN to MOCK_VIEWER
  */
 
 import React, { createContext, useContext, useState } from 'react';
+import { ENV_CONFIG, assertDevelopmentOnly } from './environmentConfig';
+
+// ✅ SECURITY CHECK: Prevent auth bypass in production
+if (!ENV_CONFIG.enableAuthBypass) {
+  throw new Error('🚨 CRITICAL: Auth bypass is disabled. Use real Supabase authentication.');
+}
 
 export type UserRole = 'admin' | 'viewer';
 
