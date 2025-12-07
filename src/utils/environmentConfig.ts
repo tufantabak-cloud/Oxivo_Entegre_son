@@ -56,7 +56,9 @@ export const ENV_CONFIG = {
   enableErrorReporting: IS_PRODUCTION,
 
   // 🔐 Security
-  enableAuthBypass: IS_DEVELOPMENT || IS_LOCALHOST, // ⚠️ NEVER true in production
+  // ⚠️ TEMPORARY: Allow auth bypass on Vercel for testing
+  // TODO: Remove IS_VERCEL after setting up real Supabase Auth
+  enableAuthBypass: IS_DEVELOPMENT || IS_LOCALHOST || IS_VERCEL,
   enableMigrationTools: IS_DEVELOPMENT || IS_LOCALHOST,
   enableDebugPanel: IS_DEVELOPMENT || IS_LOCALHOST,
 
@@ -75,6 +77,13 @@ export const ENV_CONFIG = {
   // 🚨 Error Handling
   showDetailedErrors: IS_DEVELOPMENT,
   enableErrorBoundary: true,
+
+  // 🌍 Environment Info (for debugging)
+  isDevelopment: IS_DEVELOPMENT,
+  isProduction: IS_PRODUCTION,
+  isVercel: IS_VERCEL,
+  isLocalhost: IS_LOCALHOST,
+  isFigmaMake: IS_FIGMA_MAKE,
 } as const;
 
 /**
