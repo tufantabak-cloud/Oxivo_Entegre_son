@@ -46,9 +46,11 @@ import { getStoredData, setStoredData } from './utils/storage';
 import { migrateData, validateImportData } from './utils/dataMigration';
 import { syncToSupabase } from './utils/supabaseSync';
 import { syncAllData } from './utils/autoSync';
-import { cleanupAllDuplicatesSQL, checkDuplicatesSQL, supabase } from './utils/supabaseClient';
-import { FeatureFlags, debugLog, debugWarn, debugError } from './utils/featureFlags';
+import { supabase } from './utils/supabaseClient';
+import { FeatureFlags } from './utils/featureFlags';
 import { isSilentMode } from './utils/environmentDetection';
+import { logger } from './utils/logger';
+import { loadSupabaseDebugTools, loadDuplicateCleanupTools } from './utils/debugHelpers';
 
 // ✅ CRITICAL: Import Supabase API helpers
 import { 
@@ -228,31 +230,20 @@ if (!CURRENT_APP_VERSION) {
   logger.warn('CURRENT_APP_VERSION missing, fallback to default');
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// SUPABASE CONNECTIVITY TEST - DEV/DEBUG ONLY
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// DEVELOPMENT TEST UTILITIES (disabled for production builds)
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// TEMPORARILY DISABLED TO FIX VERCEL BUILD ISSUES
-// Uncomment in development if needed:
-//
-// if (typeof window !== 'undefined' && import.meta.env.DEV) {
-//   import('./utils/supabaseConnectivityTest')
-//     .then(module => {
-//       (window as any).testSupabase = module.quickSupabaseTest;
-//       (window as any).SupabaseConnectivityTester = module.SupabaseConnectivityTester;
-//       console.log('🔧 Supabase connectivity test loaded! Run: window.testSupabase()');
-//     })
-//     .catch(err => console.warn('⚠️ Could not load supabaseConnectivityTest:', err.message));
-//   
-//   import('./utils/testSuspensionReasons')
-//     .then(module => {
-//       (window as any).testSuspensionReasons = module.quickTestSuspensionReasons;
-//       console.log('🔧 Suspension reasons test loaded! Run: window.testSuspensionReasons()');
-//     })
-//     .catch(err => console.warn('⚠️ Could not load testSuspensionReasons:', err.message));
-// }
+// Safe environment detection
+const isDev = (() => {
+  try {
+    return import.meta.env?.DEV ?? false;
+  } catch {
+    return false;
+  }
+})();
+
+// Load debug tools in development mode only
+if (isDev && typeof window !== 'undefined') {
+  loadSupabaseDebugTools();
+  loadDuplicateCleanupTools();
+}
 
 export default function App() {
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -264,9 +255,9 @@ export default function App() {
   const hasLoggedOut = typeof window !== 'undefined' && 
     sessionStorage.getItem('auth_logged_out') === 'true';
 
-  // ✅ DEBUG: Watch user state changes
+  // Watch user state changes (dev only)
   useEffect(() => {
-    console.log('🔵 [App.tsx] User state changed:', {
+    logger.debug('🔵 User state changed:', {
       user: user?.email || 'null',
       authLoading,
       hasLoggedOut,
@@ -274,9 +265,9 @@ export default function App() {
     });
   }, [user, authLoading, hasLoggedOut]);
 
-  // ✅ PRIORITY 1: If explicitly logged out, force LoginPage
+  // If explicitly logged out, force LoginPage
   if (hasLoggedOut) {
-    console.log('🔵 [App.tsx] hasLoggedOut=true, forcing LoginPage');
+    logger.debug('🔵 hasLoggedOut=true, forcing LoginPage');
     return <LoginPage />;
   }
 
@@ -292,9 +283,9 @@ export default function App() {
     );
   }
 
-  // ✅ PRIORITY 3: If no user, show LoginPage
+  // If no user, show LoginPage
   if (!user) {
-    console.log('🔵 [App.tsx] user=null, showing LoginPage');
+    logger.debug('🔵 user=null, showing LoginPage');
     return <LoginPage />;
   }
 
@@ -461,7 +452,7 @@ export default function App() {
           // 🔍 DEBUG: Verify 'reason' field mapping
           const firstReason = suspensionReasonResult.data[0];
           if (firstReason) {
-            debugLog('🔍 [App.tsx] First suspension reason:', {
+            logger.debug('🔍 First suspension reason:', {
               id: firstReason.id,
               reason: firstReason.reason || '❌ MISSING!',
               neden: (firstReason as any).neden || 'not present (correct)',
@@ -847,29 +838,29 @@ export default function App() {
   useEffect(() => {
     if (!dataLoaded || !FeatureFlags.ENABLE_REALTIME_SYNC) return;
     
-    debugLog('🔄 Starting real-time subscription for EPK List...');
+    logger.debug('🔄 Starting real-time subscription for EPK List...');
     
     const epkChannel = supabase
       .channel('epk-list-realtime')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'epk_list' },
         async (payload) => {
-          debugLog('📥 EPK değişikliği algılandı:', payload);
+          logger.debug('📥 EPK değişikliği algılandı:', payload);
           try {
             const { data } = await epkListApi.getAll();
             if (data) {
               setEpkList(data);
-              debugLog('✅ EPK listesi güncellendi:', data.length, 'kayıt');
+              logger.debug('✅ EPK listesi güncellendi:', data.length, 'kayıt');
             }
           } catch (error) {
-            debugError('❌ EPK listesi güncellenirken hata:', error);
+            logger.error('❌ EPK listesi güncellenirken hata:', error);
           }
         }
       )
       .subscribe();
     
     return () => {
-      debugLog('🛑 EPK real-time subscription kapatılıyor...');
+      logger.debug('🛑 EPK real-time subscription kapatılıyor...');
       supabase.removeChannel(epkChannel);
     };
   }, [dataLoaded]);
@@ -878,7 +869,7 @@ export default function App() {
   useEffect(() => {
     if (!dataLoaded || !FeatureFlags.ENABLE_REALTIME_SYNC) return;
     
-    debugLog('🔄 Starting real-time subscription for ÖK List...');
+    logger.debug('🔄 Starting real-time subscription for ÖK List...');
     
     const okChannel = supabase
       .channel('ok-list-realtime')
@@ -2358,7 +2349,7 @@ export default function App() {
                 }`}
               >
                 <Building2 size={13} />
-                <span className="text-[14px]">Banka</span>
+                <span className="text-[14px]">Banka/PF</span>
               </Button>
               
               <Button
@@ -2431,16 +2422,16 @@ export default function App() {
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    console.log('🔴 [App.tsx] Çıkış butonuna tıklandı - DIRECT LOGOUT');
+                    logger.debug('🔴 Çıkış butonuna tıklandı - DIRECT LOGOUT');
                     
-                    // ✅ DIRECT LOGOUT - Bypass authBypass.tsx
+                    // DIRECT LOGOUT - Bypass authBypass.tsx
                     sessionStorage.setItem('auth_logged_out', 'true');
-                    console.log('🔴 [App.tsx] Set sessionStorage.auth_logged_out = true');
+                    logger.debug('🔴 Set sessionStorage.auth_logged_out = true');
                     
                     toast.success('Başarıyla çıkış yapıldı');
                     
-                    // ✅ FORCE RELOAD
-                    console.log('🔴 [App.tsx] Reloading page...');
+                    // FORCE RELOAD
+                    logger.debug('🔴 Reloading page...');
                     setTimeout(() => {
                       window.location.reload();
                     }, 500);
@@ -2910,9 +2901,7 @@ export default function App() {
                             
                             // Detailed error log
                             if (FeatureFlags.ENABLE_DEBUG_LOGS) {
-                              console.group('🔍 Validasyon Detayları');
-                              validation.errors.forEach(err => console.log(err));
-                              console.groupEnd();
+                              logger.debug('🔍 Validasyon Detayları:', validation.errors);
                             }
                             return;
                           }
@@ -3062,41 +3051,39 @@ export default function App() {
                     );
                     
                     // Detaylı TABELA bilgisi
-                    console.log('📋 TABELA Detayları:');
-                    // ✅ ARRAY SAFETY: Ensure bankPFRecords is a valid array (Fix 2/3)
+                    // Log TABELA details (dev only)
                     const safeBankPFRecords2 = Array.isArray(bankPFRecords) ? bankPFRecords : [];
-                    safeBankPFRecords2.forEach(record => {
-                      if (record.tabelaRecords && record.tabelaRecords.length > 0) {
-                        console.log(`  ${record.firmaUnvan}: ${record.tabelaRecords.length} TABELA kaydı`);
-                        // ✅ ARRAY SAFETY: Ensure tabelaRecords is a valid array
-                        const safeTabelaRecords2 = Array.isArray(record.tabelaRecords) ? record.tabelaRecords : [];
-                        safeTabelaRecords2.forEach(t => {
-                          console.log(`    - ${t.gelirModeli.ad} (${t.kartTipi})`);
-                        });
-                      }
-                    });
-                    
-                    const dataCount = {
-                      'Müşteriler': customers.length,
-                      'Banka/PF': bankPFRecords.length,
-                      'TABELA (Toplam)': totalTabelaRecords,
-                      'Bankalar': banks.length,
-                      'EPK': epkList.length,
-                      'ÖK': okList.length,
-                    };
-                    console.log('📊 Kayıtlı Veriler:', dataCount);
-                    
-                    // LocalStorage kontrolü
-                    const storedData = localStorage.getItem('bankPFRecords');
-                    if (storedData) {
-                      try {
-                        const parsed = JSON.parse(storedData);
-                        const storedTabela = parsed.reduce((sum: number, r: BankPF) => 
-                          sum + (r.tabelaRecords?.length || 0), 0
-                        );
-                        console.log('💾 LocalStorage\'da TA.BELA:', storedTabela);
-                      } catch (error) {
-                        console.error('❌ JSON parse hatası (bankPFRecords):', error);
+                    if (isDev) {
+                      const tabelaDetails = safeBankPFRecords2
+                        .filter(record => record.tabelaRecords && record.tabelaRecords.length > 0)
+                        .map(record => ({
+                          firma: record.firmaUnvan,
+                          count: record.tabelaRecords?.length || 0
+                        }));
+                      logger.debug('📋 TABELA Detayları:', tabelaDetails);
+                      
+                      const dataCount = {
+                        'Müşteriler': customers.length,
+                        'Banka/PF': bankPFRecords.length,
+                        'TABELA (Toplam)': totalTabelaRecords,
+                        'Bankalar': banks.length,
+                        'EPK': epkList.length,
+                        'ÖK': okList.length,
+                      };
+                      logger.debug('📊 Kayıtlı Veriler:', dataCount);
+                      
+                      // LocalStorage kontrolü
+                      const storedData = localStorage.getItem('bankPFRecords');
+                      if (storedData) {
+                        try {
+                          const parsed = JSON.parse(storedData);
+                          const storedTabela = parsed.reduce((sum: number, r: BankPF) => 
+                            sum + (r.tabelaRecords?.length || 0), 0
+                          );
+                          logger.debug('💾 LocalStorage\'da TABELA:', storedTabela);
+                        } catch (error) {
+                          logger.error('❌ JSON parse hatası (bankPFRecords):', error);
+                        }
                       }
                     }
                     
@@ -3239,42 +3226,39 @@ export default function App() {
                   sum + (record.tabelaRecords?.length || 0), 0
                 );
                 
-                // Detaylı TABELA bilgisi
-                console.log('📋 TABELA Detayları:');
-                // ✅ ARRAY SAFETY: Ensure bankPFRecords is a valid array (Fix 3/3)
+                // Log TABELA details (dev only)
                 const safeBankPFRecords3 = Array.isArray(bankPFRecords) ? bankPFRecords : [];
-                safeBankPFRecords3.forEach(record => {
-                  if (record.tabelaRecords && record.tabelaRecords.length > 0) {
-                    console.log(`  ${record.firmaUnvan}: ${record.tabelaRecords.length} TABELA kaydı`);
-                    // ✅ ARRAY SAFETY: Ensure tabelaRecords is a valid array
-                    const safeTabelaRecords3 = Array.isArray(record.tabelaRecords) ? record.tabelaRecords : [];
-                    safeTabelaRecords3.forEach(t => {
-                      console.log(`    - ${t.gelirModeli.ad} (${t.kartTipi})`);
-                    });
-                  }
-                });
-                
-                const dataCount = {
-                  'Müşteriler': customers.length,
-                  'Banka/PF': bankPFRecords.length,
-                  'TABELA (Toplam)': totalTabelaRecords,
-                  'Bankalar': banks.length,
-                  'EPK': epkList.length,
-                  'ÖK': okList.length,
-                };
-                console.log('📊 Kayıtlı Veriler:', dataCount);
-                
-                // LocalStorage kontrolü
-                const storedData = localStorage.getItem('bankPFRecords');
-                if (storedData) {
-                  try {
-                    const parsed = JSON.parse(storedData);
-                    const storedTabela = parsed.reduce((sum: number, r: BankPF) => 
-                      sum + (r.tabelaRecords?.length || 0), 0
-                    );
-                    console.log('💾 LocalStorage\'da TABELA:', storedTabela);
-                  } catch (error) {
-                    console.error('❌ JSON parse hatası (bankPFRecords):', error);
+                if (isDev) {
+                  const tabelaDetails = safeBankPFRecords3
+                    .filter(record => record.tabelaRecords && record.tabelaRecords.length > 0)
+                    .map(record => ({
+                      firma: record.firmaUnvan,
+                      count: record.tabelaRecords?.length || 0
+                    }));
+                  logger.debug('📋 TABELA Detayları:', tabelaDetails);
+                  
+                  const dataCount = {
+                    'Müşteriler': customers.length,
+                    'Banka/PF': bankPFRecords.length,
+                    'TABELA (Toplam)': totalTabelaRecords,
+                    'Bankalar': banks.length,
+                    'EPK': epkList.length,
+                    'ÖK': okList.length,
+                  };
+                  logger.debug('📊 Kayıtlı Veriler:', dataCount);
+                  
+                  // LocalStorage kontrolü
+                  const storedData = localStorage.getItem('bankPFRecords');
+                  if (storedData) {
+                    try {
+                      const parsed = JSON.parse(storedData);
+                      const storedTabela = parsed.reduce((sum: number, r: BankPF) => 
+                        sum + (r.tabelaRecords?.length || 0), 0
+                      );
+                      logger.debug('💾 LocalStorage\'da TABELA:', storedTabela);
+                    } catch (error) {
+                      logger.error('❌ JSON parse hatası (bankPFRecords):', error);
+                    }
                   }
                 }
                 

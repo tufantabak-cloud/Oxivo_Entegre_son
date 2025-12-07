@@ -12,7 +12,7 @@ import { ModernFormSelect, FormSelectOption } from './ModernFormSelect';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { toast } from 'sonner';
 import { bankPFApi } from '../utils/supabaseClient';
-import type { UserInfo } from '../hooks/useUserRole'; // 🔐 User role types
+import { isFigmaMakeEnvironment } from '../utils/environmentDetection';
 
 export interface ContactPerson {
   id: string;
@@ -57,6 +57,13 @@ export interface HakedisRecord {
   olusturanKullanici?: string;
   pfIslemHacmi?: string; // PF İşlem Hacmi/TL
   oxivoIslemHacmi?: string; // OXİVO İşlem Hacmi/TL
+  // Ek Gelir/Kesinti Alanları
+  ekGelirAciklama?: string; // "Merchant Fee ödenmesi" gibi
+  ekGelirPFTL?: number; // Manuel TL
+  ekGelirOXTL?: number; // Manuel TL
+  ekKesintiAciklama?: string; // "Ceza kesintisi" gibi
+  ekKesintiPFTL?: number; // Manuel TL
+  ekKesintiOXTL?: number; // Manuel TL
   // Hesaplanmış toplam değerler (rapor performansı için)
   totalIslemHacmi?: number; // Toplam İşlem Hacmi
   totalPFPay?: number; // Toplam PF Payı
@@ -173,7 +180,6 @@ interface BankPFModuleProps {
   selectedBankPFId?: string | null;
   onClearSelectedBankPFId?: () => void;
   onDeleteBankPF?: (id: string) => void; // Müşteri referanslarını temizlemek için
-  userInfo?: UserInfo; // 🔐 User role info
 }
 
 // PERFORMANCE: React.memo prevents unnecessary re-renders
@@ -192,14 +198,8 @@ export const BankPFModule = React.memo(function BankPFModule({
   onTabelaRecordsChange,
   selectedBankPFId = null,
   onClearSelectedBankPFId,
-  onDeleteBankPF,
-  userInfo
+  onDeleteBankPF
 }: BankPFModuleProps) {
-  // 🔐 Check permissions
-  const canCreate = userInfo?.permissions.canCreate ?? true; // Default to true for backward compatibility
-  const canEdit = userInfo?.permissions.canEdit ?? true;
-  const canDelete = userInfo?.permissions.canDelete ?? true;
-
   const [selectedRecord, setSelectedRecord] = useState<BankPF | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   
@@ -248,7 +248,9 @@ export const BankPFModule = React.memo(function BankPFModule({
         await bankPFApi.create(record);
         toast.success('Kayıt eklendi ve Supabase\'e senkronize edildi');
       } catch (error) {
-        console.error('❌ Supabase sync hatası:', error);
+        if (!isFigmaMakeEnvironment()) {
+          console.error('Supabase sync hatası:', error);
+        }
         toast.error('Kayıt eklendi ama Supabase senkronizasyonu başarısız');
       }
       
@@ -263,7 +265,9 @@ export const BankPFModule = React.memo(function BankPFModule({
         await bankPFApi.create(record);
         toast.success('Kayıt güncellendi ve Supabase\'e senkronize edildi');
       } catch (error) {
-        console.error('❌ Supabase sync hatası:', error);
+        if (!isFigmaMakeEnvironment()) {
+          console.error('Supabase sync hatası:', error);
+        }
         toast.error('Kayıt güncellendi ama Supabase senkronizasyonu başarısız');
       }
       
@@ -452,12 +456,10 @@ export const BankPFModule = React.memo(function BankPFModule({
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Banka / PF - Ödeme Kuruluşları</h2>
           <p className="text-xs sm:text-sm font-medium text-gray-600">Banka ve ödeme kuruluşu kayıtlarını yönetin</p>
         </div>
-        {canCreate && (
-          <Button size="default" onClick={handleCreateNew} className="flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-shadow w-full sm:w-auto">
-            <Plus size={18} />
-            <span>Yeni Kayıt</span>
-          </Button>
-        )}
+        <Button size="default" onClick={handleCreateNew} className="flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-shadow w-full sm:w-auto">
+          <Plus size={18} />
+          <span>Yeni Kayıt</span>
+        </Button>
       </div>
 
       <BankPFList
