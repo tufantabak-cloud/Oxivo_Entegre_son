@@ -1,38 +1,6 @@
-// App v1.0.21 - TABELA Seçim Başlığı FİNAL (2025-12-05):
-//   ✅ ÇÖZÜLDÜ: "Seçim" başlığı görünür boyutta (13px, font-weight 500)
-//   🎯 Sorun: Orijinal text-xs (12px) çok küçüktü, inline style ile düzeltildi
-// App v1.0.18 - TABELA Sütun Düzeni Optimizasyonu (2025-12-05):
-//   ✅ KLM SÜTUNU: TABELA tablolarında ilk sütuna taşındı
-//   ✅ CHECKBOX SÜTUNU: TABELA tablolarında son sütuna taşındı
-//   ✅ "Seçim" BAŞLIĞI: Checkbox sütununa metin başlık eklendi
-//   ✅ GENIŞLIK OPTIMIZASYONU: Tüm sütunlara w-X değerleri eklendi
-//   📊 Expected: Daha okunabilir ve tutarlı tablo düzeni
-// App v1.0.17 - SSR-SAFE & HYDRATION FIX (2025-11-16):
-//   ✅ BATCHED UPDATES: unstable_batchedUpdates for JSON import (hydration fix)
-//   ✅ SSR-SAFE: extractLeadingNumber() util (subtitle.split() NaN crash fix)
-//   ✅ CLEAN CODE: handleJSONImport useCallback (render içi IIFE kaldırıldı)
-//   ✅ REFACTOR: 294 satır duplicate kod → tek fonksiyon
-//   📊 Expected: No more white screen, stable SSR, faster JSON import
-// PHASE 4 OPTIMIZATIONS (2025-11-10) - CRITICAL PERFORMANCE FIX:
-//   ✅ DEFERRED DATA LOADING: localStorage reads after first paint (useEffect)
-//   ✅ ALL LAZY LOADED: Dashboard, ExcelDataManager, GlobalSearch, ActivityLogViewer, DebugModule
-//   ✅ LOADING STATE: Skeleton UI during data load
-//   ✅ CONDITIONAL SAVES: localStorage writes only after initial load complete
-//   📊 Expected: 80-90% faster initial load, instant white screen → UI
-// PHASE 3 OPTIMIZATIONS (2025-11-06):
-//   ✅ Code Splitting: Lazy load all 6 major modules (React.lazy + Suspense)
-//   ✅ CustomerList & BankPFList optimizations (useMemo/useCallback)
-//   📊 Achieved: -60% initial bundle size, faster page loads
-// PHASE 2 OPTIMIZATIONS (2025-11-04):
-//   ✅ React.memo() added to 6 heavy modules
-//   ✅ useDefinitionStore custom hook (12 state → 1 hook)
-//   ✅ Reduced state declarations (17 → 5)
-//   📊 Achieved: +20-30% improvement
-// PHASE 1 OPTIMIZATIONS (2025-11-04):
-//   ✅ Memoized all filtered lists
-//   ✅ Extracted inline callbacks to useCallback
-//   ✅ Conditional homePageData computation
-//   📊 Achieved: 40-50% render reduction
+// Müşteri Yönetim Uygulaması - App v1.0.21
+// Supabase entegre, çok modüllü yönetim sistemi
+// Detaylı version history için CHANGELOG.md dosyasına bakınız
 import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
 import { unstable_batchedUpdates } from 'react-dom';
 import { useDefinitionStore } from './hooks/useDefinitionStore';
@@ -49,8 +17,6 @@ import { syncAllData } from './utils/autoSync';
 import { supabase } from './utils/supabaseClient';
 import { FeatureFlags } from './utils/featureFlags';
 import { isSilentMode } from './utils/environmentDetection';
-import { logger } from './utils/logger';
-import { loadSupabaseDebugTools, loadDuplicateCleanupTools } from './utils/debugHelpers';
 
 // ✅ CRITICAL: Import Supabase API helpers
 import { 
@@ -132,7 +98,6 @@ import { Button } from './components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './components/ui/sheet';
 import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card';
 import { Badge } from './components/ui/badge';
-// Tooltip removed - import { Tooltip, TooltipTrigger, TooltipContent } from './components/ui/tooltip';
 import { toast } from 'sonner';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './components/ui/table';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
@@ -168,62 +133,8 @@ function extractLeadingNumber(text: string | undefined): number {
   return isNaN(num) ? 0 : num;
 }
 
-// Uygulama versiyonu - Her büyük veri yapısı değişikliğinde artırın!
-// v1.0.17 - SSR-SAFE & HYDRATION FIX (2025-11-16):
-//         - ⚡ BATCHED UPDATES: unstable_batchedUpdates for all JSON imports (hydration fix)
-//         - ⚡ SSR-SAFE PARSING: extractLeadingNumber() util (no more NaN crashes in sort)
-//         - ⚡ CLEAN CODE: handleJSONImport useCallback (294 lines of duplicate removed)
-//         - ⚡ NO RENDER IIFE: All FileReader logic moved outside render
-//         - Expected: No white screen, stable SSR/hydration, -300 lines code
-// v1.0.14 - CRITICAL PERFORMANCE FIX (2025-11-10):
-//         - ⚡ DEFERRED DATA LOADING: localStorage reads moved to useEffect (after first paint)
-//         - ⚡ ALL COMPONENTS LAZY LOADED: Dashboard, ExcelDataManager, GlobalSearch, ActivityLogViewer, DebugModule
-//         - ⚡ LOADING STATE: Skeleton UI shown while data loads
-//         - ⚡ OPTIMIZED SAVES: localStorage writes only after data loaded
-//         - Expected: 80-90% faster initial page load, instant white screen → UI
-// v1.0.13 - Performance optimization Phase 3 (2025-11-06):
-//         - ⚡ Code Splitting: Lazy load all 6 major modules (React.lazy + Suspense)
-//         - ⚡ CustomerList & BankPFList optimizations (useMemo/useCallback)
-//         - Expected: -60% initial bundle size, faster page loads
-// v1.0.12 - Performance optimization Phase 2 (2025-11-04):
-//         - React.memo() added to 6 module components
-//         - useDefinitionStore custom hook (12 states → 1 hook)
-//         - Reduced state declarations in App.tsx (17 → 5)
-//         - Eliminated 12 useEffect for definition persistence
-//         - Expected additional +20-30% improvement
-// v1.0.11 - Performance optimization Phase 1 (2025-11-04):
-//         - Memoized filtered lists (activeBanks, activeEPKs, etc.)
-//         - Extracted inline callbacks (handleBankPFNavigate, handleDeleteBankPF, etc.)
-//         - Conditional homePageData computation (only when activeModule='home')
-//         - Pre-transformed props (activeMCCListForCustomer, gorevListesiForBankPF, etc.)
-//         - Expected 40-50% render reduction
-// v1.0.10 - Production optimizations:
-//         - useMemo/useCallback optimizations
-//         - Terser minification enabled (console.log removed in production)
-//         - Manual chunk splitting for optimal caching
-//         - CSS optimized and cleaned up
-// v1.0.10 - TABELA Kayıtları tablosunda sütun düzeni optimize edildi:
-//         - KLM sütunu ilk sütun olarak başa taşındı
-//         - Checkbox "Seçim" sütunu son sütun olarak sona taşındı
-//         - Tüm sütunlara genişlik değerleri (w-X) eklendi
-//         - Hem ana tablo hem Ek Gelir Detayları tablosuna uygulandı
-// v1.0.9 - Hakediş manuel değer yönetimi:
-//         - ANA TABELA TOPLAM "Toplam İşlem Hacmi" hücresine manuel veri girişi eklendi
-//         - Excel export'ta manuel değerler "(MANUEL)" etiketi ile işaretleniyor
-//         - Kesinleştirme öncesi manuel değer uyarı sistemi eklendi
-//         - View modunda manuel değerler için bilgilendirme gösterimi
-//         - Liste görünümünde manuel değer badge'i eklendi
-// v1.0.8 - Hakediş kayıtlarına toplam değerler eklendi (totalIslemHacmi, totalPFPay, totalOxivoPay)
-//         - Rapor performansı iyileştirildi (önbelleklenmiş değerler kullanılıyor)
-//         - Sabit Komisyon hesaplama hatası düzeltildi (işlem hacmi × komisyon oranı)
-// v1.0.7 - Rapor modülüne "Müşteriler" sayfası eklendi (PF bazlı, dönem bazlı, detaylı analiz)
-// v1.0.6 - Hakediş formuna PF/OXİVO İşlem Hacmi tablosu eklendi (manuel giriş + otomatik fark hesaplama)
-// v1.0.5 - TABELA gruplarına aktif/pasif durumu eklendi - Hakediş sadece aktif gruplar için
-// v1.0.4 - Hakediş sistemi: TABELA grubu bazlı hakediş yönetimi
-// v1.0.3 - Hakediş sistemi yenilendi: Kayıt bazlı hakediş yönetimi (Oluştur-Kaydet-Arşiv)
-// v1.0.2 - Hakediş modülü eklendi (Banka/PF > İş Birliği > Hakediş)
-// v1.0.1 - Export/Import butonları header'a taşındı (tüm sayfalardan erişilebilir)
-const CURRENT_APP_VERSION = '1.0.18';
+// Uygulama versiyonu (Detaylı değişiklikler için CHANGELOG.md'ye bakınız)
+const CURRENT_APP_VERSION = '1.0.21';
 
 // Version validation with fallback
 if (!CURRENT_APP_VERSION) {
@@ -239,10 +150,16 @@ const isDev = (() => {
   }
 })();
 
-// Load debug tools in development mode only
+// Load debug tools in development mode only (dynamic import for production safety)
 if (isDev && typeof window !== 'undefined') {
-  loadSupabaseDebugTools();
-  loadDuplicateCleanupTools();
+  import('./utils/debugHelpers')
+    .then(({ loadSupabaseDebugTools, loadDuplicateCleanupTools }) => {
+      loadSupabaseDebugTools();
+      loadDuplicateCleanupTools();
+    })
+    .catch((err) => {
+      logger.warn('⚠️ Debug tools not available:', err.message);
+    });
 }
 
 export default function App() {
@@ -304,8 +221,6 @@ export default function App() {
   
   // PHASE 2 OPTIMIZATION: useDefinitionStore hook
   // Consolidates 12 definition states into a single hook (reduces state declarations from 12 to 1)
-  // Note: For now, we extract individual values for backwards compatibility
-  // TODO: Refactor to pass entire definitions object to DefinitionsModule
   const definitions = useDefinitionStore();
   const { 
     jobTitles, setJobTitles,
@@ -783,13 +698,10 @@ export default function App() {
       switch (route.module) {
         case 'customer':
           setActiveModule('customers');
-          // TODO: Open customer detail by ID (route.id)
           if (route.id) {
             const customer = customers.find(c => c.id === route.id);
             if (customer) {
               logger.info('✅ Customer found:', customer.cariAdi);
-              // Note: CustomerModule needs to handle this internally
-              // For now, just navigate to customers module
             }
           }
           break;
@@ -804,7 +716,6 @@ export default function App() {
           
         case 'product':
           setActiveModule('products');
-          // TODO: Open product detail
           break;
           
         case 'revenue':
@@ -813,7 +724,6 @@ export default function App() {
           
         case 'reports':
           setActiveModule('reports');
-          // TODO: Open specific report (route.report)
           break;
           
         case 'definitions':
@@ -876,22 +786,22 @@ export default function App() {
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'ok_list' },
         async (payload) => {
-          debugLog('📥 ÖK değişikliği algılandı:', payload);
+          logger.debug('📥 ÖK değişikliği algılandı:', payload);
           try {
             const { data } = await okListApi.getAll();
             if (data) {
               setOkList(data);
-              debugLog('✅ ÖK listesi güncellendi:', data.length, 'kayıt');
+              logger.debug('✅ ÖK listesi güncellendi:', data.length, 'kayıt');
             }
           } catch (error) {
-            debugError('❌ ÖK listesi güncellenirken hata:', error);
+            logger.error('❌ ÖK listesi güncellenirken hata:', error);
           }
         }
       )
       .subscribe();
     
     return () => {
-      debugLog('🛑 ÖK real-time subscription kapatılıyor...');
+      logger.debug('🛑 ÖK real-time subscription kapatılıyor...');
       supabase.removeChannel(okChannel);
     };
   }, [dataLoaded]);
@@ -900,7 +810,7 @@ export default function App() {
   useEffect(() => {
     if (!dataLoaded || !FeatureFlags.ENABLE_REALTIME_SYNC) return;
     
-    debugLog('🔄 Starting real-time subscription for Banks...');
+    logger.debug('🔄 Starting real-time subscription for Banks...');
     
     const banksChannel = supabase
       .channel('banks-realtime')
@@ -2307,7 +2217,7 @@ export default function App() {
                 }`}
               >
                 <Home size={13} />
-                <span className="text-[11px]" className="text-[12px]" className="text-[13px]" className="text-[14px]">Ana</span>
+                <span className="text-[13px]">Ana</span>
               </Button>
               
               <Button
@@ -2335,7 +2245,7 @@ export default function App() {
                 }`}
               >
                 <Users size={13} />
-                <span className="text-[11px]" className="text-[12px]" className="text-[13px]" className="text-[14px]">Müşteri</span>
+                <span className="text-[13px]">Müşteri</span>
               </Button>
               
               <Button
@@ -2377,7 +2287,7 @@ export default function App() {
                 }`}
               >
                 <Euro size={13} />
-                <span className="text-[11px]" className="text-[12px]" className="text-[13px]" className="text-[14px]">Gelir</span>
+                <span className="text-[13px]">Gelir</span>
               </Button>
               
               <Button
@@ -2391,7 +2301,7 @@ export default function App() {
                 }`}
               >
                 <Settings size={13} />
-                <span className="text-[14px]" className="text-[12px]" className="text-[13px]">Tanım</span>
+                <span className="text-[13px]">Tanım</span>
               </Button>
               
               <Button
