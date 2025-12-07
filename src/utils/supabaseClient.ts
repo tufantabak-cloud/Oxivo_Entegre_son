@@ -75,15 +75,29 @@ export function objectToSnakeCase(obj: any): any {
 
 /**
  * Object'in tüm key'lerini snake_case'den camelCase'e çevirir
+ * FIXED: Deep conversion for nested objects and arrays
  */
 export function objectToCamelCase(obj: any): any {
   if (obj === null || obj === undefined) return obj;
-  if (Array.isArray(obj)) return obj.map(item => objectToCamelCase(item));
+  if (Array.isArray(obj)) {
+    console.log(`🔄 [objectToCamelCase] Converting array with ${obj.length} items...`);
+    return obj.map(item => objectToCamelCase(item));
+  }
   if (typeof obj !== 'object') return obj;
   
   const converted: any = {};
   for (const [key, value] of Object.entries(obj)) {
     const camelKey = toCamelCase(key);
+    
+    // 🔍 DEBUG: Log nested conversion
+    if (key === 'komisyon_oranlari' || key === 'paylasim_oranlari') {
+      console.log(`🔍 [objectToCamelCase] Converting key "${key}" → "${camelKey}"`, {
+        valueType: typeof value,
+        isArray: Array.isArray(value),
+        value: value
+      });
+    }
+    
     converted[camelKey] = (value && typeof value === 'object') 
       ? objectToCamelCase(value) 
       : value;
@@ -2198,8 +2212,9 @@ export const signApi = {
     const VALID_FIELDS = [
       'id', 'firmaId', 'urun', 'aktif', 'kartTipi', 'yurtIciDisi', 'kisaAciklama',
       'kartProgramIds', 'bankIds', 'gelirModeli', 'komisyonOranları', 'paylaşımOranları',
-      'hazineGeliri', 'ekGelirDetay', 'aciklama', 'fotograf',
-      'olusturmaTarihi', 'guncellemeTarihi', 'createdAt', 'updatedAt'
+      'hazineGeliri', 'ekGelirDetay',  
+      'aciklama', 'fotograf', 'olusturmaTarihi', 'guncellemeTarihi',
+      'createdAt', 'updatedAt'
     ];
     
     const sanitizedRecords = uniqueRecords.map(record => {

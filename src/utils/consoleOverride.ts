@@ -27,6 +27,10 @@ const originalConsole = {
  * Override console in production
  */
 export function overrideConsoleInProduction(): void {
+  // 🔧 TEMPORARILY DISABLED FOR DEBUGGING
+  // Enable this to see debug logs during development
+  return;
+  
   if (!ENV_CONFIG.enableConsoleLogs) {
     // ✅ Silence non-critical logs in production
     console.log = () => {};

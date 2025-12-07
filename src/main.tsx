@@ -3,10 +3,10 @@ import ReactDOM from 'react-dom/client'
 import App from './App'
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// PRODUCTION CONSOLE OVERRIDE - Must be FIRST
+// PRODUCTION CONSOLE OVERRIDE - DISABLED FOR DEBUGGING
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-import { overrideConsoleInProduction } from './utils/consoleOverride';
-overrideConsoleInProduction();
+// import { overrideConsoleInProduction } from './utils/consoleOverride';
+// overrideConsoleInProduction();
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // CSS IMPORT ORDER - CRITICAL FOR PERFORMANCE & CLS PREVENTION
