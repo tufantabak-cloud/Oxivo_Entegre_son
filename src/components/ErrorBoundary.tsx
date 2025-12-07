@@ -18,7 +18,8 @@ import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { toast } from 'sonner';
-import { logger, isDevelopmentMode } from '../utils/logger';
+import { logger } from '../utils/logger';
+import { ENV_CONFIG } from '../utils/environmentConfig';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -137,7 +138,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         userAgent: navigator.userAgent,
         url: window.location.href,
         viewport: `${window.innerWidth}x${window.innerHeight}`,
-        isDevelopment: isDevelopmentMode(),
+        isDevelopment: ENV_CONFIG.isDevelopment,
       };
 
       // Store in localStorage for debugging
@@ -206,7 +207,7 @@ function DefaultErrorFallback({
   const [copied, setCopied] = React.useState(false);
 
   // ⚡ PRODUCTION HARDENING: Safe environment detection
-  const isDevelopment = isDevelopmentMode();
+  const isDevelopment = ENV_CONFIG.isDevelopment;
 
   const copyErrorToClipboard = (): void => {
     const errorText = `
