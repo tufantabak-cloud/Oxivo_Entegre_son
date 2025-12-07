@@ -81,7 +81,16 @@ export function objectToCamelCase(obj: any): any {
   if (obj === null || obj === undefined) return obj;
   if (Array.isArray(obj)) {
     console.log(`🔄 [objectToCamelCase] Converting array with ${obj.length} items...`);
-    return obj.map(item => objectToCamelCase(item));
+    // 🔍 DEBUG: Log first item's keys before conversion
+    if (obj.length > 0 && typeof obj[0] === 'object' && obj[0] !== null) {
+      console.log('🔍 [objectToCamelCase] First item keys BEFORE:', Object.keys(obj[0]));
+    }
+    const converted = obj.map(item => objectToCamelCase(item));
+    // 🔍 DEBUG: Log first item's keys after conversion
+    if (converted.length > 0 && typeof converted[0] === 'object' && converted[0] !== null) {
+      console.log('🔍 [objectToCamelCase] First item keys AFTER:', Object.keys(converted[0]));
+    }
+    return converted;
   }
   if (typeof obj !== 'object') return obj;
   
