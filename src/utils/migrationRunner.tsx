@@ -100,9 +100,29 @@ export function MigrationRunner() {
           const existing = await earningsApi.getAll();
           const existingIds = new Set(existing.data?.map((r: any) => r.id) || []);
           
+          // ✅ WHITELIST: Supabase'deki earnings tablosunda var olan alanlar
+          const EARNINGS_VALID_FIELDS = [
+            'id', 'firmaId', 'tabelaGroupId', 'tabelaGroupAd', 'donem',
+            'olusturmaTarihi', 'guncellemeTarihi', 'vade', 'islemHacmiMap',
+            'durum', 'notlar', 'olusturanKullanici', 'pfIslemHacmi', 'oxivoIslemHacmi',
+            'manualEkGelirOxivoTotal', 'manualAnaTabelaOxivoTotal', 'manualAnaTabelaIslemHacmi',
+            'totalIslemHacmi', 'totalPFPay', 'totalOxivoPay', 'aktif', 'createdAt', 'updatedAt'
+          ];
+          
+          // Sadece geçerli alanları tut (ekGelirAciklama, ekGelirPFTL vs. gibi olmayan alanları çıkar)
+          const sanitizedEarnings = earningsData.map((record: any) => {
+            const clean: any = {};
+            EARNINGS_VALID_FIELDS.forEach(field => {
+              if (field in record) {
+                clean[field] = record[field];
+              }
+            });
+            return clean;
+          });
+          
           // Yeni ve güncellenecekleri ayır
-          const toCreate = earningsData.filter((e: any) => !existingIds.has(e.id));
-          const toUpdate = earningsData.filter((e: any) => existingIds.has(e.id));
+          const toCreate = sanitizedEarnings.filter((e: any) => !existingIds.has(e.id));
+          const toUpdate = sanitizedEarnings.filter((e: any) => existingIds.has(e.id));
           
           // Toplu kayıt
           if (toCreate.length > 0) {

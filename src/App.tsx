@@ -401,206 +401,22 @@ export default function App() {
     };
   }, []);
   
-  // ⚡ Load data AFTER first paint (defer heavy localStorage reads)
-  // NOTE: This now serves as a FALLBACK if Supabase has no data
+  // ✅ SUPABASE-ONLY MODE: Mark data as loaded after Supabase fetch completes
   useEffect(() => {
-    // Only load from localStorage if Supabase data is loaded but empty
     if (!supabaseDataLoaded) return;
     
-    // Use requestIdleCallback for better performance
-    const loadDataAsync = () => {
-      // ✅ SKIP LOCALSTORAGE IF SUPABASE HAS DATA
-      const hasSupabaseData = customers.length > 0 || payterProducts.length > 0 || bankPFRecords.length > 0;
-      
-      if (hasSupabaseData) {
-        logger.info('✅ Supabase data already loaded, skipping localStorage');
-        setDataLoaded(true);
-        return;
-      }
-      
-      // ⚠️ FALLBACK: Only load from localStorage if Supabase returned no data
-      if (!isSilentMode()) {
-        logger.warn('⚠️ No Supabase data found, loading from localStorage as fallback');
-      }
-      
-      const storedCustomers = getStoredData<Customer[]>('customers', []);
-      // ✅ CRITICAL FIX: Extra null/undefined check before .map()
-      const processedCustomers = (Array.isArray(storedCustomers) ? storedCustomers : []).map(c => ({
-        ...c,
-        // ✅ CRITICAL FIX: Parse linkedBankPFIds if it's a JSON string
-        linkedBankPFIds: (() => {
-          if (!c.linkedBankPFIds) return [];
-          if (Array.isArray(c.linkedBankPFIds)) return c.linkedBankPFIds;
-          if (typeof c.linkedBankPFIds === 'string') {
-            try {
-              const parsed = JSON.parse(c.linkedBankPFIds);
-              return Array.isArray(parsed) ? parsed : [];
-            } catch {
-              return [];
-            }
-          }
-          return [];
-        })()
-      }));
-      
-      logger.debug('Customers yüklendi (localStorage fallback)', {
-        total: processedCustomers.length,
-        withBankPF: processedCustomers.filter(c => c.linkedBankPFIds && c.linkedBankPFIds.length > 0).length,
-        withoutBankPF: processedCustomers.filter(c => !c.linkedBankPFIds || c.linkedBankPFIds.length === 0).length
-      });
-      
-      setCustomers(processedCustomers);
-      
-      // Load Payter Products with safety check
-      const storedProducts = getStoredData('payterProducts', []);
-      const safeProducts = Array.isArray(storedProducts) ? storedProducts : [];
-      setPayterProducts(safeProducts);
-      
-      logger.debug('Payter Products yüklendi', {
-        total: safeProducts.length,
-        raw: typeof storedProducts,
-        isArray: Array.isArray(storedProducts)
-      });
-      
-      // Load BankPF records with migration
-      const records = getStoredData<BankPF[]>('bankPFRecords', []);
-      const oldTabelaRecords = getStoredData<TabelaRecord[]>('tabelaRecords', []);
-    
-    // ✅ SAFETY: Ensure arrays before processing
-    const safeRecords = Array.isArray(records) ? records : [];
-    const safeOldTabelaRecords = Array.isArray(oldTabelaRecords) ? oldTabelaRecords : [];
-    
-    // Eski TABELA verilerini firmalara migrate et
-    if (safeOldTabelaRecords.length > 0) {
-      const updatedRecords = safeRecords.map(record => {
-        // Bu firmaya ait TABELA kayıtlarını bul
-        const firmaTabelaRecords = oldTabelaRecords.filter(
-          tr => tr.kurulus.id === record.id
-        );
-        
-        // ✅ SAFETY: Ensure firmaTabelaRecords is array
-        const safeFirmaTabelaRecords = Array.isArray(firmaTabelaRecords) ? firmaTabelaRecords : [];
-        const recordTabelaRecords = Array.isArray(record.tabelaRecords) ? record.tabelaRecords : [];
-        
-        return {
-          ...record,
-          tabelaRecords: (safeFirmaTabelaRecords.length > 0 ? safeFirmaTabelaRecords : recordTabelaRecords).map(tr => ({
-            ...tr,
-            bankIds: tr.bankIds || [], // Eski kayıtlara bankIds ekle
-            aciklama: tr.aciklama || undefined,
-            fotograf: tr.fotograf || undefined,
-            kapanmaTarihi: tr.kapanmaTarihi || undefined
-          })),
-          agreementBanks: record.agreementBanks || [],
-          tabelaGroups: (record.tabelaGroups || []).map((g: TabelaGroup) => ({
-            ...g,
-            aktif: g.aktif !== undefined ? g.aktif : true
-          })),
-          hakedisRecords: record.hakedisRecords || []
-        };
-      });
-      
-        // Migration sonrası eski veriyi temizle
-        setTimeout(() => {
-          localStorage.removeItem('tabelaRecords');
-        }, 1000);
-        
-        setBankPFRecords(updatedRecords);
-        setDataLoaded(true);
-        return;
-      }
-      
-      // Eğer tabelaRecords yoksa, varolan kayıtların tabelaRecords ve agreementBanks alanını kontrol et
-      // ✅ SAFETY: Use safeRecords instead of records
-      const processedRecords = safeRecords.map(r => ({ 
-        ...r, 
-        tabelaRecords: (Array.isArray(r.tabelaRecords) ? r.tabelaRecords : []).map(tr => ({
-          ...tr,
-          bankIds: tr.bankIds || [], // Eski kayıtlara bankIds ekle
-          aciklama: tr.aciklama || undefined,
-          fotograf: tr.fotograf || undefined,
-          kapanmaTarihi: tr.kapanmaTarihi || undefined
-        })),
-        agreementBanks: Array.isArray(r.agreementBanks) ? r.agreementBanks : [],
-        tabelaGroups: (Array.isArray(r.tabelaGroups) ? r.tabelaGroups : []).map((g: TabelaGroup) => ({
-          ...g,
-          aktif: g.aktif !== undefined ? g.aktif : true
-        })),
-        hakedisRecords: r.hakedisRecords || []
-      }));
-      
-      // Debug: BankPF yükleme durumu
-      logger.debug('BankPF kayıtları yüklendi', {
-        total: processedRecords.length,
-        withTabela: processedRecords.filter(r => r.tabelaRecords && r.tabelaRecords.length > 0).length,
-        withHakedis: processedRecords.filter(r => r.hakedisRecords && r.hakedisRecords.length > 0).length
-      });
-      
-      setBankPFRecords(processedRecords);
-      
-      // Load Signs (TABELA) from localStorage
-      const storedSigns = getStoredData<any[]>('signs', []);
-      const safeSigns = Array.isArray(storedSigns) ? storedSigns : [];
-      if (safeSigns.length > 0) {
-        setSigns(safeSigns);
-        logger.debug('Signs (TABELA) yüklendi (localStorage fallback)', {
-          total: safeSigns.length
-        });
-      }
-      
-      // Load Earnings (HAKEDİŞ) from localStorage
-      const storedEarnings = getStoredData<any[]>('earnings', []);
-      const safeEarnings = Array.isArray(storedEarnings) ? storedEarnings : [];
-      if (safeEarnings.length > 0) {
-        setEarnings(safeEarnings);
-        logger.debug('Earnings (HAKEDİŞ) yüklendi (localStorage fallback)', {
-          total: safeEarnings.length
-        });
-      }
-      
-      // Auto-fix removed - Legacy recovery utils deleted
-      
-      setDataLoaded(true);
-    };
-    
-    // Use setTimeout to defer execution (requestIdleCallback alternative)
-    setTimeout(loadDataAsync, 0);
-  }, [supabaseDataLoaded, customers, payterProducts, bankPFRecords]);
+    // ✅ SUPABASE-ONLY: Data loaded from Supabase, mark as ready
+    logger.info('✅ Supabase data loaded, application ready');
+    setDataLoaded(true);
+  }, [supabaseDataLoaded]);
 
-  // Save to localStorage whenever state changes (only after initial load)
-  // Note: Definition states (jobTitles, mccList, etc.) are auto-saved by useDefinitionStore hook
-  // Only save non-definition states here
-  useEffect(() => { 
-    if (dataLoaded) setStoredData('payterProducts', payterProducts); 
-  }, [payterProducts, dataLoaded]);
-  
-  useEffect(() => { 
-    if (dataLoaded) {
-      setStoredData('customers', customers);
-    }
-  }, [customers, dataLoaded]);
-  
-  useEffect(() => { 
-    if (!dataLoaded) return;
-    const totalTabela = bankPFRecords.reduce((sum, r) => sum + (r.tabelaRecords?.length || 0), 0);
-    logger.debug('localStorage\'a kaydediliyor - BankPF kayıtları', { 
-      count: bankPFRecords.length,
-      totalTabela 
-    });
-    setStoredData('bankPFRecords', bankPFRecords); 
-  }, [bankPFRecords, dataLoaded]);
-  
-  useEffect(() => { 
-    if (dataLoaded) setStoredData('domainMappings', domainMappings); 
-  }, [domainMappings, dataLoaded]);
-  
-  useEffect(() => { 
-    if (dataLoaded) setStoredData('signs', signs); 
-  }, [signs, dataLoaded]);
-  
-  useEffect(() => { 
-    if (dataLoaded) setStoredData('earnings', earnings); 
-  }, [earnings, dataLoaded]);
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // SUPABASE-ONLY MODE (No localStorage fallback)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // ❌ REMOVED: localStorage fallback - Application runs on Vercel (production-only)
+  // All data must be in Supabase. Use MigrationRunner once to transfer localStorage → Supabase.
+
+
 
   // ✅ NEW: Auto-sync ALL data types to Supabase (runs when ANY data changes)
   useEffect(() => {
