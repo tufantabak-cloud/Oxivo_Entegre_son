@@ -2698,6 +2698,7 @@ if (typeof window !== 'undefined') {
       suspensionReasonApi,
       domainMappingApi,
       signApi,
+      earningsApi,
       documentApi
     }
   };
