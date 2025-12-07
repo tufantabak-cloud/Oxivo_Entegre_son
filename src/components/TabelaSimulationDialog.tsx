@@ -71,7 +71,7 @@ export function TabelaSimulationDialog({
 
       aktifTabelalar.forEach(tabela => {
         // Gelir Ortaklığı modelinde alış-satış var
-        if (tabela.gelirModeli.ad === 'Gelir Ortaklığı') {
+        if (tabela.gelirModeli?.ad === 'Gelir Ortaklığı') {
           // Aktif komisyon oranlarını al
           const aktifVadeler = tabela.komisyonOranları.filter(k => k.aktif);
           
@@ -90,9 +90,9 @@ export function TabelaSimulationDialog({
               gecerliTabelaSayisi++;
 
               tabelaDetaylari.push({
-                kurulusAdi: tabela.kurulus.ad,
+                kurulusAdi: tabela.kurulus?.ad || 'Kuruluş Yok',
                 kartTipi: `${tabela.kartTipi} - ${vade.vade}`,
-                gelirModeli: tabela.gelirModeli.ad,
+                gelirModeli: tabela.gelirModeli?.ad || 'Gelir Modeli Yok',
                 alis: alis,
                 satis: satis,
                 kar: satis - alis
@@ -101,7 +101,7 @@ export function TabelaSimulationDialog({
           });
         } 
         // Sabit Komisyon modelinde yüzde bazlı hesaplama
-        else if (tabela.gelirModeli.ad === 'Sabit Komisyon') {
+        else if (tabela.gelirModeli?.ad === 'Sabit Komisyon') {
           const aktifVadeler = tabela.komisyonOranları.filter(k => k.aktif);
           
           aktifVadeler.forEach(vade => {
@@ -120,9 +120,9 @@ export function TabelaSimulationDialog({
               gecerliTabelaSayisi++;
 
               tabelaDetaylari.push({
-                kurulusAdi: tabela.kurulus.ad,
+                kurulusAdi: tabela.kurulus?.ad || 'Kuruluş Yok',
                 kartTipi: `${tabela.kartTipi} - ${vade.vade}`,
-                gelirModeli: `${tabela.gelirModeli.ad} (${komisyonYuzde}%)`,
+                gelirModeli: `${tabela.gelirModeli?.ad || 'Gelir Modeli Yok'} (${komisyonYuzde}%)`,
                 alis: 0,
                 satis: tutarSayisal,
                 kar: oxivoKazanc
@@ -131,7 +131,7 @@ export function TabelaSimulationDialog({
           });
         }
         // Hazine Geliri modeli
-        else if (tabela.gelirModeli.ad === 'Hazine Geliri' && tabela.hazineGeliri) {
+        else if (tabela.gelirModeli?.ad === 'Hazine Geliri' && tabela.hazineGeliri) {
           const hazineTutar = parseFloat(tabela.hazineGeliri.tutarTL || '0');
           const oxivoYuzde = parseFloat(tabela.hazineGeliri.oxivoYuzde || '0');
           const kazanc = parseFloat(tabela.hazineGeliri.kazancTL || '0');
@@ -145,9 +145,9 @@ export function TabelaSimulationDialog({
             gecerliTabelaSayisi++;
 
             tabelaDetaylari.push({
-              kurulusAdi: tabela.kurulus.ad,
+              kurulusAdi: tabela.kurulus?.ad || 'Kuruluş Yok',
               kartTipi: tabela.kartTipi,
-              gelirModeli: `${tabela.gelirModeli.ad} (${oxivoYuzde}%)`,
+              gelirModeli: `${tabela.gelirModeli?.ad || 'Gelir Modeli Yok'} (${oxivoYuzde}%)`,
               alis: 0,
               satis: tutarSayisal,
               kar: oranliKazanc
@@ -378,7 +378,7 @@ export function TabelaSimulationDialog({
                             <TableRow className="cursor-pointer hover:bg-gray-50">
                               <TableCell>
                                 <CollapsibleTrigger asChild>
-                                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                  <Button variant="ghost" size="icon-sm">
                                     {expandedFirms.has(result.firmaId) ? (
                                       <ChevronDown className="h-4 w-4" />
                                     ) : (

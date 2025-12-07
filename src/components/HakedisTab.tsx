@@ -482,7 +482,7 @@ export function HakedisTab({
     let satis = 0;
     let kazanc = 0;
 
-    if (record.gelirModeli.ad === 'Hazine Geliri') {
+    if (record.gelirModeli?.ad === 'Hazine Geliri') {
       const tutarTL = parseFloat(record.hazineGeliri?.tutarTL || '0');
       const oxivoYuzde = parseFloat(record.hazineGeliri?.oxivoYuzde || '0');
       
@@ -491,7 +491,7 @@ export function HakedisTab({
       maliyet = toplamTutar;
       satis = toplamTutar;
       
-    } else if (record.gelirModeli.ad === 'Gelir Ortaklığı') {
+    } else if (record.gelirModeli?.ad === 'Gelir Ortaklığı') {
       const alisYuzde = parseFloat(vadeData.alisTL || '0');
       const satisYuzde = parseFloat(vadeData.satisTL || '0');
       
@@ -499,7 +499,7 @@ export function HakedisTab({
       satis = islemHacmi * (satisYuzde / 100);
       kazanc = satis - maliyet;
       
-    } else if (record.gelirModeli.ad === 'Sabit Komisyon') {
+    } else if (record.gelirModeli?.ad === 'Sabit Komisyon') {
       // Sabit Komisyon: Kar = İşlem Hacmi × (Komisyon Oranı / 100)
       const komisyonOrani = parseFloat(vadeData.oran || '0');
       kazanc = islemHacmi * (komisyonOrani / 100);
@@ -553,7 +553,7 @@ export function HakedisTab({
         let satisTL = 0;
         let kazancTL = 0;
         
-        if (record.gelirModeli.ad === 'Sabit Komisyon') {
+        if (record.gelirModeli?.ad === 'Sabit Komisyon') {
           // Sabit Komisyon: Kar = İşlem Hacmi × (Komisyon Oranı / 100)
           const komisyonOrani = parseFloat(vadeData.oran || '0');
           kazancTL = islemHacmi * (komisyonOrani / 100);
@@ -642,9 +642,9 @@ export function HakedisTab({
         const vadeData = record.komisyonOranları.find(ko => ko.vade === hakedis.vade && ko.aktif !== false);
         
         let komisyonStr = '-';
-        if (record.gelirModeli.ad === 'Gelir Ortaklığı') {
+        if (record.gelirModeli?.ad === 'Gelir Ortaklığı') {
           komisyonStr = `A:%${vadeData?.alisTL || '0'} S:%${vadeData?.satisTL || '0'}`;
-        } else if (record.gelirModeli.ad === 'Sabit Komisyon') {
+        } else if (record.gelirModeli?.ad === 'Sabit Komisyon') {
           komisyonStr = `%${vadeData?.oran || '0'}`;
         } else {
           komisyonStr = `${record.hazineGeliri?.tutarTL || '0'}₺ (OX:%${record.hazineGeliri?.oxivoYuzde || '0'})`;
@@ -653,7 +653,7 @@ export function HakedisTab({
         rows.push([
           'Ana TABELA',
           kisaltUrunAdi(record.urun || '-'),
-          record.gelirModeli.ad,
+          record.gelirModeli?.ad || 'Gelir Modeli Yok',
           '-',
           record.kartProgramIds?.includes('ALL') ? 'Tümü' : `${record.kartProgramIds?.length || 0} program`,
           record.yurtIciDisi,
@@ -1749,7 +1749,7 @@ export function HakedisTab({
                           const islemHacmi = parseFloat(formIslemHacmiMap[vadeKey] || '0');
                           
                           // Gelir Modeline göre hesaplamalar
-                          const isSabitKomisyon = record.gelirModeli.ad === 'Sabit Komisyon';
+                          const isSabitKomisyon = record.gelirModeli?.ad === 'Sabit Komisyon';
                           
                           let alisYuzde = 0;
                           let satisYuzde = 0;
@@ -1829,7 +1829,7 @@ export function HakedisTab({
                         {/* E: Gelir Modeli */}
                         {visibleColumns.gelirModeli && (
                           <TableCell className="bg-blue-50/30 w-36">
-                            <span className="text-xs">{record.gelirModeli.ad}</span>
+                            <span className="text-xs">{record.gelirModeli?.ad || 'Gelir Modeli Yok'}</span>
                           </TableCell>
                         )}
                         
@@ -2022,28 +2022,24 @@ export function HakedisTab({
                         ) : (
                           <div className="flex flex-col items-center gap-2">
                             <Input
-                              type="text"
+                              type="number"
                               placeholder={totals.normalTotals.totalIslemHacmi.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               value={manualAnaTabelaIslemHacmi}
                               onChange={(e) => {
-                                const value = e.target.value.replace(/[^0-9.,]/g, '');
+                                const value = e.target.value;
                                 setManualAnaTabelaIslemHacmi(value);
                               }}
                               className="w-32 h-8 text-center bg-white border-2 border-purple-300 focus:border-purple-500 text-sm"
+                              step="0.01"
                             />
-                            <div className="flex items-center gap-2">
-                              <div className="text-xs text-green-700">
-                                {manualAnaTabelaIslemHacmi ? '(Manuel)' : '(Otomatik)'}
-                              </div>
-                              {manualAnaTabelaIslemHacmi && (
-                                <button
-                                  onClick={() => setManualAnaTabelaIslemHacmi('')}
-                                  className="text-xs text-red-600 hover:text-red-800 underline"
-                                >
-                                  Sıfırla
-                                </button>
-                              )}
-                            </div>
+                            {manualAnaTabelaIslemHacmi && (
+                              <button
+                                onClick={() => setManualAnaTabelaIslemHacmi('')}
+                                className="text-xs text-red-600 hover:text-red-800 underline"
+                              >
+                                Sıfırla
+                              </button>
+                            )}
                           </div>
                         )}
                       </TableCell>
@@ -2117,7 +2113,9 @@ export function HakedisTab({
                                     </button>
                                   </>
                                 ) : (
-                                  <span>Otomatik: {totals.normalTotals.totalOxivoPay.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺</span>
+                                  <span className="text-xs text-gray-500">
+                                    {totals.normalTotals.totalOxivoPay.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
+                                  </span>
                                 )}
                               </div>
                             </div>
@@ -2178,15 +2176,9 @@ export function HakedisTab({
                         {visibleColumns.islemHacmi && (
                           <TableCell className="text-left">
                             {view === 'view' ? (
-                              <span className="text-green-700">{ekGelirAciklama || '—'}</span>
+                              <span className="text-green-700 text-xs">Hazine Geliri</span>
                             ) : (
-                              <Input
-                                type="text"
-                                value={ekGelirAciklama}
-                                onChange={(e) => setEkGelirAciklama(e.target.value)}
-                                placeholder="Açıklama (örn: Merchant Fee)"
-                                className="w-full text-sm bg-white"
-                              />
+                              <span className="text-green-700 text-xs">Hazine Geliri</span>
                             )}
                           </TableCell>
                         )}
@@ -2245,15 +2237,9 @@ export function HakedisTab({
                         {visibleColumns.islemHacmi && (
                           <TableCell className="text-left">
                             {view === 'view' ? (
-                              <span className="text-red-700">{ekKesintiAciklama || '—'}</span>
+                              <span className="text-red-700 text-xs">Açıklama (Örn: Ceza kesintisi)</span>
                             ) : (
-                              <Input
-                                type="text"
-                                value={ekKesintiAciklama}
-                                onChange={(e) => setEkKesintiAciklama(e.target.value)}
-                                placeholder="Açıklama (örn: Ceza kesintisi)"
-                                className="w-full text-sm bg-white"
-                              />
+                              <span className="text-red-700 text-xs">Açıklama (Örn: Ceza kesintisi)</span>
                             )}
                           </TableCell>
                         )}

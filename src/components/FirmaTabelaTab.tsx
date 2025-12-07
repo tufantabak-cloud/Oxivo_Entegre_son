@@ -17,6 +17,7 @@ import { TabelaRecord, TabelaGroup } from './TabelaTab';
 import { EkGelir } from './RevenueModelsTab';
 import { kisaltUrunAdi } from '../utils/formatters';
 import { TabelaFormData, GroupFormData, FirmaTabelaTabProps, TabelaGroupDialogProps } from './tabela/types';
+import { signApi } from '../utils/supabaseClient';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // INLINE COMPONENT: TabelaGroupDialog (to avoid build resolution issues)
@@ -126,7 +127,7 @@ function TabelaGroupDialog({
                         <Badge variant="outline" className="bg-indigo-50 text-indigo-700">
                           {record.urun}
                         </Badge>
-                        <span>{record.gelirModeli.ad}</span>
+                        <span>{record.gelirModeli?.ad || 'Gelir Modeli Yok'}</span>
                         <Badge variant={record.yurtIciDisi === 'Yurt İçi' ? 'default' : 'secondary'}>
                           {record.yurtIciDisi}
                         </Badge>
@@ -363,7 +364,7 @@ export function FirmaTabelaTab({
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const newRecord: TabelaRecord = {
       id: editingRecord?.id || `rec-${Date.now()}`,
       firmaId,
@@ -387,6 +388,19 @@ export function FirmaTabelaTab({
       guncellemeTarihi: new Date().toISOString(),
     };
 
+    // ✅ Supabase'e kaydet
+    try {
+      const result = await signApi.create(newRecord);
+      if (result.success) {
+        console.log('✅ TABELA kaydı Supabase\'e kaydedildi:', newRecord.id);
+      } else {
+        console.warn('⚠️ Supabase kaydetme hatası:', result.error);
+        toast.warning('Kayıt yerel olarak kaydedildi ancak Supabase senkronizasyonu başarısız');
+      }
+    } catch (error) {
+      console.error('❌ Supabase kaydetme hatası:', error);
+    }
+
     if (editingRecord) {
       const updatedRecords = tabelaRecords.map(r => r.id === editingRecord.id ? newRecord : r);
       onTabelaRecordsChange?.(updatedRecords);
@@ -399,21 +413,45 @@ export function FirmaTabelaTab({
     handleCloseDialog();
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
+    // ✅ Supabase'den sil
+    try {
+      const result = await signApi.delete(id);
+      if (result.success) {
+        console.log('✅ TABELA kaydı Supabase\'den silindi:', id);
+      } else {
+        console.warn('⚠️ Supabase silme hatası:', result.error);
+      }
+    } catch (error) {
+      console.error('❌ Supabase silme hatası:', error);
+    }
+
     const filteredRecords = tabelaRecords.filter(r => r.id !== id);
     onTabelaRecordsChange?.(filteredRecords);
     toast.success('TABELA kaydı silindi');
   };
   
-  const handleToggleStatus = (id: string) => {
-    const updatedRecords = tabelaRecords.map(r => 
-      r.id === id ? { ...r, aktif: !r.aktif, guncellemeTarihi: new Date().toISOString() } : r
-    );
-    onTabelaRecordsChange?.(updatedRecords);
+  const handleToggleStatus = async (id: string) => {
     const record = tabelaRecords.find(r => r.id === id);
-    if (record) {
-      toast.success(record.aktif ? 'TABELA kaydı kapatıldı' : 'TABELA kaydı açıldı');
+    if (!record) return;
+
+    const updatedRecord = { ...record, aktif: !record.aktif, guncellemeTarihi: new Date().toISOString() };
+    
+    // ✅ Supabase'e kaydet
+    try {
+      const result = await signApi.create(updatedRecord);
+      if (result.success) {
+        console.log('✅ TABELA durum değişikliği Supabase\'e kaydedildi:', id);
+      } else {
+        console.warn('⚠️ Supabase güncelleme hatası:', result.error);
+      }
+    } catch (error) {
+      console.error('❌ Supabase güncelleme hatası:', error);
     }
+
+    const updatedRecords = tabelaRecords.map(r => r.id === id ? updatedRecord : r);
+    onTabelaRecordsChange?.(updatedRecords);
+    toast.success(record.aktif ? 'TABELA kaydı kapatıldı' : 'TABELA kaydı açıldı');
   };
   
   const handleCloseAgreement = () => {
@@ -837,7 +875,7 @@ export function FirmaTabelaTab({
                             )}
                             {isFirstRow && (
                               <TableCell className="py-2" rowSpan={activeVadeler.length}>
-                                <Badge variant="secondary">{record.gelirModeli.ad}</Badge>
+                                <Badge variant="secondary">{record.gelirModeli?.ad || 'Gelir Modeli Yok'}</Badge>
                               </TableCell>
                             )}
                             {isFirstRow && (
@@ -1005,7 +1043,7 @@ export function FirmaTabelaTab({
                             )}
                             {isFirstRow && (
                               <TableCell className="py-2" rowSpan={activeVadeler.length}>
-                                <Badge variant="secondary">{record.gelirModeli.ad}</Badge>
+                                <Badge variant="secondary">{record.gelirModeli?.ad || 'Gelir Modeli Yok'}</Badge>
                               </TableCell>
                             )}
                             {isFirstRow && (

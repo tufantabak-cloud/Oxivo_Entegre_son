@@ -83,8 +83,8 @@ export function TabelaRow({
                 {/* Gelir Modeli */}
                 <TableCell className="py-2 w-36" rowSpan={activeVadeler.length}>
                   <div className="flex items-center gap-2">
-                    <span>{record.gelirModeli.ad}</span>
-                    {record.gelirModeli.ad?.toLowerCase().includes('paçal') && (
+                    <span>{record.gelirModeli?.ad || 'Gelir Modeli Yok'}</span>
+                    {record.gelirModeli?.ad?.toLowerCase().includes('paçal') && (
                       <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300 text-xs">
                         Auto
                       </Badge>
@@ -124,12 +124,12 @@ export function TabelaRow({
             {/* Oran */}
             <TableCell className="py-2 w-40">
               <div className="text-xs space-y-0.5">
-                {record.gelirModeli.ad === 'Hazine Geliri' ? (
+                {record.gelirModeli?.ad === 'Hazine Geliri' ? (
                   <>
                     <div className="text-gray-500">Kazanç:</div>
                     <div className="text-blue-700">{parseFloat(record.hazineGeliri?.kazancTL || '0').toFixed(2)}₺</div>
                   </>
-                ) : record.gelirModeli.ad === 'Gelir Ortaklığı' ? (
+                ) : record.gelirModeli?.ad === 'Gelir Ortaklığı' ? (
                   <>
                     <div className="text-gray-500">Alış: <span className="text-red-600">{parseFloat(vadeInfo.alisTL || '0').toFixed(2)}</span></div>
                     <div className="text-gray-500">Satış: <span className="text-green-600">{parseFloat(vadeInfo.satisTL || '0').toFixed(2)}</span></div>
@@ -150,7 +150,7 @@ export function TabelaRow({
                 <TableCell className="py-2 w-36" rowSpan={activeVadeler.length}>
                   <div className="text-xs space-y-2">
                     <div className="flex items-center justify-between gap-2 bg-green-50 px-2 py-2 rounded">
-                      <span className="text-gray-700">{record.kurulus.ad}</span>
+                      <span className="text-gray-700">{record.kurulus?.ad || 'Kuruluş'}</span>
                       <span className="text-green-700">%{record.paylaşımOranları.kurulusOrani}</span>
                     </div>
                     <div className="flex items-center justify-between gap-2 bg-blue-50 px-2 py-2 rounded">

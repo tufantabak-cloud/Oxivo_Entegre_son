@@ -215,7 +215,7 @@ export const getTabelaByGelirModeli = (
   records: ExtendedTabelaRecord[],
   gelirModeliAd: string
 ): ExtendedTabelaRecord[] => {
-  return records.filter(r => r.gelirModeli.ad === gelirModeliAd);
+  return records.filter(r => r.gelirModeli?.ad === gelirModeliAd);
 };
 
 /**

@@ -1,7 +1,9 @@
+import React, { useState } from 'react';
 import { Switch } from './ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
 import { Plus, Pencil, Trash2, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
+import { signApi } from '../utils/supabaseClient';
 
 export type TabelaRecord = {
   id: string;
@@ -273,7 +275,7 @@ export function TabelaTab({
         return;
       }
       
-      toast.success(`✅ Gelir modeli seçildi: ${gelirModeli.ad}`);
+      toast.success(`✅ Gelir modeli seçildi: ${gelirModeli?.ad || 'Gelir Modeli'}`);
     } 
     
     // ✅ Adım 3 Validasyonu (Ek Gelir - Opsiyonel)
@@ -303,7 +305,7 @@ export function TabelaTab({
     setCurrentStep(currentStep - 1);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const kurulusList = kurulusTipi === 'EPK' ? aktifEPKList : aktifOKList;
     const selectedKurulus = kurulusList.find(k => k.id === kurulusId);
     const selectedGelirModeli = aktifGelirModelleri.find(g => g.id === gelirModeliId);
@@ -373,6 +375,19 @@ export function TabelaTab({
       aktif: editingRecord?.aktif ?? true,
     };
 
+    // ✅ Supabase'e kaydet
+    try {
+      const result = await signApi.create(newRecord);
+      if (result.success) {
+        console.log('✅ TABELA kaydı Supabase\'e kaydedildi:', newRecord.id);
+      } else {
+        console.warn('⚠️ Supabase kaydetme hatası:', result.error);
+        toast.warning('Kayıt yerel olarak kaydedildi ancak Supabase senkronizasyonu başarısız');
+      }
+    } catch (error) {
+      console.error('❌ Supabase kaydetme hatası:', error);
+    }
+
     if (editingRecord) {
       const updatedRecords = tabelaRecords.map(r => (r.id === editingRecord.id ? newRecord : r));
       onTabelaRecordsChange?.(updatedRecords);
@@ -386,7 +401,19 @@ export function TabelaTab({
     handleCloseDialog();
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
+    // ✅ Supabase'den sil
+    try {
+      const result = await signApi.delete(id);
+      if (result.success) {
+        console.log('✅ TABELA kaydı Supabase\'den silindi:', id);
+      } else {
+        console.warn('⚠️ Supabase silme hatası:', result.error);
+      }
+    } catch (error) {
+      console.error('❌ Supabase silme hatası:', error);
+    }
+
     const filteredRecords = tabelaRecords.filter(r => r.id !== id);
     onTabelaRecordsChange?.(filteredRecords);
     toast.success('Tabela kaydı silindi');
@@ -517,11 +544,11 @@ export function TabelaTab({
                   <TableRow key={record.id}>
                     <TableCell>
                       <div>
-                        <div>{record.kurulus.ad}</div>
-                        <div className="text-sm text-gray-500">{record.kurulus.tip}</div>
+                        <div>{record.kurulus?.ad || 'Kuruluş Yok'}</div>
+                        <div className="text-sm text-gray-500">{record.kurulus?.tip}</div>
                       </div>
                     </TableCell>
-                    <TableCell>{record.gelirModeli.ad}</TableCell>
+                    <TableCell>{record.gelirModeli?.ad || 'Gelir Modeli Yok'}</TableCell>
                     <TableCell>
                       <Badge variant="outline">
                         {record.yurtIciDisi}
@@ -533,7 +560,7 @@ export function TabelaTab({
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {record.gelirModeli.ad === 'Hazine Geliri' ? (
+                      {record.gelirModeli?.ad === 'Hazine Geliri' ? (
                         // Hazine Geliri: Tutar, OXiVO %, Kazanç göster
                         <div className="space-y-1 text-xs">
                           <div className="flex items-center justify-between gap-2 bg-purple-50 px-2 py-1 rounded">
@@ -549,7 +576,7 @@ export function TabelaTab({
                             <span className="text-green-700">{parseFloat(record.hazineGeliri?.kazancTL || '0').toFixed(2)}₺</span>
                           </div>
                         </div>
-                      ) : record.gelirModeli.ad === 'Gelir Ortaklığı' ? (
+                      ) : record.gelirModeli?.ad === 'Gelir Ortaklığı' ? (
                         // Gelir Ortaklığı: KAR/TL göster
                         <div className="grid grid-cols-2 gap-1 text-xs">
                           {record.komisyonOranları.map((ko, idx) => {
@@ -581,7 +608,7 @@ export function TabelaTab({
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">
-                        <div>{record.kurulus.ad}: %{record.paylaşımOranları.kurulusOrani}</div>
+                        <div>{record.kurulus?.ad || 'Kuruluş'}: %{record.paylaşımOranları.kurulusOrani}</div>
                         <div>OXİVO: %{record.paylaşımOranları.oxivoOrani}</div>
                       </div>
                     </TableCell>
