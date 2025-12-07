@@ -297,9 +297,16 @@ export function FirmaTabelaTab({
   const handleOpenDialog = (record?: TabelaRecord) => {
     if (record) {
       setEditingRecord(record);
+      
+      // 🔍 DEBUG: Log the record being edited
+      console.log('🔍 [FirmaTabelaTab] Opening dialog for record:', {
+        id: record.id,
+        komisyonOranları: record.komisyonOranları,
+      });
+      
       const loadedKomisyonlar = vadeListesi.map(vade => {
         const existing = record.komisyonOranları.find(k => k.vade === vade);
-        return existing ? {
+        const result = existing ? {
           vade: existing.vade,
           oran: existing.oran || '',
           alisTL: typeof existing.alisTL === 'number' ? existing.alisTL.toString() : (existing.alisTL || ''),
@@ -307,7 +314,16 @@ export function FirmaTabelaTab({
           karTL: typeof existing.karTL === 'number' ? existing.karTL.toString() : (existing.karTL || ''),
           aktif: existing.aktif !== false
         } : { vade, oran: '', alisTL: '', satisTL: '', karTL: '', aktif: false };
+        
+        // 🔍 DEBUG: Log each vade mapping
+        if (existing) {
+          console.log(`🔍 [FirmaTabelaTab] Vade ${vade}:`, { existing, result });
+        }
+        
+        return result;
       });
+      
+      console.log('🔍 [FirmaTabelaTab] Loaded komisyonlar:', loadedKomisyonlar);
       
       setFormData({
         kisaAciklama: record.kisaAciklama || '',
@@ -394,6 +410,13 @@ export function FirmaTabelaTab({
       olusturmaTarihi: editingRecord?.olusturmaTarihi || new Date().toISOString(),
       guncellemeTarihi: new Date().toISOString(),
     };
+
+    // 🔍 DEBUG: Log the record being saved
+    console.log('💾 [FirmaTabelaTab] Saving record:', {
+      id: newRecord.id,
+      komisyonOranları: newRecord.komisyonOranları,
+      isEditing: !!editingRecord,
+    });
 
     // ✅ Supabase'e kaydet
     try {

@@ -2158,8 +2158,26 @@ export const signApi = {
       return { success: false, error: error.message, data: [] };
     }
 
+    // 🔍 DEBUG: Log raw data from Supabase
+    if (data && data.length > 0) {
+      const firstRecord = data[0];
+      if (firstRecord.komisyon_oranlari) {
+        console.log('🔍 [signApi.getAll] Raw from Supabase - komisyon_oranlari:', firstRecord.komisyon_oranlari);
+      }
+    }
+
+    const camelCasedData = data.map(objectToCamelCase);
+    
+    // 🔍 DEBUG: Log after camelCase conversion
+    if (camelCasedData && camelCasedData.length > 0) {
+      const firstCamelRecord = camelCasedData[0];
+      if (firstCamelRecord.komisyonOranları) {
+        console.log('🔍 [signApi.getAll] After camelCase - komisyonOranları:', firstCamelRecord.komisyonOranları);
+      }
+    }
+
     console.log(`✅ Fetched ${data.length} sign records from Supabase`);
-    return { success: true, data: data.map(objectToCamelCase) || [] };
+    return { success: true, data: camelCasedData || [] };
   },
 
   async create(records: any | any[]) {
@@ -2178,9 +2196,10 @@ export const signApi = {
     
     // ✅ Step 2: WHITELIST - Only allow valid Supabase columns
     const VALID_FIELDS = [
-      'id', 'urun', 'aktif', 'kartTipi', 'yurtIciDisi', 'kisaAciklama',
-      'kartProgramIds', 'gelirModeli', 'komisyonOranları', 'paylaşımOranları',
-      'hazineGeliri', 'ekGelirDetay', 'createdAt', 'updatedAt'
+      'id', 'firmaId', 'urun', 'aktif', 'kartTipi', 'yurtIciDisi', 'kisaAciklama',
+      'kartProgramIds', 'bankIds', 'gelirModeli', 'komisyonOranları', 'paylaşımOranları',
+      'hazineGeliri', 'ekGelirDetay', 'aciklama', 'fotograf',
+      'olusturmaTarihi', 'guncellemeTarihi', 'createdAt', 'updatedAt'
     ];
     
     const sanitizedRecords = uniqueRecords.map(record => {
@@ -2195,7 +2214,21 @@ export const signApi = {
     
     // ✅ Step 3: Apply snake_case transformation + FIX Turkish characters
     const transformedItems = sanitizedRecords.map(record => {
+      // 🔍 DEBUG: Log before transformation
+      if (record.komisyonOranları) {
+        console.log('🔍 [signApi] Before snake_case - komisyonOranları:', record.komisyonOranları);
+      }
+      
       const snakeCased = objectToSnakeCase(record);
+      
+      // 🔍 DEBUG: Log after snake_case
+      if (snakeCased.komisyon_oranları || snakeCased.komisyon_oranlari) {
+        console.log('🔍 [signApi] After snake_case:', {
+          komisyon_oranları: snakeCased.komisyon_oranları,
+          komisyon_oranlari: snakeCased.komisyon_oranlari,
+        });
+      }
+      
       // CRITICAL: Fix Turkish characters in column names
       if ('komisyon_oranları' in snakeCased) {
         snakeCased.komisyon_oranlari = snakeCased.komisyon_oranları;
@@ -2205,6 +2238,12 @@ export const signApi = {
         snakeCased.paylasim_oranlari = snakeCased.paylaşım_oranları;
         delete snakeCased.paylaşım_oranları;
       }
+      
+      // 🔍 DEBUG: Log final result
+      if (snakeCased.komisyon_oranlari) {
+        console.log('🔍 [signApi] Final (to Supabase) - komisyon_oranlari:', snakeCased.komisyon_oranlari);
+      }
+      
       return snakeCased;
     });
     
