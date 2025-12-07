@@ -54,6 +54,8 @@ const DashboardHome = lazy(() => import('./components/DashboardHome').then(m => 
 // ⚡ DSYM Module - Dijital Sözleşme Yönetim Modülü
 const DSYMModule = lazy(() => import('./components/DSYMModule'));
 const ContractPublicView = lazy(() => import('./components/DSYM/ContractPublicView'));
+// 🔧 Migration Tool
+const MigrationRunner = lazy(() => import('./utils/migrationRunner').then(m => ({ default: m.MigrationRunner })));
 
 // Type imports (not lazy loaded)
 import type { 
@@ -92,7 +94,7 @@ const GlobalSearch = lazy(() => import('./components/GlobalSearch').then(m => ({
 const ActivityLogViewer = lazy(() => import('./components/ActivityLogViewer').then(m => ({ default: m.ActivityLogViewer })));
 import { useGlobalSearch } from './hooks/useGlobalSearch';
 import { logActivity } from './utils/activityLog';
-import { Home, Users, Building2, Settings, Package, FileText, CheckCircle, XCircle, Filter, Euro, Download, Upload, Search, Trash2, CreditCard, TrendingUp, BarChart3, PieChart, DollarSign, Target, Award, Activity, Menu, X, RefreshCw, FileSignature, LogOut } from 'lucide-react';
+import { Home, Users, Building2, Settings, Package, FileText, CheckCircle, XCircle, Filter, Euro, Download, Upload, Search, Trash2, CreditCard, TrendingUp, BarChart3, PieChart, DollarSign, Target, Award, Activity, Menu, X, RefreshCw, FileSignature, LogOut, Database } from 'lucide-react';
 import { Toaster } from './components/ui/sonner';
 import { Button } from './components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './components/ui/sheet';
@@ -2183,6 +2185,24 @@ export default function App() {
                       <FileSignature size={18} className="flex-shrink-0" />
                       <span className="truncate">DSYM</span>
                     </Button>
+                    <Button
+                      variant="ghost"
+                      size="default"
+                      style={{ minHeight: '48px' }}
+                      onClick={() => {
+                        setActiveModule('migration');
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`justify-start gap-3 ${
+                        activeModule === 'migration'
+                          ? 'bg-green-600 text-white shadow-md hover:bg-green-700 hover:text-white'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                      title="TABELA & HAKEDİŞ Migration Tool"
+                    >
+                      <Database size={18} className="flex-shrink-0" />
+                      <span className="truncate">Migration</span>
+                    </Button>
                   </nav>
                 </SheetContent>
               </Sheet>
@@ -2304,6 +2324,21 @@ export default function App() {
               >
                 <FileSignature size={13} />
                 <span>DSYM</span>
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setActiveModule('migration')}
+                className={`gap-1 h-7 px-2 text-[10px] ${
+                  activeModule === 'migration'
+                    ? 'bg-green-600 text-white shadow-md shadow-green-200 hover:bg-green-700 hover:text-white'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                }`}
+                title="TABELA & HAKEDİŞ Migration Tool"
+              >
+                <Database size={13} />
+                <span>Migrate</span>
               </Button>
             </nav>
             
@@ -3309,6 +3344,11 @@ export default function App() {
         {dataLoaded && activeModule === 'dsym' && (
           <Suspense fallback={<ModuleLoadingFallback />}>
             <DSYMModule />
+          </Suspense>
+        )}
+        {activeModule === 'migration' && (
+          <Suspense fallback={<ModuleLoadingFallback />}>
+            <MigrationRunner />
           </Suspense>
         )}
       </main>
