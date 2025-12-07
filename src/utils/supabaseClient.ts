@@ -2256,6 +2256,12 @@ export const signApi = {
       console.warn(`⚠️ Step 4: Removed ${transformedItems.length - finalItems.length} duplicate signs after sanitization`);
     }
     
+    console.log('📤 [signApi] Sending to Supabase:', {
+      count: finalItems.length,
+      firstItem: finalItems[0],
+      columnNames: finalItems[0] ? Object.keys(finalItems[0]) : [],
+    });
+    
     const { data, error } = await supabase
       .from('signs')
       .upsert(finalItems, { onConflict: 'id' })
@@ -2263,6 +2269,11 @@ export const signApi = {
 
     if (error) {
       console.error('❌ Error creating signs:', error);
+      console.error('❌ Error details:', JSON.stringify(error, null, 2));
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error hint:', error.hint);
+      console.error('❌ Error code:', error.code);
+      console.error('❌ Sample record being sent:', JSON.stringify(finalItems[0], null, 2));
       return { success: false, error: error.message, count: 0 };
     }
 
