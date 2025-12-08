@@ -2248,7 +2248,9 @@ export const signApi = {
       'kartProgramIds', 'bankIds', 'gelirModeli', 'komisyonOranları', 'paylaşımOranları',
       'hazineGeliri', 'ekGelirDetay',  
       'aciklama', 'fotograf', 'olusturmaTarihi', 'guncellemeTarihi',
-      'createdAt', 'updatedAt'
+      'createdAt', 'updatedAt',
+      // ✅ FIX: Hesaplanan değerleri de kaydet
+      'komisyonYuzdesi', 'alisFiyati', 'satisFiyati', 'karFiyati'
     ];
     
     const sanitizedRecords = uniqueRecords.map(record => {
