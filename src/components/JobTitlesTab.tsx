@@ -98,7 +98,7 @@ export const JobTitlesTab = React.memo(function JobTitlesTab({ jobTitles, onJobT
       // Add new
       onJobTitlesChange([
         ...jobTitles,
-        { ...formData, id: Date.now().toString() },
+        { ...formData, id: crypto.randomUUID() }, // ✅ UUID GENERATION for Supabase compatibility
       ]);
     }
     setIsDialogOpen(false);

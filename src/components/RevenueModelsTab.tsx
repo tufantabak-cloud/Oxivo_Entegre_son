@@ -163,7 +163,7 @@ export function RevenueModelsTab({
     } else {
       // Yeni ekleme
       const newItem: HesapKalemi = {
-        id: `hk-${Date.now()}`,
+        id: crypto.randomUUID(), // ✅ UUID GENERATION for Supabase compatibility
         kod: hesapForm.kod!,
         adi: hesapForm.adi!,
         aciklama: hesapForm.aciklama || '',
@@ -236,7 +236,7 @@ export function RevenueModelsTab({
     } else {
       // Yeni ekleme
       const newItem: SabitKomisyon = {
-        id: `sk-${Date.now()}`,
+        id: crypto.randomUUID(), // ✅ UUID GENERATION for Supabase compatibility
         adi: komisyonForm.adi!,
         oran: komisyonForm.oran || 0,
         aciklama: komisyonForm.aciklama || '',
@@ -309,7 +309,7 @@ export function RevenueModelsTab({
     } else {
       // Yeni ekleme
       const newItem: EkGelir = {
-        id: `eg-${Date.now()}`,
+        id: crypto.randomUUID(), // ✅ UUID GENERATION for Supabase compatibility
         adi: gelirForm.adi!,
         tutar: gelirForm.tutar || 0,
         birim: gelirForm.birim || 'TL',

@@ -120,7 +120,7 @@ export const BanksTab = React.memo(function BanksTab({ banks, onBanksChange }: B
     } else {
       // Yeni ekleme
       const newBank: Bank = {
-        id: Date.now().toString(),
+        id: crypto.randomUUID(), // ✅ UUID GENERATION for Supabase compatibility
         kod: formData.kod!,
         bankaAdi: formData.bankaAdi!,
         aciklama: formData.aciklama || '',
@@ -161,9 +161,9 @@ export const BanksTab = React.memo(function BanksTab({ banks, onBanksChange }: B
           <h3>Banka Tanımları</h3>
           <p className="text-gray-600">Sistemdeki banka tanımlarını yönetin</p>
         </div>
-        <Button onClick={() => handleOpenDialog()} className="flex items-center space-x-2">
+        <Button size="default" onClick={() => handleOpenDialog()} className="flex items-center space-x-2">
           <Plus size={18} />
-          <span>Yeni Banka Ekle</span>
+          <span>Yeni Banka</span>
         </Button>
       </div>
 
@@ -293,10 +293,10 @@ export const BanksTab = React.memo(function BanksTab({ banks, onBanksChange }: B
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <Button variant="outline" size="default" onClick={() => setIsDialogOpen(false)}>
               İptal
             </Button>
-            <Button onClick={handleSave}>Kaydet</Button>
+            <Button size="default" onClick={handleSave}>Kaydet</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

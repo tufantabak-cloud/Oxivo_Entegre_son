@@ -120,7 +120,7 @@ export const EPKTab = React.memo(function EPKTab({ epkList, onEPKListChange }: E
     } else {
       // Yeni ekleme
       const newEPK: EPK = {
-        id: Date.now().toString(),
+        id: crypto.randomUUID(), // ✅ UUID GENERATION for Supabase compatibility
         kod: formData.kod!,
         kurumAdi: formData.kurumAdi!,
         aciklama: formData.aciklama || '',

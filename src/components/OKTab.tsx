@@ -120,7 +120,7 @@ export const OKTab = React.memo(function OKTab({ okList, onOKListChange }: OKTab
     } else {
       // Yeni ekleme
       const newOK: OK = {
-        id: Date.now().toString(),
+        id: crypto.randomUUID(), // ✅ UUID GENERATION for Supabase compatibility
         kod: formData.kod!,
         kurumAdi: formData.kurumAdi!,
         aciklama: formData.aciklama || '',

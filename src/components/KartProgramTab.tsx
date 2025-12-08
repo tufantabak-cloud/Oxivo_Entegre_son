@@ -91,7 +91,7 @@ export function KartProgramTab({ kartProgramlar, onKartProgramlarChange }: KartP
     } else {
       // Yeni ekleme
       const newKart: KartProgram = {
-        id: Date.now().toString(),
+        id: crypto.randomUUID(), // ✅ UUID GENERATION for Supabase compatibility
         kartAdi: formData.kartAdi!,
         aciklama: formData.aciklama || '',
         aktif: formData.aktif ?? true,

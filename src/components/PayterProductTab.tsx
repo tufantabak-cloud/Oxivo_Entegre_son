@@ -289,7 +289,7 @@ export function PayterProductTab({ products, onProductsChange, customers = [] }:
 
         try {
           const product: PayterProduct = {
-            id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+            id: crypto.randomUUID(), // ✅ UUID GENERATION for Supabase compatibility
             serialNumber: String(row['Serial number'] || '').trim(),
             name: String(row['Name'] || '').trim(),
             tid: String(row['TID'] || '').trim(),

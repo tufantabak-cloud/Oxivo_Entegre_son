@@ -140,7 +140,7 @@ export function SharingTab({ sharings, onSharingsChange }: SharingTabProps) {
     } else {
       // Yeni ekleme
       const newSharing: Sharing = {
-        id: Date.now().toString(),
+        id: crypto.randomUUID(), // ✅ UUID GENERATION for Supabase compatibility
         kod: formData.kod!,
         modelAdi: formData.modelAdi!,
         oran: formData.oran!,

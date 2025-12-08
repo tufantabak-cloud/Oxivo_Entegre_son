@@ -6,7 +6,6 @@ import { Plus } from 'lucide-react';
 import { Button } from './ui/button';
 import { toast } from 'sonner';
 import { customerApi } from '../utils/supabaseClient';
-import type { UserInfo } from '../hooks/useUserRole'; // 🔐 User role types
 // XLSX import - ES6 module format (v3.0.8 - fixed require issue)
 import * as XLSX from 'xlsx';
 
@@ -297,7 +296,6 @@ interface SuspensionReason {
 }
 
 interface CustomerModuleProps {
-  userInfo?: UserInfo; // 🔐 User permissions
   mccList?: Array<{ kod: string; kategori: string }>;
   customers?: Customer[];
   onCustomersChange?: (customers: Customer[]) => void;
@@ -313,7 +311,6 @@ interface CustomerModuleProps {
 
 // PERFORMANCE: React.memo prevents unnecessary re-renders when props haven't changed
 export const CustomerModule = React.memo(function CustomerModule({ 
-  userInfo,
   mccList = [],
   customers = [],
   onCustomersChange,
@@ -326,10 +323,6 @@ export const CustomerModule = React.memo(function CustomerModule({
   salesReps = [],
   suspensionReasons = []
 }: CustomerModuleProps) {
-  // 🔐 Check permissions
-  const canCreate = userInfo?.permissions.canCreate ?? true; // Default to true for backward compatibility
-  const canEdit = userInfo?.permissions.canEdit ?? true;
-  const canDelete = userInfo?.permissions.canDelete ?? true;
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isCreating, setIsCreating] = useState(false);
 
@@ -384,14 +377,15 @@ export const CustomerModule = React.memo(function CustomerModule({
     }
 
     if (isCreating) {
-      const newCustomers = [...customers, { ...customer, id: Date.now().toString() }];
+      const customerId = crypto.randomUUID(); // ✅ UUID GENERATION for Supabase compatibility
+      const newCustomers = [...customers, { ...customer, id: customerId }];
       onCustomersChange?.(newCustomers);
       setIsCreating(false);
       toast.success('Müşteri başarıyla eklendi');
       
       // ✅ INSTANT SUPABASE SYNC: Yeni müşteri
       try {
-        await customerApi.upsert([{ ...customer, id: Date.now().toString() }]);
+        await customerApi.upsert([{ ...customer, id: customerId }]);
         console.log('✅ New customer instantly synced to Supabase');
       } catch (error) {
         console.error('❌ Customer instant sync error:', error);
@@ -1829,19 +1823,16 @@ ${notMatchedDomains.length > 0 ? `\n⚠️ Eşleşmeyen domainler konsola yazdı
             <span className="lg:hidden">Yükle</span>
           </Button>
           
-          {canCreate && <ExcelImport onImport={handleImportCustomers} bankPFRecords={bankPFRecords} />}
-          {canCreate && (
-            <Button onClick={handleCreateNew} className="flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-shadow text-xs sm:text-sm col-span-2 sm:col-span-1">
-              <Plus size={18} />
-              <span className="hidden sm:inline">Yeni Cari Kart</span>
-              <span className="sm:hidden">Yeni</span>
-            </Button>
-          )}
+          <ExcelImport onImport={handleImportCustomers} bankPFRecords={bankPFRecords} />
+          <Button onClick={handleCreateNew} className="flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-shadow text-xs sm:text-sm col-span-2 sm:col-span-1">
+            <Plus size={18} />
+            <span className="hidden sm:inline">Yeni Cari Kart</span>
+            <span className="sm:hidden">Yeni</span>
+          </Button>
         </div>
       </div>
 
       <CustomerList
-        userInfo={userInfo}
         customers={customers}
         onSelectCustomer={setSelectedCustomer}
         onUpdateCustomer={handleUpdateCustomer}

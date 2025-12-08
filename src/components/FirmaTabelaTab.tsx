@@ -376,7 +376,7 @@ export function FirmaTabelaTab({
     }
 
     const newRecord: TabelaRecord = {
-      id: editingRecord?.id || `rec-${Date.now()}`,
+      id: editingRecord?.id || crypto.randomUUID(), // ✅ UUID GENERATION for Supabase compatibility
       firmaId,
       kisaAciklama: formData.kisaAciklama,
       urun: formData.urun,
@@ -545,7 +545,7 @@ export function FirmaTabelaTab({
     }
 
     const newGroup: TabelaGroup = {
-      id: editingGroup?.id || `group-${Date.now()}`,
+      id: editingGroup?.id || crypto.randomUUID(), // ✅ UUID GENERATION for Supabase compatibility
       name: groupFormData.groupName.trim(),
       gecerlilikBaslangic: groupFormData.groupStartDate,
       gecerlilikBitis: groupFormData.groupEndDate || undefined,

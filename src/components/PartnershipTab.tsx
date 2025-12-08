@@ -80,7 +80,7 @@ export function PartnershipTab({ partnerships, onPartnershipsChange }: Partnersh
 
   const handleOpenNewModel = () => {
     const newRow: PartnershipCalculationRow = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(), // ✅ UUID GENERATION for Supabase compatibility
       kullanim: 'Yurtiçi',
       kartTipi: 'Debit',
       islemHacmi: '',
@@ -97,16 +97,11 @@ export function PartnershipTab({ partnerships, onPartnershipsChange }: Partnersh
   const handleSaveRow = () => {
     if (!currentRow) return;
 
-    // Otomatik model bilgileri üret
-    const timestamp = Date.now();
-    const autoKod = `ORT${String(partnerships.length + 1).padStart(3, '0')}`;
-    const autoModelAdi = `Ortaklık Modeli ${partnerships.length + 1}`;
-
-    // Yeni ortaklık modeli oluştur
+    // ✅ UUID GENERATION: Ortaklık modeli için UUID kullan
     const newPartnership: Partnership = {
-      id: timestamp.toString(),
-      kod: autoKod,
-      modelAdi: autoModelAdi,
+      id: crypto.randomUUID(), // ✅ UUID instead of timestamp
+      kod: `ORT${String(partnerships.length + 1).padStart(3, '0')}`,
+      modelAdi: `Ortaklık Modeli ${partnerships.length + 1}`,
       oran: '50/50',
       aciklama: '',
       aktif: true,

@@ -158,7 +158,7 @@ export const SalesRepresentativesTab = React.memo(function SalesRepresentativesT
       // Yeni ekleme
       const newRep: SalesRepresentative = {
         ...formData,
-        id: Date.now().toString(),
+        id: crypto.randomUUID(), // ✅ UUID GENERATION for Supabase compatibility
         olusturmaTarihi: new Date().toISOString().split('T')[0],
       } as SalesRepresentative;
       onSalesRepsChange([...salesReps, newRep]);

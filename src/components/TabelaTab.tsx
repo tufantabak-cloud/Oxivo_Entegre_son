@@ -332,7 +332,7 @@ export function TabelaTab({
     }
 
     const newRecord: TabelaRecord = {
-      id: editingRecord?.id || Date.now().toString(),
+      id: editingRecord?.id || crypto.randomUUID(), // ✅ UUID GENERATION for Supabase compatibility
       kurulus: {
         tip: kurulusTipi as 'EPK' | 'OK',
         id: selectedKurulus.id,
@@ -356,7 +356,7 @@ export function TabelaTab({
       // ✅ Ek Gelir bilgileri (eğer girilmişse)
       ...((ekGelir.kodNo || ekGelir.tutar) && {
         ekGelirDetay: {
-          id: editingRecord?.ekGelirDetay?.id || `eg-${Date.now()}`,
+          id: editingRecord?.ekGelirDetay?.id || crypto.randomUUID(), // ✅ UUID GENERATION
           kodNo: ekGelir.kodNo,
           gelirTuru: ekGelir.gelirTuru,
           kullanim: ekGelir.kullanim,
