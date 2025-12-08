@@ -298,12 +298,6 @@ export function FirmaTabelaTab({
     if (record) {
       setEditingRecord(record);
       
-      // 🔍 DEBUG: Log the record being edited
-      console.log('🔍 [FirmaTabelaTab] Opening dialog for record:', {
-        id: record.id,
-        komisyonOranları: record.komisyonOranları,
-      });
-      
       const loadedKomisyonlar = vadeListesi.map(vade => {
         const existing = record.komisyonOranları?.find(k => k.vade === vade);
         const result = existing ? {
@@ -315,15 +309,8 @@ export function FirmaTabelaTab({
           aktif: existing.aktif !== false
         } : { vade, oran: '', alisTL: '', satisTL: '', karTL: '', aktif: false };
         
-        // 🔍 DEBUG: Log each vade mapping
-        if (existing) {
-          console.log(`🔍 [FirmaTabelaTab] Vade ${vade}:`, { existing, result });
-        }
-        
         return result;
       });
-      
-      console.log('🔍 [FirmaTabelaTab] Loaded komisyonlar:', loadedKomisyonlar);
       
       setFormData({
         kisaAciklama: record.kisaAciklama || '',
@@ -411,18 +398,11 @@ export function FirmaTabelaTab({
       guncellemeTarihi: new Date().toISOString(),
     };
 
-    // 🔍 DEBUG: Log the record being saved
-    console.log('💾 [FirmaTabelaTab] Saving record:', {
-      id: newRecord.id,
-      komisyonOranları: newRecord.komisyonOranları,
-      isEditing: !!editingRecord,
-    });
-
     // ✅ Supabase'e kaydet
     try {
       const result = await signApi.create(newRecord);
       if (result.success) {
-        console.log('✅ TABELA kaydı Supabase\'e kaydedildi:', newRecord.id);
+        console.log('✅ TABELA kaydı kaydedildi:', newRecord.id);
       } else {
         console.warn('⚠️ Supabase kaydetme hatası:', result.error);
         toast.warning('Kayıt yerel olarak kaydedildi ancak Supabase senkronizasyonu başarısız');

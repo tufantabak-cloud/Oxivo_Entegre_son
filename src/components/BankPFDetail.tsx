@@ -142,13 +142,16 @@ export function BankPFDetail({
     };
   }, [formData, originalData, isCreating, onSave]);
   
-  // Record değiştiğinde originalData'yı güncelle
+  // ✅ FIX: Record değiştiğinde (tabelaRecords dahil) formData'yı güncelle
   useEffect(() => {
     if (record) {
-      setFormData(record);
-      setOriginalData(record);
+      // Deep comparison ile gereksiz güncellemeleri önle
+      if (JSON.stringify(record) !== JSON.stringify(formData)) {
+        setFormData(record);
+        setOriginalData(record);
+      }
     }
-  }, [record?.id]);
+  }, [record]);
   
 
 

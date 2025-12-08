@@ -981,9 +981,16 @@ export default function App() {
       return firma;
     });
 
-    setBankPFRecords(updatedBankPFRecords);
-    logger.debug('✅ Signs -> BankPFRecords senkronizasyonu tamamlandı');
-  }, [signs]);
+    // ✅ FIX: Sadece tabelaRecords değişmişse state'i güncelle (infinite loop önlemi)
+    const hasChanges = updatedBankPFRecords.some((firma, index) => {
+      return JSON.stringify(firma.tabelaRecords) !== JSON.stringify(bankPFRecords[index]?.tabelaRecords);
+    });
+
+    if (hasChanges) {
+      setBankPFRecords(updatedBankPFRecords);
+      logger.debug('✅ Signs -> BankPFRecords senkronizasyonu tamamlandı');
+    }
+  }, [signs, bankPFRecords]);
 
   // ✅ SYNC: BankPFRecords tabelaRecords -> Signs (ters yön senkronizasyonu)
   useEffect(() => {
