@@ -246,7 +246,8 @@ export const BankPFModule = React.memo(function BankPFModule({
 
   const handleSaveRecord = async (record: BankPF) => {
     if (isCreating) {
-      const newRecords = [...bankPFRecords, { ...record, id: Date.now().toString() }];
+      // ✅ UUID GENERATION: Native crypto.randomUUID() for Supabase compatibility
+      const newRecords = [...bankPFRecords, { ...record, id: record.id || crypto.randomUUID() }];
       onBankPFRecordsChange?.(newRecords);
       
       // ✅ INSTANT SYNC: Yeni kayıt hemen Supabase'e yazılsın
@@ -393,7 +394,7 @@ export const BankPFModule = React.memo(function BankPFModule({
     }
   };
 
-  const handleSaveNewRecord = () => {
+  const handleSaveNewRecord = async () => {
     // Zorunlu alanları kontrol et
     if (!selectedKategori) {
       toast.error('Kuruluş kategorisi seçmelisiniz');
@@ -412,10 +413,10 @@ export const BankPFModule = React.memo(function BankPFModule({
       return;
     }
 
-    // Yeni kayıt oluştur
+    // ✅ UUID GENERATION: Yeni kayıt oluştur
     const newRecord: BankPF = {
       ...newRecordData,
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       iletisimMatrisi: [],
       dokumanlar: [],
       isbirlikleri: [],
@@ -428,8 +429,19 @@ export const BankPFModule = React.memo(function BankPFModule({
     // Listeye ekle
     const newRecords = [...bankPFRecords, newRecord];
     onBankPFRecordsChange?.(newRecords);
+    
+    // ✅ INSTANT SYNC: Yeni kayıt hemen Supabase'e yazılsın
+    try {
+      await bankPFApi.create(newRecord);
+      toast.success(`${newRecordData.firmaUnvan} başarıyla eklendi ve Supabase'e senkronize edildi`);
+    } catch (error) {
+      if (!isFigmaMakeEnvironment()) {
+        console.error('Supabase sync hatası:', error);
+      }
+      toast.error('Kayıt eklendi ama Supabase senkronizasyonu başarısız');
+    }
+    
     setIsNewRecordDialogOpen(false);
-    toast.success(`${newRecordData.firmaUnvan} başarıyla eklendi`);
   };
 
   if (selectedRecord || isCreating) {

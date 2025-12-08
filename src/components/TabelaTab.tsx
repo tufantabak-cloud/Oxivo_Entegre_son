@@ -7,6 +7,7 @@ import { signApi } from '../utils/supabaseClient';
 
 export type TabelaRecord = {
   id: string;
+  firmaId?: string; // ✅ BankPF firma ID (UUID format - Supabase partnerships.id referansı)
   kurulus: { tip: 'EPK' | 'OK'; id: string; ad: string };
   musteri?: string; // Müşteri adı (cariAdi)
   urun?: 'UnattendedPOS' | 'AttendedPOS' | 'SoftPOS' | 'SanalPOS'; // Ürün tipi
