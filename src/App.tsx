@@ -1140,7 +1140,7 @@ export default function App() {
     };
   }, [dataLoaded]);
 
-  // 📥 REAL-TIME: Bank Accounts (BankPF) değişikliklerini dinle
+  // 📥 REAL-TIME: Bank Accounts (BankPF) ve Signs (TABELA) değişikliklerini dinle
   useEffect(() => {
     if (!dataLoaded || !FeatureFlags.ENABLE_REALTIME_SYNC) return;
     
@@ -1165,9 +1165,34 @@ export default function App() {
       )
       .subscribe();
     
+    // ✅ FIX: Signs (TABELA) tablosu için realtime listener ekle
+    logger.debug('🔄 Starting real-time subscription for Signs (TABELA)...');
+    
+    const signsChannel = supabase
+      .channel('signs-realtime')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'signs' },
+        async (payload) => {
+          logger.debug('📥 TABELA (Signs) değişikliği algılandı:', payload);
+          try {
+            // BankPF verilerini refresh et (enrichment ile birlikte)
+            const { data } = await bankPFApi.getAll();
+            if (data) {
+              setBankPFRecords(data);
+              logger.debug('✅ TABELA değişikliği sonrası BankPF listesi güncellendi:', data.length, 'kayıt');
+            }
+          } catch (error) {
+            logger.error('❌ TABELA değişikliği sonrası BankPF güncellenirken hata:', error);
+          }
+        }
+      )
+      .subscribe();
+    
     return () => {
       logger.debug('🛑 Bank Accounts real-time subscription kapatılıyor...');
       supabase.removeChannel(bankAccountsChannel);
+      logger.debug('🛑 Signs real-time subscription kapatılıyor...');
+      supabase.removeChannel(signsChannel);
     };
   }, [dataLoaded]);
 
