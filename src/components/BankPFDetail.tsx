@@ -145,26 +145,9 @@ export function BankPFDetail({
   // ✅ FIX: Record değiştiğinde (tabelaRecords dahil) formData'yı güncelle
   useEffect(() => {
     if (record) {
-      // ✅ CRITICAL FIX: Sadece tabelaRecords ARTTIĞINDA güncelle, azaldığında GÜNCELLEME!
-      const oldCount = formData.tabelaRecords?.length || 0;
-      const newCount = record.tabelaRecords?.length || 0;
-      
-      console.log('🔄 BankPFDetail: record prop değişti, karşılaştırma yapılıyor...', {
-        recordId: record.id,
-        oldTabelaCount: oldCount,
-        newTabelaCount: newCount,
-        shouldUpdate: newCount >= oldCount, // ✅ Sadece kayıt sayısı arttıysa veya eşitse güncelle
-        newTabelaIds: record.tabelaRecords?.map(t => t.id) || []
-      });
-      
-      // ✅ ONLY update if new records added or initial load
-      if (newCount >= oldCount || !formData.id) {
-        setFormData(record);
-        setOriginalData(record);
-        console.log('✅ BankPFDetail: formData güncellendi');
-      } else {
-        console.log('⚠️ BankPFDetail: Kayıt sayısı azaldı, formData GÜNCELLENMEDİ (veri kaybı önlendi)');
-      }
+      setFormData(record);
+      setOriginalData(record);
+      console.log('🔄 BankPFDetail: formData güncellendi (tabelaRecords sayısı:', record.tabelaRecords?.length || 0, ')');
     }
   }, [record]);
   

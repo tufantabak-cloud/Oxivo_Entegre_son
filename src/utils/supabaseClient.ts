@@ -2297,7 +2297,7 @@ export const signApi = {
     if (finalItems.length < transformedItems.length) {
       console.warn(`⚠️ Step 4: Removed ${transformedItems.length - finalItems.length} duplicate signs after sanitization`);
     }
-    
+
     const { data, error } = await supabase
       .from('signs')
       .upsert(finalItems, { onConflict: 'id' })
@@ -2305,12 +2305,13 @@ export const signApi = {
 
     if (error) {
       console.error('❌ Error creating signs:', error);
-      console.error('❌ Error details:', JSON.stringify(error, null, 2));
       console.error('❌ Error message:', error.message);
-      console.error('❌ Error hint:', error.hint);
-      console.error('❌ Error code:', error.code);
-      console.error('❌ Sample record being sent:', JSON.stringify(finalItems[0], null, 2));
       return { success: false, error: error.message, count: 0 };
+    }
+
+    if (!data || data.length === 0) {
+      console.error('❌ Upsert failed - no data returned');
+      return { success: false, error: 'Kayıt Supabase\'e yazılamadı', count: 0 };
     }
 
     console.log(`✅ Created/updated ${data.length} sign records in Supabase`);

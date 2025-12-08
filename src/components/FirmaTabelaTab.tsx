@@ -418,20 +418,14 @@ export function FirmaTabelaTab({
     try {
       const result = await signApi.create(newRecord);
       if (result.success) {
-        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(newRecord.id);
-        console.log(`✅ [v3.2.0] TABELA kaydı kaydedildi: ${newRecord.id} ${isUUID ? '(UUID ✅)' : '(TIMESTAMP ❌)'}`);
-        console.log(`🔍 [DEBUG] generatedId variable: ${generatedId}`);
-        console.log(`🔍 [DEBUG] editingRecord?.id: ${editingRecord?.id}`);
-        console.log(`🔍 [DEBUG] crypto.randomUUID available: ${typeof crypto.randomUUID === 'function'}`);
-        if (!isUUID) {
-          console.error('🚨 CRITICAL: ID generation is still using old code! Clear ALL caches and try Incognito mode.');
-        }
+        console.log(`✅ TABELA kaydı Supabase'e kaydedildi: ${newRecord.id}`);
       } else {
-        console.warn('⚠️ Supabase kaydetme hatası:', result.error);
-        toast.warning('Kayıt yerel olarak kaydedildi ancak Supabase senkronizasyonu başarısız');
+        console.error('❌ Supabase kayıt hatası:', result.error);
+        toast.error(`Supabase hatası: ${result.error}`);
       }
     } catch (error) {
-      console.error('❌ Supabase kaydetme hatası:', error);
+      console.error('❌ TABELA kayıt hatası:', error);
+      toast.error('Kayıt sırasında hata oluştu!');
     }
 
     if (editingRecord) {
