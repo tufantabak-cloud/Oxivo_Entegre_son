@@ -115,7 +115,7 @@ export function HakedisTab({
     if (!selectedGroup) return [];
     
     return tabelaRecords.filter(record => 
-      selectedGroup.recordIds.includes(record.id) &&
+      selectedGroup.recordIds?.includes(record.id) &&
       !record.kapanmaTarihi
     );
   }, [tabelaRecords, tabelaGroups, formTabelaGroupId]);
@@ -466,7 +466,7 @@ export function HakedisTab({
       };
     }
 
-    const vadeData = record.komisyonOranları.find(ko => ko.vade === vade && ko.aktif !== false);
+    const vadeData = record.komisyonOranları?.find(ko => ko.vade === vade && ko.aktif !== false);
     
     if (!vadeData) {
       return {
@@ -514,8 +514,8 @@ export function HakedisTab({
       kazanc = 0;
     }
 
-    const kurulusOrani = parseFloat(record.paylaşımOranları.kurulusOrani || '0');
-    const oxivoOrani = parseFloat(record.paylaşımOranları.oxivoOrani || '0');
+    const kurulusOrani = parseFloat(record.paylaşımOranları?.kurulusOrani || '0');
+    const oxivoOrani = parseFloat(record.paylaşımOranları?.oxivoOrani || '0');
     
     const pfPay = kazanc * (kurulusOrani / 100);
     const oxivoPay = kazanc * (oxivoOrani / 100);
@@ -542,7 +542,7 @@ export function HakedisTab({
 
     normalRecords.forEach(record => {
       // Her kayıt için tüm aktif vadeleri hesapla
-      const aktifVadeler = record.komisyonOranları.filter(ko => ko.aktif !== false);
+      const aktifVadeler = record.komisyonOranları?.filter(ko => ko.aktif !== false) || [];
       
       aktifVadeler.forEach(vadeData => {
         const vadeKey = `${record.id}-${vadeData.vade}`;
@@ -569,8 +569,8 @@ export function HakedisTab({
           kazancTL = satisTL - alisTL;
         }
         
-        const pfOrani = parseFloat(record.paylaşımOranları.kurulusOrani || '0');
-        const oxivoOrani = parseFloat(record.paylaşımOranları.oxivoOrani || '0');
+        const pfOrani = parseFloat(record.paylaşımOranları?.kurulusOrani || '0');
+        const oxivoOrani = parseFloat(record.paylaşımOranları?.oxivoOrani || '0');
         const pfPayi = kazancTL * (pfOrani / 100);
         const oxivoPayi = kazancTL * (oxivoOrani / 100);
         
@@ -639,7 +639,7 @@ export function HakedisTab({
       normalRecords.forEach(record => {
         const islemHacmi = parseFloat(hakedis.islemHacmiMap[record.id] || '0');
         const calc = calculateHakedis(record, hakedis.vade, hakedis.islemHacmiMap);
-        const vadeData = record.komisyonOranları.find(ko => ko.vade === hakedis.vade && ko.aktif !== false);
+        const vadeData = record.komisyonOranları?.find(ko => ko.vade === hakedis.vade && ko.aktif !== false);
         
         let komisyonStr = '-';
         if (record.gelirModeli?.ad === 'Gelir Ortaklığı') {
@@ -1100,7 +1100,7 @@ export function HakedisTab({
             ) : (
               <div className="space-y-3">
                 {aktifTabelaGroups.map((group) => {
-                  const groupRecords = tabelaRecords.filter(r => group.recordIds.includes(r.id) && !r.kapanmaTarihi);
+                  const groupRecords = tabelaRecords.filter(r => group.recordIds?.includes(r.id) && !r.kapanmaTarihi);
                   const isSelected = formTabelaGroupId === group.id;
                   
                   return (
@@ -1741,7 +1741,7 @@ export function HakedisTab({
                     const renderRecordRows = (records: typeof normalRecords, globalStartIndex: number) => {
                       return records.flatMap((record, localRecordIndex) => {
                         // Her kayıt için aktif vadeleri bul
-                        const aktifVadeler = record.komisyonOranları.filter(ko => ko.aktif !== false);
+                        const aktifVadeler = record.komisyonOranları?.filter(ko => ko.aktif !== false) || [];
                         
                         // Her vade için ayrı satır oluştur
                         return aktifVadeler.map((vadeData, vadeIndex) => {
@@ -1773,8 +1773,8 @@ export function HakedisTab({
                             kazancTL = satisTL - alisTL;
                           }
                           
-                          const pfOrani = parseFloat(record.paylaşımOranları.kurulusOrani || '0');
-                          const oxivoOrani = parseFloat(record.paylaşımOranları.oxivoOrani || '0');
+                          const pfOrani = parseFloat(record.paylaşımOranları?.kurulusOrani || '0');
+                          const oxivoOrani = parseFloat(record.paylaşımOranları?.oxivoOrani || '0');
                           const pfPayi = kazancTL * (pfOrani / 100);
                           const oxivoPayi = kazancTL * (oxivoOrani / 100);
                           

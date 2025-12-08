@@ -771,7 +771,7 @@ export const ReportsModule = React.memo(function ReportsModule({
                       
                       // TABELA'nın ait olduğu grubu bul
                       const tabelaGroup = firma.tabelaGroups?.find(g => 
-                        g.recordIds.includes(t.id)
+                        g.recordIds?.includes(t.id)
                       );
                       
                       // Grup bulundu mu ve aktif mi?
@@ -809,7 +809,7 @@ export const ReportsModule = React.memo(function ReportsModule({
                           {firma.tabelaGroups?.filter(g => g.aktif !== false).map((tabelaGroup) => {
                             // Bu gruba ait aktif kayıtları al
                             const grupTabelalar = aktifTabelalar.filter(t => 
-                              tabelaGroup.recordIds.includes(t.id)
+                              tabelaGroup.recordIds?.includes(t.id)
                             );
                             
                             if (grupTabelalar.length === 0) return null;

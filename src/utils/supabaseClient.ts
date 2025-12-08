@@ -35,24 +35,41 @@ import { isFigmaMakeEnvironment } from './environmentDetection';
  * FIXED: Handles consecutive capitals (e.g., "linkedBankPFIds" → "linked_bank_pf_ids")
  */
 function toSnakeCase(str: string): string {
-  const result = str
+  return str
     // Insert underscore before uppercase letter that follows a lowercase letter (Türkçe destekli)
     .replace(/([a-zıöüşğç\d])([A-ZİÖÜŞĞÇ])/g, '$1_$2')
     // Insert underscore before uppercase letter that follows another uppercase letter and is followed by lowercase (Türkçe destekli)
     .replace(/([A-ZİÖÜŞĞÇ]+)([A-ZİÖÜŞĞÇ][a-zıöüşğç])/g, '$1_$2')
-    // ✅ FIX: Türkçe İ ve I karakterlerini doğru dönüştür
+    // ✅ Türkçe karakterleri küçük harfe çevir (JavaScript toLowerCase() Türkçe İ'yi yanlış çevirir)
     .replace(/İ/g, 'i')
     .replace(/I/g, 'ı')
+    .replace(/Ö/g, 'ö')
+    .replace(/Ü/g, 'ü')
+    .replace(/Ş/g, 'ş')
+    .replace(/Ğ/g, 'ğ')
+    .replace(/Ç/g, 'ç')
+    // İngilizce karakterler için standart toLowerCase
     .toLowerCase();
-  
-  return result;
 }
 
 /**
  * snake_case → camelCase dönüşümü
+ * ✅ Türkçe karakter desteği: ı→I, i→I, ö→Ö, ü→Ü, ş→Ş, ğ→Ğ, ç→Ç
  */
 function toCamelCase(str: string): string {
-  return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+  return str.replace(/_([a-zıöüşğç])/g, (_, letter) => {
+    // Türkçe ve İngilizce karakterler için doğru mapping
+    const upperMap: { [key: string]: string } = {
+      'ı': 'I',  // Türkçe ı → I (komisyon_oranları → komisyonOranları)
+      'i': 'I',  // İngilizce i → I (record_ids → recordIds)
+      'ö': 'Ö',  // Türkçe ö → Ö
+      'ü': 'Ü',  // Türkçe ü → Ü
+      'ş': 'Ş',  // Türkçe ş → Ş
+      'ğ': 'Ğ',  // Türkçe ğ → Ğ
+      'ç': 'Ç'   // Türkçe ç → Ç
+    };
+    return upperMap[letter] || letter.toUpperCase();
+  });
 }
 
 /**

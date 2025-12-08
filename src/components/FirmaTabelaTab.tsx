@@ -305,7 +305,7 @@ export function FirmaTabelaTab({
       });
       
       const loadedKomisyonlar = vadeListesi.map(vade => {
-        const existing = record.komisyonOranları.find(k => k.vade === vade);
+        const existing = record.komisyonOranları?.find(k => k.vade === vade);
         const result = existing ? {
           vade: existing.vade,
           oran: existing.oran || '',
@@ -639,7 +639,7 @@ export function FirmaTabelaTab({
 
   const availableRecordsForGroup = tabelaRecords.filter(record => {
     if (!record.aktif) return false;
-    if (editingGroup && editingGroup.recordIds.includes(record.id)) {
+    if (editingGroup && editingGroup.recordIds?.includes(record.id)) {
       return true;
     }
     const recordGroup = getRecordGroup(record.id);
@@ -696,9 +696,9 @@ export function FirmaTabelaTab({
       {tabelaGroups.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {tabelaGroups.map(group => {
-            const groupRecordCount = group.recordIds.length;
+            const groupRecordCount = group.recordIds?.length || 0;
             const activeRecordsInGroup = tabelaRecords.filter(r => 
-              group.recordIds.includes(r.id) && r.aktif
+              group.recordIds?.includes(r.id) && r.aktif
             ).length;
 
             return (
@@ -865,7 +865,7 @@ export function FirmaTabelaTab({
                     {!isCollapsed && group.aktif !== false && groupRecords.flatMap((record, indexInGroup) => {
                       const recordGroup = getRecordGroup(record.id);
                       const isGrouped = !!recordGroup;
-                      const activeVadeler = record.komisyonOranları.filter(ko => ko.aktif !== false);
+                      const activeVadeler = record.komisyonOranları?.filter(ko => ko.aktif !== false) || [];
                       if (activeVadeler.length === 0) activeVadeler.push({ vade: '-', oran: '0', aktif: true });
                       
                       return activeVadeler.map((vadeInfo, vadeIndex) => {
@@ -1033,7 +1033,7 @@ export function FirmaTabelaTab({
                     {!isCollapsed && ungroupedRecords.flatMap((record, indexInUngrouped) => {
                       const recordGroup = getRecordGroup(record.id);
                       const isGrouped = !!recordGroup;
-                      const activeVadeler = record.komisyonOranları.filter(ko => ko.aktif !== false);
+                      const activeVadeler = record.komisyonOranları?.filter(ko => ko.aktif !== false) || [];
                       if (activeVadeler.length === 0) activeVadeler.push({ vade: '-', oran: '0', aktif: true });
                       
                       return activeVadeler.map((vadeInfo, vadeIndex) => {

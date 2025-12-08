@@ -149,13 +149,13 @@ export function TabelaRow({
                 {/* Paylaşım */}
                 <TableCell className="py-2 w-36" rowSpan={activeVadeler.length}>
                   <div className="text-xs space-y-2">
-                    <div className="flex items-center justify-between gap-2 bg-green-50 px-2 py-2 rounded">
+                    <div className="flex items-center justify-between gap-2">
                       <span className="text-gray-700">{record.kurulus?.ad || 'Kuruluş'}</span>
-                      <span className="text-green-700">%{record.paylaşımOranları.kurulusOrani}</span>
+                      <span className="text-green-700">%{record.paylaşımOranları?.kurulusOrani}</span>
                     </div>
-                    <div className="flex items-center justify-between gap-2 bg-blue-50 px-2 py-2 rounded">
+                    <div className="flex items-center justify-between gap-2">
                       <span className="text-gray-700">OXİVO</span>
-                      <span className="text-blue-700">%{record.paylaşımOranları.oxivoOrani}</span>
+                      <span className="text-blue-700">%{record.paylaşımOranları?.oxivoOrani}</span>
                     </div>
                   </div>
                 </TableCell>

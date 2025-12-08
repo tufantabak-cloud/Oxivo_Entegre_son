@@ -608,8 +608,8 @@ export function TabelaTab({
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">
-                        <div>{record.kurulus?.ad || 'Kuruluş'}: %{record.paylaşımOranları.kurulusOrani}</div>
-                        <div>OXİVO: %{record.paylaşımOranları.oxivoOrani}</div>
+                        <div>{record.kurulus?.ad || 'Kuruluş'}: %{record.paylaşımOranları?.kurulusOrani}</div>
+                        <div>OXİVO: %{record.paylaşımOranları?.oxivoOrani}</div>
                       </div>
                     </TableCell>
                     <TableCell>
