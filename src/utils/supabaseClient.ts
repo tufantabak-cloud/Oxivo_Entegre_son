@@ -32,7 +32,8 @@ import { isFigmaMakeEnvironment } from './environmentDetection';
 
 /**
  * camelCase → snake_case dönüşümü
- * FIXED: Handles consecutive capitals (e.g., "linkedBankPFIds" → "linked_bank_pf_ids")
+ * ✅ Türkçe karakterleri İngilizce ASCII karşılığına çevir (Database'de ASCII kullanılıyor)
+ * Örnek: bankIds → bank_ids, yurtIciDisi → yurt_ici_disi
  */
 function toSnakeCase(str: string): string {
   return str
@@ -40,14 +41,19 @@ function toSnakeCase(str: string): string {
     .replace(/([a-zıöüşğç\d])([A-ZİÖÜŞĞÇ])/g, '$1_$2')
     // Insert underscore before uppercase letter that follows another uppercase letter and is followed by lowercase (Türkçe destekli)
     .replace(/([A-ZİÖÜŞĞÇ]+)([A-ZİÖÜŞĞÇ][a-zıöüşğç])/g, '$1_$2')
-    // ✅ Türkçe karakterleri küçük harfe çevir (JavaScript toLowerCase() Türkçe İ'yi yanlış çevirir)
-    .replace(/İ/g, 'i')
-    .replace(/I/g, 'ı')
-    .replace(/Ö/g, 'ö')
-    .replace(/Ü/g, 'ü')
-    .replace(/Ş/g, 'ş')
-    .replace(/Ğ/g, 'ğ')
-    .replace(/Ç/g, 'ç')
+    // ✅ Türkçe karakterleri İngilizce ASCII karşılığına çevir (Database'de Türkçe karakter YOK)
+    .replace(/İ/g, 'I')   // Türkçe İ → İngilizce I
+    .replace(/ı/g, 'i')   // Türkçe ı → İngilizce i  (bankIds → bank_ids ✅)
+    .replace(/Ö/g, 'O')   // Türkçe Ö → İngilizce O
+    .replace(/ö/g, 'o')   // Türkçe ö → İngilizce o
+    .replace(/Ü/g, 'U')   // Türkçe Ü → İngilizce U
+    .replace(/ü/g, 'u')   // Türkçe ü → İngilizce u
+    .replace(/Ş/g, 'S')   // Türkçe Ş → İngilizce S
+    .replace(/ş/g, 's')   // Türkçe ş → İngilizce s
+    .replace(/Ğ/g, 'G')   // Türkçe Ğ → İngilizce G
+    .replace(/ğ/g, 'g')   // Türkçe ğ → İngilizce g
+    .replace(/Ç/g, 'C')   // Türkçe Ç → İngilizce C
+    .replace(/ç/g, 'c')   // Türkçe ç → İngilizce c
     // İngilizce karakterler için standart toLowerCase
     .toLowerCase();
 }
@@ -102,17 +108,7 @@ export function objectToSnakeCase(obj: any): any {
 export function objectToCamelCase(obj: any): any {
   if (obj === null || obj === undefined) return obj;
   if (Array.isArray(obj)) {
-    console.log(`🔄 [objectToCamelCase] Converting array with ${obj.length} items...`);
-    // 🔍 DEBUG: Log first item's keys before conversion
-    if (obj.length > 0 && typeof obj[0] === 'object' && obj[0] !== null) {
-      console.log('🔍 [objectToCamelCase] First item keys BEFORE:', Object.keys(obj[0]));
-    }
-    const converted = obj.map(item => objectToCamelCase(item));
-    // 🔍 DEBUG: Log first item's keys after conversion
-    if (converted.length > 0 && typeof converted[0] === 'object' && converted[0] !== null) {
-      console.log('🔍 [objectToCamelCase] First item keys AFTER:', Object.keys(converted[0]));
-    }
-    return converted;
+    return obj.map(item => objectToCamelCase(item));
   }
   if (typeof obj !== 'object') return obj;
   
