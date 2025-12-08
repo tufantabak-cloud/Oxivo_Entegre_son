@@ -45,6 +45,7 @@ export interface Collaboration {
 
 export interface HakedisRecord {
   id: string;
+  firmaId?: string; // Firma ID (Supabase'den)
   tabelaGroupId: string; // Hangi TABELA grubuna ait
   tabelaGroupAd: string; // Grup adı (görüntüleme için)
   donem: string; // YYYY-MM formatında (örn: "2025-10")
@@ -64,10 +65,15 @@ export interface HakedisRecord {
   ekKesintiAciklama?: string; // "Ceza kesintisi" gibi
   ekKesintiPFTL?: number; // Manuel TL
   ekKesintiOXTL?: number; // Manuel TL
+  // Manuel değer override alanları
+  manualEkGelirOxivoTotal?: string; // Manuel ek gelir OXİVO toplamı
+  manualAnaTabelaOxivoTotal?: string; // Manuel ana TABELA OXİVO toplamı
+  manualAnaTabelaIslemHacmi?: string; // Manuel ana TABELA işlem hacmi
   // Hesaplanmış toplam değerler (rapor performansı için)
   totalIslemHacmi?: number; // Toplam İşlem Hacmi
   totalPFPay?: number; // Toplam PF Payı
   totalOxivoPay?: number; // Toplam OXİVO Payı
+  aktif?: boolean; // Aktif/Pasif durumu
 }
 
 export interface BankPF {

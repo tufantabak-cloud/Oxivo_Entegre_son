@@ -1,7 +1,7 @@
 // Müşteri Yönetim Uygulaması - App v1.0.21
 // Supabase entegre, çok modüllü yönetim sistemi
 // Detaylı version history için CHANGELOG.md dosyasına bakınız
-import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
+import { useState, useEffect, useMemo, useCallback, lazy, Suspense, useRef } from 'react';
 import { unstable_batchedUpdates } from 'react-dom';
 import { useDefinitionStore } from './hooks/useDefinitionStore';
 import { useRoute } from './utils/routingHelper';
@@ -957,9 +957,21 @@ export default function App() {
     };
   }, [dataLoaded]);
 
-  // ✅ SYNC: Signs -> BankPFRecords tabelaRecords senkronizasyonu
+  // ✅ SYNC: Signs -> BankPFRecords tabelaRecords senkronizasyonu (useRef ile infinite loop önlemi)
+  const previousSignsRef = useRef<string>('');
+  const previousBankPFRef = useRef<string>('');
+  
   useEffect(() => {
     if (!signs || signs.length === 0 || !bankPFRecords || bankPFRecords.length === 0) return;
+    
+    // 🔍 Önceki değerlerle karşılaştır
+    const currentSignsHash = JSON.stringify(signs.map(s => s.id).sort());
+    const currentBankPFHash = JSON.stringify(bankPFRecords.map(b => b.id).sort());
+    
+    // Eğer signs veya bankPFRecords listesi değişmediyse, işlem yapma
+    if (previousSignsRef.current === currentSignsHash && previousBankPFRef.current === currentBankPFHash) {
+      return;
+    }
     
     logger.debug('🔄 Syncing signs to bankPFRecords.tabelaRecords...', {
       signsCount: signs.length,
@@ -978,18 +990,19 @@ export default function App() {
         };
       }
       
-      return firma;
+      return {
+        ...firma,
+        tabelaRecords: [] // ✅ Boş array ile başlat
+      };
     });
 
-    // ✅ FIX: Sadece tabelaRecords değişmişse state'i güncelle (infinite loop önlemi)
-    const hasChanges = updatedBankPFRecords.some((firma, index) => {
-      return JSON.stringify(firma.tabelaRecords) !== JSON.stringify(bankPFRecords[index]?.tabelaRecords);
-    });
-
-    if (hasChanges) {
-      setBankPFRecords(updatedBankPFRecords);
-      logger.debug('✅ Signs -> BankPFRecords senkronizasyonu tamamlandı');
-    }
+    setBankPFRecords(updatedBankPFRecords);
+    
+    // 🔍 Güncel değerleri kaydet
+    previousSignsRef.current = currentSignsHash;
+    previousBankPFRef.current = currentBankPFHash;
+    
+    logger.debug('✅ Signs -> BankPFRecords senkronizasyonu tamamlandı');
   }, [signs, bankPFRecords]);
 
   // ✅ SYNC: BankPFRecords tabelaRecords -> Signs (ters yön senkronizasyonu)
