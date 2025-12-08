@@ -145,6 +145,13 @@ export function BankPFDetail({
   // ✅ FIX: Record değiştiğinde (tabelaRecords dahil) formData'yı güncelle
   useEffect(() => {
     if (record) {
+      // ✅ CRITICAL: Cancel any pending auto-save before updating
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+        autoSaveTimeoutRef.current = null;
+        console.log('⚠️ BankPFDetail: Pending auto-save CANCELLED (record updated from parent)');
+      }
+      
       setFormData(record);
       setOriginalData(record);
       console.log('🔄 BankPFDetail: formData güncellendi (tabelaRecords sayısı:', record.tabelaRecords?.length || 0, ')');
@@ -1083,16 +1090,13 @@ export function BankPFDetail({
             tabelaRecords={formData.tabelaRecords || []}
             tabelaGroups={formData.tabelaGroups || []}
             onTabelaRecordsChange={(records) => {
+              // ✅ CRITICAL FIX: Sadece state güncelle, onSave ÇAĞIRMA!
+              // Otomatik kayıt mekanizması 1.5 saniye sonra zaten çalışacak
               setFormData(prev => ({ ...prev, tabelaRecords: records }));
-              // TABELA değişikliklerini otomatik kaydet (ama sayfadan atma!)
-              const updatedFormData = { ...formData, tabelaRecords: records };
-              onSave(updatedFormData);
             }}
             onTabelaGroupsChange={(groups) => {
+              // ✅ CRITICAL FIX: Sadece state güncelle, onSave ÇAĞIRMA!
               setFormData(prev => ({ ...prev, tabelaGroups: groups }));
-              // TABELA grup değişikliklerini otomatik kaydet (ama sayfadan atma!)
-              const updatedFormData = { ...formData, tabelaGroups: groups };
-              onSave(updatedFormData);
             }}
           />
         </TabsContent>

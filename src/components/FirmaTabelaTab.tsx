@@ -416,16 +416,39 @@ export function FirmaTabelaTab({
 
     // ✅ Supabase'e kaydet
     try {
+      console.log('🚀 [DEBUG] TABELA kaydı Supabase\'e GÖNDERİLİYOR:', {
+        id: newRecord.id,
+        firmaId: newRecord.firmaId,
+        kisaAciklama: newRecord.kisaAciklama,
+        gelirModeli: newRecord.gelirModeli
+      });
+      
       const result = await signApi.create(newRecord);
+      
+      console.log('🔍 [DEBUG] signApi.create() SONUCU:', result);
+      
       if (result.success) {
         console.log(`✅ TABELA kaydı Supabase'e kaydedildi: ${newRecord.id}`);
+        
+        // ✅ VERIFICATION: Supabase'den geri çekerek doğrulama yap
+        const verification = await signApi.getAll();
+        if (verification.success && verification.data) {
+          const savedRecord = verification.data.find((r: any) => r.id === newRecord.id);
+          if (savedRecord) {
+            console.log('✅✅ [VERIFICATION] Kayıt Supabase\'de DOĞRULANDI:', savedRecord);
+          } else {
+            console.error('❌ [VERIFICATION] Kayıt Supabase\'de BULUNAMADI!');
+          }
+        }
       } else {
         console.error('❌ Supabase kayıt hatası:', result.error);
         toast.error(`Supabase hatası: ${result.error}`);
+        return; // ✅ CRITICAL: Hata varsa devam etme!
       }
     } catch (error) {
       console.error('❌ TABELA kayıt hatası:', error);
       toast.error('Kayıt sırasında hata oluştu!');
+      return; // ✅ CRITICAL: Hata varsa devam etme!
     }
 
     if (editingRecord) {
