@@ -79,6 +79,10 @@ if (document.readyState === 'loading') {
 // STARTUP HEALTH CHECK
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+// ✅ BUILD VERSION TRACKER - UUID Migration
+const BUILD_VERSION = 'v2.0-UUID-2024-12-08';
+console.log(`🚀 OXIVO App ${BUILD_VERSION} - UUID Generation Active`);
+
 // Run health check before rendering
 initStartupCheck().then((success) => {
   if (success) {

@@ -402,7 +402,11 @@ export function FirmaTabelaTab({
     try {
       const result = await signApi.create(newRecord);
       if (result.success) {
-        console.log('✅ TABELA kaydı kaydedildi:', newRecord.id);
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(newRecord.id);
+        console.log(`✅ TABELA kaydı kaydedildi: ${newRecord.id} ${isUUID ? '(UUID ✅)' : '(TIMESTAMP ❌)'}`);
+        if (!isUUID) {
+          console.error('🚨 CACHE SORUNU: Browser eski JavaScript kodunu çalıştırıyor! Hard refresh gerekli (Ctrl+Shift+R)');
+        }
       } else {
         console.warn('⚠️ Supabase kaydetme hatası:', result.error);
         toast.warning('Kayıt yerel olarak kaydedildi ancak Supabase senkronizasyonu başarısız');

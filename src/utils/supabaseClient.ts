@@ -2724,4 +2724,9 @@ if (typeof window !== 'undefined') {
     }
   };
   console.log('✅ All APIs available at window.__OXIVO_SUPABASE__.apis');
+  
+  // ✅ UUID VALIDATION TEST
+  const testId = crypto.randomUUID();
+  const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(testId);
+  console.log(`🔍 UUID Generation Test: ${testId} ${isValidUUID ? '✅ VALID' : '❌ INVALID'}`);
 }
