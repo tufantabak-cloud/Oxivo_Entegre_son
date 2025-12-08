@@ -295,6 +295,10 @@ export function FirmaTabelaTab({
   };
 
   const handleOpenDialog = (record?: TabelaRecord) => {
+    console.log('🔍 [FirmaTabelaTab] handleOpenDialog çağrıldı:', {
+      recordProvided: !!record,
+      recordId: record?.id
+    });
     if (record) {
       setEditingRecord(record);
       
@@ -328,8 +332,10 @@ export function FirmaTabelaTab({
         hazineGeliri: record.hazineGeliri || { tutarTL: '', oxivoYuzde: '', kazancTL: '' },
       });
       setCurrentStep(0);
+      console.log('✅ [FirmaTabelaTab] Edit modu: kayıt yüklendi');
     } else {
       resetForm();
+      console.log('✅ [FirmaTabelaTab] Yeni kayıt modu: form sıfırlandı');
     }
     setIsDialogOpen(true);
   };
@@ -375,8 +381,18 @@ export function FirmaTabelaTab({
       return;
     }
 
+    // ✅ DEBUG: editingRecord durumunu kontrol et
+    console.log('🔍 [FirmaTabelaTab] handleSave çağrıldı:', {
+      editingRecordExists: !!editingRecord,
+      editingRecordId: editingRecord?.id,
+      action: editingRecord ? 'UPDATE' : 'CREATE'
+    });
+
+    // ✅ CRITICAL: Generate UUID for new records ONLY - v3.2.0
+    const generatedId = editingRecord?.id || crypto.randomUUID();
+    
     const newRecord: TabelaRecord = {
-      id: editingRecord?.id || crypto.randomUUID(), // ✅ UUID GENERATION for Supabase compatibility
+      id: generatedId, // ✅ UUID GENERATION for Supabase compatibility
       firmaId,
       kisaAciklama: formData.kisaAciklama,
       urun: formData.urun,
@@ -403,9 +419,12 @@ export function FirmaTabelaTab({
       const result = await signApi.create(newRecord);
       if (result.success) {
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(newRecord.id);
-        console.log(`✅ TABELA kaydı kaydedildi: ${newRecord.id} ${isUUID ? '(UUID ✅)' : '(TIMESTAMP ❌)'}`);
+        console.log(`✅ [v3.2.0] TABELA kaydı kaydedildi: ${newRecord.id} ${isUUID ? '(UUID ✅)' : '(TIMESTAMP ❌)'}`);
+        console.log(`🔍 [DEBUG] generatedId variable: ${generatedId}`);
+        console.log(`🔍 [DEBUG] editingRecord?.id: ${editingRecord?.id}`);
+        console.log(`🔍 [DEBUG] crypto.randomUUID available: ${typeof crypto.randomUUID === 'function'}`);
         if (!isUUID) {
-          console.error('🚨 CACHE SORUNU: Browser eski JavaScript kodunu çalıştırıyor! Hard refresh gerekli (Ctrl+Shift+R)');
+          console.error('🚨 CRITICAL: ID generation is still using old code! Clear ALL caches and try Incognito mode.');
         }
       } else {
         console.warn('⚠️ Supabase kaydetme hatası:', result.error);
@@ -419,10 +438,12 @@ export function FirmaTabelaTab({
       const updatedRecords = tabelaRecords.map(r => r.id === editingRecord.id ? newRecord : r);
       onTabelaRecordsChange?.(updatedRecords);
       toast.success('TABELA kaydı güncellendi');
+      console.log('🔄 [FirmaTabelaTab] Mevcut kayıt GÜNCELLENDİ:', editingRecord.id);
     } else {
       const updatedRecords = [...tabelaRecords, newRecord];
       onTabelaRecordsChange?.(updatedRecords);
       toast.success('TABELA kaydı oluşturuldu');
+      console.log('✅ [FirmaTabelaTab] Yeni kayıt EKLENDİ:', newRecord.id);
     }
     handleCloseDialog();
   };
