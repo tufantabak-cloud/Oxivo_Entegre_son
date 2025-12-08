@@ -147,6 +147,12 @@ export function BankPFDetail({
     if (record) {
       // Deep comparison ile gereksiz güncellemeleri önle
       if (JSON.stringify(record) !== JSON.stringify(formData)) {
+        console.log('🔄 BankPFDetail: record prop değişti, formData güncelleniyor...', {
+          recordId: record.id,
+          oldTabelaCount: formData.tabelaRecords?.length || 0,
+          newTabelaCount: record.tabelaRecords?.length || 0,
+          newTabelaIds: record.tabelaRecords?.map(t => t.id) || []
+        });
         setFormData(record);
         setOriginalData(record);
       }
