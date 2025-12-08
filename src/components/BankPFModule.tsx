@@ -276,32 +276,6 @@ export const BankPFModule = React.memo(function BankPFModule({
       try {
         await bankPFApi.create(record);
         toast.success('Kayıt güncellendi ve Supabase\'e senkronize edildi');
-        
-        // ✅ FIX: Supabase'den güncel veriyi çek (tabelaRecords dahil)
-        const refreshedData = await bankPFApi.getAll();
-        if (refreshedData.success && refreshedData.data) {
-          console.log('🔄 BankPFModule: Supabase\'den yeniden çekildi', {
-            totalRecords: refreshedData.data.length,
-            updatedRecordId: record.id
-          });
-          
-          // Parent state'i güncelle
-          onBankPFRecordsChange?.(refreshedData.data);
-          
-          // selectedRecord'u güncel veriden bul ve set et
-          const refreshedRecord = refreshedData.data.find(r => r.id === record.id);
-          if (refreshedRecord) {
-            console.log('✅ BankPFModule: refreshedRecord bulundu', {
-              id: refreshedRecord.id,
-              firmaAdi: refreshedRecord.firmaUnvan,
-              tabelaCount: refreshedRecord.tabelaRecords?.length || 0,
-              tabelaIds: refreshedRecord.tabelaRecords?.map(t => t.id) || []
-            });
-            setSelectedRecord(refreshedRecord);
-          } else {
-            console.error('❌ BankPFModule: refreshedRecord BULUNAMADI!', record.id);
-          }
-        }
       } catch (error) {
         if (!isFigmaMakeEnvironment()) {
           console.error('Supabase sync hatası:', error);
@@ -309,10 +283,9 @@ export const BankPFModule = React.memo(function BankPFModule({
         toast.error('Kayıt güncellendi ama Supabase senkronizasyonu başarısız');
       }
       
-      // Otomatik kaydetme durumunda sayfadan atma!
-      // setSelectedRecord(null); // Bu satırı kaldırdık
-      // Güncellenen kaydı yeniden set et (state'i güncel tut)
-      // setSelectedRecord(record); // ✅ ARTIK GEREK YOK - yukarıda refreshedRecord set ediliyor
+      // ✅ CRITICAL FIX: Parent state zaten güncellendiği için refresh'e gerek yok!
+      // Güncellenen kaydı state'te tut (otomatik kaydetme durumunda sayfadan atma)
+      setSelectedRecord(record);
     }
   };
 
