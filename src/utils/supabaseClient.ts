@@ -60,8 +60,29 @@ function toSnakeCase(str: string): string {
 /**
  * snake_case → camelCase dönüşümü
  * ✅ Türkçe karakter desteği: ı→I, i→I, ö→Ö, ü→Ü, ş→Ş, ğ→Ğ, ç→Ç
+ * ✅ FIX: Special cases for _tl suffix (Turkish Lira)
  */
 function toCamelCase(str: string): string {
+  // ✅ FIX: Handle special cases first (e.g., alis_tl → alisTL, not alisTl)
+  const specialCases: { [key: string]: string } = {
+    'alis_tl': 'alisTL',
+    'satis_tl': 'satisTL',
+    'kar_tl': 'karTL',
+    'toplam_tl': 'toplamTL',
+    'tutar_tl': 'tutarTL',
+    'fiyat_tl': 'fiyatTL',
+    'alis_fiyati': 'alisFiyati',
+    'satis_fiyati': 'satisFiyati',
+    'kar_fiyati': 'karFiyati',
+    'komisyon_yuzdesi': 'komisyonYuzdesi',
+    'komisyon_oranlari': 'komisyonOranlari',
+    'paylasim_oranlari': 'paylasimOranlari'
+  };
+  
+  if (specialCases[str]) {
+    return specialCases[str];
+  }
+  
   return str.replace(/_([a-zıöüşğç])/g, (_, letter) => {
     // Türkçe ve İngilizce karakterler için doğru mapping
     const upperMap: { [key: string]: string } = {
