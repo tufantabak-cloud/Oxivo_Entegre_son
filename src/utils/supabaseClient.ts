@@ -37,13 +37,9 @@ import { isFigmaMakeEnvironment } from './environmentDetection';
  */
 function toSnakeCase(str: string): string {
   return str
-    // Insert underscore before uppercase letter that follows a lowercase letter (Türkçe destekli)
-    .replace(/([a-zıöüşğç\d])([A-ZİÖÜŞĞÇ])/g, '$1_$2')
-    // Insert underscore before uppercase letter that follows another uppercase letter and is followed by lowercase (Türkçe destekli)
-    .replace(/([A-ZİÖÜŞĞÇ]+)([A-ZİÖÜŞĞÇ][a-zıöüşğç])/g, '$1_$2')
-    // ✅ Türkçe karakterleri İngilizce ASCII karşılığına çevir (Database'de Türkçe karakter YOK)
+    // ✅ STEP 1: Türkçe karakterleri İngilizce ASCII karşılığına çevir (toLowerCase ÖNCE!)
     .replace(/İ/g, 'I')   // Türkçe İ → İngilizce I
-    .replace(/ı/g, 'i')   // Türkçe ı → İngilizce i  (bankIds → bank_ids ✅)
+    .replace(/ı/g, 'i')   // Türkçe ı → İngilizce i
     .replace(/Ö/g, 'O')   // Türkçe Ö → İngilizce O
     .replace(/ö/g, 'o')   // Türkçe ö → İngilizce o
     .replace(/Ü/g, 'U')   // Türkçe Ü → İngilizce U
@@ -54,7 +50,10 @@ function toSnakeCase(str: string): string {
     .replace(/ğ/g, 'g')   // Türkçe ğ → İngilizce g
     .replace(/Ç/g, 'C')   // Türkçe Ç → İngilizce C
     .replace(/ç/g, 'c')   // Türkçe ç → İngilizce c
-    // İngilizce karakterler için standart toLowerCase
+    // ✅ STEP 2: Underscore ekle (artık sadece İngilizce karakterler var)
+    .replace(/([a-z\d])([A-Z])/g, '$1_$2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1_$2')
+    // ✅ STEP 3: Tümünü küçük harfe çevir
     .toLowerCase();
 }
 
@@ -115,16 +114,6 @@ export function objectToCamelCase(obj: any): any {
   const converted: any = {};
   for (const [key, value] of Object.entries(obj)) {
     const camelKey = toCamelCase(key);
-    
-    // 🔍 DEBUG: Log nested conversion
-    if (key === 'komisyon_oranlari' || key === 'paylasim_oranlari') {
-      console.log(`🔍 [objectToCamelCase] Converting key "${key}" → "${camelKey}"`, {
-        valueType: typeof value,
-        isArray: Array.isArray(value),
-        value: value
-      });
-    }
-    
     converted[camelKey] = (value && typeof value === 'object') 
       ? objectToCamelCase(value) 
       : value;
@@ -1959,16 +1948,9 @@ export const suspensionReasonApi = {
         mapped.olusturmaTarihi = camelCased.createdAt;
       }
       
-      console.log('🔍 [suspensionReasonApi.getAll] Mapped item:', { 
-        original_neden: item.neden, 
-        mapped_reason: mapped.reason,
-        has_reason: !!mapped.reason 
-      });
-      
       return mapped;
     });
     
-    console.log(`✅ Mapped ${mappedData.length} suspension reasons with 'reason' field`);
     return { success: true, data: mappedData || [] };
   },
 
@@ -2199,24 +2181,7 @@ export const signApi = {
       return { success: false, error: error.message, data: [] };
     }
 
-    // 🔍 DEBUG: Log raw data from Supabase
-    if (data && data.length > 0) {
-      const firstRecord = data[0];
-      if (firstRecord.komisyon_oranlari) {
-        console.log('🔍 [signApi.getAll] Raw from Supabase - komisyon_oranlari:', firstRecord.komisyon_oranlari);
-      }
-    }
-
     const camelCasedData = data.map(objectToCamelCase);
-    
-    // 🔍 DEBUG: Log after camelCase conversion
-    if (camelCasedData && camelCasedData.length > 0) {
-      const firstCamelRecord = camelCasedData[0];
-      if (firstCamelRecord.komisyonOranları) {
-        console.log('🔍 [signApi.getAll] After camelCase - komisyonOranları:', firstCamelRecord.komisyonOranları);
-      }
-    }
-
     console.log(`✅ Fetched ${data.length} sign records from Supabase`);
     return { success: true, data: camelCasedData || [] };
   },
@@ -2256,37 +2221,7 @@ export const signApi = {
     
     // ✅ Step 3: Apply snake_case transformation + FIX Turkish characters
     const transformedItems = sanitizedRecords.map(record => {
-      // 🔍 DEBUG: Log before transformation
-      if (record.komisyonOranları) {
-        console.log('🔍 [signApi] Before snake_case - komisyonOranları:', record.komisyonOranları);
-      }
-      
-      const snakeCased = objectToSnakeCase(record);
-      
-      // 🔍 DEBUG: Log after snake_case
-      if (snakeCased.komisyon_oranları || snakeCased.komisyon_oranlari) {
-        console.log('🔍 [signApi] After snake_case:', {
-          komisyon_oranları: snakeCased.komisyon_oranları,
-          komisyon_oranlari: snakeCased.komisyon_oranlari,
-        });
-      }
-      
-      // CRITICAL: Fix Turkish characters in column names
-      if ('komisyon_oranları' in snakeCased) {
-        snakeCased.komisyon_oranlari = snakeCased.komisyon_oranları;
-        delete snakeCased.komisyon_oranları;
-      }
-      if ('paylaşım_oranları' in snakeCased) {
-        snakeCased.paylasim_oranlari = snakeCased.paylaşım_oranları;
-        delete snakeCased.paylaşım_oranları;
-      }
-      
-      // 🔍 DEBUG: Log final result
-      if (snakeCased.komisyon_oranlari) {
-        console.log('🔍 [signApi] Final (to Supabase) - komisyon_oranlari:', snakeCased.komisyon_oranlari);
-      }
-      
-      return snakeCased;
+      return objectToSnakeCase(record);
     });
     
     // ✅ Step 4: Remove duplicates AFTER sanitization
@@ -2297,12 +2232,6 @@ export const signApi = {
     if (finalItems.length < transformedItems.length) {
       console.warn(`⚠️ Step 4: Removed ${transformedItems.length - finalItems.length} duplicate signs after sanitization`);
     }
-    
-    console.log('📤 [signApi] Sending to Supabase:', {
-      count: finalItems.length,
-      firstItem: finalItems[0],
-      columnNames: finalItems[0] ? Object.keys(finalItems[0]) : [],
-    });
     
     const { data, error } = await supabase
       .from('signs')
