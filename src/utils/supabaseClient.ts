@@ -948,23 +948,65 @@ export const productApi = {
 export const bankPFApi = {
   /**
    * Tüm Bank/PF kayıtlarını getirir
+   * ✅ FIX: signs tablosundan tabelaRecords'ı da getir ve ilişkilendir
    */
   async getAll() {
     const check = checkSupabase();
     if (!check.available) return check.fallback;
 
-    const { data, error } = await supabase!
+    // ✅ Step 1: Fetch bank_accounts
+    const { data: bankAccounts, error: bankError } = await supabase!
       .from('bank_accounts')
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (error) {
-      logError('Error fetching bankPF records:', error);
-      return { success: false, error: error.message, data: [] };
+    if (bankError) {
+      logError('Error fetching bankPF records:', bankError);
+      return { success: false, error: bankError.message, data: [] };
     }
 
-    console.log(`✅ Fetched ${data.length} bankPF records from Supabase`);
-    return { success: true, data: data.map(objectToCamelCase) || [] };
+    // ✅ Step 2: Fetch ALL signs (TABELA records)
+    const { data: allSigns, error: signsError } = await supabase!
+      .from('signs')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (signsError) {
+      logError('Error fetching signs for bankPF:', signsError);
+      // Continue without signs data (non-critical)
+    }
+
+    // ✅ Step 3: Group signs by firma_id
+    const signsByFirma: Record<string, any[]> = {};
+    if (allSigns && allSigns.length > 0) {
+      allSigns.forEach((sign: any) => {
+        const firmaId = sign.firma_id;
+        if (firmaId) {
+          if (!signsByFirma[firmaId]) {
+            signsByFirma[firmaId] = [];
+          }
+          signsByFirma[firmaId].push(objectToCamelCase(sign));
+        }
+      });
+    }
+
+    // ✅ Step 4: Enrich bank_accounts with tabelaRecords
+    const enrichedData = (bankAccounts || []).map((bank: any) => {
+      const bankCamelCase = objectToCamelCase(bank);
+      const firmaTabelaRecords = signsByFirma[bank.id] || [];
+      
+      return {
+        ...bankCamelCase,
+        tabelaRecords: firmaTabelaRecords,
+        // Keep existing tabelaGroups if present in bank_accounts table
+        tabelaGroups: bankCamelCase.tabelaGroups || []
+      };
+    });
+
+    console.log(`✅ Fetched ${bankAccounts.length} bankPF records from Supabase`);
+    console.log(`✅ Enriched with ${allSigns?.length || 0} total TABELA records across all firms`);
+    
+    return { success: true, data: enrichedData };
   },
 
   /**
