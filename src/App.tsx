@@ -2848,20 +2848,6 @@ export default function App() {
                         'ÖK': okList.length,
                       };
                       logger.debug('📊 Kayıtlı Veriler:', dataCount);
-                      
-                      // LocalStorage kontrolü
-                      const storedData = localStorage.getItem('bankPFRecords');
-                      if (storedData) {
-                        try {
-                          const parsed = JSON.parse(storedData);
-                          const storedTabela = parsed.reduce((sum: number, r: BankPF) => 
-                            sum + (r.tabelaRecords?.length || 0), 0
-                          );
-                          logger.debug('💾 LocalStorage\'da TABELA:', storedTabela);
-                        } catch (error) {
-                          logger.error('❌ JSON parse hatası (bankPFRecords):', error);
-                        }
-                      }
                     }
                     
                     toast.success(`Toplam ${totalTabelaRecords} TABELA kaydı - Detaylar konsolda`);
@@ -3023,20 +3009,6 @@ export default function App() {
                     'ÖK': okList.length,
                   };
                   logger.debug('📊 Kayıtlı Veriler:', dataCount);
-                  
-                  // LocalStorage kontrolü
-                  const storedData = localStorage.getItem('bankPFRecords');
-                  if (storedData) {
-                    try {
-                      const parsed = JSON.parse(storedData);
-                      const storedTabela = parsed.reduce((sum: number, r: BankPF) => 
-                        sum + (r.tabelaRecords?.length || 0), 0
-                      );
-                      logger.debug('💾 LocalStorage\'da TABELA:', storedTabela);
-                    } catch (error) {
-                      logger.error('❌ JSON parse hatası (bankPFRecords):', error);
-                    }
-                  }
                 }
                 
                 toast.success(`Toplam ${totalTabelaRecords} TABELA kaydı - Detaylar konsolda`);

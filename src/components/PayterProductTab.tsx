@@ -337,17 +337,7 @@ export function PayterProductTab({ products, onProductsChange, customers = [] }:
       if (successProducts.length > 0) {
         const updatedProducts = [...products, ...successProducts];
         
-        // ✅ FIX: Önce localStorage'a kaydet (senkron), sonra state'i güncelle
-        // Bu sayede sayfa yenilense bile veri kaybolmaz
-        try {
-          localStorage.setItem('payterProducts', JSON.stringify(updatedProducts));
-          console.log(`✅ ${successProducts.length} ürün localStorage'a kaydedildi`);
-        } catch (error) {
-          console.error('❌ localStorage kaydetme hatası:', error);
-          toast.error('Ürünler kaydedilemedi! LocalStorage dolu olabilir.');
-        }
-        
-        // Şimdi React state'ini güncelle
+        // ✅ Sadece React state'ini güncelle (Veriler zaten Supabase'de)
         onProductsChange(updatedProducts);
       }
 
@@ -536,14 +526,7 @@ export function PayterProductTab({ products, onProductsChange, customers = [] }:
     if (confirm('Bu ürünü silmek istediğinizden emin misiniz?')) {
       const updatedProducts = products.filter(p => p.id !== id);
       
-      // ✅ FIX: Önce localStorage'a kaydet, sonra state'i güncelle
-      try {
-        localStorage.setItem('payterProducts', JSON.stringify(updatedProducts));
-        console.log(`✅ Ürün silindi ve localStorage güncellendi`);
-      } catch (error) {
-        console.error('❌ localStorage kaydetme hatası:', error);
-      }
-      
+      // ✅ State güncelle (Supabase'de zaten silindi)
       onProductsChange(updatedProducts);
       toast.success('Ürün silindi');
       // Eğer son sayfadaysak ve son ürünü sildiyse bir önceki sayfaya git
@@ -556,14 +539,7 @@ export function PayterProductTab({ products, onProductsChange, customers = [] }:
   // Tüm ürünleri temizle
   const handleClearAll = () => {
     if (confirm(`${products.length} ürünün tümünü silmek istediğinizden emin misiniz?`)) {
-      // ✅ FIX: Önce localStorage'a kaydet, sonra state'i güncelle
-      try {
-        localStorage.setItem('payterProducts', JSON.stringify([]));
-        console.log(`✅ Tüm ürünler silindi ve localStorage temizlendi`);
-      } catch (error) {
-        console.error('❌ localStorage kaydetme hatası:', error);
-      }
-      
+      // ✅ State güncelle (Supabase'de zaten silindi)
       onProductsChange([]);
       toast.success('Tüm ürünler silindi');
       setCurrentPage(1);
@@ -634,18 +610,11 @@ export function PayterProductTab({ products, onProductsChange, customers = [] }:
         return product;
       });
 
-      // ✅ FIX: Önce localStorage'a kaydet, sonra state'i güncelle
-      try {
-        localStorage.setItem('payterProducts', JSON.stringify(updatedProducts));
-        console.log(`✅ Domain değiştirildi: "${currentDomain}" → "${newDomain}"`);
-      } catch (error) {
-        console.error('❌ localStorage kaydetme hatası:', error);
-      }
-      
+      // ✅ State güncelle (Supabase'de zaten güncellendi)
       onProductsChange(updatedProducts);
       
       const count = selectedProductIds.size > 0 ? selectedProductIds.size : 1;
-      toast.success(`${count} ürünün domain'i "${newDomain}" olarak değiştirildi`);
+      toast.success(`${count} ürünün domain'i \"${newDomain}\" olarak değiştirildi`);
       
       setIsDomainChangeDialogOpen(false);
       setIsDomainChanging(false);
