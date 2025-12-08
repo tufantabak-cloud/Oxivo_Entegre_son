@@ -3,6 +3,7 @@
  * Auto-generated from your SQL schema
  * 
  * Created: 2025-11-22
+ * Updated: 2024-12-08 - Added 11 missing definition tables
  * 
  * NOTE: Bu dosya Supabase'deki tablo yapılarını TypeScript'e map eder
  */
@@ -11,40 +12,220 @@
 // DATABASE ROW TYPES (snake_case)
 // ========================================
 
-export interface CustomersRow {
+// ========================================
+// TANIMLAR (DEFINITIONS) - 11 TABLES
+// ========================================
+
+export interface MCCCodesRow {
   id: string;
-  customer_code: string;
-  name: string;
-  contact_person: string | null;
-  phone: string | null;
-  email: string | null;
-  address: string | null;
-  city: string | null;
-  tax_office: string | null;
-  tax_number: string | null;
-  customer_type: string;
-  balance: number;
-  credit_limit: number;
-  notes: string | null;
-  is_active: boolean;
+  kod: string; // MCC kodu (NOT NULL)
+  kategori: string; // MCC kategorisi (NOT NULL)
+  aciklama: string | null; // Açıklama
+  aktif: boolean; // Aktif/Pasif durumu (default: true)
+  created_at: string; // timestamp with time zone
+}
+
+export interface BanksRow {
+  id: string;
+  kod: string; // Banka kodu (NOT NULL)
+  ad: string; // Banka adı (NOT NULL)
+  muhasebe_kodu: string | null; // Muhasebe kodu
+  vergi_no: string | null; // Vergi numarası
+  vergi_dairesi: string | null; // Vergi dairesi
+  adres: string | null; // Adres
+  telefon: string | null; // Telefon
+  email: string | null; // Email
+  aktif: boolean; // Aktif/Pasif (default: true)
+  created_at: string; // timestamp with time zone
+}
+
+export interface EPKInstitutionsRow {
+  id: string;
+  kod: string; // EPK kodu (NOT NULL)
+  ad: string; // EPK adı (NOT NULL)
+  muhasebe_kodu: string | null; // Muhasebe kodu
+  vergi_no: string | null; // Vergi numarası
+  vergi_dairesi: string | null; // Vergi dairesi
+  adres: string | null; // Adres
+  telefon: string | null; // Telefon
+  email: string | null; // Email
+  aktif: boolean; // Aktif/Pasif (default: true)
+  created_at: string; // timestamp with time zone
+}
+
+export interface OKInstitutionsRow {
+  id: string;
+  kod: string; // ÖK kodu (NOT NULL)
+  ad: string; // ÖK adı (NOT NULL)
+  muhasebe_kodu: string | null; // Muhasebe kodu
+  vergi_no: string | null; // Vergi numarası
+  vergi_dairesi: string | null; // Vergi dairesi
+  adres: string | null; // Adres
+  telefon: string | null; // Telefon
+  email: string | null; // Email
+  aktif: boolean; // Aktif/Pasif (default: true)
+  created_at: string; // timestamp with time zone
+}
+
+export interface SalesRepresentativesRow {
+  id: string;
+  kod: string; // Satış temsilcisi kodu (NOT NULL)
+  ad_soyad: string; // Ad Soyad (NOT NULL)
+  telefon: string | null; // Telefon
+  email: string | null; // Email
+  bolge: string | null; // Bölge
+  aktif: boolean; // Aktif/Pasif (default: true)
+  created_at: string; // timestamp with time zone
+  ad: string | null; // Ad (eski field - backward compatibility)
+}
+
+export interface JobTitlesRow {
+  id: string;
+  unvan: string; // Ünvan (NOT NULL)
+  aciklama: string | null; // Açıklama
+  aktif: boolean; // Aktif/Pasif (default: true)
+  created_at: string; // timestamp with time zone
+}
+
+export interface PartnershipsRow {
+  id: string;
+  partner_name: string | null; // Partner adı
+  partner_type: string | null; // Partner tipi
+  contact_person: string | null; // İrtibat kişisi
+  phone: string | null; // Telefon
+  email: string | null; // Email
+  notes: string | null; // Notlar
+  aktif: boolean; // Aktif/Pasif (default: true)
+  created_at: string; // timestamp with time zone
+  calculation_rows: any | null; // JSONB - Hesaplama satırları
+}
+
+export interface SharingsRow {
+  id: string;
+  kod: string; // Paylaşım kodu (NOT NULL)
+  ad: string; // Paylaşım adı (NOT NULL)
+  tip: string | null; // Tip
+  sira: number; // Sıra (default: 0)
+  aktif: boolean; // Aktif/Pasif (default: true)
+  paydaslar: any | null; // JSONB - Paydaslar array
+  created_at: string; // timestamp with time zone
+  model_adi: string | null; // Model adı
+}
+
+export interface CardProgramsRow {
+  id: string;
+  kod: string | null; // Kart program kodu
+  ad: string; // Kart program adı (NOT NULL)
+  banka_kodu: string | null; // Banka kodu
+  kart_tipi: string | null; // Kart tipi (Kredi/Banka)
+  komisyon_orani: number | null; // Komisyon oranı (numeric)
+  aktif: boolean; // Aktif/Pasif (default: true)
+  created_at: string; // timestamp with time zone
+  kart_adi: string | null; // Kart adı (eski field)
+}
+
+export interface SuspensionReasonsRow {
+  id: string;
+  neden: string; // Askıya alma nedeni (NOT NULL)
+  aciklama: string | null; // Açıklama
+  aktif: boolean; // Aktif/Pasif (default: true)
+  created_at: string; // timestamp with time zone
+}
+
+export interface EarningsRow {
+  id: string;
+  firma_id: string; // Firma ID (NOT NULL)
+  tabela_group_id: string; // Tabela grup ID (NOT NULL)
+  tabela_group_ad: string; // Tabela grup adı (NOT NULL)
+  donem: string; // Dönem (NOT NULL)
+  olusturma_tarihi: string; // timestamp with time zone (default: now())
+  guncelleme_tarihi: string | null; // timestamp with time zone
+  vade: string; // Vade (NOT NULL)
+  islem_hacmi_map: any; // JSONB - İşlem hacmi map (NOT NULL, default: {})
+  durum: string; // Durum (default: 'Taslak')
+  notlar: string | null; // Notlar
+  olusturan_kullanici: string | null; // Oluşturan kullanıcı
+  pf_islem_hacmi: string | null; // PF işlem hacmi
+  oxivo_islem_hacmi: string | null; // Oxivo işlem hacmi
+  manual_ek_gelir_oxivo_total: string | null; // Manuel ek gelir Oxivo total
+  manual_ana_tabela_oxivo_total: string | null; // Manuel ana tabela Oxivo total
+  manual_ana_tabela_islem_hacmi: string | null; // Manuel ana tabela işlem hacmi
+  total_islem_hacmi: number | null; // Total işlem hacmi (numeric)
+  total_pf_pay: number | null; // Total PF ödeme (numeric)
+  total_oxivo_pay: number | null; // Total Oxivo ödeme (numeric)
+  aktif: boolean; // Aktif/Pasif (default: true)
+  created_at: string; // timestamp with time zone (default: now())
+  updated_at: string; // timestamp with time zone (default: now())
+  ek_gelir_aciklama: string | null; // Ek gelir açıklaması
+  ek_gelir_pf_tl: number | null; // Ek gelir PF TL (numeric)
+  ek_gelir_ox_tl: number | null; // Ek gelir Oxivo TL (numeric)
+  ek_kesinti_aciklama: string | null; // Ek kesinti açıklaması
+  ek_kesinti_pf_tl: number | null; // Ek kesinti PF TL (numeric)
+  ek_kesinti_ox_tl: number | null; // Ek kesinti Oxivo TL (numeric)
+}
+
+// ========================================
+// CORE TABLES
+// ========================================
+
+export interface CustomersRow {
+  // Primary & System Fields
+  id: string;
   created_at: string;
   updated_at: string;
-  created_by: string | null;
-  updated_by: string | null;
+  
   // ========================================
-  // 🆕 COMPREHENSIVE FIELDS (JSONB)
+  // CORE CUSTOMER FIELDS (Turkish names → snake_case)
+  // Matches Customer interface from CustomerModule.tsx
   // ========================================
-  domain_hierarchy: any | null; // JSONB - DomainNode tree structure
-  bank_device_assignments: any | null; // JSONB - BankDeviceAssignment[]
+  cari_hesap_kodu: string; // Customer code (cariHesapKodu)
+  sektor: string | null; // Sector
+  mcc: string | null; // MCC code
+  cari_adi: string; // Customer name (cariAdi)
+  guncel_my_payter_domain: string | null; // Current MyPayter domain (guncelMyPayterDomain)
+  vergi_dairesi: string | null; // Tax office (vergiDairesi)
+  vergi_no: string | null; // Tax number (vergiNo)
+  adres: string | null; // Address
+  ilce: string | null; // District
+  posta_kodu: string | null; // Postal code (postaKodu)
+  email: string | null; // Email
+  yetkili: string | null; // Contact person
+  tel: string | null; // Phone
+  durum: string; // Status: 'Aktif' | 'Pasif'
+  p6x: string | null; // P6X info
+  apollo: string | null; // Apollo info
+  
+  // ========================================
+  // SALES & MANAGEMENT FIELDS
+  // ========================================
+  sales_rep_id: string | null; // Sales rep ID (salesRepId)
+  sales_rep_name: string | null; // Sales rep name cached (salesRepName)
+  bloke_durumu: boolean | null; // Blocked status (blokeDurumu)
+  sorumlu_kisi: string | null; // Responsible person (sorumluKisi)
+  cari_grubu: string | null; // Customer group (cariGrubu)
+  kayit_tarihi: string | null; // Registration date ISO string (kayitTarihi)
+  musteri_tipi: string | null; // Customer type (musteriTipi)
+  
+  // ========================================
+  // DOMAIN & SUBSCRIPTION
+  // ========================================
+  domain: string | null; // Alias for guncel_my_payter_domain
+  ignore_main_domain: boolean | null; // Ignore main domain flag (ignoreMainDomain)
+  ignore_main_domain_note: string | null; // Reason for ignoring (ignoreMainDomainNote)
+  subscription_fee: number | null; // Monthly subscription fee (subscriptionFee)
+  
+  // ========================================
+  // JSONB FIELDS (Complex data structures)
+  // ========================================
+  domain_hierarchy: any | null; // JSONB - DomainNode[] tree structure
+  linked_bank_pf_ids: any | null; // JSONB - string[] Related Bank/PF IDs (linkedBankPFIds)
+  bank_device_assignments: any | null; // JSONB - BankDeviceAssignment[] (bankDeviceAssignments)
+  service_fee_settings: any | null; // JSONB - ServiceFeeSettings object (serviceFeeSettings)
   device_subscriptions: any | null; // JSONB - DeviceSubscription[]
   service_fee_invoices: any | null; // JSONB - ServiceFeeInvoice[]
   payment_reminders: any | null; // JSONB - PaymentReminder[]
   reminder_settings: any | null; // JSONB - ReminderSettings
   suspension_history: any | null; // JSONB - SuspensionHistoryRecord[]
-  linked_bankpf_ids: any | null; // JSONB - string[] (BankPF IDs)
-  mcc_code: string | null; // MCC kodu
-  sector: string | null; // Sektör
-  segment: string | null; // Müşteri segmenti
 }
 
 export interface BankAccountsRow {
@@ -292,6 +473,20 @@ export interface DomainMappingsRow {
 // DATABASE INSERT TYPES (Omit auto-generated)
 // ========================================
 
+// Definitions Tables
+export type MCCCodesInsert = Omit<MCCCodesRow, 'id' | 'created_at'>;
+export type BanksInsert = Omit<BanksRow, 'id' | 'created_at'>;
+export type EPKInstitutionsInsert = Omit<EPKInstitutionsRow, 'id' | 'created_at'>;
+export type OKInstitutionsInsert = Omit<OKInstitutionsRow, 'id' | 'created_at'>;
+export type SalesRepresentativesInsert = Omit<SalesRepresentativesRow, 'id' | 'created_at'>;
+export type JobTitlesInsert = Omit<JobTitlesRow, 'id' | 'created_at'>;
+export type PartnershipsInsert = Omit<PartnershipsRow, 'id' | 'created_at'>;
+export type SharingsInsert = Omit<SharingsRow, 'id' | 'created_at'>;
+export type CardProgramsInsert = Omit<CardProgramsRow, 'id' | 'created_at'>;
+export type SuspensionReasonsInsert = Omit<SuspensionReasonsRow, 'id' | 'created_at'>;
+export type EarningsInsert = Omit<EarningsRow, 'id' | 'created_at' | 'updated_at'>;
+
+// Core Tables
 export type CustomersInsert = Omit<CustomersRow, 'id' | 'created_at' | 'updated_at'>;
 export type BankAccountsInsert = Omit<BankAccountsRow, 'id' | 'created_at' | 'updated_at'>;
 export type PettyCashInsert = Omit<PettyCashRow, 'id' | 'created_at' | 'updated_at'>;
@@ -306,6 +501,20 @@ export type DomainMappingsInsert = Omit<DomainMappingsRow, 'id' | 'created_at' |
 // DATABASE UPDATE TYPES (All optional)
 // ========================================
 
+// Definitions Tables
+export type MCCCodesUpdate = Partial<MCCCodesInsert>;
+export type BanksUpdate = Partial<BanksInsert>;
+export type EPKInstitutionsUpdate = Partial<EPKInstitutionsInsert>;
+export type OKInstitutionsUpdate = Partial<OKInstitutionsInsert>;
+export type SalesRepresentativesUpdate = Partial<SalesRepresentativesInsert>;
+export type JobTitlesUpdate = Partial<JobTitlesInsert>;
+export type PartnershipsUpdate = Partial<PartnershipsInsert>;
+export type SharingsUpdate = Partial<SharingsInsert>;
+export type CardProgramsUpdate = Partial<CardProgramsInsert>;
+export type SuspensionReasonsUpdate = Partial<SuspensionReasonsInsert>;
+export type EarningsUpdate = Partial<EarningsInsert>;
+
+// Core Tables
 export type CustomersUpdate = Partial<CustomersInsert>;
 export type BankAccountsUpdate = Partial<BankAccountsInsert>;
 export type PettyCashUpdate = Partial<PettyCashInsert>;
@@ -323,6 +532,67 @@ export type DomainMappingsUpdate = Partial<DomainMappingsInsert>;
 export interface Database {
   public: {
     Tables: {
+      // ========================================
+      // TANIMLAR (DEFINITIONS) TABLES
+      // ========================================
+      mcc_codes: {
+        Row: MCCCodesRow;
+        Insert: MCCCodesInsert;
+        Update: MCCCodesUpdate;
+      };
+      banks: {
+        Row: BanksRow;
+        Insert: BanksInsert;
+        Update: BanksUpdate;
+      };
+      epk_institutions: {
+        Row: EPKInstitutionsRow;
+        Insert: EPKInstitutionsInsert;
+        Update: EPKInstitutionsUpdate;
+      };
+      ok_institutions: {
+        Row: OKInstitutionsRow;
+        Insert: OKInstitutionsInsert;
+        Update: OKInstitutionsUpdate;
+      };
+      sales_representatives: {
+        Row: SalesRepresentativesRow;
+        Insert: SalesRepresentativesInsert;
+        Update: SalesRepresentativesUpdate;
+      };
+      job_titles: {
+        Row: JobTitlesRow;
+        Insert: JobTitlesInsert;
+        Update: JobTitlesUpdate;
+      };
+      partnerships: {
+        Row: PartnershipsRow;
+        Insert: PartnershipsInsert;
+        Update: PartnershipsUpdate;
+      };
+      sharings: {
+        Row: SharingsRow;
+        Insert: SharingsInsert;
+        Update: SharingsUpdate;
+      };
+      card_programs: {
+        Row: CardProgramsRow;
+        Insert: CardProgramsInsert;
+        Update: CardProgramsUpdate;
+      };
+      suspension_reasons: {
+        Row: SuspensionReasonsRow;
+        Insert: SuspensionReasonsInsert;
+        Update: SuspensionReasonsUpdate;
+      };
+      earnings: {
+        Row: EarningsRow;
+        Insert: EarningsInsert;
+        Update: EarningsUpdate;
+      };
+      // ========================================
+      // CORE TABLES
+      // ========================================
       customers: {
         Row: CustomersRow;
         Insert: CustomersInsert;
