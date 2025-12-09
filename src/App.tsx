@@ -406,6 +406,17 @@ export default function App() {
         if (signsResult.success && signsResult.data) {
           setSigns(signsResult.data);
           logger.info(`✅ Loaded ${signsResult.data.length} signs from Supabase`);
+          
+          // 🔍 DEBUG: Verify komisyonOranları field mapping
+          const firstSign = signsResult.data[0];
+          if (firstSign) {
+            logger.debug('🔍 First sign komisyon check:', {
+              id: firstSign.id,
+              hasKomisyonOranları: !!firstSign.komisyonOranları,
+              komisyonType: typeof firstSign.komisyonOranları,
+              firstVade: firstSign.komisyonOranları?.[0]
+            });
+          }
         }
         
         if (earningsResult.success && earningsResult.data) {
@@ -944,6 +955,15 @@ export default function App() {
             if (data) {
               setSigns(data);
               logger.debug('✅ Tabelalar listesi güncellendi:', data.length, 'kayıt');
+              
+              // 🔍 DEBUG: Verify komisyonOranları after realtime update
+              if (data.length > 0) {
+                logger.debug('🔍 Realtime - First sign komisyon:', {
+                  id: data[0].id,
+                  hasKomisyonOranları: !!data[0].komisyonOranları,
+                  firstVade: data[0].komisyonOranları?.[0]
+                });
+              }
             }
           } catch (error) {
             logger.error('❌ Tabelalar listesi güncellenirken hata:', error);

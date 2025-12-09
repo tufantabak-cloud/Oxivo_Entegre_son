@@ -238,8 +238,14 @@ export function FirmaTabelaTab({
         gelirModeliValue: tabelaRecords[0]?.gelirModeli,
         hasUrun: !!tabelaRecords[0]?.urun,
         urunValue: tabelaRecords[0]?.urun,
+        hasKomisyonOranları: !!tabelaRecords[0]?.komisyonOranları,
+        komisyonOranlarıType: typeof tabelaRecords[0]?.komisyonOranları,
+        komisyonOranlarıLength: tabelaRecords[0]?.komisyonOranları?.length,
+        firstKomisyon: tabelaRecords[0]?.komisyonOranları?.[0],
         allKeys: Object.keys(tabelaRecords[0] || {})
       });
+    } else {
+      console.log('⚠️ [FirmaTabelaTab] TABELA kayıtları YOK! (length: 0)');
     }
   }, [tabelaRecords]);
   

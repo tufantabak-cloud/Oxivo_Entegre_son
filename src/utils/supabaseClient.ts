@@ -75,8 +75,10 @@ function toCamelCase(str: string): string {
     'satis_fiyati': 'satisFiyati',
     'kar_fiyati': 'karFiyati',
     'komisyon_yuzdesi': 'komisyonYuzdesi',
-    'komisyon_oranlari': 'komisyonOranlari',
-    'paylasim_oranlari': 'paylasimOranlari'
+    'komisyon_oranlari': 'komisyonOranları',
+    'paylasim_oranlari': 'paylaşımOranları',
+    'hazine_geliri': 'hazineGeliri',
+    'ek_gelir_detay': 'ekGelirDetay'
   };
   
   if (specialCases[str]) {
