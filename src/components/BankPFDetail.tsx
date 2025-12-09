@@ -767,6 +767,7 @@ export function BankPFDetail({
             tabelaRecords={formData.tabelaRecords || []}
             tabelaGroups={formData.tabelaGroups || []}
             kurumAdi={formData.firmaUnvan}
+            firmaId={formData.id}
             hakedisRecords={formData.hakedisRecords || []}
             onHakedisRecordsChange={(records) => {
               setFormData(prev => ({ ...prev, hakedisRecords: records }));

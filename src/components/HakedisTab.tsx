@@ -21,6 +21,7 @@ interface HakedisTabProps {
   tabelaRecords: TabelaRecord[];
   tabelaGroups?: TabelaGroup[];
   kurumAdi: string; // Firma adı (SİPAY gibi)
+  firmaId: string; // Firma ID (BankPF ID)
   hakedisRecords: HakedisRecord[];
   onHakedisRecordsChange: (records: HakedisRecord[]) => void;
 }
@@ -37,6 +38,7 @@ export function HakedisTab({
   tabelaRecords, 
   tabelaGroups = [], 
   kurumAdi,
+  firmaId,
   hakedisRecords,
   onHakedisRecordsChange
 }: HakedisTabProps) {
@@ -267,6 +269,7 @@ export function HakedisTab({
       // Yeni hakediş kaydı oluştur
       const newHakedis: HakedisRecord = {
         id: `hakedis-${Date.now()}`,
+        firmaId: firmaId, // ✅ Firma ID eklendi
         tabelaGroupId: formTabelaGroupId,
         tabelaGroupAd: selectedGroup.name,
         donem: formDonem,
@@ -296,6 +299,7 @@ export function HakedisTab({
       // ✅ Supabase'e kaydet
       console.log('🔍 [HakedisTab] Yeni hakediş kaydı oluşturuluyor:', {
         id: newHakedis.id,
+        firmaId: newHakedis.firmaId, // ✅ FirmaId kontrolü
         donem: newHakedis.donem,
         durum: newHakedis.durum,
         totalIslemHacmi: newHakedis.totalIslemHacmi,
@@ -333,6 +337,7 @@ export function HakedisTab({
       // Mevcut kaydı güncelle
       const updatedHakedis: HakedisRecord = {
         ...selectedHakedis,
+        firmaId: firmaId, // ✅ Firma ID güncellendi
         tabelaGroupId: formTabelaGroupId,
         tabelaGroupAd: selectedGroup.name,
         donem: formDonem,
@@ -364,6 +369,7 @@ export function HakedisTab({
       // ✅ Supabase'e kaydet
       console.log('🔍 [HakedisTab] Hakediş kaydı güncelleniyor:', {
         id: updatedHakedis.id,
+        firmaId: updatedHakedis.firmaId, // ✅ FirmaId kontrolü
         donem: updatedHakedis.donem,
         durum: updatedHakedis.durum,
         totalIslemHacmi: updatedHakedis.totalIslemHacmi,
