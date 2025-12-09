@@ -2049,17 +2049,23 @@ export function HakedisTab({
                           </div>
                         ) : (
                           <div className="flex flex-col items-center gap-2">
-                            <Input
-                              type="number"
-                              placeholder={totals.normalTotals.totalIslemHacmi.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                              value={manualAnaTabelaIslemHacmi}
-                              onChange={(e) => {
-                                const value = e.target.value;
-                                setManualAnaTabelaIslemHacmi(value);
-                              }}
-                              className="w-32 h-8 text-center bg-white border-2 border-purple-300 focus:border-purple-500 text-sm"
-                              step="0.01"
-                            />
+                            <div className="flex items-center gap-1">
+                              <Input
+                                type="number"
+                                placeholder={totals.normalTotals.totalIslemHacmi.toFixed(2)}
+                                value={manualAnaTabelaIslemHacmi}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  setManualAnaTabelaIslemHacmi(value);
+                                }}
+                                className="w-32 h-8 text-right bg-white border-2 border-purple-300 focus:border-purple-500 text-sm"
+                                step="0.01"
+                              />
+                              <span className="text-sm text-gray-600">₺</span>
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              Otomatik: {totals.normalTotals.totalIslemHacmi.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
+                            </div>
                             {manualAnaTabelaIslemHacmi && (
                               <button
                                 onClick={() => setManualAnaTabelaIslemHacmi('')}
