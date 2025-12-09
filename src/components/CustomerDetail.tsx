@@ -4,6 +4,7 @@ import { PayterProduct } from './PayterProductTab';
 import { BankPF } from './BankPFModule';
 import { BankDeviceManagementTab } from './BankDeviceManagementTab';
 import { SendContractDialog } from './DSYM/SendContractDialog';
+import { CustomerContractPreview } from './CustomerContractPreview';
 import { ArrowLeft, Save, Trash2, X, Plus, ChevronDown, ChevronRight, Edit2, Trash, Monitor, CheckCircle, XCircle, FileSpreadsheet, FileText, Download, FileDown, Calendar, AlertTriangle, Clock, Euro, Bell, Ban, Play, DollarSign, FileSignature, Upload, Folder, CheckCircle2, XOctagon } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -4434,6 +4435,9 @@ export function CustomerDetail({
                             </div>
                           </CardContent>
                         </Card>
+
+                        {/* Sözleşme Şablonları Önizleme */}
+                        <CustomerContractPreview customer={formData} />
 
                         {/* Gönderilen Sözleşmeler */}
                         <Card>

@@ -34,16 +34,36 @@ interface TemplateEditorProps {
   onCancel: () => void;
 }
 
-// Otomatik doldurulacak alanlar
+// Otomatik doldurulacak alanlar - Müşteri Bilgileri
 const AUTO_FILL_FIELDS = [
-  { key: 'unvan', label: 'Ünvan' },
-  { key: 'vergi_no', label: 'Vergi No' },
-  { key: 'vergi_dairesi', label: 'Vergi Dairesi' },
-  { key: 'adres', label: 'Adres' },
-  { key: 'telefon', label: 'Telefon' },
-  { key: 'email', label: 'Email' },
-  { key: 'yetkili_kisi', label: 'Yetkili Kişi' },
-  { key: 'tarih', label: 'Bugünün Tarihi' },
+  { key: 'MUSTERI_UNVAN', label: '👤 Müşteri Ünvanı' },
+  { key: 'MUSTERI_ADI', label: '👤 Müşteri Adı' },
+  { key: 'CARI_HESAP_KODU', label: '🔢 Cari Hesap Kodu' },
+  { key: 'VERGI_DAIRESI', label: '🏛️ Vergi Dairesi' },
+  { key: 'VERGI_NO', label: '🔢 Vergi Numarası' },
+  { key: 'ADRES', label: '📍 Adres' },
+  { key: 'TELEFON', label: '📞 Telefon' },
+  { key: 'EMAIL', label: '📧 Email' },
+  { key: 'YETKILI_ADI_SOYADI', label: '👔 Yetkili Adı Soyadı' },
+];
+
+// Tarih bilgileri
+const DATE_FIELDS = [
+  { key: 'BUGUN', label: '📅 Bugünün Tarihi' },
+  { key: 'TARIH', label: '📅 Tarih' },
+  { key: 'YIL', label: '📅 Yıl' },
+  { key: 'AY', label: '📅 Ay' },
+  { key: 'GUN', label: '📅 Gün' },
+];
+
+// Firma bilgileri (OXİVO)
+const COMPANY_FIELDS = [
+  { key: 'FIRMA_UNVAN', label: '🏢 Firma Ünvanı' },
+  { key: 'FIRMA_ADRES', label: '🏢 Firma Adresi' },
+  { key: 'FIRMA_TELEFON', label: '🏢 Firma Telefon' },
+  { key: 'FIRMA_EMAIL', label: '🏢 Firma Email' },
+  { key: 'FIRMA_VERGI_DAIRESI', label: '🏢 Firma Vergi Dairesi' },
+  { key: 'FIRMA_VERGI_NO', label: '🏢 Firma Vergi No' },
 ];
 
 export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorProps) {
@@ -89,7 +109,9 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
       return;
     }
 
-    const autoFillFieldKeys = AUTO_FILL_FIELDS.map((f) => f.key);
+    // Tüm otomatik alanları birleştir
+    const allAutoFields = [...AUTO_FILL_FIELDS, ...DATE_FIELDS, ...COMPANY_FIELDS];
+    const autoFillFieldKeys = allAutoFields.map((f) => f.key);
 
     const templateData = {
       name,
@@ -343,11 +365,12 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
           </button>
 
           {showVariableMenu && (
-            <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl z-10 min-w-[300px]">
-              <div className="p-3 border-b border-gray-200 bg-gray-50">
-                <p className="text-sm text-gray-600">Otomatik Doldurulacak Alanlar</p>
+            <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl z-10 min-w-[350px] max-h-[500px] overflow-y-auto">
+              {/* Müşteri Bilgileri */}
+              <div className="p-3 border-b border-gray-200 bg-blue-50">
+                <p className="text-sm text-blue-900">👤 Müşteri Bilgileri</p>
               </div>
-              <div className="p-2 max-h-60 overflow-y-auto">
+              <div className="p-2">
                 {AUTO_FILL_FIELDS.map((field) => (
                   <button
                     type="button"
@@ -355,10 +378,50 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
                     onClick={() => insertVariable(field.key, field.label, false)}
                     className="w-full px-3 py-2 text-left text-sm hover:bg-blue-50 rounded flex items-center gap-2"
                   >
-                    <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">
+                    <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-mono">
                       {`{{${field.key}}}`}
                     </span>
-                    <span className="text-gray-600">{field.label}</span>
+                    <span className="text-gray-700">{field.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Tarih Bilgileri */}
+              <div className="p-3 border-b border-t border-gray-200 bg-green-50">
+                <p className="text-sm text-green-900">📅 Tarih Bilgileri</p>
+              </div>
+              <div className="p-2">
+                {DATE_FIELDS.map((field) => (
+                  <button
+                    type="button"
+                    key={field.key}
+                    onClick={() => insertVariable(field.key, field.label, false)}
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-green-50 rounded flex items-center gap-2"
+                  >
+                    <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-mono">
+                      {`{{${field.key}}}`}
+                    </span>
+                    <span className="text-gray-700">{field.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Firma Bilgileri (OXİVO) */}
+              <div className="p-3 border-b border-t border-gray-200 bg-purple-50">
+                <p className="text-sm text-purple-900">🏢 Firma Bilgileri (OXİVO)</p>
+              </div>
+              <div className="p-2">
+                {COMPANY_FIELDS.map((field) => (
+                  <button
+                    type="button"
+                    key={field.key}
+                    onClick={() => insertVariable(field.key, field.label, false)}
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-purple-50 rounded flex items-center gap-2"
+                  >
+                    <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs font-mono">
+                      {`{{${field.key}}}`}
+                    </span>
+                    <span className="text-gray-700">{field.label}</span>
                   </button>
                 ))}
               </div>
