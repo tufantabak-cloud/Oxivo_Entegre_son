@@ -1904,12 +1904,12 @@ export function HakedisTab({
                               </div>
                             ) : (
                               <Input
-                                type="text"
-                                inputMode="decimal"
-                                value={formIslemHacmiMap[vadeKey] ? formatCurrency(formIslemHacmiMap[vadeKey]) : ''}
+                                type="number"
+                                value={formIslemHacmiMap[vadeKey] || ''}
                                 onChange={(e) => handleIslemHacmiChange(vadeKey, e.target.value)}
-                                placeholder="0,00 ₺"
+                                placeholder="0.00"
                                 className="w-40 text-right bg-white"
+                                step="0.01"
                               />
                             )}
                           </TableCell>
@@ -2108,33 +2108,15 @@ export function HakedisTab({
                             <div className="flex flex-col gap-1 flex-1">
                               <div className="flex items-center gap-1 justify-end">
                                 <Input
-                                  type="text"
-                                  inputMode="decimal"
-                                  value={manualAnaTabelaOxivoTotal ? formatCurrency(manualAnaTabelaOxivoTotal) : ''}
+                                  type="number"
+                                  value={manualAnaTabelaOxivoTotal}
                                   onChange={(e) => {
                                     const value = e.target.value;
-                                    if (value === '') {
-                                      setManualAnaTabelaOxivoTotal('');
-                                      return;
-                                    }
-                                    const numericValue = parseCurrency(value);
-                                    if (!isNaN(numericValue)) {
-                                      setManualAnaTabelaOxivoTotal(numericValue.toString());
-                                    }
+                                    setManualAnaTabelaOxivoTotal(value);
                                   }}
                                   placeholder={totals.normalTotals.totalOxivoPay.toFixed(2)}
                                   className="w-44 text-right bg-white border-indigo-300 focus:border-indigo-500"
-                                  onFocus={(e) => {
-                                    if (manualAnaTabelaOxivoTotal) {
-                                      const num = parseFloat(manualAnaTabelaOxivoTotal);
-                                      e.target.value = num.toFixed(2).replace('.', ',');
-                                    }
-                                  }}
-                                  onBlur={(e) => {
-                                    if (manualAnaTabelaOxivoTotal) {
-                                      e.target.value = formatCurrency(manualAnaTabelaOxivoTotal);
-                                    }
-                                  }}
+                                  step="0.01"
                                 />
                                 <span className="text-sm text-gray-600">₺</span>
                               </div>
