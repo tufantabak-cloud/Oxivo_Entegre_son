@@ -8,8 +8,9 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { templateApi, ContractTemplate } from '../utils/contractApi';
-import { FileText, Eye, X, RefreshCw } from 'lucide-react';
+import { FileText, Eye, X, RefreshCw, Maximize2, Edit } from 'lucide-react';
 import { toast } from 'sonner';
+import { FullscreenContractEditor } from './FullscreenContractEditor';
 
 // Müşteri veri yapısı
 export interface CustomerData {
@@ -34,6 +35,8 @@ export function CustomerContractPreview({ customer }: CustomerContractPreviewPro
   const [loading, setLoading] = useState(true);
   const [previewTemplate, setPreviewTemplate] = useState<ContractTemplate | null>(null);
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
+  const [fullscreenEditorOpen, setFullscreenEditorOpen] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<ContractTemplate | null>(null);
 
   useEffect(() => {
     loadTemplates();
@@ -56,9 +59,9 @@ export function CustomerContractPreview({ customer }: CustomerContractPreviewPro
   const fillTemplateVariables = (htmlContent: string, customerData: CustomerData): string => {
     let filledContent = htmlContent;
 
-    // Değişken mapping'i
+    // Değişken mapping'i - Hem büyük hem küçük harfli desteklenir
     const variableMap: Record<string, string> = {
-      // Temel bilgiler
+      // Müşteri bilgileri - Büyük harf
       '{{MUSTERI_UNVAN}}': customerData.cariAdi || '',
       '{{MUSTERI_ADI}}': customerData.cariAdi || '',
       '{{CARI_HESAP_KODU}}': customerData.cariHesapKodu || '',
@@ -72,25 +75,55 @@ export function CustomerContractPreview({ customer }: CustomerContractPreviewPro
       '{{EPOSTA}}': customerData.email || '',
       '{{YETKILI_ADI_SOYADI}}': customerData.yetkiliAdiSoyadi || '',
       
-      // Tarih bilgileri
+      // Müşteri bilgileri - Küçük harf (backward compatibility)
+      '{{musteri_unvan}}': customerData.cariAdi || '',
+      '{{musteri_adi}}': customerData.cariAdi || '',
+      '{{unvan}}': customerData.cariAdi || '',
+      '{{cari_hesap_kodu}}': customerData.cariHesapKodu || '',
+      '{{vergi_dairesi}}': customerData.vergiDairesi || '',
+      '{{vergi_no}}': customerData.vergiNo || '',
+      '{{adres}}': customerData.adres || '',
+      '{{telefon}}': customerData.tel || '',
+      '{{tel}}': customerData.tel || '',
+      '{{email}}': customerData.email || '',
+      '{{eposta}}': customerData.email || '',
+      '{{yetkili_adi_soyadi}}': customerData.yetkiliAdiSoyadi || '',
+      '{{yetkili_kisi}}': customerData.yetkiliAdiSoyadi || '',
+      
+      // Tarih bilgileri - Büyük harf
       '{{BUGUN}}': new Date().toLocaleDateString('tr-TR'),
       '{{TARIH}}': new Date().toLocaleDateString('tr-TR'),
       '{{YIL}}': new Date().getFullYear().toString(),
       '{{AY}}': (new Date().getMonth() + 1).toString().padStart(2, '0'),
       '{{GUN}}': new Date().getDate().toString().padStart(2, '0'),
       
-      // Firma bilgileri (OXİVO)
+      // Tarih bilgileri - Küçük harf
+      '{{bugun}}': new Date().toLocaleDateString('tr-TR'),
+      '{{tarih}}': new Date().toLocaleDateString('tr-TR'),
+      '{{yil}}': new Date().getFullYear().toString(),
+      '{{ay}}': (new Date().getMonth() + 1).toString().padStart(2, '0'),
+      '{{gun}}': new Date().getDate().toString().padStart(2, '0'),
+      
+      // Firma bilgileri (OXİVO) - Büyük harf
       '{{FIRMA_UNVAN}}': 'OXİVO Ödeme ve Elektronik Para Hizmetleri A.Ş.',
       '{{FIRMA_ADRES}}': 'Büyükdere Cad. No:127 Esentepe, Şişli/İstanbul',
       '{{FIRMA_TELEFON}}': '+90 212 123 45 67',
       '{{FIRMA_EMAIL}}': 'info@oxivo.com.tr',
       '{{FIRMA_VERGI_DAIRESI}}': 'Mecidiyeköy Vergi Dairesi',
       '{{FIRMA_VERGI_NO}}': '1234567890',
+      
+      // Firma bilgileri (OXİVO) - Küçük harf
+      '{{firma_unvan}}': 'OXİVO Ödeme ve Elektronik Para Hizmetleri A.Ş.',
+      '{{firma_adres}}': 'Büyükdere Cad. No:127 Esentepe, Şişli/İstanbul',
+      '{{firma_telefon}}': '+90 212 123 45 67',
+      '{{firma_email}}': 'info@oxivo.com.tr',
+      '{{firma_vergi_dairesi}}': 'Mecidiyeköy Vergi Dairesi',
+      '{{firma_vergi_no}}': '1234567890',
     };
 
     // Tüm değişkenleri değiştir
     Object.entries(variableMap).forEach(([variable, value]) => {
-      const regex = new RegExp(variable.replace(/[{}]/g, '\\$&'), 'g');
+      const regex = new RegExp(variable.replace(/[{}]/g, '\\\\$&'), 'g');
       filledContent = filledContent.replace(regex, value);
     });
 
@@ -106,6 +139,11 @@ export function CustomerContractPreview({ customer }: CustomerContractPreviewPro
   const handlePreview = (template: ContractTemplate) => {
     setPreviewTemplate(template);
     setPreviewDialogOpen(true);
+  };
+
+  const handleEdit = (template: ContractTemplate) => {
+    setEditingTemplate(template);
+    setFullscreenEditorOpen(true);
   };
 
   if (loading) {
@@ -177,15 +215,26 @@ export function CustomerContractPreview({ customer }: CustomerContractPreviewPro
                       </div>
                     </div>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handlePreview(template)}
-                    className="gap-2"
-                  >
-                    <Eye size={16} />
-                    Önizle
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handlePreview(template)}
+                      className="gap-2"
+                    >
+                      <Eye size={16} />
+                      Önizle
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleEdit(template)}
+                      className="gap-2"
+                    >
+                      <Edit size={16} />
+                      Düzenle
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -255,12 +304,38 @@ export function CustomerContractPreview({ customer }: CustomerContractPreviewPro
             <Button variant="outline" onClick={() => setPreviewDialogOpen(false)}>
               Kapat
             </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setPreviewDialogOpen(false);
+                if (previewTemplate) {
+                  handleEdit(previewTemplate);
+                }
+              }}
+              className="gap-2"
+            >
+              <Maximize2 size={16} />
+              Tam Ekran Düzenle
+            </Button>
             <Button onClick={() => toast.info('Sözleşme gönderimi aktif değil')}>
               Bu Şablonu Gönder
             </Button>
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Fullscreen Editor */}
+      {editingTemplate && (
+        <FullscreenContractEditor
+          isOpen={fullscreenEditorOpen}
+          onClose={() => setFullscreenEditorOpen(false)}
+          customerId={customer.id}
+          templateId={editingTemplate.id}
+          templateName={editingTemplate.name}
+          initialContent={fillTemplateVariables(editingTemplate.content_html, customer)}
+          onSave={loadTemplates}
+        />
+      )}
     </>
   );
 }

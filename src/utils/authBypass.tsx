@@ -148,3 +148,13 @@ if (typeof window !== 'undefined') {
   console.log('👤 Default User:', DEFAULT_USER.email, '/', DEFAULT_USER.role);
   console.log('🚪 Logged Out:', hasLoggedOut ? 'Yes (will show login page)' : 'No (auto-login active)');
 }
+
+// Helper function to get current user ID (for non-component usage)
+export function getCurrentUserId(): string {
+  return DEFAULT_USER.id;
+}
+
+// Helper function to get current user
+export function getCurrentUser(): AuthUser {
+  return DEFAULT_USER;
+}
