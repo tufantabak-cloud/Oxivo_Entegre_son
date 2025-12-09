@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { BankPF, bankaPFListesi, okListesi, epkListesi } from './BankPFModule';
 import { BankPFCategorySelector } from './BankPFCategorySelector';
 import { ContactMatrix } from './ContactMatrix';
@@ -191,7 +191,14 @@ export function BankPFDetail({
     return [];
   };
 
+  // ✅ PERFORMANCE FIX: Memoize callback functions to prevent infinite re-render
+  const handleTabelaRecordsChange = useCallback((records: any[]) => {
+    setFormData(prev => ({ ...prev, tabelaRecords: records }));
+  }, []);
 
+  const handleTabelaGroupsChange = useCallback((groups: any[]) => {
+    setFormData(prev => ({ ...prev, tabelaGroups: groups }));
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -1089,15 +1096,8 @@ export function BankPFDetail({
             kartProgramlar={kartProgramlar}
             tabelaRecords={formData.tabelaRecords || []}
             tabelaGroups={formData.tabelaGroups || []}
-            onTabelaRecordsChange={(records) => {
-              // ✅ CRITICAL FIX: Sadece state güncelle, onSave ÇAĞIRMA!
-              // Otomatik kayıt mekanizması 1.5 saniye sonra zaten çalışacak
-              setFormData(prev => ({ ...prev, tabelaRecords: records }));
-            }}
-            onTabelaGroupsChange={(groups) => {
-              // ✅ CRITICAL FIX: Sadece state güncelle, onSave ÇAĞIRMA!
-              setFormData(prev => ({ ...prev, tabelaGroups: groups }));
-            }}
+            onTabelaRecordsChange={handleTabelaRecordsChange}
+            onTabelaGroupsChange={handleTabelaGroupsChange}
           />
         </TabsContent>
 
