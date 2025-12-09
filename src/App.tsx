@@ -55,6 +55,8 @@ const DashboardHome = lazy(() => import('./components/DashboardHome').then(m => 
 // ⚡ DSYM Module - Dijital Sözleşme Yönetim Modülü
 const DSYMModule = lazy(() => import('./components/DSYMModule'));
 const ContractPublicView = lazy(() => import('./components/DSYM/ContractPublicView'));
+// ⚡ Supabase Data Inspector - Real-time Veri Takip Paneli
+const SupabaseDataInspector = lazy(() => import('./components/SupabaseDataInspector'));
 // 🔧 Migration Tool (Development only)
 const MigrationRunner = ENV_CONFIG.enableMigrationTools 
   ? lazy(() => import('./utils/migrationRunner').then(m => ({ default: m.MigrationRunner })))
@@ -542,6 +544,10 @@ export default function App() {
           
         case 'dsym':
           setActiveModule('dsym');
+          break;
+          
+        case 'dataInspector':
+          setActiveModule('dataInspector');
           break;
           
         default:
@@ -2050,6 +2056,24 @@ export default function App() {
                       <FileSignature size={18} className="flex-shrink-0" />
                       <span className="truncate">DSYM</span>
                     </Button>
+                    <Button
+                      variant="ghost"
+                      size="default"
+                      style={{ minHeight: '48px' }}
+                      onClick={() => {
+                        setActiveModule('dataInspector');
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`justify-start gap-3 ${
+                        activeModule === 'dataInspector'
+                          ? 'bg-purple-600 text-white shadow-md hover:bg-purple-700 hover:text-white'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                      title="Supabase Data Inspector"
+                    >
+                      <Database size={18} className="flex-shrink-0" />
+                      <span className="truncate">Data Inspector</span>
+                    </Button>
                     {ENV_CONFIG.enableMigrationTools && (
                       <Button
                         variant="ghost"
@@ -2191,6 +2215,21 @@ export default function App() {
               >
                 <FileSignature size={13} />
                 <span>DSYM</span>
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setActiveModule('dataInspector')}
+                className={`gap-1 h-7 px-2 text-[10px] ${
+                  activeModule === 'dataInspector'
+                    ? 'bg-purple-600 text-white shadow-md shadow-purple-200 hover:bg-purple-700 hover:text-white'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                }`}
+                title="Supabase Data Inspector"
+              >
+                <Database size={13} />
+                <span className="text-[13px]">Inspector</span>
               </Button>
               
               {ENV_CONFIG.enableMigrationTools && (
@@ -3185,6 +3224,11 @@ export default function App() {
         {dataLoaded && activeModule === 'dsym' && (
           <Suspense fallback={<ModuleLoadingFallback />}>
             <DSYMModule />
+          </Suspense>
+        )}
+        {activeModule === 'dataInspector' && (
+          <Suspense fallback={<ModuleLoadingFallback />}>
+            <SupabaseDataInspector />
           </Suspense>
         )}
         {activeModule === 'migration' && ENV_CONFIG.enableMigrationTools && MigrationRunner && (
