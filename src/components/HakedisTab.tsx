@@ -15,7 +15,7 @@ import { HakedisRecord } from './BankPFModule';
 import { Calendar, Download, Calculator, Plus, Eye, Edit, Trash2, Save, Archive, Columns3, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { kisaltUrunAdi } from '../utils/formatters';
-import { earningsApi } from '../utils/supabaseClient';
+import { earningsApi } from '../utils/supabaseClient';4
 
 interface HakedisTabProps {
   tabelaRecords: TabelaRecord[];
@@ -424,22 +424,22 @@ export function HakedisTab({
     }
   };
 
-  // Para formatı yardımcı fonksiyonları
+  // Para formatı yardımcı fonksiyonları (₺ işareti OLMADAN)
   const formatCurrency = (value: string | number): string => {
     const numValue = typeof value === 'string' ? parseFloat(value.replace(',', '.')) : value;
     if (isNaN(numValue) || numValue === 0) return '';
     
-    // Bindelik ayırım ve virgülle ondalık
+    // Bindelik ayırım ve virgülle ondalık (₺ işareti YOK!)
     return numValue.toLocaleString('tr-TR', { 
       minimumFractionDigits: 2, 
       maximumFractionDigits: 2 
-    }) + ' ₺';
+    });
   };
   
   const parseCurrency = (formatted: string): number => {
-    // "1.234,56 ₺" formatından "1234.56" sayısına dönüştür
+    // "1.234,56" formatından "1234.56" sayısına dönüştür
     const cleaned = formatted
-      .replace(/\s₺/g, '')        // ₺ sembolünü kaldır
+      .replace(/\s₺/g, '')        // ₺ sembolünü kaldır (güvenlik için)
       .replace(/\./g, '')          // Binlik ayırıcıları kaldır
       .replace(',', '.');          // Virgülü noktaya çevir
     return parseFloat(cleaned);
@@ -2106,36 +2106,39 @@ export function HakedisTab({
                         ) : (
                           <div className="flex items-center gap-2 justify-end">
                             <div className="flex flex-col gap-1 flex-1">
-                              <Input
-                                type="text"
-                                inputMode="decimal"
-                                value={manualAnaTabelaOxivoTotal ? formatCurrency(manualAnaTabelaOxivoTotal) : ''}
-                                onChange={(e) => {
-                                  const value = e.target.value;
-                                  if (value === '') {
-                                    setManualAnaTabelaOxivoTotal('');
-                                    return;
-                                  }
-                                  const numericValue = parseCurrency(value);
-                                  if (!isNaN(numericValue)) {
-                                    setManualAnaTabelaOxivoTotal(numericValue.toString());
-                                  }
-                                }}
-                                placeholder={totals.normalTotals.totalOxivoPay.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺'}
-                                className="w-48 text-right bg-white border-indigo-300 focus:border-indigo-500"
-                                onFocus={(e) => {
-                                  if (manualAnaTabelaOxivoTotal) {
-                                    const num = parseFloat(manualAnaTabelaOxivoTotal);
-                                    e.target.value = num.toFixed(2).replace('.', ',');
-                                  }
-                                }}
-                                onBlur={(e) => {
-                                  if (manualAnaTabelaOxivoTotal) {
-                                    e.target.value = formatCurrency(manualAnaTabelaOxivoTotal);
-                                  }
-                                }}
-                              />
-                              <div className="text-xs text-indigo-600 flex items-center gap-1">
+                              <div className="flex items-center gap-1 justify-end">
+                                <Input
+                                  type="text"
+                                  inputMode="decimal"
+                                  value={manualAnaTabelaOxivoTotal ? formatCurrency(manualAnaTabelaOxivoTotal) : ''}
+                                  onChange={(e) => {
+                                    const value = e.target.value;
+                                    if (value === '') {
+                                      setManualAnaTabelaOxivoTotal('');
+                                      return;
+                                    }
+                                    const numericValue = parseCurrency(value);
+                                    if (!isNaN(numericValue)) {
+                                      setManualAnaTabelaOxivoTotal(numericValue.toString());
+                                    }
+                                  }}
+                                  placeholder={totals.normalTotals.totalOxivoPay.toFixed(2)}
+                                  className="w-44 text-right bg-white border-indigo-300 focus:border-indigo-500"
+                                  onFocus={(e) => {
+                                    if (manualAnaTabelaOxivoTotal) {
+                                      const num = parseFloat(manualAnaTabelaOxivoTotal);
+                                      e.target.value = num.toFixed(2).replace('.', ',');
+                                    }
+                                  }}
+                                  onBlur={(e) => {
+                                    if (manualAnaTabelaOxivoTotal) {
+                                      e.target.value = formatCurrency(manualAnaTabelaOxivoTotal);
+                                    }
+                                  }}
+                                />
+                                <span className="text-sm text-gray-600">₺</span>
+                              </div>
+                              <div className="text-xs text-indigo-600 flex items-center gap-1 justify-end">
                                 {manualAnaTabelaOxivoTotal ? (
                                   <>
                                     <span className="text-indigo-700">✓ Manuel</span>
@@ -2148,7 +2151,7 @@ export function HakedisTab({
                                   </>
                                 ) : (
                                   <span className="text-xs text-gray-500">
-                                    {totals.normalTotals.totalOxivoPay.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
+                                    Otomatik: {totals.normalTotals.totalOxivoPay.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
                                   </span>
                                 )}
                               </div>
