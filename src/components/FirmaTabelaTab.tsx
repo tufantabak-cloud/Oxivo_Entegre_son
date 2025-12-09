@@ -681,6 +681,17 @@ export function FirmaTabelaTab({
                             </Button>
                             <Button
                               size="sm"
+                              variant={group.aktif ? 'default' : 'outline'}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleToggleGroupAktif(group.id);
+                              }}
+                              title={group.aktif ? 'Grubu Pasif Yap' : 'Grubu Aktif Yap'}
+                            >
+                              {group.aktif ? 'Aktif' : 'Pasif'}
+                            </Button>
+                            <Button
+                              size="sm"
                               variant="ghost"
                               className="text-red-600"
                               onClick={(e) => {
@@ -907,7 +918,7 @@ export function FirmaTabelaTab({
                   <Label>Ürün *</Label>
                   <ModernFormSelect
                     value={formData.urun}
-                    onValueChange={(value) => setFormData({ ...formData, urun: value as any })}
+                    onChange={(value) => setFormData({ ...formData, urun: value as any })}
                     options={URUN_LISTESI.map(u => ({ value: u, label: u }))}
                     placeholder="Ürün seçin"
                   />
@@ -919,7 +930,7 @@ export function FirmaTabelaTab({
                   <Label>Kart Tipi *</Label>
                   <ModernFormSelect
                     value={formData.kartTipi}
-                    onValueChange={(value) => setFormData({ ...formData, kartTipi: value as any })}
+                    onChange={(value) => setFormData({ ...formData, kartTipi: value as any })}
                     options={[
                       { value: 'Credit', label: 'Credit' },
                       { value: 'Debit', label: 'Debit' },
@@ -933,7 +944,7 @@ export function FirmaTabelaTab({
                   <Label>Gelir Modeli *</Label>
                   <ModernFormSelect
                     value={formData.gelirModeliId}
-                    onValueChange={(value) => setFormData({ ...formData, gelirModeliId: value })}
+                    onChange={(value) => setFormData({ ...formData, gelirModeliId: value })}
                     options={activeGelirModelleri.map(g => ({ value: g.id, label: g.ad }))}
                     placeholder="Gelir modeli seçin"
                   />
@@ -943,7 +954,7 @@ export function FirmaTabelaTab({
                   <Label>Yurt İçi/Dışı *</Label>
                   <ModernFormSelect
                     value={formData.yurtIciDisi}
-                    onValueChange={(value) => setFormData({ ...formData, yurtIciDisi: value as any })}
+                    onChange={(value) => setFormData({ ...formData, yurtIciDisi: value as any })}
                     options={[
                       { value: 'Yurt İçi', label: 'Yurt İçi' },
                       { value: 'Yurt Dışı', label: 'Yurt Dışı' }
@@ -1067,7 +1078,7 @@ export function FirmaTabelaTab({
                 <Label>Ek Gelir Türü</Label>
                 <ModernFormSelect
                   value={formData.selectedEkGelirId}
-                  onValueChange={(value) => setFormData({ ...formData, selectedEkGelirId: value })}
+                  onChange={(value) => setFormData({ ...formData, selectedEkGelirId: value })}
                   options={[
                     { value: 'NONE', label: 'Seçilmedi' },
                     ...activeEkGelirler.map(e => ({ value: e.id, label: e.gelirTuru }))
@@ -1075,47 +1086,6 @@ export function FirmaTabelaTab({
                   placeholder="Ek gelir seçin"
                 />
               </div>
-              
-              {isHazineGeliriSelected && (
-                <div className="grid grid-cols-3 gap-4 p-4 bg-blue-50 rounded-lg">
-                  <div className="space-y-2">
-                    <Label>Tutar (TL)</Label>
-                    <Input
-                      type="number"
-                      value={formData.hazineGeliri.tutarTL}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        hazineGeliri: { ...formData.hazineGeliri, tutarTL: e.target.value }
-                      })}
-                      placeholder="0"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Oxivo Yüzde (%)</Label>
-                    <Input
-                      type="number"
-                      value={formData.hazineGeliri.oxivoYuzde}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        hazineGeliri: { ...formData.hazineGeliri, oxivoYuzde: e.target.value }
-                      })}
-                      placeholder="0"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Kazanç (TL)</Label>
-                    <Input
-                      type="number"
-                      value={formData.hazineGeliri.kazancTL}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        hazineGeliri: { ...formData.hazineGeliri, kazancTL: e.target.value }
-                      })}
-                      placeholder="0"
-                    />
-                  </div>
-                </div>
-              )}
             </div>
             
             {/* Açıklama ve Fotoğraf */}
