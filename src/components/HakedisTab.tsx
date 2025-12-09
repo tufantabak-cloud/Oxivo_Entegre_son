@@ -294,16 +294,27 @@ export function HakedisTab({
       onHakedisRecordsChange([...hakedisRecords, newHakedis]);
       
       // ✅ Supabase'e kaydet
+      console.log('🔍 [HakedisTab] Yeni hakediş kaydı oluşturuluyor:', {
+        id: newHakedis.id,
+        donem: newHakedis.donem,
+        durum: newHakedis.durum,
+        totalIslemHacmi: newHakedis.totalIslemHacmi,
+        totalPFPay: newHakedis.totalPFPay,
+        totalOxivoPay: newHakedis.totalOxivoPay,
+        islemHacmiMapKeys: Object.keys(newHakedis.islemHacmiMap || {}).length
+      });
+      
       try {
         const result = await earningsApi.create(newHakedis);
         if (result.success) {
           console.log(`✅ Hakediş kaydı Supabase'e kaydedildi: ${newHakedis.id}`);
         } else {
-          console.warn(`⚠️ Hakediş Supabase'e kaydedilemedi: ${result.error}`);
-          toast.warning('Kayıt yerel olarak kaydedildi ancak Supabase senkronizasyonu başarısız');
+          console.error(`❌ Hakediş Supabase'e kaydedilemedi:`, result.error);
+          toast.error(`Supabase kayıt hatası: ${result.error}`);
         }
       } catch (error) {
         console.error('❌ Hakediş Supabase kayıt hatası:', error);
+        toast.error('Beklenmeyen hata: ' + (error as Error).message);
       }
       
       toast.success(`${formDonem} dönemi hakediş kaydı ${durum === 'Taslak' ? 'taslak olarak' : ''} oluşturuldu`);
@@ -351,16 +362,27 @@ export function HakedisTab({
       );
       
       // ✅ Supabase'e kaydet
+      console.log('🔍 [HakedisTab] Hakediş kaydı güncelleniyor:', {
+        id: updatedHakedis.id,
+        donem: updatedHakedis.donem,
+        durum: updatedHakedis.durum,
+        totalIslemHacmi: updatedHakedis.totalIslemHacmi,
+        totalPFPay: updatedHakedis.totalPFPay,
+        totalOxivoPay: updatedHakedis.totalOxivoPay,
+        islemHacmiMapKeys: Object.keys(updatedHakedis.islemHacmiMap || {}).length
+      });
+      
       try {
         const result = await earningsApi.create(updatedHakedis);
         if (result.success) {
           console.log(`✅ Hakediş kaydı Supabase'de güncellendi: ${updatedHakedis.id}`);
         } else {
-          console.warn(`⚠️ Hakediş Supabase'de güncellenemedi: ${result.error}`);
-          toast.warning('Kayıt yerel olarak güncellendi ancak Supabase senkronizasyonu başarısız');
+          console.error(`❌ Hakediş Supabase'de güncellenemedi:`, result.error);
+          toast.error(`Supabase güncelleme hatası: ${result.error}`);
         }
       } catch (error) {
         console.error('❌ Hakediş Supabase güncelleme hatası:', error);
+        toast.error('Beklenmeyen hata: ' + (error as Error).message);
       }
       
       toast.success(`${formDonem} dönemi hakediş kaydı ${durum === 'Taslak' ? 'taslak olarak' : ''} güncellendi`);

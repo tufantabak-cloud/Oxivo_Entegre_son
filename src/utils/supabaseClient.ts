@@ -2358,11 +2358,15 @@ export const earningsApi = {
     }
 
     console.log(`✅ Fetched ${data.length} earnings records from Supabase`);
-    return { success: true, data: data.map(objectToCamelCase) || [] };
+    console.log('🔍 [DEBUG] RAW EARNINGS FROM DB:', JSON.stringify(data, null, 2));
+    const camelCaseData = data.map(objectToCamelCase);
+    console.log('🔍 [DEBUG] CAMEL CASE EARNINGS:', JSON.stringify(camelCaseData, null, 2));
+    return { success: true, data: camelCaseData || [] };
   },
 
   async create(records: any | any[]) {
     console.log('📤 Creating earnings records in Supabase...');
+    console.log('🔍 [DEBUG] RAW INPUT:', JSON.stringify(records, null, 2));
     
     const recordsArray = Array.isArray(records) ? records : [records];
     
@@ -2377,6 +2381,7 @@ export const earningsApi = {
     
     // ✅ Step 2: Apply transformations
     const transformedItems = uniqueRecords.map(objectToSnakeCase);
+    console.log('🔍 [DEBUG] TRANSFORMED DATA (snake_case):', JSON.stringify(transformedItems, null, 2));
     
     // ✅ Step 3: CRITICAL FIX - Remove duplicates AFTER sanitization
     const finalItems = Array.from(
@@ -2387,6 +2392,8 @@ export const earningsApi = {
       console.warn(`⚠️ Step 3: Removed ${transformedItems.length - finalItems.length} duplicate earnings after sanitization`);
     }
     
+    console.log('🔍 [DEBUG] FINAL DATA TO UPSERT:', JSON.stringify(finalItems, null, 2));
+    
     const { data, error } = await supabase
       .from('earnings')
       .upsert(finalItems, { onConflict: 'id' })
@@ -2394,10 +2401,17 @@ export const earningsApi = {
 
     if (error) {
       console.error('❌ Error creating earnings:', error);
+      console.error('🔍 [DEBUG] ERROR DETAILS:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
       return { success: false, error: error.message, count: 0 };
     }
 
     console.log(`✅ Created/updated ${data.length} earnings records in Supabase`);
+    console.log('🔍 [DEBUG] RESPONSE DATA:', JSON.stringify(data, null, 2));
     return { success: true, count: data.length };
   },
 
