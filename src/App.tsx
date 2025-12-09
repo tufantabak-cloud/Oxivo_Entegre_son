@@ -304,7 +304,33 @@ export default function App() {
         }
         
         if (bankPFResult.success && bankPFResult.data) {
-          setBankPFRecords(bankPFResult.data);
+          // ✅ CRITICAL FIX: Integrate TABELA records from signs table
+          let enrichedBankPFRecords = bankPFResult.data;
+          
+          // If signs data is available, map them to BankPF records
+          if (signsResult.success && signsResult.data) {
+            const signsByFirmaId = new Map<string, TabelaRecord[]>();
+            
+            // Group signs by firmaId
+            signsResult.data.forEach((sign: any) => {
+              if (sign.firmaId) {
+                const existing = signsByFirmaId.get(sign.firmaId) || [];
+                signsByFirmaId.set(sign.firmaId, [...existing, sign as TabelaRecord]);
+              }
+            });
+            
+            // Attach tabelaRecords to each BankPF record
+            enrichedBankPFRecords = bankPFResult.data.map(bankPF => ({
+              ...bankPF,
+              tabelaRecords: signsByFirmaId.get(bankPF.id) || bankPF.tabelaRecords || []
+            }));
+            
+            const totalTabelaCount = signsResult.data.length;
+            const mappedCount = Array.from(signsByFirmaId.values()).reduce((sum, arr) => sum + arr.length, 0);
+            logger.info(`✅ Mapped ${mappedCount}/${totalTabelaCount} TABELA records to BankPF firms`);
+          }
+          
+          setBankPFRecords(enrichedBankPFRecords);
           logger.info(`✅ Loaded ${bankPFResult.data.length} bankPF records from Supabase`);
         }
         
