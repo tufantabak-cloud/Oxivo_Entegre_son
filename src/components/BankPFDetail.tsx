@@ -770,10 +770,10 @@ export function BankPFDetail({
             firmaId={formData.id}
             hakedisRecords={formData.hakedisRecords || []}
             onHakedisRecordsChange={(records) => {
+              // ⚠️ Artık JSON'a kaydetmiyoruz - Sadece state'i güncelle
+              // Hakediş kayıtları Supabase earnings tablosunda tutuluyor
               setFormData(prev => ({ ...prev, hakedisRecords: records }));
-              // Hakediş kayıtlarını otomatik kaydet
-              const updatedFormData = { ...formData, hakedisRecords: records };
-              onSave(updatedFormData);
+              // onSave(updatedFormData); // ❌ DISABLEDKaydı yapma
             }}
           />
         </TabsContent>

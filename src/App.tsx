@@ -1101,7 +1101,10 @@ export default function App() {
     logger.debug('✅ Earnings -> BankPFRecords senkronizasyonu tamamlandı');
   }, [earnings]);
 
-  // ✅ SYNC: BankPFRecords hakedisRecords -> Earnings (ters yön senkronizasyonu)
+  // ❌ DISABLED: BankPFRecords hakedisRecords -> Earnings (ters yön senkronizasyonu)
+  // Bu sync artık devre dışı - Tüm hakediş verileri Supabase'den geliyor
+  // JSON'dan yükleme yapılmıyor çünkü tam Supabase migration yapıldı
+  /*
   useEffect(() => {
     if (!bankPFRecords || bankPFRecords.length === 0) return;
     
@@ -1125,6 +1128,7 @@ export default function App() {
       });
     }
   }, [bankPFRecords]);
+  */
 
   // 📥 REAL-TIME: Customers değişikliklerini dinle
   useEffect(() => {
