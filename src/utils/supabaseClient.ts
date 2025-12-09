@@ -2364,6 +2364,25 @@ export const earningsApi = {
     return { success: true, data: camelCaseData || [] };
   },
 
+  async getByFirmaId(firmaId: string) {
+    const check = checkSupabase();
+    if (!check.available) return [];
+
+    const { data, error } = await supabase!
+      .from('earnings')
+      .select('*')
+      .eq('firma_id', firmaId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      logError(`Error fetching earnings for firma ${firmaId}:`, error);
+      return [];
+    }
+
+    console.log(`✅ Fetched ${data.length} earnings records for firma ${firmaId}`);
+    return data.map(objectToCamelCase) || [];
+  },
+
   async create(records: any | any[]) {
     console.log('📤 Creating earnings records in Supabase...');
     console.log('🔍 [DEBUG] RAW INPUT:', JSON.stringify(records, null, 2));

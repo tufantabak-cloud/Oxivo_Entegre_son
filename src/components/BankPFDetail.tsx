@@ -27,6 +27,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { earningsApi } from '../utils/supabaseClient';
 
 interface BankPFDetailProps {
   record: BankPF | null;
@@ -158,7 +159,26 @@ export function BankPFDetail({
     }
   }, [record]);
   
-
+  // ✅ Supabase'den hakediş kayıtlarını çek (firma açıldığında)
+  useEffect(() => {
+    const loadEarnings = async () => {
+      if (!formData.id || isCreating) return;
+      
+      try {
+        console.log(`📥 Hakediş kayıtları yükleniyor (firmaId: ${formData.id})...`);
+        const earnings = await earningsApi.getByFirmaId(formData.id);
+        console.log(`✅ ${earnings.length} hakediş kaydı yüklendi`);
+        
+        // FormData'yı güncelle
+        setFormData(prev => ({ ...prev, hakedisRecords: earnings }));
+      } catch (error) {
+        console.error('❌ Hakediş kayıtları yüklenirken hata:', error);
+        toast.error('Hakediş kayıtları yüklenemedi');
+      }
+    };
+    
+    loadEarnings();
+  }, [formData.id, isCreating]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

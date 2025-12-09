@@ -289,9 +289,9 @@ export function HakedisTab({
         manualAnaTabelaOxivoTotal: manualAnaTabelaOxivoTotal || undefined,
         manualAnaTabelaIslemHacmi: manualAnaTabelaIslemHacmi || undefined,
         // Hesaplanmış toplam değerleri kaydet
-        totalIslemHacmi: manualAnaTabelaIslemHacmi ? parseFloat(manualAnaTabelaIslemHacmi) : totals.normalTotals.totalIslemHacmi,
+        totalIslemHacmi: manualAnaTabelaIslemHacmi ? parseNumber(manualAnaTabelaIslemHacmi) : totals.normalTotals.totalIslemHacmi,
         totalPFPay: totals.normalTotals.totalPFPay + (ekGelirPFTL || 0) - (ekKesintiPFTL || 0),
-        totalOxivoPay: (manualAnaTabelaOxivoTotal ? parseFloat(manualAnaTabelaOxivoTotal) : totals.normalTotals.totalOxivoPay) + (ekGelirOXTL || 0) - (ekKesintiOXTL || 0),
+        totalOxivoPay: (manualAnaTabelaOxivoTotal ? parseNumber(manualAnaTabelaOxivoTotal) : totals.normalTotals.totalOxivoPay) + (ekGelirOXTL || 0) - (ekKesintiOXTL || 0),
       } as any;
       
       onHakedisRecordsChange([...hakedisRecords, newHakedis]);
@@ -357,9 +357,9 @@ export function HakedisTab({
         manualAnaTabelaIslemHacmi: manualAnaTabelaIslemHacmi || undefined,
         guncellemeTarihi: new Date().toISOString(),
         // Hesaplanmış toplam değerleri kaydet
-        totalIslemHacmi: manualAnaTabelaIslemHacmi ? parseFloat(manualAnaTabelaIslemHacmi) : totals.normalTotals.totalIslemHacmi,
+        totalIslemHacmi: manualAnaTabelaIslemHacmi ? parseNumber(manualAnaTabelaIslemHacmi) : totals.normalTotals.totalIslemHacmi,
         totalPFPay: totals.normalTotals.totalPFPay + (ekGelirPFTL || 0) - (ekKesintiPFTL || 0),
-        totalOxivoPay: (manualAnaTabelaOxivoTotal ? parseFloat(manualAnaTabelaOxivoTotal) : totals.normalTotals.totalOxivoPay) + (ekGelirOXTL || 0) - (ekKesintiOXTL || 0),
+        totalOxivoPay: (manualAnaTabelaOxivoTotal ? parseNumber(manualAnaTabelaOxivoTotal) : totals.normalTotals.totalOxivoPay) + (ekGelirOXTL || 0) - (ekKesintiOXTL || 0),
       } as any;
       
       onHakedisRecordsChange(
@@ -445,6 +445,12 @@ export function HakedisTab({
     return parseFloat(cleaned);
   };
 
+  // Virgüllü sayıları parse et (örn: "1047608,25" -> 1047608.25)
+  const parseNumber = (value: string): number => {
+    if (!value) return 0;
+    return parseFloat(value.replace(',', '.'));
+  };
+
   // İşlem hacmi değişikliği
   const handleIslemHacmiChange = (tabelaId: string, value: string) => {
     // Eğer boşsa direkt boş kaydet
@@ -456,28 +462,14 @@ export function HakedisTab({
       return;
     }
     
-    // Sadece sayı, nokta ve virgül kabul et
-    const cleanValue = value
-      .replace(/\s₺/g, '')        // ₺ sembolünü kaldır
-      .replace(/\./g, '')          // Binlik ayırıcıları kaldır
-      .replace(',', '.');          // Virgülü noktaya çevir
+    // Sadece sayı, virgül ve nokta kabul et (gereksiz karakterleri filtrele)
+    const filtered = value.replace(/[^0-9.,]/g, '');
     
-    // Geçerli bir sayı formatı mı kontrol et
-    const numericValue = cleanValue.replace(/[^0-9.]/g, '');
-    
-    // Geçerli bir sayı ise kaydet (state'e sadece sayısal değer kaydedilir)
-    if (numericValue && !isNaN(parseFloat(numericValue))) {
-      setFormIslemHacmiMap(prev => ({
-        ...prev,
-        [tabelaId]: numericValue
-      }));
-    } else if (numericValue === '') {
-      // Boşsa sıfır olarak kaydet
-      setFormIslemHacmiMap(prev => ({
-        ...prev,
-        [tabelaId]: ''
-      }));
-    }
+    // State'e olduğu gibi kaydet (kullanıcı ne yazdıysa onu göster)
+    setFormIslemHacmiMap(prev => ({
+      ...prev,
+      [tabelaId]: filtered
+    }));
   };
 
   // Hesaplama fonksiyonu - bir TABELA kaydı için
@@ -704,10 +696,10 @@ export function HakedisTab({
       const manualAnaTabelaIslemHacmiValue = (hakedis as any).manualAnaTabelaIslemHacmi;
       const manualAnaTabelaOxivoValue = (hakedis as any).manualAnaTabelaOxivoTotal;
       const islemHacmiValue = manualAnaTabelaIslemHacmiValue 
-        ? parseFloat(manualAnaTabelaIslemHacmiValue) 
+        ? parseNumber(manualAnaTabelaIslemHacmiValue) 
         : totals.normalTotals.totalIslemHacmi;
       const oxivoPayValue = manualAnaTabelaOxivoValue 
-        ? parseFloat(manualAnaTabelaOxivoValue) 
+        ? parseNumber(manualAnaTabelaOxivoValue) 
         : totals.normalTotals.totalOxivoPay;
       
       rows.push([
@@ -1417,17 +1409,17 @@ export function HakedisTab({
                     {isViewMode ? (
                       <div className="text-center py-2 px-3 bg-gray-50 rounded">
                         {formPFIslemHacmi 
-                          ? `${parseFloat(formPFIslemHacmi).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`
+                          ? `${parseNumber(formPFIslemHacmi).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`
                           : '-'}
                       </div>
                     ) : (
                       <Input
-                        type="number"
+                        type="text"
+                        inputMode="decimal"
                         placeholder="Manuel giriş TL tutar"
                         value={formPFIslemHacmi}
                         onChange={(e) => setFormPFIslemHacmi(e.target.value)}
                         className="bg-white text-center"
-                        step="0.01"
                       />
                     )}
                   </TableCell>
@@ -1435,24 +1427,24 @@ export function HakedisTab({
                     {isViewMode ? (
                       <div className="text-center py-2 px-3 bg-gray-50 rounded">
                         {formOxivoIslemHacmi 
-                          ? `${parseFloat(formOxivoIslemHacmi).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`
+                          ? `${parseNumber(formOxivoIslemHacmi).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`
                           : '-'}
                       </div>
                     ) : (
                       <Input
-                        type="number"
+                        type="text"
+                        inputMode="decimal"
                         placeholder="Manuel giriş TL tutar"
                         value={formOxivoIslemHacmi}
                         onChange={(e) => setFormOxivoIslemHacmi(e.target.value)}
                         className="bg-white text-center"
-                        step="0.01"
                       />
                     )}
                   </TableCell>
                   <TableCell className="p-2">
                     {(() => {
-                      const pf = parseFloat(formPFIslemHacmi) || 0;
-                      const oxivo = parseFloat(formOxivoIslemHacmi) || 0;
+                      const pf = parseNumber(formPFIslemHacmi) || 0;
+                      const oxivo = parseNumber(formOxivoIslemHacmi) || 0;
                       const fark = pf - oxivo;
                       const bgColor = fark > 0 ? 'bg-green-50' : fark < 0 ? 'bg-red-50' : 'bg-gray-50';
                       const borderColor = fark > 0 ? 'border-green-200' : fark < 0 ? 'border-red-200' : 'border-gray-200';
@@ -1774,7 +1766,7 @@ export function HakedisTab({
                         // Her vade için ayrı satır oluştur
                         return aktifVadeler.map((vadeData, vadeIndex) => {
                           const vadeKey = `${record.id}-${vadeData.vade}`;
-                          const islemHacmi = parseFloat(formIslemHacmiMap[vadeKey] || '0');
+                          const islemHacmi = parseFloat((formIslemHacmiMap[vadeKey] || '0').replace(',', '.'));
                           
                           // Gelir Modeline göre hesaplamalar
                           const isSabitKomisyon = record.gelirModeli?.ad === 'Sabit Komisyon';
@@ -1904,12 +1896,12 @@ export function HakedisTab({
                               </div>
                             ) : (
                               <Input
-                                type="number"
+                                type="text"
+                                inputMode="decimal"
                                 value={formIslemHacmiMap[vadeKey] || ''}
                                 onChange={(e) => handleIslemHacmiChange(vadeKey, e.target.value)}
-                                placeholder="0.00"
+                                placeholder="0,00"
                                 className="w-40 text-right bg-white"
-                                step="0.01"
                               />
                             )}
                           </TableCell>
@@ -2034,7 +2026,7 @@ export function HakedisTab({
                           <div className="flex flex-col items-center gap-1">
                             <strong className="text-green-800">
                               {(manualAnaTabelaIslemHacmi 
-                                ? parseFloat(manualAnaTabelaIslemHacmi) 
+                                ? parseNumber(manualAnaTabelaIslemHacmi) 
                                 : totals.normalTotals.totalIslemHacmi
                               ).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
                             </strong>
@@ -2051,15 +2043,15 @@ export function HakedisTab({
                           <div className="flex flex-col items-center gap-2">
                             <div className="flex items-center gap-1">
                               <Input
-                                type="number"
-                                placeholder={totals.normalTotals.totalIslemHacmi.toFixed(2)}
+                                type="text"
+                                inputMode="decimal"
+                                placeholder={totals.normalTotals.totalIslemHacmi.toFixed(2).replace('.', ',')}
                                 value={manualAnaTabelaIslemHacmi}
                                 onChange={(e) => {
                                   const value = e.target.value;
                                   setManualAnaTabelaIslemHacmi(value);
                                 }}
                                 className="w-32 h-8 text-right bg-white border-2 border-purple-300 focus:border-purple-500 text-sm"
-                                step="0.01"
                               />
                               <span className="text-sm text-gray-600">₺</span>
                             </div>
@@ -2090,7 +2082,7 @@ export function HakedisTab({
                         {view === 'view' ? (
                           <div className="flex flex-col items-end gap-1">
                             <strong className="text-indigo-800">
-                              {(manualAnaTabelaOxivoTotal ? parseFloat(manualAnaTabelaOxivoTotal) : totals.normalTotals.totalOxivoPay).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
+                              {(manualAnaTabelaOxivoTotal ? parseNumber(manualAnaTabelaOxivoTotal) : totals.normalTotals.totalOxivoPay).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
                             </strong>
                             {manualAnaTabelaOxivoTotal && (
                               <span className="text-xs text-indigo-600">
@@ -2108,15 +2100,15 @@ export function HakedisTab({
                             <div className="flex flex-col gap-1 flex-1">
                               <div className="flex items-center gap-1 justify-end">
                                 <Input
-                                  type="number"
+                                  type="text"
+                                  inputMode="decimal"
                                   value={manualAnaTabelaOxivoTotal}
                                   onChange={(e) => {
                                     const value = e.target.value;
                                     setManualAnaTabelaOxivoTotal(value);
                                   }}
-                                  placeholder={totals.normalTotals.totalOxivoPay.toFixed(2)}
+                                  placeholder={totals.normalTotals.totalOxivoPay.toFixed(2).replace('.', ',')}
                                   className="w-44 text-right bg-white border-indigo-300 focus:border-indigo-500"
-                                  step="0.01"
                                 />
                                 <span className="text-sm text-gray-600">₺</span>
                               </div>
@@ -2210,12 +2202,12 @@ export function HakedisTab({
                               </span>
                             ) : (
                               <Input
-                                type="number"
+                                type="text"
+                                inputMode="decimal"
                                 value={ekGelirPFTL}
-                                onChange={(e) => setEkGelirPFTL(e.target.value ? parseFloat(e.target.value) : '')}
+                                onChange={(e) => setEkGelirPFTL(e.target.value ? parseFloat(e.target.value.replace(',', '.')) : '')}
                                 placeholder="0,00"
                                 className="w-32 text-right text-sm bg-white"
-                                step="0.01"
                               />
                             )}
                           </TableCell>
@@ -2228,12 +2220,12 @@ export function HakedisTab({
                               </span>
                             ) : (
                               <Input
-                                type="number"
+                                type="text"
+                                inputMode="decimal"
                                 value={ekGelirOXTL}
-                                onChange={(e) => setEkGelirOXTL(e.target.value ? parseFloat(e.target.value) : '')}
+                                onChange={(e) => setEkGelirOXTL(e.target.value ? parseFloat(e.target.value.replace(',', '.')) : '')}
                                 placeholder="0,00"
                                 className="w-32 text-right text-sm bg-white"
-                                step="0.01"
                               />
                             )}
                           </TableCell>
@@ -2271,12 +2263,12 @@ export function HakedisTab({
                               </span>
                             ) : (
                               <Input
-                                type="number"
+                                type="text"
+                                inputMode="decimal"
                                 value={ekKesintiPFTL}
-                                onChange={(e) => setEkKesintiPFTL(e.target.value ? parseFloat(e.target.value) : '')}
+                                onChange={(e) => setEkKesintiPFTL(e.target.value ? parseFloat(e.target.value.replace(',', '.')) : '')}
                                 placeholder="0,00"
                                 className="w-32 text-right text-sm bg-white"
-                                step="0.01"
                               />
                             )}
                           </TableCell>
@@ -2289,12 +2281,12 @@ export function HakedisTab({
                               </span>
                             ) : (
                               <Input
-                                type="number"
+                                type="text"
+                                inputMode="decimal"
                                 value={ekKesintiOXTL}
-                                onChange={(e) => setEkKesintiOXTL(e.target.value ? parseFloat(e.target.value) : '')}
+                                onChange={(e) => setEkKesintiOXTL(e.target.value ? parseFloat(e.target.value.replace(',', '.')) : '')}
                                 placeholder="0,00"
                                 className="w-32 text-right text-sm bg-white"
-                                step="0.01"
                               />
                             )}
                           </TableCell>
@@ -2326,7 +2318,7 @@ export function HakedisTab({
                         {visibleColumns.oxivoPayi && (
                           <TableCell className="text-right">
                             <strong className="text-purple-900 text-base">
-                              {((manualAnaTabelaOxivoTotal ? parseFloat(manualAnaTabelaOxivoTotal) : totals.normalTotals.totalOxivoPay) + (ekGelirOXTL || 0) - (ekKesintiOXTL || 0)).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
+                              {((manualAnaTabelaOxivoTotal ? parseNumber(manualAnaTabelaOxivoTotal) : totals.normalTotals.totalOxivoPay) + (ekGelirOXTL || 0) - (ekKesintiOXTL || 0)).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
                             </strong>
                           </TableCell>
                         )}
@@ -2345,7 +2337,7 @@ export function HakedisTab({
           <CardContent className="pt-6 text-center">
             <div className="text-sm text-yellow-800 mb-1">Toplam İşlem Hacmi</div>
             <div className="text-2xl text-yellow-900">
-              {(manualAnaTabelaIslemHacmi ? parseFloat(manualAnaTabelaIslemHacmi) : totals.normalTotals.totalIslemHacmi).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
+              {(manualAnaTabelaIslemHacmi ? parseNumber(manualAnaTabelaIslemHacmi) : totals.normalTotals.totalIslemHacmi).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
             </div>
             {manualAnaTabelaIslemHacmi && (
               <div className="text-xs text-yellow-700 mt-1">
@@ -2375,7 +2367,7 @@ export function HakedisTab({
           <CardContent className="pt-6 text-center">
             <div className="text-sm text-indigo-800 mb-1">ANA TABELA TOPLAM (OXİVO Payı)</div>
             <div className="text-2xl text-indigo-900">
-              {((manualAnaTabelaOxivoTotal ? parseFloat(manualAnaTabelaOxivoTotal) : totals.normalTotals.totalOxivoPay) + (ekGelirOXTL || 0) - (ekKesintiOXTL || 0)).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
+              {((manualAnaTabelaOxivoTotal ? parseNumber(manualAnaTabelaOxivoTotal) : totals.normalTotals.totalOxivoPay) + (ekGelirOXTL || 0) - (ekKesintiOXTL || 0)).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
             </div>
             {manualAnaTabelaOxivoTotal && (
               <div className="text-xs text-indigo-700 mt-1">
