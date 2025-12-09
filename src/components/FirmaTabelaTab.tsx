@@ -228,6 +228,20 @@ export function FirmaTabelaTab({
   const aktifBankalar = banks.filter(b => b.aktif);
   const aktifKartProgramlar = kartProgramlar.filter(k => k.aktif);
   
+  // 🔍 DEBUG: Log props on component render
+  console.log('🔍 [FirmaTabelaTab] Component Props:', {
+    firmaId,
+    firmaAdi,
+    tabelaRecordsCount: tabelaRecords.length,
+    tabelaGroupsCount: tabelaGroups.length,
+    tabelaRecordsSample: tabelaRecords.slice(0, 2).map(r => ({ 
+      id: r.id, 
+      kisaAciklama: r.kisaAciklama, 
+      aktif: r.aktif,
+      firmaId: r.firmaId 
+    }))
+  });
+  
   // ✅ Seçili gelir modelini bul
   const selectedGelirModeli = gelirModelleri.find(g => g.id === formData.gelirModeliId);
   const isPacalGelirModeli = selectedGelirModeli?.ad?.toLowerCase().includes('paçal') || false;
@@ -645,6 +659,15 @@ export function FirmaTabelaTab({
     if (showFilter === 'active') return record.aktif;
     if (showFilter === 'closed') return !record.aktif;
     return true;
+  });
+  
+  // 🔍 DEBUG: Log filtering results
+  console.log('🔍 [FirmaTabelaTab] Filtering Debug:', {
+    totalRecords: tabelaRecords.length,
+    showFilter,
+    filteredCount: filteredRecords.length,
+    tabelaRecords: tabelaRecords.map(r => ({ id: r.id, kisaAciklama: r.kisaAciklama, aktif: r.aktif })),
+    filteredRecords: filteredRecords.map(r => ({ id: r.id, kisaAciklama: r.kisaAciklama, aktif: r.aktif }))
   });
 
   const availableRecordsForGroup = tabelaRecords.filter(record => {
