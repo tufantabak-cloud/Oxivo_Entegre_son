@@ -54,6 +54,7 @@ interface TabelaFormData {
   selectedEkGelirId: string;
   kurulusOrani: string;
   oxivoOrani: string;
+  komisyonTipi: 'sabit' | 'alisSatis';
   aciklama: string;
   fotograf: string;
   komisyonOranları: Array<{
@@ -120,6 +121,7 @@ export function FirmaTabelaTab({
     selectedEkGelirId: 'NONE',
     kurulusOrani: '',
     oxivoOrani: '',
+    komisyonTipi: 'sabit',
     aciklama: '',
     fotograf: '',
     komisyonOranları: VADE_LISTESI.map(vade => ({
@@ -242,6 +244,7 @@ export function FirmaTabelaTab({
       selectedEkGelirId: 'NONE',
       kurulusOrani: '',
       oxivoOrani: '',
+      komisyonTipi: 'sabit',
       aciklama: '',
       fotograf: '',
       komisyonOranları: VADE_LISTESI.map(vade => ({
@@ -274,6 +277,7 @@ export function FirmaTabelaTab({
         selectedEkGelirId: 'NONE',
         kurulusOrani: record.paylaşımOranları?.kurulusOrani || '',
         oxivoOrani: record.paylaşımOranları?.oxivoOrani || '',
+        komisyonTipi: record.komisyonTipi || 'sabit',
         aciklama: record.aciklama || '',
         fotograf: record.fotograf || '',
         komisyonOranları: VADE_LISTESI.map(vade => {
@@ -336,6 +340,7 @@ export function FirmaTabelaTab({
       kisaAciklama: formData.kisaAciklama,
       aciklama: formData.aciklama,
       fotograf: formData.fotograf,
+      komisyonTipi: formData.komisyonTipi,
       olusturmaTarihi: editingRecord?.olusturmaTarihi || new Date().toISOString(),
       guncellemeTarihi: new Date().toISOString(),
       aktif: editingRecord?.aktif !== false
@@ -886,270 +891,401 @@ export function FirmaTabelaTab({
         </div>
       )}
       
-      {/* Add/Edit Dialog */}
+      {/* Add/Edit Dialog - High Fidelity Production Design */}
       <Dialog open={showDialog} onOpenChange={handleCloseDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {editingRecord ? 'TABELA Kaydı Düzenle' : 'Yeni TABELA Kaydı'}
-            </DialogTitle>
-            <DialogDescription>
-              {firmaAdi} için TABELA kaydı {editingRecord ? 'düzenleyin' : 'oluşturun'}
-            </DialogDescription>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+          {/* Fixed Header */}
+          <DialogHeader className="border-b pb-4">
+            <div className="flex items-start justify-between">
+              <div>
+                <DialogTitle className="text-2xl">
+                  {editingRecord ? 'TABELA Kaydı Düzenle' : 'Yeni TABELA Kaydı'}
+                </DialogTitle>
+                <DialogDescription className="text-base mt-1">
+                  {firmaAdi} için kayıt {editingRecord ? 'düzenleniyor' : 'oluşturuluyor'}
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
           
-          <div className="space-y-6">
-            {/* Temel Bilgiler */}
-            <div className="space-y-4">
-              <h4 className="font-medium">Temel Bilgiler</h4>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Kısa Açıklama (max 15 karakter)</Label>
-                  <Input
-                    value={formData.kisaAciklama}
-                    onChange={(e) => setFormData({ ...formData, kisaAciklama: e.target.value.slice(0, 15) })}
-                    placeholder="Örn: 2024-Q1"
-                    maxLength={15}
-                  />
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto px-1">
+            <div className="space-y-8 py-6">
+              {/* ═══════════════════════════════════════════════════════ */}
+              {/* SECTION 1: TEMEL BİLGİLER */}
+              {/* ═══════════════════════════════════════════════════════ */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b">
+                  <div className="w-1 h-6 bg-blue-600 rounded-full"></div>
+                  <h3 className="text-lg font-semibold text-gray-900">Temel Bilgiler</h3>
                 </div>
                 
-                <div className="space-y-2">
-                  <Label>Ürün *</Label>
-                  <ModernFormSelect
-                    value={formData.urun}
-                    onChange={(value) => setFormData({ ...formData, urun: value as any })}
-                    options={URUN_LISTESI.map(u => ({ value: u, label: u }))}
-                    placeholder="Ürün seçin"
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>Kart Tipi *</Label>
-                  <ModernFormSelect
-                    value={formData.kartTipi}
-                    onChange={(value) => setFormData({ ...formData, kartTipi: value as any })}
-                    options={[
-                      { value: 'Credit', label: 'Credit' },
-                      { value: 'Debit', label: 'Debit' },
-                      { value: 'Paçal', label: 'Paçal' }
-                    ]}
-                    placeholder="Kart tipi seçin"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Gelir Modeli *</Label>
-                  <ModernFormSelect
-                    value={formData.gelirModeliId}
-                    onChange={(value) => setFormData({ ...formData, gelirModeliId: value })}
-                    options={activeGelirModelleri.map(g => ({ value: g.id, label: g.ad }))}
-                    placeholder="Gelir modeli seçin"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Yurt İçi/Dışı *</Label>
-                  <ModernFormSelect
-                    value={formData.yurtIciDisi}
-                    onChange={(value) => setFormData({ ...formData, yurtIciDisi: value as any })}
-                    options={[
-                      { value: 'Yurt İçi', label: 'Yurt İçi' },
-                      { value: 'Yurt Dışı', label: 'Yurt Dışı' }
-                    ]}
-                    placeholder="Seçin"
-                  />
-                </div>
-              </div>
-            </div>
-            
-            {/* Kart Programları */}
-            <div className="space-y-2">
-              <Label>Kart Programları</Label>
-              <div className="grid grid-cols-3 gap-2 p-4 border rounded-lg max-h-40 overflow-y-auto">
-                {activeKartProgramlar.map(kp => (
-                  <div key={kp.id} className="flex items-center gap-2">
-                    <Checkbox
-                      checked={formData.kartProgramIds.includes(kp.id)}
-                      onCheckedChange={() => toggleKartProgram(kp.id)}
-                      id={`kp-${kp.id}`}
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-700">
+                      Kısa Açıklama
+                      <span className="text-xs text-gray-500 ml-2">(max 15 karakter)</span>
+                    </Label>
+                    <Input
+                      value={formData.kisaAciklama}
+                      onChange={(e) => setFormData({ ...formData, kisaAciklama: e.target.value.slice(0, 15) })}
+                      placeholder="Örn: 2024-Q1"
+                      maxLength={15}
+                      className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                     />
-                    <label htmlFor={`kp-${kp.id}`} className="text-sm cursor-pointer">
-                      {kp.kartAdi}
-                    </label>
+                    <p className="text-xs text-gray-500">{formData.kisaAciklama.length}/15 karakter</p>
                   </div>
-                ))}
-              </div>
-            </div>
-            
-            {/* Paylaşım Oranları */}
-            <div className="space-y-4">
-              <h4 className="font-medium">Paylaşım Oranları</h4>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Kuruluş Oranı (%)</Label>
-                  <Input
-                    type="number"
-                    value={formData.kurulusOrani}
-                    onChange={(e) => setFormData({ ...formData, kurulusOrani: e.target.value })}
-                    placeholder="0"
-                  />
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-700">
+                      Ürün <span className="text-red-500">*</span>
+                    </Label>
+                    <ModernFormSelect
+                      value={formData.urun}
+                      onChange={(value) => setFormData({ ...formData, urun: value as any })}
+                      options={URUN_LISTESI.map(u => ({ value: u, label: u }))}
+                      placeholder="Ürün seçin"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Oxivo Oranı (%)</Label>
-                  <Input
-                    type="number"
-                    value={formData.oxivoOrani}
-                    onChange={(e) => setFormData({ ...formData, oxivoOrani: e.target.value })}
-                    placeholder="0"
-                  />
+                
+                <div className="grid grid-cols-3 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-700">
+                      Kart Tipi <span className="text-red-500">*</span>
+                    </Label>
+                    <ModernFormSelect
+                      value={formData.kartTipi}
+                      onChange={(value) => setFormData({ ...formData, kartTipi: value as any })}
+                      options={[
+                        { value: 'Credit', label: 'Credit', description: 'Kredi kartı' },
+                        { value: 'Debit', label: 'Debit', description: 'Banka kartı' },
+                        { value: 'Paçal', label: 'Paçal', description: 'Tüm kartlar' }
+                      ]}
+                      placeholder="Kart tipi seçin"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-700">
+                      Gelir Modeli <span className="text-red-500">*</span>
+                    </Label>
+                    <ModernFormSelect
+                      value={formData.gelirModeliId}
+                      onChange={(value) => setFormData({ ...formData, gelirModeliId: value })}
+                      options={activeGelirModelleri.map(g => ({ value: g.id, label: g.ad }))}
+                      placeholder="Gelir modeli seçin"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-700">
+                      Yurt İçi/Dışı <span className="text-red-500">*</span>
+                    </Label>
+                    <ModernFormSelect
+                      value={formData.yurtIciDisi}
+                      onChange={(value) => setFormData({ ...formData, yurtIciDisi: value as any })}
+                      options={[
+                        { value: 'Yurt İçi', label: 'Yurt İçi' },
+                        { value: 'Yurt Dışı', label: 'Yurt Dışı' }
+                      ]}
+                      placeholder="Seçin"
+                    />
+                  </div>
                 </div>
-              </div>
-            </div>
-            
-            {/* Komisyon Oranları */}
-            <div className="space-y-4">
-              <h4 className="font-medium">Komisyon Oranları (Vade Bazlı)</h4>
-              {isPacalGelirModeli ? (
-                <div className="space-y-2">
-                  {formData.komisyonOranları.map((k) => (
-                    <div key={k.vade} className="grid grid-cols-5 gap-2 items-center">
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          checked={k.aktif}
-                          onCheckedChange={(checked) => handleVadeAktifChange(k.vade, checked as boolean)}
-                        />
-                        <span className="text-sm font-medium">{k.vade}</span>
-                      </div>
-                      <div>
-                        <Input
-                          type="number"
-                          value={k.alisTL}
-                          onChange={(e) => handleAlisTLChange(k.vade, e.target.value)}
-                          placeholder="Alış TL"
-                          disabled={!k.aktif}
-                        />
-                      </div>
-                      <div>
-                        <Input
-                          type="number"
-                          value={k.satisTL}
-                          onChange={(e) => handleSatisTLChange(k.vade, e.target.value)}
-                          placeholder="Satış TL"
-                          disabled={!k.aktif}
-                        />
-                      </div>
-                      <div>
-                        <Input
-                          type="number"
-                          value={k.karTL}
-                          placeholder="Kar TL"
-                          disabled
-                          className="bg-gray-100"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-2">
-                  {formData.komisyonOranları.map((k) => (
-                    <div key={k.vade} className="flex items-center gap-2">
-                      <span className="text-sm w-12">{k.vade}:</span>
-                      <Input
-                        type="number"
-                        value={k.oran}
-                        onChange={(e) => handleKomisyonChange(k.vade, e.target.value)}
-                        placeholder="%"
-                        className="flex-1"
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            
-            {/* Ek Gelir (Hazine Geliri) */}
-            <div className="space-y-4">
-              <h4 className="font-medium">Ek Gelir (Opsiyonel)</h4>
-              <div className="space-y-2">
-                <Label>Ek Gelir Türü</Label>
-                <ModernFormSelect
-                  value={formData.selectedEkGelirId}
-                  onChange={(value) => setFormData({ ...formData, selectedEkGelirId: value })}
-                  options={[
-                    { value: 'NONE', label: 'Seçilmedi' },
-                    ...activeEkGelirler.map(e => ({ value: e.id, label: e.gelirTuru }))
-                  ]}
-                  placeholder="Ek gelir seçin"
-                />
-              </div>
-            </div>
-            
-            {/* Açıklama ve Fotoğraf */}
-            <div className="space-y-4">
-              <h4 className="font-medium">Ek Bilgiler</h4>
-              
-              <div className="space-y-2">
-                <Label>Açıklama</Label>
-                <Textarea
-                  value={formData.aciklama}
-                  onChange={(e) => setFormData({ ...formData, aciklama: e.target.value })}
-                  placeholder="Detaylı açıklama yazın..."
-                  rows={3}
-                />
               </div>
               
-              <div className="space-y-2">
-                <Label>Fotoğraf</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <Upload className="mr-2 h-4 w-4" />
-                    Fotoğraf Yükle
-                  </Button>
-                  {formData.fotograf && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setFormData({ ...formData, fotograf: '' })}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+              {/* ═══════════════════════════════════════════════════════ */}
+              {/* SECTION 2: KART PROGRAMLARI */}
+              {/* ═══════════════════════════════════════════════════════ */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b">
+                  <div className="w-1 h-6 bg-purple-600 rounded-full"></div>
+                  <h3 className="text-lg font-semibold text-gray-900">Kart Programları</h3>
+                </div>
+                
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  {activeKartProgramlar.length === 0 ? (
+                    <p className="text-sm text-gray-500 text-center py-4">
+                      Henüz aktif kart programı bulunmuyor
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-3 max-h-40 overflow-y-auto">
+                      {activeKartProgramlar.map(kp => (
+                        <label 
+                          key={kp.id} 
+                          className="flex items-center gap-2 p-2 rounded hover:bg-white transition-colors cursor-pointer"
+                        >
+                          <Checkbox
+                            checked={formData.kartProgramIds.includes(kp.id)}
+                            onCheckedChange={() => toggleKartProgram(kp.id)}
+                            id={`kp-${kp.id}`}
+                          />
+                          <span className="text-sm text-gray-700">{kp.kartAdi}</span>
+                        </label>
+                      ))}
+                    </div>
                   )}
                 </div>
-                {formData.fotograf && (
-                  <img 
-                    src={formData.fotograf} 
-                    alt="Preview" 
-                    className="mt-2 max-w-xs rounded-lg border"
-                  />
+                {formData.kartProgramIds.length > 0 && (
+                  <p className="text-xs text-blue-600">
+                    ✓ {formData.kartProgramIds.length} kart programı seçildi
+                  </p>
                 )}
+              </div>
+              
+              {/* ═══════════════════════════════════════════════════════ */}
+              {/* SECTION 3: FİNANSAL DETAYLAR */}
+              {/* ═══════════════════════════════════════════════════════ */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b">
+                  <div className="w-1 h-6 bg-green-600 rounded-full"></div>
+                  <h3 className="text-lg font-semibold text-gray-900">Finansal Detaylar</h3>
+                </div>
+                
+                {/* Paylaşım Oranları */}
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <h4 className="text-sm font-semibold text-green-900 mb-3">Paylaşım Oranları</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">
+                        Kuruluş Oranı (%)
+                      </Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={formData.kurulusOrani}
+                        onChange={(e) => setFormData({ ...formData, kurulusOrani: e.target.value })}
+                        placeholder="0.00"
+                        className="h-11 border-green-300 focus:border-green-500 focus:ring-green-500"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">
+                        Oxivo Oranı (%)
+                      </Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={formData.oxivoOrani}
+                        onChange={(e) => setFormData({ ...formData, oxivoOrani: e.target.value })}
+                        placeholder="0.00"
+                        className="h-11 border-green-300 focus:border-green-500 focus:ring-green-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Komisyon Oranları */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="text-sm font-semibold text-blue-900 mb-3">
+                    Komisyon Oranları (Vade Bazlı)
+                  </h4>
+                  
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">
+                        Komisyon Tipi <span className="text-red-500">*</span>
+                      </Label>
+                      <ModernFormSelect
+                        value={formData.komisyonTipi}
+                        onChange={(value) => setFormData({ ...formData, komisyonTipi: value as 'sabit' | 'alisSatis' })}
+                        options={[
+                          { value: 'sabit', label: 'Sabit (%)', description: 'Yüzde bazlı komisyon' },
+                          { value: 'alisSatis', label: 'Alış-Satış (TL)', description: 'TL bazlı kar hesabı' }
+                        ]}
+                        placeholder="Komisyon tipini seçin"
+                      />
+                    </div>
+                    
+                    {formData.komisyonTipi === 'alisSatis' ? (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-5 gap-2 text-xs font-medium text-gray-600 bg-blue-100 px-3 py-2 rounded">
+                          <div>Vade</div>
+                          <div>Alış TL</div>
+                          <div>Satış TL</div>
+                          <div>Kar TL</div>
+                          <div className="text-center">Aktif</div>
+                        </div>
+                        {formData.komisyonOranları.map((k) => (
+                          <div key={k.vade} className="grid grid-cols-5 gap-2 items-center">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="font-mono">{k.vade}</Badge>
+                            </div>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={k.alisTL}
+                              onChange={(e) => handleAlisTLChange(k.vade, e.target.value)}
+                              placeholder="0.00"
+                              disabled={!k.aktif}
+                              className="h-10 text-sm"
+                            />
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={k.satisTL}
+                              onChange={(e) => handleSatisTLChange(k.vade, e.target.value)}
+                              placeholder="0.00"
+                              disabled={!k.aktif}
+                              className="h-10 text-sm"
+                            />
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={k.karTL}
+                              placeholder="0.00"
+                              disabled
+                              className="h-10 text-sm bg-green-50 border-green-200 font-medium text-green-700"
+                            />
+                            <div className="flex items-center justify-center">
+                              <Checkbox
+                                checked={k.aktif}
+                                onCheckedChange={(checked) => handleVadeAktifChange(k.vade, checked as boolean)}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-4">
+                        {formData.komisyonOranları.map((k) => (
+                          <div key={k.vade} className="flex items-center gap-3">
+                            <Badge variant="outline" className="font-mono w-14 justify-center">{k.vade}</Badge>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={k.oran}
+                              onChange={(e) => handleKomisyonChange(k.vade, e.target.value)}
+                              placeholder="%"
+                              className="h-10 flex-1"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              {/* ═══════════════════════════════════════════════════════ */}
+              {/* SECTION 4: EKSTRALAR */}
+              {/* ═══════════════════════════════════════════════════════ */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b">
+                  <div className="w-1 h-6 bg-orange-600 rounded-full"></div>
+                  <h3 className="text-lg font-semibold text-gray-900">Ekstralar</h3>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-gray-700">
+                    Ek Gelir
+                    <span className="text-xs text-gray-500 ml-2">(Opsiyonel)</span>
+                  </Label>
+                  <ModernFormSelect
+                    value={formData.selectedEkGelirId}
+                    onChange={(value) => setFormData({ ...formData, selectedEkGelirId: value })}
+                    options={[
+                      { value: 'NONE', label: 'Seçilmedi' },
+                      ...activeEkGelirler.map(e => ({ value: e.id, label: e.gelirTuru }))
+                    ]}
+                    placeholder="Ek gelir seçin"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-gray-700">
+                    Ek Bilgiler
+                    <span className="text-xs text-gray-500 ml-2">(Opsiyonel)</span>
+                  </Label>
+                  <Textarea
+                    value={formData.aciklama}
+                    onChange={(e) => setFormData({ ...formData, aciklama: e.target.value })}
+                    placeholder="Detaylı açıklama yazın..."
+                    rows={4}
+                    className="resize-y border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  />
+                  <p className="text-xs text-gray-500">{formData.aciklama.length} karakter</p>
+                </div>
+              </div>
+              
+              {/* ═══════════════════════════════════════════════════════ */}
+              {/* SECTION 5: MEDYA */}
+              {/* ═══════════════════════════════════════════════════════ */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b">
+                  <div className="w-1 h-6 bg-pink-600 rounded-full"></div>
+                  <h3 className="text-lg font-semibold text-gray-900">Medya</h3>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-gray-700">
+                    Fotoğraf Yükle
+                    <span className="text-xs text-gray-500 ml-2">(Opsiyonel)</span>
+                  </Label>
+                  
+                  {!formData.fotograf ? (
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                        <p className="text-sm text-gray-600 font-medium">Fotoğraf yüklemek için tıklayın</p>
+                        <p className="text-xs text-gray-500 mt-1">veya sürükleyip bırakın</p>
+                        <p className="text-xs text-gray-400 mt-2">PNG, JPG, JPEG (max 5MB)</p>
+                      </div>
+                      <Input
+                        ref={fileInputRef}
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                      />
+                    </label>
+                  ) : (
+                    <div className="relative border-2 border-gray-300 rounded-lg overflow-hidden">
+                      <img 
+                        src={formData.fotograf} 
+                        alt="Preview" 
+                        className="w-full h-48 object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, fotograf: '' })}
+                        className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
           
-          <DialogFooter>
-            <Button variant="outline" onClick={handleCloseDialog}>
-              İptal
-            </Button>
-            <Button onClick={handleSave}>
-              {editingRecord ? 'Güncelle' : 'Oluştur'}
-            </Button>
-          </DialogFooter>
+          {/* Fixed Footer */}
+          <div className="border-t pt-4 mt-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-gray-500">
+                <span className="text-red-500">*</span> zorunlu alanlar
+              </p>
+              <div className="flex gap-3">
+                <Button 
+                  type="button"
+                  variant="outline" 
+                  onClick={handleCloseDialog}
+                  className="min-w-[100px]"
+                >
+                  İptal
+                </Button>
+                <Button 
+                  type="button"
+                  onClick={handleSave}
+                  className="min-w-[120px] bg-blue-600 hover:bg-blue-700"
+                >
+                  {editingRecord ? 'Güncelle' : 'Oluştur'}
+                </Button>
+              </div>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
       
