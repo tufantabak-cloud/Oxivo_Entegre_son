@@ -937,36 +937,8 @@ export default function App() {
     };
   }, [dataLoaded]);
 
-  // 📥 REAL-TIME: Signs değişikliklerini dinle
-  useEffect(() => {
-    if (!dataLoaded || !FeatureFlags.ENABLE_REALTIME_SYNC) return;
-    
-    logger.debug('🔄 Starting real-time subscription for Signs...');
-    
-    const signsChannel = supabase
-      .channel('signs-realtime')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'signs' },
-        async (payload) => {
-          logger.debug('📥 Tabela değişikliği algılandı:', payload);
-          try {
-            const { data } = await signApi.getAll();
-            if (data) {
-              setSigns(data);
-              logger.debug('✅ Tabelalar listesi güncellendi:', data.length, 'kayıt');
-            }
-          } catch (error) {
-            logger.error('❌ Tabelalar listesi güncellenirken hata:', error);
-          }
-        }
-      )
-      .subscribe();
-    
-    return () => {
-      logger.debug('🛑 Signs real-time subscription kapatılıyor...');
-      supabase.removeChannel(signsChannel);
-    };
-  }, [dataLoaded]);
+  // ❌ REMOVED: Signs realtime listener birleştirildi
+  // Artık Bank Accounts listener içinde hem signs state hem de BankPF enrichment yapılıyor (satır ~1220-1270)
 
   // 📥 REAL-TIME: Earnings değişikliklerini dinle
   useEffect(() => {
@@ -999,7 +971,9 @@ export default function App() {
     };
   }, [dataLoaded]);
 
-  // ✅ SYNC: Signs -> BankPFRecords tabelaRecords senkronizasyonu (useRef ile infinite loop önlemi)
+  // ❌ DISABLED: Signs <-> BankPFRecords sync artık gereksiz
+  // Realtime listener ve initial load zaten enrichment yapıyor
+  // ✅ SYNC: Signs -> BankPFRecords tabelaRecords senkronizasyonu (DISABLED) (useRef ile infinite loop önlemi)
   const previousSignsRef = useRef<string>('');
   const previousBankPFRef = useRef<string>('');
   
@@ -1205,10 +1179,36 @@ export default function App() {
         async (payload) => {
           logger.debug('📥 Banka Hesap değişikliği algılandı:', payload);
           try {
-            const { data } = await bankPFApi.getAll();
-            if (data) {
-              setBankPFRecords(data);
-              logger.debug('✅ Banka Hesapları listesi güncellendi:', data.length, 'kayıt');
+            // ✅ FIX: BankPF ve Signs verilerini birlikte refresh et (enrichment)
+            const [bankPFResult, signsResult] = await Promise.all([
+              bankPFApi.getAll(),
+              signApi.getAll()
+            ]);
+            
+            if (bankPFResult.success && bankPFResult.data) {
+              let enrichedBankPFRecords = bankPFResult.data;
+              
+              // ✅ Signs verilerini BankPF kayıtlarına ekle (enrichment)
+              if (signsResult.success && signsResult.data) {
+                const signsByFirmaId = new Map<string, TabelaRecord[]>();
+                
+                // Group signs by firmaId
+                signsResult.data.forEach((sign: any) => {
+                  if (sign.firmaId) {
+                    const existing = signsByFirmaId.get(sign.firmaId) || [];
+                    signsByFirmaId.set(sign.firmaId, [...existing, sign as TabelaRecord]);
+                  }
+                });
+                
+                // Attach tabelaRecords to each BankPF record
+                enrichedBankPFRecords = bankPFResult.data.map(bankPF => ({
+                  ...bankPF,
+                  tabelaRecords: signsByFirmaId.get(bankPF.id) || bankPF.tabelaRecords || []
+                }));
+              }
+              
+              setBankPFRecords(enrichedBankPFRecords);
+              logger.debug('✅ Banka Hesapları listesi güncellendi (enriched):', enrichedBankPFRecords.length, 'kayıt');
             }
           } catch (error) {
             logger.error('❌ Banka Hesapları listesi güncellenirken hata:', error);
@@ -1227,11 +1227,41 @@ export default function App() {
         async (payload) => {
           logger.debug('📥 TABELA (Signs) değişikliği algılandı:', payload);
           try {
-            // BankPF verilerini refresh et (enrichment ile birlikte)
-            const { data } = await bankPFApi.getAll();
-            if (data) {
-              setBankPFRecords(data);
-              logger.debug('✅ TABELA değişikliği sonrası BankPF listesi güncellendi:', data.length, 'kayıt');
+            // ✅ FIX: BankPF ve Signs verilerini birlikte refresh et
+            const [bankPFResult, signsResult] = await Promise.all([
+              bankPFApi.getAll(),
+              signApi.getAll()
+            ]);
+            
+            if (bankPFResult.success && bankPFResult.data) {
+              let enrichedBankPFRecords = bankPFResult.data;
+              
+              // ✅ Signs verilerini BankPF kayıtlarına ekle (enrichment)
+              if (signsResult.success && signsResult.data) {
+                // ✅ Global signs state'ini güncelle
+                setSigns(signsResult.data);
+                
+                const signsByFirmaId = new Map<string, TabelaRecord[]>();
+                
+                // Group signs by firmaId
+                signsResult.data.forEach((sign: any) => {
+                  if (sign.firmaId) {
+                    const existing = signsByFirmaId.get(sign.firmaId) || [];
+                    signsByFirmaId.set(sign.firmaId, [...existing, sign as TabelaRecord]);
+                  }
+                });
+                
+                // Attach tabelaRecords to each BankPF record
+                enrichedBankPFRecords = bankPFResult.data.map(bankPF => ({
+                  ...bankPF,
+                  tabelaRecords: signsByFirmaId.get(bankPF.id) || bankPF.tabelaRecords || []
+                }));
+                
+                logger.debug(`✅ TABELA enrichment tamamlandı: ${signsResult.data.length} kayıt eşleştirildi`);
+              }
+              
+              setBankPFRecords(enrichedBankPFRecords);
+              logger.debug('✅ TABELA değişikliği sonrası BankPF listesi güncellendi:', enrichedBankPFRecords.length, 'kayıt');
             }
           } catch (error) {
             logger.error('❌ TABELA değişikliği sonrası BankPF güncellenirken hata:', error);
