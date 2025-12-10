@@ -53,7 +53,15 @@ export function CustomerContractPreview({ customer }: CustomerContractPreviewPro
       setTemplates(data);
     } catch (error: any) {
       console.error('Şablonlar yüklenirken hata:', error);
-      toast.error('Şablonlar yüklenemedi');
+      
+      // Tablo yoksa kullanıcıyı bilgilendir
+      if (error.code === '42P01' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
+        console.warn('⚠️ contract_templates tablosu henüz oluşturulmamış. SQL script çalıştırın.');
+        // Sessizce handle et - toast gösterme (spam önlemek için)
+        setTemplates([]); // Boş array set et
+      } else {
+        toast.error('Şablonlar yüklenemedi');
+      }
     } finally {
       setLoading(false);
     }
