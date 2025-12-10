@@ -838,58 +838,92 @@ export const CustomerList = React.memo(function CustomerList({ customers, onSele
     return result;
   };
 
-  // Excel export fonksiyonu (Cihaz Adedi ve Banka/PF dahil)
+  // Excel export fonksiyonu (Sütun Gör filtresi ile senkronize)
   const handleExportToExcel = () => {
     try {
-      const exportData = filteredCustomers.map(customer => ({
-        'Cari Hesap Kodu': customer.cariHesapKodu,
-        'SEKTÖR': customer.sektor,
-        'MCC': customer.mcc,
-        'Cari Adı': customer.cariAdi,
-        'Güncel Mypayter Domain': customer.guncelMyPayterDomain || '',
-        'Cihaz Adedi': getDeviceCount(customer),
-        'Domain Eşleşmesi (Debug)': getDomainMatchCount(customer),
-        'Banka/PF': getBankPFNames(customer),
-        'Satış Temsilcisi': customer.salesRepName || '',
-        'Yetkili': customer.yetkili,
-        'Tel': customer.tel,
-        'Email': customer.email,
-        'Vergi Dairesi': customer.vergiDairesi,
-        'Vergi No': customer.vergiNo,
-        'Adres': customer.adres,
-        'İlçe': customer.ilce,
-        'Posta Kodu': customer.postaKodu,
-        'P6X': customer.p6x || '',
-        'APOLLO': customer.apollo || '',
-        'Durum': customer.durum
-      }));
+      // Sütun mapping fonksiyonu - her sütun key'ine göre değer döndürür
+      const getColumnValue = (customer: Customer, key: string): string | number => {
+        switch (key) {
+          case 'cariHesapKodu': return customer.cariHesapKodu;
+          case 'sektor': return customer.sektor;
+          case 'mcc': return customer.mcc;
+          case 'cariAdi': return customer.cariAdi;
+          case 'domain': return customer.guncelMyPayterDomain || '';
+          case 'cihazAdedi': return getDeviceCount(customer);
+          case 'domainMatchCount': return getDomainMatchCount(customer);
+          case 'bankaPF': return getBankPFNames(customer);
+          case 'salesRep': return customer.salesRepName || '';
+          case 'yetkili': return customer.yetkili;
+          case 'tel': return customer.tel;
+          case 'email': return customer.email;
+          case 'vergiDairesi': return customer.vergiDairesi;
+          case 'vergiNo': return customer.vergiNo;
+          case 'adres': return customer.adres;
+          case 'ilce': return customer.ilce;
+          case 'postaKodu': return customer.postaKodu;
+          case 'p6x': return customer.p6x || '';
+          case 'apollo': return customer.apollo || '';
+          case 'odemeYontemi': 
+            return customer.serviceFeeSettings?.paymentType === 'monthly' 
+              ? 'Aylık' 
+              : customer.serviceFeeSettings?.paymentType === 'yearly' 
+              ? 'Yıllık' 
+              : '';
+          case 'standartUcret': 
+            return customer.serviceFeeSettings?.standardFeePerDevice 
+              ? `${customer.serviceFeeSettings.standardFeePerDevice} €` 
+              : '';
+          case 'durum': return customer.durum;
+          default: return '';
+        }
+      };
+
+      // Sütun genişliği mapping
+      const columnWidths: Record<string, number> = {
+        'cariHesapKodu': 18,
+        'sektor': 15,
+        'mcc': 8,
+        'cariAdi': 25,
+        'domain': 30,
+        'cihazAdedi': 12,
+        'domainMatchCount': 18,
+        'bankaPF': 35,
+        'salesRep': 20,
+        'yetkili': 20,
+        'tel': 15,
+        'email': 25,
+        'vergiDairesi': 15,
+        'vergiNo': 12,
+        'adres': 40,
+        'ilce': 15,
+        'postaKodu': 12,
+        'p6x': 10,
+        'apollo': 10,
+        'odemeYontemi': 15,
+        'standartUcret': 15,
+        'durum': 10
+      };
+
+      // Sadece görünür sütunları filtrele
+      const visibleColumns = CUSTOMER_COLUMN_CONFIGS.filter(
+        col => columnVisibility[col.key] !== false
+      );
+
+      // Export data oluştur - sadece görünür sütunlar
+      const exportData = filteredCustomers.map(customer => {
+        const row: Record<string, string | number> = {};
+        visibleColumns.forEach(col => {
+          row[col.label] = getColumnValue(customer, col.key);
+        });
+        return row;
+      });
 
       const ws = XLSX.utils.json_to_sheet(exportData);
       
-      // Sütun genişlikleri
-      ws['!cols'] = [
-        { wch: 18 }, // Cari Hesap Kodu
-        { wch: 15 }, // SEKTÖR
-        { wch: 8 },  // MCC
-        { wch: 25 }, // Cari Adı
-        { wch: 30 }, // Güncel Mypayter Domain
-        { wch: 18 }, // Cihaz Adedi (Otomatik)
-        { wch: 18 }, // Domain Eşleşmesi
-        { wch: 15 }, // Manuel Atama
-        { wch: 35 }, // Banka/PF
-        { wch: 20 }, // Satış Temsilcisi
-        { wch: 20 }, // Yetkili
-        { wch: 15 }, // Tel
-        { wch: 25 }, // Email
-        { wch: 15 }, // Vergi Dairesi
-        { wch: 12 }, // Vergi No
-        { wch: 40 }, // Adres
-        { wch: 15 }, // İlçe
-        { wch: 12 }, // Posta Kodu
-        { wch: 10 }, // P6X
-        { wch: 10 }, // APOLLO
-        { wch: 10 }  // Durum
-      ];
+      // Dinamik sütun genişlikleri - sadece görünür sütunlar için
+      ws['!cols'] = visibleColumns.map(col => ({ 
+        wch: columnWidths[col.key] || 15 
+      }));
 
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Müşteri Listesi');
@@ -897,7 +931,7 @@ export const CustomerList = React.memo(function CustomerList({ customers, onSele
       const fileName = `musteri-listesi-${new Date().toISOString().split('T')[0]}.xlsx`;
       XLSX.writeFile(wb, fileName);
       
-      toast.success(`✅ ${filteredCustomers.length} müşteri Excel'e aktarıldı`);
+      toast.success(`✅ ${filteredCustomers.length} müşteri Excel'e aktarıldı (${visibleColumns.length} sütun)`);
     } catch (error) {
       console.error('Excel export hatası:', error);
       toast.error('Excel export başarısız!');
