@@ -48,6 +48,7 @@ export function FullscreenContractEditor({
 }: FullscreenContractEditorProps) {
   const [saving, setSaving] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(true);
+  const [editorError, setEditorError] = useState(false);
 
   const editor = useEditor({
     extensions: [
@@ -66,6 +67,11 @@ export function FullscreenContractEditor({
         class: 'prose prose-sm max-w-none p-8 focus:outline-none min-h-[calc(100vh-200px)]',
       },
     },
+    onError: ({ error }) => {
+      console.error('TipTap Editor Error:', error);
+      setEditorError(true);
+      toast.error('Editor yüklenemedi');
+    },
   });
 
   useEffect(() => {
@@ -73,6 +79,11 @@ export function FullscreenContractEditor({
       editor.commands.setContent(initialContent);
     }
   }, [isOpen, initialContent, editor]);
+
+  // SSR Safety: Don't render on server
+  if (typeof window === 'undefined') {
+    return null;
+  }
 
   const handleSave = async () => {
     if (!editor) {

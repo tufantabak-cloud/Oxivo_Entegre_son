@@ -2,7 +2,7 @@
 // 🎯 CUSTOMER CONTRACT PREVIEW - Müşteri Özelinde Sözleşme Görüntüleme
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -10,7 +10,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { templateApi, ContractTemplate } from '../utils/contractApi';
 import { FileText, Eye, X, RefreshCw, Maximize2, Edit } from 'lucide-react';
 import { toast } from 'sonner';
-import { FullscreenContractEditor } from './FullscreenContractEditor';
+
+// Lazy load the fullscreen editor to prevent SSR issues
+const FullscreenContractEditor = lazy(() => 
+  import('./FullscreenContractEditor').then(m => ({ default: m.FullscreenContractEditor }))
+);
 
 // Müşteri veri yapısı
 export interface CustomerData {
@@ -326,15 +330,17 @@ export function CustomerContractPreview({ customer }: CustomerContractPreviewPro
 
       {/* Fullscreen Editor */}
       {editingTemplate && (
-        <FullscreenContractEditor
-          isOpen={fullscreenEditorOpen}
-          onClose={() => setFullscreenEditorOpen(false)}
-          customerId={customer.id}
-          templateId={editingTemplate.id}
-          templateName={editingTemplate.name}
-          initialContent={fillTemplateVariables(editingTemplate.content_html, customer)}
-          onSave={loadTemplates}
-        />
+        <Suspense fallback={<div>Loading...</div>}>
+          <FullscreenContractEditor
+            isOpen={fullscreenEditorOpen}
+            onClose={() => setFullscreenEditorOpen(false)}
+            customerId={customer.id}
+            templateId={editingTemplate.id}
+            templateName={editingTemplate.name}
+            initialContent={fillTemplateVariables(editingTemplate.content_html, customer)}
+            onSave={loadTemplates}
+          />
+        </Suspense>
       )}
     </>
   );
