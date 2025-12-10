@@ -2,13 +2,17 @@
 // 🎯 TEMPLATE LIST - Sözleşme Şablonları
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Plus, FileText, Edit, Copy, Eye, Trash2 } from 'lucide-react';
 import { templateApi, ContractTemplate } from '../../utils/contractApi';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
-import { TemplateEditor } from './TemplateEditor';
 import { toast } from 'sonner';
+
+// ✅ Lazy load TipTap editor to prevent SSR issues
+const TemplateEditor = lazy(() => 
+  import('./TemplateEditor').then(m => ({ default: m.TemplateEditor }))
+);
 
 export function TemplateList() {
   const [templates, setTemplates] = useState<ContractTemplate[]>([]);
@@ -159,11 +163,13 @@ export function TemplateList() {
             </DialogDescription>
           </DialogHeader>
           <div className="flex-1 overflow-auto px-6 py-4">
-            <TemplateEditor
-              template={editingTemplate}
-              onSave={handleSave}
-              onCancel={() => setIsEditorOpen(false)}
-            />
+            <Suspense fallback={<div className="text-center py-12 text-gray-500">Yükleniyor...</div>}>
+              <TemplateEditor
+                template={editingTemplate}
+                onSave={handleSave}
+                onCancel={() => setIsEditorOpen(false)}
+              />
+            </Suspense>
           </div>
         </DialogContent>
       </Dialog>
