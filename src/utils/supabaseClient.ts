@@ -36,6 +36,18 @@ import { isFigmaMakeEnvironment } from './environmentDetection';
  * Örnek: bankIds → bank_ids, yurtIciDisi → yurt_ici_disi
  */
 function toSnakeCase(str: string): string {
+  // ✅ SPECIAL CASES: Büyük harf kısaltmaları için özel mapping (ekGelirOXTL → ek_gelir_ox_tl)
+  const specialCases: { [key: string]: string } = {
+    'ekGelirPFTL': 'ek_gelir_pf_tl',
+    'ekGelirOXTL': 'ek_gelir_ox_tl',
+    'ekKesintiPFTL': 'ek_kesinti_pf_tl',
+    'ekKesintiOXTL': 'ek_kesinti_ox_tl',
+  };
+  
+  if (specialCases[str]) {
+    return specialCases[str];
+  }
+  
   return str
     // ✅ STEP 1: Türkçe karakterleri İngilizce ASCII karşılığına çevir (toLowerCase ÖNCE!)
     .replace(/İ/g, 'I')   // Türkçe İ → İngilizce I
@@ -78,7 +90,12 @@ function toCamelCase(str: string): string {
     'komisyon_oranlari': 'komisyonOranları',
     'paylasim_oranlari': 'paylaşımOranları',
     'hazine_geliri': 'hazineGeliri',
-    'ek_gelir_detay': 'ekGelirDetay'
+    'ek_gelir_detay': 'ekGelirDetay',
+    // ✅ NEW: Earnings special cases (ek_gelir_pf_tl → ekGelirPFTL)
+    'ek_gelir_pf_tl': 'ekGelirPFTL',
+    'ek_gelir_ox_tl': 'ekGelirOXTL',
+    'ek_kesinti_pf_tl': 'ekKesintiPFTL',
+    'ek_kesinti_ox_tl': 'ekKesintiOXTL'
   };
   
   if (specialCases[str]) {
