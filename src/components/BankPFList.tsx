@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
+import React from 'react';
 import { BankPF } from './BankPFModule';
 import { Search, ArrowUpDown, ArrowUp, ArrowDown, Eye, ExternalLink, Copy, Edit } from 'lucide-react';
 import { Input } from './ui/input';
@@ -40,7 +41,8 @@ const BANKPF_COLUMN_CONFIGS: ColumnConfig[] = [
   { key: 'durum', label: 'Durum', defaultVisible: true },
 ];
 
-export function BankPFList({ records, onSelectRecord, banks = [], epkList = [], okList = [] }: BankPFListProps) {
+// ⚡ PERFORMANCE: React.memo prevents re-renders when props haven't changed
+export const BankPFList = React.memo(function BankPFList({ records, onSelectRecord, banks = [], epkList = [], okList = [] }: BankPFListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -547,4 +549,4 @@ export function BankPFList({ records, onSelectRecord, banks = [], epkList = [], 
       </div>
     </div>
   );
-}
+});

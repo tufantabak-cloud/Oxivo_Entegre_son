@@ -420,7 +420,7 @@ export default function App() {
           logger.info(`✅ Loaded ${earningsResult.data.length} earnings from Supabase`);
           
           // 🔍 DEBUG: Earnings firmaId kontrolü
-          if (earningsResult.data.length > 0) {
+          if (process.env.NODE_ENV === 'development' && earningsResult.data.length > 0) {
             console.log('🔍 [App] First earning record:', {
               id: earningsResult.data[0].id,
               firmaId: earningsResult.data[0].firmaId || '❌ MISSING!',
