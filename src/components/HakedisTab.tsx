@@ -1406,7 +1406,7 @@ export function HakedisTab({
           </div>
 
           {/* İşlem Hacmi Tablosu */}
-          <div className="border rounded-lg overflow-hidden bg-white">
+          <div className="border rounded-lg overflow-hidden bg-white relative z-50">
             <Table>
               <TableHeader>
                 <TableRow className="bg-gradient-to-r from-blue-50 to-indigo-50">
