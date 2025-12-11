@@ -467,30 +467,50 @@ export function HakedisTab({
   };
 
   // Virgüllü sayıları parse et (örn: "1047608,25" -> 1047608.25)
-  const parseNumber = (value: string): number => {
-    if (!value) return 0;
-    return parseFloat(value.replace(',', '.'));
+  const parseNumber = (value: string | number | null | undefined): number => {
+    // Eğer null, undefined veya boş string ise 0 döndür
+    if (!value || value === '') return 0;
+    
+    // Eğer zaten number ise direkt döndür
+    if (typeof value === 'number') return value;
+    
+    // String ise virgülü noktaya çevir ve parse et
+    if (typeof value === 'string') {
+      return parseFloat(value.replace(',', '.'));
+    }
+    
+    // Diğer durumlarda 0 döndür
+    return 0;
   };
 
   // İşlem hacmi değişikliği
   const handleIslemHacmiChange = (tabelaId: string, value: string) => {
+    console.log(`🔍 [TABELA] handleIslemHacmiChange called for ${tabelaId}:`, value);
+    
     // Eğer boşsa direkt boş kaydet
     if (value === '') {
-      setFormIslemHacmiMap(prev => ({
-        ...prev,
-        [tabelaId]: ''
-      }));
+      setFormIslemHacmiMap(prev => {
+        console.log('🔍 [TABELA] Setting empty value, prev:', prev);
+        return {
+          ...prev,
+          [tabelaId]: ''
+        };
+      });
       return;
     }
     
     // Sadece sayı, virgül ve nokta kabul et (gereksiz karakterleri filtrele)
     const filtered = value.replace(/[^0-9.,]/g, '');
+    console.log(`🔍 [TABELA] Filtered value: "${value}" → "${filtered}"`);
     
     // State'e olduğu gibi kaydet (kullanıcı ne yazdıysa onu göster)
-    setFormIslemHacmiMap(prev => ({
-      ...prev,
-      [tabelaId]: filtered
-    }));
+    setFormIslemHacmiMap(prev => {
+      console.log(`🔍 [TABELA] Updating map, prev[${tabelaId}]:`, prev[tabelaId], '→', filtered);
+      return {
+        ...prev,
+        [tabelaId]: filtered
+      };
+    });
   };
 
   // Hesaplama fonksiyonu - bir TABELA kaydı için
@@ -1261,6 +1281,11 @@ export function HakedisTab({
     isViewMode,
     isEditMode,
     isCreateMode
+  });
+  console.log('🎯 [RENDER] Form Values:', {
+    formPFIslemHacmi,
+    formOxivoIslemHacmi,
+    formNotlar
   });
 
   return (
