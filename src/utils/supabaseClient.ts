@@ -632,7 +632,9 @@ export const customerApi = {
     
     for (let i = 0; i < batches.length; i++) {
       const batch = batches[i];
-      console.log(`📤 Batch ${i + 1}/${batches.length}: Upserting ${batch.length} customers...`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`📤 Batch ${i + 1}/${batches.length}: Upserting ${batch.length} customers...`);
+      }
       
       let data, error;
       try {
@@ -675,10 +677,14 @@ export const customerApi = {
       
       totalUpserted += data.length;
       allData.push(...data);
-      console.log(`✅ Batch ${i + 1}/${batches.length}: ${data.length} customers upserted (Total: ${totalUpserted}/${sanitizedRecords.length})`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`✅ Batch ${i + 1}/${batches.length}: ${data.length} customers upserted (Total: ${totalUpserted}/${sanitizedRecords.length})`);
+      }
     }
 
-    console.log(`✅ All batches completed! Total upserted: ${totalUpserted} customers`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`✅ All batches completed! Total upserted: ${totalUpserted} customers`);
+    }
     const data = allData;
     
     // ✅ FIX: Parse JSONB strings back to objects when reading
@@ -923,14 +929,18 @@ export const productApi = {
       batches.push(sanitizedRecords.slice(i, i + BATCH_SIZE));
     }
     
-    console.log(`📦 Processing ${sanitizedRecords.length} products in ${batches.length} batches...`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📦 Processing ${sanitizedRecords.length} products in ${batches.length} batches...`);
+    }
     
     let totalUpserted = 0;
     const allData: any[] = [];
     
     for (let i = 0; i < batches.length; i++) {
       const batch = batches[i];
-      console.log(`📤 Batch ${i + 1}/${batches.length}: Upserting ${batch.length} products...`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`📤 Batch ${i + 1}/${batches.length}: Upserting ${batch.length} products...`);
+      }
       
       const { data, error } = await supabase
         .from('products')
@@ -951,10 +961,14 @@ export const productApi = {
       
       totalUpserted += data.length;
       allData.push(...data);
-      console.log(`✅ Batch ${i + 1}/${batches.length}: ${data.length} products upserted (Total: ${totalUpserted}/${sanitizedRecords.length})`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`✅ Batch ${i + 1}/${batches.length}: ${data.length} products upserted (Total: ${totalUpserted}/${sanitizedRecords.length})`);
+      }
     }
 
-    console.log(`✅ All batches completed! Total upserted: ${totalUpserted} products`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`✅ All batches completed! Total upserted: ${totalUpserted} products`);
+    }
     return { success: true, data: allData.map(objectToCamelCase), count: totalUpserted };
   },
 
