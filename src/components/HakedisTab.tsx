@@ -1264,9 +1264,17 @@ export function HakedisTab({
   });
 
   return (
-    <div className="space-y-6">
+    <div 
+      className="space-y-6 pointer-events-auto" 
+      onClick={() => console.log('🌐 TOP DIV CLICKED!')}
+      onMouseEnter={() => console.log('🖱️ TOP DIV MOUSE ENTER')}
+    >
       {/* Başlık ve Form */}
-      <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
+      <Card 
+        className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200 pointer-events-auto relative z-[999]" 
+        onClick={() => console.log('🎴 MAIN CARD CLICKED!')}
+        onMouseEnter={() => console.log('🖱️ MAIN CARD MOUSE ENTER')}
+      >
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>

@@ -251,6 +251,20 @@ export default function App() {
   const [dataLoaded, setDataLoaded] = useState(false);
   const [supabaseDataLoaded, setSupabaseDataLoaded] = useState(false);
   
+  // 🧪 DEBUG: Body-level click listener
+  useEffect(() => {
+    const handleBodyClick = (e: MouseEvent) => {
+      console.log('🌍 BODY CLICKED!', {
+        target: e.target,
+        tagName: (e.target as HTMLElement).tagName,
+        className: (e.target as HTMLElement).className
+      });
+    };
+    
+    document.body.addEventListener('click', handleBodyClick, true); // capture phase
+    return () => document.body.removeEventListener('click', handleBodyClick, true);
+  }, []);
+  
   // ✅ NEW: Fetch ALL data from Supabase on mount
   useEffect(() => {
     let isMounted = true; // ✅ Cleanup flag to prevent state updates after unmount
