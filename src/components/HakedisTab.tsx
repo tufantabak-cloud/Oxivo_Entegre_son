@@ -1254,6 +1254,14 @@ export function HakedisTab({
   const isEditMode = view === 'edit';
   const isCreateMode = view === 'create';
   const totals = calculateTotals(formVade, formIslemHacmiMap);
+  
+  // 🔍 DEBUG: View state kontrolü
+  console.log('🎯 [HakedisTab RENDER] View state:', {
+    view,
+    isViewMode,
+    isEditMode,
+    isCreateMode
+  });
 
   return (
     <div className="space-y-6">
@@ -1406,7 +1414,7 @@ export function HakedisTab({
           </div>
 
           {/* İşlem Hacmi Tablosu */}
-          <div className="border rounded-lg overflow-hidden bg-white relative z-50">
+          <div className="border rounded-lg overflow-hidden bg-white relative z-[9999]">
             <Table>
               <TableHeader>
                 <TableRow className="bg-gradient-to-r from-blue-50 to-indigo-50">
@@ -1427,25 +1435,35 @@ export function HakedisTab({
               <TableBody>
                 <TableRow>
                   <TableCell className="p-2">
-                    {isViewMode ? (
-                      <div className="text-center py-2 px-3 bg-gray-50 rounded">
-                        {formPFIslemHacmi 
-                          ? `${parseNumber(formPFIslemHacmi).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`
-                          : '-'}
-                      </div>
-                    ) : (
-                      <Input
+                    {(() => {
+                      console.log('🔍 [PF INPUT RENDER CHECK]', { isViewMode, view });
+                      return isViewMode ? (
+                        <div className="text-center py-2 px-3 bg-gray-50 rounded">
+                          {formPFIslemHacmi 
+                            ? `${parseNumber(formPFIslemHacmi).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`
+                            : '-'}
+                        </div>
+                      ) : (
+                        <>
+                          {console.log('✅ [PF INPUT] RENDERING INPUT FIELD!')}
+                          <Input
                         type="text"
                         inputMode="decimal"
                         placeholder="Manuel giriş TL tutar"
                         value={formPFIslemHacmi}
                         onChange={(e) => {
                           console.log('🔍 [INPUT] PF İşlem Hacmi onChange:', e.target.value);
+                          console.log('🔍 [INPUT] formPFIslemHacmi BEFORE:', formPFIslemHacmi);
                           setFormPFIslemHacmi(e.target.value);
+                          console.log('🔍 [INPUT] formPFIslemHacmi AFTER (expected):', e.target.value);
                         }}
+                        onFocus={() => console.log('✅ PF Input FOCUSED')}
+                        onBlur={() => console.log('❌ PF Input BLURRED')}
                         className="bg-white text-center"
                       />
-                    )}
+                        </>
+                      );
+                    })()}
                   </TableCell>
                   <TableCell className="p-2">
                     {isViewMode ? (
@@ -1462,8 +1480,12 @@ export function HakedisTab({
                         value={formOxivoIslemHacmi}
                         onChange={(e) => {
                           console.log('🔍 [INPUT] OXİVO İşlem Hacmi onChange:', e.target.value);
+                          console.log('🔍 [INPUT] formOxivoIslemHacmi BEFORE:', formOxivoIslemHacmi);
                           setFormOxivoIslemHacmi(e.target.value);
+                          console.log('🔍 [INPUT] formOxivoIslemHacmi AFTER (expected):', e.target.value);
                         }}
+                        onFocus={() => console.log('✅ OXİVO Input FOCUSED')}
+                        onBlur={() => console.log('❌ OXİVO Input BLURRED')}
                         className="bg-white text-center"
                       />
                     )}
@@ -1545,7 +1567,7 @@ export function HakedisTab({
 
       {/* Ana TABELA Tablosu */}
       {(normalRecords || []).length > 0 && (
-        <Card>
+        <Card className="relative z-0">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
