@@ -1414,7 +1414,7 @@ export function HakedisTab({
           </div>
 
           {/* İşlem Hacmi Tablosu */}
-          <div className="border rounded-lg overflow-hidden bg-white relative z-[9999]">
+          <div className="border rounded-lg overflow-hidden bg-white relative z-[9999] pointer-events-auto" style={{ isolation: 'isolate' }}>
             <Table>
               <TableHeader>
                 <TableRow className="bg-gradient-to-r from-blue-50 to-indigo-50">
@@ -1459,7 +1459,12 @@ export function HakedisTab({
                         }}
                         onFocus={() => console.log('✅ PF Input FOCUSED')}
                         onBlur={() => console.log('❌ PF Input BLURRED')}
-                        className="bg-white text-center"
+                        onClick={(e) => {
+                          console.log('🖱️ PF Input CLICKED!', e.target);
+                          e.stopPropagation();
+                        }}
+                        className="bg-white text-center relative z-50 pointer-events-auto"
+                        style={{ pointerEvents: 'auto' }}
                       />
                         </>
                       );
@@ -1486,7 +1491,12 @@ export function HakedisTab({
                         }}
                         onFocus={() => console.log('✅ OXİVO Input FOCUSED')}
                         onBlur={() => console.log('❌ OXİVO Input BLURRED')}
-                        className="bg-white text-center"
+                        onClick={(e) => {
+                          console.log('🖱️ OXİVO Input CLICKED!', e.target);
+                          e.stopPropagation();
+                        }}
+                        className="bg-white text-center relative z-50 pointer-events-auto"
+                        style={{ pointerEvents: 'auto' }}
                       />
                     )}
                   </TableCell>
