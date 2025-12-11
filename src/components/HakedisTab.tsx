@@ -1357,7 +1357,7 @@ export function HakedisTab({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 pointer-events-auto relative z-50" onClick={() => console.log('📦 CardContent CLICKED!')}>
           {/* TABELA Grubu Bilgisi */}
           <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
             <div className="flex items-center justify-between">
