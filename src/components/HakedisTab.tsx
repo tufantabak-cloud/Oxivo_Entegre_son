@@ -1434,7 +1434,8 @@ export function HakedisTab({
               </TableHeader>
               <TableBody>
                 <TableRow>
-                  <TableCell className="p-2">
+                  <TableCell className="p-2 pointer-events-auto relative z-50" onClick={() => console.log('🎯 PF TableCell CLICKED!')}>
+                  
                     {(() => {
                       console.log('🔍 [PF INPUT RENDER CHECK]', { isViewMode, view });
                       return isViewMode ? (
@@ -1470,7 +1471,7 @@ export function HakedisTab({
                       );
                     })()}
                   </TableCell>
-                  <TableCell className="p-2">
+                  <TableCell className="p-2 pointer-events-auto relative z-50" onClick={() => console.log('🎯 OXIVO TableCell CLICKED!')}>
                     {isViewMode ? (
                       <div className="text-center py-2 px-3 bg-gray-50 rounded">
                         {formOxivoIslemHacmi 
