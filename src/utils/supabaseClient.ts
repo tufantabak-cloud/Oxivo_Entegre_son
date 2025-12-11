@@ -163,10 +163,12 @@ export const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 
 // Log credentials source for debugging
 if (typeof window !== 'undefined' && SUPABASE_ENABLED) {
-  console.log('🔧 Using Supabase credentials:', {
-    projectId: PROJECT_ID,
-    source: 'hard-coded (Figma Make environment)'
-  });
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔧 Using Supabase credentials:', {
+      projectId: PROJECT_ID,
+      source: 'hard-coded (Figma Make environment)'
+    });
+  }
 }
 
 // Global singleton cache key
@@ -196,7 +198,9 @@ function getSupabaseClient(): SupabaseClient | null {
 
   // Client-side: check if already exists in window
   if (!window[SUPABASE_SINGLETON_KEY]) {
-    console.log('🔧 Creating new Supabase client singleton...');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔧 Creating new Supabase client singleton...');
+    }
     
     window[SUPABASE_SINGLETON_KEY] = createClient(
       `https://${PROJECT_ID}.supabase.co`,
@@ -279,7 +283,9 @@ function checkSupabase() {
 // Debug: Expose client to window for inspection
 if (typeof window !== 'undefined') {
   (window as any).__OXIVO_SUPABASE__ = supabase;
-  console.log('🔍 Debug: Supabase client available at window.__OXIVO_SUPABASE__');
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔍 Debug: Supabase client available at window.__OXIVO_SUPABASE__');
+  }
 }
 
 // HMR (Hot Module Replacement) cleanup
@@ -309,7 +315,9 @@ export const customerApi = {
       return { success: false, error: 'Supabase disabled in Figma Make', data: [] };
     }
 
-    console.log('🔍 Fetching customers from Supabase...');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 Fetching customers from Supabase...');
+    }
     
     let data, error;
     try {
@@ -2070,12 +2078,14 @@ export const suspensionReasonApi = {
     
     console.log(`📤 Final: Sending ${finalItems.length} unique suspension reason records to Supabase...`);
     
-    // ✅ Safe JSON.stringify with try-catch
-    try {
-      console.log('📋 DEBUGGING - Final items to upsert:', JSON.stringify(finalItems, null, 2));
-    } catch (e) {
-      console.warn('⚠️ JSON.stringify failed for finalItems:', e);
-      console.log('📋 DEBUGGING - Final items (raw):', finalItems);
+    // ✅ Safe JSON.stringify with try-catch (production silent)
+    if (process.env.NODE_ENV === 'development') {
+      try {
+        console.log('📋 DEBUGGING - Final items to upsert:', JSON.stringify(finalItems, null, 2));
+      } catch (e) {
+        console.warn('⚠️ JSON.stringify failed for finalItems:', e);
+        console.log('📋 DEBUGGING - Final items (raw):', finalItems);
+      }
     }
     
     const { data, error } = await supabase
@@ -2358,9 +2368,13 @@ export const earningsApi = {
     }
 
     console.log(`✅ Fetched ${data.length} earnings records from Supabase`);
-    console.log('🔍 [DEBUG] RAW EARNINGS FROM DB:', JSON.stringify(data, null, 2));
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 [DEBUG] RAW EARNINGS FROM DB:', JSON.stringify(data, null, 2));
+    }
     const camelCaseData = data.map(objectToCamelCase);
-    console.log('🔍 [DEBUG] CAMEL CASE EARNINGS:', JSON.stringify(camelCaseData, null, 2));
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 [DEBUG] CAMEL CASE EARNINGS:', JSON.stringify(camelCaseData, null, 2));
+    }
     return { success: true, data: camelCaseData || [] };
   },
 
@@ -2385,7 +2399,9 @@ export const earningsApi = {
 
   async create(records: any | any[]) {
     console.log('📤 Creating earnings records in Supabase...');
-    console.log('🔍 [DEBUG] RAW INPUT:', JSON.stringify(records, null, 2));
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 [DEBUG] RAW INPUT:', JSON.stringify(records, null, 2));
+    }
     
     const recordsArray = Array.isArray(records) ? records : [records];
     
@@ -2400,7 +2416,9 @@ export const earningsApi = {
     
     // ✅ Step 2: Apply transformations
     const transformedItems = uniqueRecords.map(objectToSnakeCase);
-    console.log('🔍 [DEBUG] TRANSFORMED DATA (snake_case):', JSON.stringify(transformedItems, null, 2));
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 [DEBUG] TRANSFORMED DATA (snake_case):', JSON.stringify(transformedItems, null, 2));
+    }
     
     // ✅ Step 3: CRITICAL FIX - Remove duplicates AFTER sanitization
     const finalItems = Array.from(
@@ -2411,7 +2429,9 @@ export const earningsApi = {
       console.warn(`⚠️ Step 3: Removed ${transformedItems.length - finalItems.length} duplicate earnings after sanitization`);
     }
     
-    console.log('🔍 [DEBUG] FINAL DATA TO UPSERT:', JSON.stringify(finalItems, null, 2));
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 [DEBUG] FINAL DATA TO UPSERT:', JSON.stringify(finalItems, null, 2));
+    }
     
     const { data, error } = await supabase
       .from('earnings')
@@ -2420,17 +2440,21 @@ export const earningsApi = {
 
     if (error) {
       console.error('❌ Error creating earnings:', error);
-      console.error('🔍 [DEBUG] ERROR DETAILS:', {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.error('🔍 [DEBUG] ERROR DETAILS:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+      }
       return { success: false, error: error.message, count: 0 };
     }
 
     console.log(`✅ Created/updated ${data.length} earnings records in Supabase`);
-    console.log('🔍 [DEBUG] RESPONSE DATA:', JSON.stringify(data, null, 2));
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 [DEBUG] RESPONSE DATA:', JSON.stringify(data, null, 2));
+    }
     return { success: true, count: data.length };
   },
 

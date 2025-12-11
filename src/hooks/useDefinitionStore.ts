@@ -166,11 +166,13 @@ export function useDefinitionStore(): DefinitionStore {
   
   const [mccList, setMCCListState] = useState<MCC[]>(() => {
     const loadedData = getStoredData('mccList', defaultMCCList);
-    console.log('🔍 [useDefinitionStore] Initial mccList load:', {
-      count: loadedData.length,
-      sampleData: loadedData.slice(0, 3),
-      allData: loadedData
-    });
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 [useDefinitionStore] Initial mccList load:', {
+        count: loadedData.length,
+        sampleData: loadedData.slice(0, 3),
+        allData: loadedData
+      });
+    }
     return loadedData;
   });
   
@@ -224,10 +226,12 @@ export function useDefinitionStore(): DefinitionStore {
   
   useEffect(() => { setStoredData('jobTitles', jobTitles); }, [jobTitles]);
   useEffect(() => {
-    console.log('🔍 [useDefinitionStore] mccList changed, saving to localStorage:', {
-      count: mccList.length,
-      sampleData: mccList.slice(0, 3)
-    });
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 [useDefinitionStore] mccList changed, saving to localStorage:', {
+        count: mccList.length,
+        sampleData: mccList.slice(0, 3)
+      });
+    }
     setStoredData('mccList', mccList);
   }, [mccList]);
   useEffect(() => { setStoredData('banks', banks); }, [banks]);
@@ -248,11 +252,13 @@ export function useDefinitionStore(): DefinitionStore {
   
   const setJobTitles = (newJobTitles: JobTitle[]) => setJobTitlesState(newJobTitles);
   const setMCCList = (newMCCList: MCC[]) => {
-    console.log('🔍 [useDefinitionStore] setMCCList called with:', {
-      newCount: newMCCList.length,
-      sampleData: newMCCList.slice(0, 3),
-      allData: newMCCList
-    });
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 [useDefinitionStore] setMCCList called with:', {
+        newCount: newMCCList.length,
+        sampleData: newMCCList.slice(0, 3),
+        allData: newMCCList
+      });
+    }
     
     // 🚨 ALERT DEBUG
     if (newMCCList.length !== 17 && newMCCList.length < 15) {
