@@ -152,7 +152,10 @@ export function DashboardHome({
   // Auto-refresh: Her 30 saniyede bir otomatik yenile (opsiyonel)
   useEffect(() => {
     const autoRefreshInterval = setInterval(() => {
-      console.log('📊 Dashboard auto-refresh triggered');
+      // ✅ PRODUCTION OPTIMIZATION: Silent refresh (no console spam)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📊 Dashboard auto-refresh triggered');
+      }
       setRefreshKey(prev => prev + 1);
     }, 30000); // 30 seconds
 

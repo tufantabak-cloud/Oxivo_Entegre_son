@@ -163,8 +163,8 @@ if (typeof window !== 'undefined' && ENV_CONFIG.enableDebugLogs) {
   }
 }
 
-// ✅ Export environment info to window (for debugging)
-if (typeof window !== 'undefined' && ENV_CONFIG.enableDebugLogs) {
+// ✅ Export environment info to window (ALWAYS - for debugging in all environments)
+if (typeof window !== 'undefined') {
   (window as any).__OXIVO_ENV__ = {
     environment: getEnvironmentName(),
     config: ENV_CONFIG,
