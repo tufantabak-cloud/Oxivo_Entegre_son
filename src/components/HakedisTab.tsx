@@ -239,6 +239,15 @@ export function HakedisTab({
 
   // Hakediş kaydetme (yeni veya düzenleme)
   const handleSave = async (durum: 'Taslak' | 'Kesinleşmiş' = formDurum) => {
+    console.log('🔍 [SAVE] handleSave çağrıldı - State değerleri:', {
+      formPFIslemHacmi,
+      formPFIslemHacmiType: typeof formPFIslemHacmi,
+      formOxivoIslemHacmi,
+      formOxivoIslemHacmiType: typeof formOxivoIslemHacmi,
+      ekGelirPFTL,
+      ekGelirOXTL
+    });
+    
     // Kesinleştirme sırasında manuel değer uyarısı
     if (durum === 'Kesinleşmiş') {
       const hasManualValues = manualAnaTabelaIslemHacmi || manualAnaTabelaOxivoTotal;
@@ -1430,7 +1439,10 @@ export function HakedisTab({
                         inputMode="decimal"
                         placeholder="Manuel giriş TL tutar"
                         value={formPFIslemHacmi}
-                        onChange={(e) => setFormPFIslemHacmi(e.target.value)}
+                        onChange={(e) => {
+                          console.log('🔍 [INPUT] PF İşlem Hacmi onChange:', e.target.value);
+                          setFormPFIslemHacmi(e.target.value);
+                        }}
                         className="bg-white text-center"
                       />
                     )}
@@ -1448,7 +1460,10 @@ export function HakedisTab({
                         inputMode="decimal"
                         placeholder="Manuel giriş TL tutar"
                         value={formOxivoIslemHacmi}
-                        onChange={(e) => setFormOxivoIslemHacmi(e.target.value)}
+                        onChange={(e) => {
+                          console.log('🔍 [INPUT] OXİVO İşlem Hacmi onChange:', e.target.value);
+                          setFormOxivoIslemHacmi(e.target.value);
+                        }}
                         className="bg-white text-center"
                       />
                     )}
