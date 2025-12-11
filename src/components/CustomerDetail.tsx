@@ -468,8 +468,7 @@ export function CustomerDetail({
     .map(r => r.reason);
   
   // Debug: Konsola yazdır (sadece dropdown açıldığında)
-  // Detaylı debug için tarayıcı konsolunda: localStorage.setItem('debugSuspensionReasons', 'true')
-  if (typeof localStorage !== 'undefined' && localStorage.getItem('debugSuspensionReasons') === 'true') {
+  if (process.env.NODE_ENV === 'development') {
     console.group('🔍 Dondurma Sebepleri Debug');
     console.log('Total sebep sayısı:', suspensionReasons?.length || 0);
     console.log('Aktif sebep sayısı:', activeSuspensionReasons.length);
@@ -1824,32 +1823,9 @@ export function CustomerDetail({
               }
               console.log('');
               
-              console.log('💾 5. LOCALSTORAGE KONTROLÜ:');
-              try {
-                const storedCustomers = localStorage.getItem('customers');
-                const storedPayter = localStorage.getItem('payterProducts');
-                
-                if (storedCustomers) {
-                  const customers = JSON.parse(storedCustomers);
-                  const thisCustomer = customers.find((c: Customer) => c.id === formData.id);
-                  console.log('   Bu müşterinin localStorage kaydı:', thisCustomer ? {
-                    cariAdi: thisCustomer.cariAdi,
-                    guncelMyPayterDomain: thisCustomer.guncelMyPayterDomain,
-                    domainHierarchyLength: thisCustomer.domainHierarchy?.length || 0
-                  } : '(Bulunamadı)');
-                } else {
-                  console.log('   ⚠️ UYARI: localStorage\'da customers verisi yok!');
-                }
-                
-                if (storedPayter) {
-                  const payterList = JSON.parse(storedPayter);
-                  console.log('   localStorage\'daki Payter Ürün Sayısı:', payterList.length);
-                } else {
-                  console.log('   ⚠️ UYARI: localStorage\'da payterProducts verisi yok!');
-                }
-              } catch (error) {
-                console.error('   ❌ localStorage okuma hatası:', error);
-              }
+              console.log('💾 5. VERİ DURUMU:');
+              console.log('   Payter ürün sayısı:', payterProducts.length);
+              console.log('   Müşteri bilgisi:', formData.cariAdi);
               console.log('');
               
               console.log('📋 6. SONUÇ VE ÖNERİLER:');

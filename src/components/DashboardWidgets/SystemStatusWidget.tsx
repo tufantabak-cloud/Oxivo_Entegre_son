@@ -40,19 +40,6 @@ export function SystemStatusWidget({
     }, 0),
   };
 
-  // LocalStorage boyutu
-  const getStorageSize = () => {
-    let size = 0;
-    for (const key in localStorage) {
-      if (localStorage.hasOwnProperty(key)) {
-        size += localStorage.getItem(key)?.length || 0;
-      }
-    }
-    return (size / 1024 / 1024).toFixed(2); // MB
-  };
-
-  const storageSize = getStorageSize();
-
   return (
     <Card className="h-full w-full">
       <CardHeader>
@@ -124,22 +111,6 @@ export function SystemStatusWidget({
             <div className="p-3 bg-emerald-50 rounded-lg">
               <div className="text-2xl font-bold text-emerald-600">{stats.totalDevices}</div>
               <div className="text-xs text-gray-600">Cihaz</div>
-            </div>
-          </div>
-
-          {/* Storage Durumu */}
-          <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-gray-600">LocalStorage Kullanımı</span>
-              <span className="text-xs font-semibold text-gray-900">
-                {storageSize} MB
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div
-                className="bg-blue-600 h-2 rounded-full"
-                style={{ width: `${Math.min((parseFloat(storageSize) / 10) * 100, 100)}%` }}
-              />
             </div>
           </div>
 

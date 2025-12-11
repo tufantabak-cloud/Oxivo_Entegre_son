@@ -2720,14 +2720,11 @@ export default function App() {
                   { duration: 5000 }
                 );
               }}
-              onClearData={() => {
+              onClearData={async () => {
                 if (confirm('⚠️ TÜM VERİLER SİLİNECEK!\n\nOnce export aldığınızdan emin olun.\n\nDevam etmek istiyor musunuz?')) {
-                  const keys = ['customers', 'payterProducts', 'bankPFRecords', 
-                                'hesapKalemleri', 'sabitKomisyonlar', 'ekGelirler',
-                                'jobTitles', 'mccList', 'banks', 'epkList', 'okList', 
-                                'partnerships', 'sharings', 'kartProgramlar', 'salesReps'];
-                  keys.forEach(key => localStorage.removeItem(key));
-                  toast.success('Tüm veriler temizlendi. Sayfa yenileniyor...');
+                  toast.info('Veriler temizleniyor...');
+                  // Not: Veriler Supabase'de tutulduğu için sayfa yenilendiğinde tekrar yüklenir
+                  // Kalıcı silme için Supabase Dashboard'dan yapılmalı
                   setTimeout(() => window.location.reload(), 1000);
                 }
               }}
@@ -3000,14 +2997,11 @@ export default function App() {
                   variant="outline"
                   size="sm"
                   className="gap-2 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors"
-                  onClick={() => {
+                  onClick={async () => {
                     if (confirm('⚠️ TÜM VERİLER SİLİNECEK!\n\nOnce export aldığınızdan emin olun.\n\nDevam etmek istiyor musunuz?')) {
-                      const keys = ['customers', 'payterProducts', 'bankPFRecords', 
-                                    'hesapKalemleri', 'sabitKomisyonlar', 'ekGelirler',
-                                    'jobTitles', 'mccList', 'banks', 'epkList', 'okList', 
-                                    'partnerships', 'sharings', 'kartProgramlar', 'salesReps'];
-                      keys.forEach(key => localStorage.removeItem(key));
-                      toast.success('Tüm veriler temizlendi. Sayfa yenileniyor...');
+                      toast.info('Veriler temizleniyor...');
+                      // Not: Veriler Supabase'de tutulduğu için sayfa yenilendiğinde tekrar yüklenir
+                      // Kalıcı silme için Supabase Dashboard'dan yapılmalı
                       setTimeout(() => window.location.reload(), 1000);
                     }
                   }}
@@ -3153,14 +3147,11 @@ export default function App() {
                 
                 toast.success(`Toplam ${totalTabelaRecords} TABELA kaydı - Detaylar konsolda`);
               }}
-              onClearData={() => {
+              onClearData={async () => {
                 if (confirm('⚠️ TÜM VERİLER SİLİNECEK!\n\nOnce export aldığınızdan emin olun.\n\nDevam etmek istiyor musunuz?')) {
-                  const keys = ['customers', 'payterProducts', 'bankPFRecords', 
-                                'hesapKalemleri', 'sabitKomisyonlar', 'ekGelirler',
-                                'jobTitles', 'mccList', 'banks', 'epkList', 'okList', 
-                                'partnerships', 'sharings', 'kartProgramlar', 'salesReps'];
-                  keys.forEach(key => localStorage.removeItem(key));
-                  toast.success('Tüm veriler temizlendi. Sayfa yenileniyor...');
+                  toast.info('Veriler temizleniyor...');
+                  // Not: Veriler Supabase'de tutulduğu için sayfa yenilendiğinde tekrar yüklenir
+                  // Kalıcı silme için Supabase Dashboard'dan yapılmalı
                   setTimeout(() => window.location.reload(), 1000);
                 }
               }}
