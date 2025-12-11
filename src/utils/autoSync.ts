@@ -731,27 +731,29 @@ export async function syncAllData(options: SyncDataOptions): Promise<SyncResult[
     return [];
   }
 
-  console.log('🚀 Starting batch sync to Supabase...');
-  console.log('📊 Data summary:', {
-    customers: options.customers?.length || 0,
-    products: options.products?.length || 0,
-    bankPF: options.bankPF?.length || 0,
-    mccCodes: options.mccCodes?.length || 0,
-    banks: options.banks?.length || 0,
-    epkList: options.epkList?.length || 0,
-    okList: options.okList?.length || 0,
-    salesReps: options.salesReps?.length || 0,
-    jobTitles: options.jobTitles?.length || 0,
-    partnerships: options.partnerships?.length || 0,
-    accountItems: options.accountItems?.length || 0,
-    fixedCommissions: options.fixedCommissions?.length || 0,
-    additionalRevenues: options.additionalRevenues?.length || 0,
-    sharing: options.sharing?.length || 0,
-    kartProgram: options.kartProgram?.length || 0,
-    suspensionReason: options.suspensionReason?.length || 0,
-    domainMappings: options.domainMappings?.length || 0,
-    signs: options.signs?.length || 0
-  });
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🚀 Starting batch sync to Supabase...');
+    console.log('📊 Data summary:', {
+      customers: options.customers?.length || 0,
+      products: options.products?.length || 0,
+      bankPF: options.bankPF?.length || 0,
+      mccCodes: options.mccCodes?.length || 0,
+      banks: options.banks?.length || 0,
+      epkList: options.epkList?.length || 0,
+      okList: options.okList?.length || 0,
+      salesReps: options.salesReps?.length || 0,
+      jobTitles: options.jobTitles?.length || 0,
+      partnerships: options.partnerships?.length || 0,
+      accountItems: options.accountItems?.length || 0,
+      fixedCommissions: options.fixedCommissions?.length || 0,
+      additionalRevenues: options.additionalRevenues?.length || 0,
+      sharing: options.sharing?.length || 0,
+      kartProgram: options.kartProgram?.length || 0,
+      suspensionReason: options.suspensionReason?.length || 0,
+      domainMappings: options.domainMappings?.length || 0,
+      signs: options.signs?.length || 0
+    });
+  }
 
   const results: SyncResult[] = [];
 
@@ -855,13 +857,15 @@ export async function syncAllData(options: SyncDataOptions): Promise<SyncResult[
   const failCount = results.filter(r => !r.success).length;
   const totalRecords = results.reduce((sum, r) => sum + (r.count || 0), 0);
 
-  console.log('✅ Batch sync complete!');
-  console.log('📊 Summary:', {
-    operations: results.length,
-    successful: successCount,
-    failed: failCount,
-    totalRecords
-  });
+  if (process.env.NODE_ENV === 'development') {
+    console.log('✅ Batch sync complete!');
+    console.log('📊 Summary:', {
+      operations: results.length,
+      successful: successCount,
+      failed: failCount,
+      totalRecords
+    });
+  }
 
   if (failCount > 0) {
     console.warn('⚠️ Some operations failed:');

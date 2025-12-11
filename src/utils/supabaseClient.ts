@@ -419,7 +419,9 @@ export const customerApi = {
    * Müşteri ekler (tek veya toplu)
    */
   async create(customers: any | any[]) {
-    console.log('📤 Creating customers in Supabase...');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📤 Creating customers in Supabase...');
+    }
     
     try {
       // Convert to array
@@ -447,7 +449,9 @@ export const customerApi = {
     // Convert to snake_case
     const records = enrichedCustomers.map(objectToSnakeCase);
     
-    console.log(`📤 Converting ${records.length} customers to snake_case...`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📤 Converting ${records.length} customers to snake_case...`);
+    }
     
     // ✅ FIX: Convert JSONB fields to JSON strings (Supabase requirement)
     const sanitizedRecords = records.map(record => {
@@ -625,7 +629,9 @@ export const customerApi = {
       batches.push(sanitizedRecords.slice(i, i + BATCH_SIZE));
     }
     
-    console.log(`📦 Processing ${sanitizedRecords.length} customers in ${batches.length} batches...`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📦 Processing ${sanitizedRecords.length} customers in ${batches.length} batches...`);
+    }
     
     let totalUpserted = 0;
     const allData: any[] = [];
@@ -868,7 +874,9 @@ export const productApi = {
    * Ürün ekler (UPSERT)
    */
   async create(products: any | any[]) {
-    console.log('📤 Creating products in Supabase...');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📤 Creating products in Supabase...');
+    }
     
     // Convert to array
     const productArray = Array.isArray(products) ? products : [products];
@@ -897,7 +905,9 @@ export const productApi = {
     // Convert to snake_case
     const records = enrichedProducts.map(objectToSnakeCase);
     
-    console.log(`📤 Converting ${records.length} products to snake_case...`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📤 Converting ${records.length} products to snake_case...`);
+    }
     
     // Auto-sanitize: Convert any object/array fields to JSON strings (if needed)
     
@@ -1058,7 +1068,9 @@ export const bankPFApi = {
    * Bank/PF kayıtları ekler (UPSERT)
    */
   async create(records: any | any[]) {
-    console.log('📤 Creating bankPF records in Supabase...');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📤 Creating bankPF records in Supabase...');
+    }
     
     // Convert to array
     const recordArray = Array.isArray(records) ? records : [records];
@@ -1085,7 +1097,9 @@ export const bankPFApi = {
     // Convert to snake_case
     const items = enrichedRecords.map(objectToSnakeCase);
     
-    console.log(`📤 Converting ${items.length} bankPF records to snake_case...`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📤 Converting ${items.length} bankPF records to snake_case...`);
+    }
     
     // ✅ UPSERT: Insert new records or update existing ones (based on 'id')
     const { data, error } = await supabase
@@ -1155,7 +1169,9 @@ export const mccCodesApi = {
   },
 
   async create(records: any | any[]) {
-    console.log('📤 Creating MCC codes in Supabase...');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📤 Creating MCC codes in Supabase...');
+    }
     
     const recordsArray = Array.isArray(records) ? records : [records];
     
@@ -1180,7 +1196,9 @@ export const mccCodesApi = {
       console.warn(`⚠️ Step 3: Removed ${transformedItems.length - finalItems.length} duplicate MCC codes AFTER sanitization`);
     }
     
-    console.log(`📤 Final: Sending ${finalItems.length} unique MCC codes to Supabase...`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📤 Final: Sending ${finalItems.length} unique MCC codes to Supabase...`);
+    }
     
     const { data, error } = await supabase
       .from('mcc_codes')
@@ -1246,7 +1264,9 @@ export const banksApi = {
   },
 
   async create(records: any | any[]) {
-    console.log('📤 Creating banks in Supabase...');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📤 Creating banks in Supabase...');
+    }
     
     const recordsArray = Array.isArray(records) ? records : [records];
     
@@ -1271,7 +1291,9 @@ export const banksApi = {
       console.warn(`⚠️ Step 3: Removed ${transformedItems.length - finalItems.length} duplicate banks AFTER sanitization`);
     }
     
-    console.log(`📤 Final: Sending ${finalItems.length} unique banks to Supabase...`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📤 Final: Sending ${finalItems.length} unique banks to Supabase...`);
+    }
     
     const { data, error } = await supabase
       .from('banks')
@@ -1345,7 +1367,9 @@ export const epkListApi = {
   },
 
   async create(records: any | any[]) {
-    console.log('📤 Creating EPK entries in Supabase...');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📤 Creating EPK entries in Supabase...');
+    }
     
     const recordsArray = Array.isArray(records) ? records : [records];
     
@@ -1370,7 +1394,9 @@ export const epkListApi = {
       console.warn(`⚠️ Step 3: Removed ${transformedItems.length - finalItems.length} duplicate EPK AFTER sanitization`);
     }
     
-    console.log(`📤 Final: Sending ${finalItems.length} unique EPK entries to Supabase...`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📤 Final: Sending ${finalItems.length} unique EPK entries to Supabase...`);
+    }
     
     const { data, error } = await supabase
       .from('epk_institutions')
@@ -1444,7 +1470,9 @@ export const okListApi = {
   },
 
   async create(records: any | any[]) {
-    console.log('📤 Creating OK entries in Supabase...');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📤 Creating OK entries in Supabase...');
+    }
     
     const recordsArray = Array.isArray(records) ? records : [records];
     
@@ -1469,7 +1497,9 @@ export const okListApi = {
       console.warn(`⚠️ Step 3: Removed ${transformedItems.length - finalItems.length} duplicate OK AFTER sanitization`);
     }
     
-    console.log(`📤 Final: Sending ${finalItems.length} unique OK entries to Supabase...`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📤 Final: Sending ${finalItems.length} unique OK entries to Supabase...`);
+    }
     
     const { data, error } = await supabase
       .from('ok_institutions')
@@ -1535,13 +1565,17 @@ export const salesRepsApi = {
   },
 
   async create(records: any | any[]) {
-    console.log('📤 Creating sales representatives in Supabase...');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📤 Creating sales representatives in Supabase...');
+    }
     
     const items = Array.isArray(records) 
       ? records.map(objectToSnakeCase).map(sanitizeSalesRep)
       : [sanitizeSalesRep(objectToSnakeCase(records))];
     
-    console.log(`📤 Converting & sanitizing ${items.length} sales reps to snake_case...`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📤 Converting & sanitizing ${items.length} sales reps to snake_case...`);
+    }
     
     const { data, error } = await supabase
       .from('sales_representatives')
@@ -1582,13 +1616,17 @@ export const jobTitlesApi = {
   },
 
   async create(records: any | any[]) {
-    console.log('📤 Creating job titles in Supabase...');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📤 Creating job titles in Supabase...');
+    }
     
     const items = Array.isArray(records) 
       ? records.map(objectToSnakeCase).map(sanitizeJobTitle)
       : [sanitizeJobTitle(objectToSnakeCase(records))];
     
-    console.log(`📤 Converting & sanitizing ${items.length} job titles to snake_case...`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📤 Converting & sanitizing ${items.length} job titles to snake_case...`);
+    }
     
     const { data, error } = await supabase
       .from('job_titles')
@@ -1629,7 +1667,9 @@ export const partnershipsApi = {
   },
 
   async create(records: any | any[]) {
-    console.log('📤 Creating partnerships in Supabase...');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📤 Creating partnerships in Supabase...');
+    }
     
     const recordsArray = Array.isArray(records) ? records : [records];
     
@@ -1654,7 +1694,9 @@ export const partnershipsApi = {
       console.warn(`⚠️ Step 3: Removed ${transformedItems.length - finalItems.length} duplicate partnerships AFTER sanitization`);
     }
     
-    console.log(`📤 Final: Sending ${finalItems.length} unique partnerships to Supabase...`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📤 Final: Sending ${finalItems.length} unique partnerships to Supabase...`);
+    }
     
     const { data, error } = await supabase
       .from('partnerships')
@@ -1712,13 +1754,17 @@ export const accountItemsApi = {
   },
 
   async create(records: any | any[]) {
-    console.log('📤 Creating account items in Supabase...');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📤 Creating account items in Supabase...');
+    }
     
     const items = Array.isArray(records) 
       ? records.map(objectToSnakeCase).map(sanitizeAccountItem)
       : [sanitizeAccountItem(objectToSnakeCase(records))];
     
-    console.log(`📤 Converting & sanitizing ${items.length} account items to snake_case...`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📤 Converting & sanitizing ${items.length} account items to snake_case...`);
+    }
     
     const { data, error } = await supabase
       .from('account_items')
@@ -1759,13 +1805,17 @@ export const fixedCommissionsApi = {
   },
 
   async create(records: any | any[]) {
-    console.log('📤 Creating fixed commissions in Supabase...');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📤 Creating fixed commissions in Supabase...');
+    }
     
     const items = Array.isArray(records) 
       ? records.map(objectToSnakeCase).map(sanitizeFixedCommission)
       : [sanitizeFixedCommission(objectToSnakeCase(records))];
     
-    console.log(`📤 Converting & sanitizing ${items.length} fixed commissions to snake_case...`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📤 Converting & sanitizing ${items.length} fixed commissions to snake_case...`);
+    }
     
     const { data, error } = await supabase
       .from('fixed_commissions')
@@ -1806,13 +1856,17 @@ export const additionalRevenuesApi = {
   },
 
   async create(records: any | any[]) {
-    console.log('📤 Creating additional revenues in Supabase...');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📤 Creating additional revenues in Supabase...');
+    }
     
     const items = Array.isArray(records) 
       ? records.map(objectToSnakeCase).map(sanitizeAdditionalRevenue)
       : [sanitizeAdditionalRevenue(objectToSnakeCase(records))];
     
-    console.log(`📤 Converting & sanitizing ${items.length} additional revenues to snake_case...`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📤 Converting & sanitizing ${items.length} additional revenues to snake_case...`);
+    }
     
     const { data, error } = await supabase
       .from('additional_revenues')
@@ -1853,7 +1907,9 @@ export const sharingApi = {
   },
 
   async create(records: any | any[]) {
-    console.log('📤 Creating sharing records in Supabase...');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📤 Creating sharing records in Supabase...');
+    }
     
     const recordsArray = Array.isArray(records) ? records : [records];
     
@@ -1878,7 +1934,9 @@ export const sharingApi = {
       console.warn(`⚠️ Step 3: Removed ${transformedItems.length - finalItems.length} duplicate sharings AFTER sanitization`);
     }
     
-    console.log(`📤 Final: Sending ${finalItems.length} unique sharing records to Supabase...`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📤 Final: Sending ${finalItems.length} unique sharing records to Supabase...`);
+    }
     
     const { data, error } = await supabase
       .from('sharings') // ✅ FIXED: 'sharing' → 'sharings' (plural)
@@ -1936,7 +1994,9 @@ export const kartProgramApi = {
   },
 
   async create(records: any | any[]) {
-    console.log('📤 Creating kart program records in Supabase...');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📤 Creating kart program records in Supabase...');
+    }
     
     const recordsArray = Array.isArray(records) ? records : [records];
     
@@ -1961,7 +2021,9 @@ export const kartProgramApi = {
       console.warn(`⚠️ Step 3: Removed ${transformedItems.length - finalItems.length} duplicate card programs AFTER sanitization`);
     }
     
-    console.log(`📤 Final: Sending ${finalItems.length} unique kart program records to Supabase...`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📤 Final: Sending ${finalItems.length} unique kart program records to Supabase...`);
+    }
     
     const { data, error } = await supabase
       .from('card_programs') // ✅ FIXED: 'kart_program' → 'card_programs' (English + plural)
@@ -2042,7 +2104,9 @@ export const suspensionReasonApi = {
   },
 
   async create(records: any | any[]) {
-    console.log('📤 Creating suspension reason records in Supabase...');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📤 Creating suspension reason records in Supabase...');
+    }
     
     const recordsArray = Array.isArray(records) ? records : [records];
     
@@ -2090,7 +2154,9 @@ export const suspensionReasonApi = {
       console.warn(`⚠️ Step 3: Removed ${transformedItems.length - finalItems.length} duplicate suspension reasons AFTER sanitization`);
     }
     
-    console.log(`📤 Final: Sending ${finalItems.length} unique suspension reason records to Supabase...`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📤 Final: Sending ${finalItems.length} unique suspension reason records to Supabase...`);
+    }
     
     // ✅ Safe JSON.stringify with try-catch (production silent)
     if (process.env.NODE_ENV === 'development') {
@@ -2194,7 +2260,9 @@ export const domainMappingApi = {
   },
 
   async create(records: any | any[]) {
-    console.log('📤 Creating domain mapping records in Supabase...');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📤 Creating domain mapping records in Supabase...');
+    }
     
     const recordsArray = Array.isArray(records) ? records : [records];
     
@@ -2276,7 +2344,9 @@ export const signApi = {
   },
 
   async create(records: any | any[]) {
-    console.log('📤 Creating sign records in Supabase...');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📤 Creating sign records in Supabase...');
+    }
     
     const recordsArray = Array.isArray(records) ? records : [records];
     
@@ -2412,7 +2482,9 @@ export const earningsApi = {
   },
 
   async create(records: any | any[]) {
-    console.log('📤 Creating earnings records in Supabase...');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📤 Creating earnings records in Supabase...');
+    }
     if (process.env.NODE_ENV === 'development') {
       console.log('🔍 [DEBUG] RAW INPUT:', JSON.stringify(records, null, 2));
     }
