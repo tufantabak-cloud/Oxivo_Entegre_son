@@ -57,10 +57,10 @@ const DSYMModule = lazy(() => import('./components/DSYMModule'));
 const ContractPublicView = lazy(() => import('./components/DSYM/ContractPublicView'));
 // ⚡ Supabase Data Inspector - Real-time Veri Takip Paneli
 const SupabaseDataInspector = lazy(() => import('./components/SupabaseDataInspector'));
-// 🔧 Migration Tool (Development only)
-const MigrationRunner = ENV_CONFIG.enableMigrationTools 
-  ? lazy(() => import('./utils/migrationRunner').then(m => ({ default: m.MigrationRunner })))
-  : null;
+// ❌ REMOVED: Migration Tool - Already migrated to Supabase
+// const MigrationRunner = ENV_CONFIG.enableMigrationTools 
+//   ? lazy(() => import('./utils/migrationRunner').then(m => ({ default: m.MigrationRunner })))
+//   : null;
 
 // Type imports (not lazy loaded)
 import type { 
@@ -456,7 +456,7 @@ export default function App() {
   // SUPABASE-ONLY MODE (No localStorage fallback)
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // ❌ REMOVED: localStorage fallback - Application runs on Vercel (production-only)
-  // All data must be in Supabase. Use MigrationRunner once to transfer localStorage → Supabase.
+  // All data must be in Supabase. Migration to Supabase completed.
 
 
 
@@ -3298,11 +3298,7 @@ export default function App() {
             <SupabaseDataInspector />
           </Suspense>
         )}
-        {activeModule === 'migration' && ENV_CONFIG.enableMigrationTools && MigrationRunner && (
-          <Suspense fallback={<ModuleLoadingFallback />}>
-            <MigrationRunner />
-          </Suspense>
-        )}
+        {/* ❌ REMOVED: Migration module - Already migrated to Supabase */}
       </main>
       
       {/* Global Search Dialog */}
