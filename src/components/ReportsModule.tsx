@@ -2643,7 +2643,10 @@ export const ReportsModule = React.memo(function ReportsModule({
                         // Sadece bankPF modülündeki kayıtlar için geçerli
                         if (definition.source === 'bankPF' && customer.linkedBankPFIds?.includes(definition.id)) {
                           matchReason = 'linkedBankPFIds';
-                          console.log(`✅ ÜİY Match: ${customer.cariAdi} <-> ${definition.name} (${matchReason})`);
+                          // ✅ PRODUCTION OPTIMIZATION: Silent matching (no console spam)
+                          if (process.env.NODE_ENV === 'development') {
+                            console.log(`✅ ÜİY Match: ${customer.cariAdi} <-> ${definition.name} (${matchReason})`);
+                          }
                           return true;
                         }
                         
@@ -2677,7 +2680,10 @@ export const ReportsModule = React.memo(function ReportsModule({
                           });
                           
                           if (hasAssignment) {
-                            console.log(`✅ ÜİY Match: ${customer.cariAdi} <-> ${definition.name} (${matchReason})`);
+                            // ✅ PRODUCTION OPTIMIZATION: Silent matching (no console spam)
+                            if (process.env.NODE_ENV === 'development') {
+                              console.log(`✅ ÜİY Match: ${customer.cariAdi} <-> ${definition.name} (${matchReason})`);
+                            }
                             return true;
                           }
                         }
@@ -2696,11 +2702,14 @@ export const ReportsModule = React.memo(function ReportsModule({
                     }).filter(item => item.customers.length > 0); // Sadece müşterisi olanları göster
                     
                     // Debug: ÜİY listesi özeti
-                    console.log('📊 ÜİY Listesi Özeti:', {
-                      toplamBankPF: filteredDefinitions.length,
-                      musteriOlanBankPF: bankPFWithCustomers.length,
-                      toplamMusteri: bankPFWithCustomers.reduce((sum, item) => sum + item.customers.length, 0)
-                    });
+                    // ✅ PRODUCTION OPTIMIZATION: Silent logging
+                    if (process.env.NODE_ENV === 'development') {
+                      console.log('📊 ÜİY Listesi Özeti:', {
+                        toplamBankPF: filteredDefinitions.length,
+                        musteriOlanBankPF: bankPFWithCustomers.length,
+                        toplamMusteri: bankPFWithCustomers.reduce((sum, item) => sum + item.customers.length, 0)
+                      });
+                    }
 
                     if (bankPFWithCustomers.length === 0) {
                       if (selectedBankPFId === 'ALL') {
