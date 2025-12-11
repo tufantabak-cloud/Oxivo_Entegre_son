@@ -14,14 +14,16 @@ export interface HakedisV2Record {
   
   // 📅 Dönem ve Vade
   donem: string;                // YYYY-MM format
-  vade: string;                 // D+1, D+7, D+14, D+31
+  vade: string;                 // "Tüm Vadeler" veya spesifik vade
   
   // 📊 Durum
   durum: 'Taslak' | 'Kesinleşmiş';
   aktif?: boolean;              // Soft delete (false = silinmiş)
   
   // 💰 İşlem Hacmi Mapping (JSONB)
-  islemHacmiMap?: Record<string, number>;  // tabelaId → hacim
+  // 🆕 YENİ FORMAT: "tabelaId_vade" → hacim (örn: "abc123_D+1" → 50000)
+  // Her tabela ve aktif vadesi için ayrı entry
+  islemHacmiMap?: Record<string, number>;  // tabelaId_vade → hacim
   
   // 💸 İşlem Hacmi Artışları (Manuel Ek)
   pfIslemHacmi?: string | number;          // PF ek işlem hacmi

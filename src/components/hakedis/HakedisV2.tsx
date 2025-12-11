@@ -10,7 +10,7 @@ import { Plus, RefreshCw } from 'lucide-react';
 import { useHakedisV2 } from '../../hooks/useHakedisV2';
 import { HakedisV2Record } from './types';
 import { TabelaRecord, TabelaGroup } from '../TabelaTab';
-import { calculateHakedis, formatCurrency, formatNumber } from './calculations';
+import { calculateHakedis, formatCurrency, formatNumber, generateHakedisDetayRows } from './calculations';
 
 interface HakedisV2Props {
   firmaId: string;
@@ -115,7 +115,7 @@ export function HakedisV2({
                 </thead>
                 <tbody>
                   {hakedisler.map((hakedis, index) => {
-                    const hesap = calculateHakedis(hakedis);
+                    const hesap = calculateHakedis(hakedis, tabelaRecords, tabelaGroups);
                     return (
                       <tr key={hakedis.id} className="border-b hover:bg-gray-50">
                         <td className="px-4 py-2">{index + 1}</td>
@@ -203,8 +203,18 @@ export function HakedisV2({
 
   // 📝 Görüntüleme
   if (view === 'view' && selectedHakedis) {
-    // Hesaplamaları yap
-    const hesaplama = calculateHakedis(selectedHakedis, tabelaRecords);
+    // 🆕 YENİ: Her tabela × aktif vade için satır oluştur
+    const detayRows = generateHakedisDetayRows(
+      tabelaRecords,
+      tabelaGroups,
+      selectedHakedis.islemHacmiMap || {}
+    );
+    
+    // Kümüle toplamlar
+    const toplamIslemHacmi = detayRows.reduce((sum, row) => sum + row.islemHacmi, 0);
+    const toplamKazanc = detayRows.reduce((sum, row) => sum + row.kazanc, 0);
+    const toplamPFPayi = detayRows.reduce((sum, row) => sum + row.pfPayiHesaplama, 0);
+    const toplamOxivoPayi = detayRows.reduce((sum, row) => sum + row.oxivoPayiHesaplama, 0);
     
     return (
       <Card>
@@ -241,80 +251,78 @@ export function HakedisV2({
               </div>
             </div>
 
-            {/* İşlem Hacmi Detayları - Excel Formatı */}
-            {hesaplama.tabelaDetaylar.length > 0 && (
+            {/* 🆕 EXCEL FORMATINDA HAKEDİŞ TABLOSU */}
+            {detayRows.length > 0 && (
               <div>
-                <h3 className="mb-3">📊 İşlem Hacmi Detayları</h3>
+                <h3 className="mb-3">📊 Hakediş Tablosu</h3>
                 <div className="overflow-x-auto border rounded-lg">
-                  <table className="w-full text-sm">
+                  <table className="w-full text-sm border-collapse">
+                    {/* ÇİFT SATIRLI HEADER */}
                     <thead>
-                      <tr className="bg-gray-100">
-                        <th className="px-2 py-2 border text-left">KLM</th>
-                        <th className="px-2 py-2 border text-left">Kısa Açıklama</th>
-                        <th className="px-2 py-2 border text-left">Ürün</th>
-                        <th className="px-2 py-2 border text-left">Gelir Modeli</th>
-                        <th className="px-2 py-2 border text-center">Kart Tipi</th>
-                        <th className="px-2 py-2 border text-center">Vade</th>
-                        <th className="px-2 py-2 border text-right bg-blue-50">Tabelanın<br/>İşlem Hacmi</th>
-                        <th className="px-2 py-2 border text-right bg-green-50">İşlem Hacmi</th>
-                        <th className="px-2 py-2 border text-right bg-yellow-50">Hesaplama<br/>(Kom. TL)</th>
-                        <th className="px-2 py-2 border text-right bg-blue-100">Kuruluş<br/>Oranı %</th>
-                        <th className="px-2 py-2 border text-right bg-blue-200">PF Payı</th>
-                        <th className="px-2 py-2 border text-right bg-purple-100">OXIVO<br/>Oranı %</th>
-                        <th className="px-2 py-2 border text-right bg-purple-200">OXIVO Payı</th>
+                      {/* 1. Satır: Ana Başlıklar */}
+                      <tr className="bg-yellow-100 border-b-2 border-gray-400">
+                        <th rowSpan={2} className="px-3 py-3 border text-center">KLM</th>
+                        <th rowSpan={2} className="px-3 py-3 border text-left">Grup</th>
+                        <th rowSpan={2} className="px-3 py-3 border text-left">Kısa Açıklama</th>
+                        <th rowSpan={2} className="px-3 py-3 border text-left">Ürün</th>
+                        <th rowSpan={2} className="px-3 py-3 border text-left">Gelir Modeli</th>
+                        <th rowSpan={2} className="px-3 py-3 border text-center">Kart Tipi</th>
+                        <th rowSpan={2} className="px-3 py-3 border text-center">Yurt İçi/Dışı</th>
+                        <th rowSpan={2} className="px-3 py-3 border text-center">Vade</th>
+                        <th rowSpan={2} className="px-3 py-3 border text-center">Tabela Oranları</th>
+                        <th rowSpan={2} className="px-3 py-3 border text-right bg-white">İşlem Hacmi</th>
+                        <th rowSpan={2} className="px-3 py-3 border text-right bg-blue-100">Kazanç (TL)</th>
+                        <th colSpan={2} className="px-3 py-3 border text-center bg-blue-200">PF Payı</th>
+                        <th colSpan={2} className="px-3 py-3 border text-center bg-purple-200">OXIVO Payı</th>
+                      </tr>
+                      {/* 2. Satır: Alt Başlıklar */}
+                      <tr className="bg-yellow-50 border-b-2 border-gray-400">
+                        <th className="px-3 py-2 border text-center bg-yellow-100">Kuruluş %</th>
+                        <th className="px-3 py-2 border text-right bg-blue-100">Hesaplama (TL)</th>
+                        <th className="px-3 py-2 border text-center bg-yellow-100">OXIVO %</th>
+                        <th className="px-3 py-2 border text-right bg-purple-100">Hesaplama (TL)</th>
                       </tr>
                     </thead>
+                    
                     <tbody>
-                      {hesaplama.tabelaDetaylar.map((detay, idx) => (
-                        <tr key={idx} className="hover:bg-gray-50">
-                          <td className="px-2 py-2 border text-center">{idx + 1}</td>
-                          <td className="px-2 py-2 border">{detay.kisaAciklama}</td>
-                          <td className="px-2 py-2 border">{detay.urun}</td>
-                          <td className="px-2 py-2 border">{detay.gelirModeli}</td>
-                          <td className="px-2 py-2 border text-center">{detay.kartTipi}</td>
-                          <td className="px-2 py-2 border text-center">{detay.vade}</td>
-                          <td className="px-2 py-2 border text-right bg-blue-50">
-                            {formatNumber(detay.tabelaninIslemHacmi)}
-                          </td>
-                          <td className="px-2 py-2 border text-right bg-green-50">
-                            {formatNumber(detay.islemHacmi)}
-                          </td>
-                          <td className="px-2 py-2 border text-right bg-yellow-50">
-                            {formatCurrency(detay.hesaplama)}
-                          </td>
-                          <td className="px-2 py-2 border text-right bg-blue-100">
-                            %{detay.kurulusOrani.toFixed(2)}
-                          </td>
-                          <td className="px-2 py-2 border text-right bg-blue-200">
-                            {formatCurrency(detay.pfPayi)}
-                          </td>
-                          <td className="px-2 py-2 border text-right bg-purple-100">
-                            %{detay.oxivoOrani.toFixed(2)}
-                          </td>
-                          <td className="px-2 py-2 border text-right bg-purple-200">
-                            {formatCurrency(detay.oxivoPayi)}
-                          </td>
+                      {detayRows.map((row, idx) => (
+                        <tr key={idx} className="hover:bg-gray-50 border-b">
+                          <td className="px-3 py-2 border text-center bg-yellow-50">{idx + 1}</td>
+                          <td className="px-3 py-2 border bg-yellow-50">{row.grupAdi}</td>
+                          <td className="px-3 py-2 border bg-yellow-50">{row.kisaAciklama}</td>
+                          <td className="px-3 py-2 border bg-yellow-50">{row.urun}</td>
+                          <td className="px-3 py-2 border bg-yellow-50">{row.gelirModeli}</td>
+                          <td className="px-3 py-2 border text-center bg-yellow-50">{row.kartTipi}</td>
+                          <td className="px-3 py-2 border text-center bg-yellow-50">{row.yurtIciDisi}</td>
+                          <td className="px-3 py-2 border text-center bg-yellow-50">{row.vade}</td>
+                          <td className="px-3 py-2 border text-center bg-yellow-50">{row.tabelaOrani}</td>
+                          <td className="px-3 py-2 border text-right">{formatNumber(row.islemHacmi)}</td>
+                          <td className="px-3 py-2 border text-right bg-blue-50">{formatCurrency(row.kazanc)}</td>
+                          <td className="px-3 py-2 border text-center bg-yellow-50">%{row.kurulusOrani.toFixed(2)}</td>
+                          <td className="px-3 py-2 border text-right bg-blue-100">{formatCurrency(row.pfPayiHesaplama)}</td>
+                          <td className="px-3 py-2 border text-center bg-yellow-50">%{row.oxivoOrani.toFixed(2)}</td>
+                          <td className="px-3 py-2 border text-right bg-purple-100">{formatCurrency(row.oxivoPayiHesaplama)}</td>
                         </tr>
                       ))}
                       
                       {/* KÜMÜLE TOPLAMLAR */}
-                      <tr className="bg-gradient-to-r from-blue-100 to-purple-100">
-                        <td colSpan={7} className="px-2 py-2 border text-right">
+                      <tr className="bg-gradient-to-r from-blue-200 to-purple-200 border-t-2 border-gray-500">
+                        <td colSpan={9} className="px-3 py-3 border text-right">
                           <strong>KÜMÜLE TOPLAMLAR:</strong>
                         </td>
-                        <td className="px-2 py-2 border text-right bg-green-100">
-                          <strong>{formatNumber(hesaplama.toplamIslemHacmi)}</strong>
+                        <td className="px-3 py-3 border text-right bg-gray-100">
+                          <strong>{formatNumber(toplamIslemHacmi)}</strong>
                         </td>
-                        <td className="px-2 py-2 border text-right bg-yellow-100">
-                          <strong>{formatCurrency(hesaplama.toplamHesaplama)}</strong>
+                        <td className="px-3 py-3 border text-right bg-blue-200">
+                          <strong>{formatCurrency(toplamKazanc)}</strong>
                         </td>
-                        <td className="px-2 py-2 border"></td>
-                        <td className="px-2 py-2 border text-right bg-blue-200">
-                          <strong>{formatCurrency(hesaplama.toplamPFPayi)}</strong>
+                        <td className="px-3 py-3 border"></td>
+                        <td className="px-3 py-3 border text-right bg-blue-300">
+                          <strong>{formatCurrency(toplamPFPayi)}</strong>
                         </td>
-                        <td className="px-2 py-2 border"></td>
-                        <td className="px-2 py-2 border text-right bg-purple-200">
-                          <strong>{formatCurrency(hesaplama.toplamOxivoPayi)}</strong>
+                        <td className="px-3 py-3 border"></td>
+                        <td className="px-3 py-3 border text-right bg-purple-300">
+                          <strong>{formatCurrency(toplamOxivoPayi)}</strong>
                         </td>
                       </tr>
                     </tbody>
@@ -322,94 +330,28 @@ export function HakedisV2({
                 </div>
                 
                 {/* Açıklama Notları */}
-                <div className="mt-2 text-xs text-gray-600 space-y-1">
-                  <div>• <strong>Hesaplama:</strong> İşlem Hacmi × (Komisyon Oranı / 100)</div>
-                  <div>• <strong>PF Payı:</strong> Hesaplama × (Kuruluş Oranı % / 100)</div>
-                  <div>• <strong>OXIVO Payı:</strong> Hesaplama × (OXIVO Oranı % / 100)</div>
+                <div className="mt-3 p-3 bg-gray-50 rounded text-xs text-gray-700 space-y-1">
+                  <div><strong>🟨 Sarı Hücreler:</strong> TABELA kaydından gelen veriler</div>
+                  <div><strong>⚪ Beyaz Hücreler:</strong> Kullanıcı manuel girişi (İşlem Hacmi)</div>
+                  <div><strong>🟦 Mavi Hücreler:</strong> Otomatik hesaplanan (PF tarafı)</div>
+                  <div><strong>🟪 Mor Hücreler:</strong> Otomatik hesaplanan (OXIVO tarafı)</div>
+                  <div className="pt-2 border-t mt-2">
+                    <strong>Formüller:</strong>
+                  </div>
+                  <div>• <strong>Kazanç (Gelir Ortaklığı):</strong> İşlem Hacmi × Satış TL</div>
+                  <div>• <strong>Kazanç (Sabit Komisyon):</strong> İşlem Hacmi × (Komisyon % / 100)</div>
+                  <div>• <strong>PF Payı Hesaplama:</strong> Kazanç × (Kuruluş % / 100)</div>
+                  <div>• <strong>OXIVO Payı Hesaplama:</strong> Kazanç × (OXIVO % / 100)</div>
                 </div>
               </div>
             )}
 
-            {/* Finansal Hesaplamalar */}
-            <div className="grid grid-cols-2 gap-6">
-              {/* PF Tarafı */}
-              <div className="border rounded-lg p-4 bg-blue-50">
-                <h3 className="mb-3">💳 PF Tarafı</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Komisyon (Kümüle):</span>
-                    <span>{formatCurrency(hesaplama.toplamKomisyon)}</span>
-                  </div>
-                  {hesaplama.ekGelirPF > 0 && (
-                    <div className="flex justify-between text-green-700">
-                      <span>Ek Gelir:</span>
-                      <span>+ {formatCurrency(hesaplama.ekGelirPF)}</span>
-                    </div>
-                  )}
-                  {hesaplama.ekKesintiPF > 0 && (
-                    <div className="flex justify-between text-red-700">
-                      <span>Kesinti:</span>
-                      <span>- {formatCurrency(hesaplama.ekKesintiPF)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between pt-2 border-t">
-                    <span>Brüt Tutar:</span>
-                    <span>{formatCurrency(hesaplama.brutTutarPF)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>KDV (%20):</span>
-                    <span>{formatCurrency(hesaplama.kdvPF)}</span>
-                  </div>
-                  <div className="flex justify-between pt-2 border-t">
-                    <strong>Net Tutar:</strong>
-                    <strong>{formatCurrency(hesaplama.netTutarPF)}</strong>
-                  </div>
-                </div>
+            {/* Boş durum */}
+            {detayRows.length === 0 && (
+              <div className="text-center py-8 text-gray-500 bg-gray-50 rounded">
+                Bu hakediş için henüz işlem hacmi girişi yapılmamış.
               </div>
-
-              {/* OXİVO Tarafı */}
-              <div className="border rounded-lg p-4 bg-purple-50">
-                <h3 className="mb-3">🎯 OXİVO Tarafı</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Komisyon (Kümüle):</span>
-                    <span>{formatCurrency(hesaplama.toplamOxivoPayi)}</span>
-                  </div>
-                  {hesaplama.ekGelirOXIVO > 0 && (
-                    <div className="flex justify-between text-green-700">
-                      <span>Ek Gelir:</span>
-                      <span>+ {formatCurrency(hesaplama.ekGelirOXIVO)}</span>
-                    </div>
-                  )}
-                  {hesaplama.ekKesintiOXIVO > 0 && (
-                    <div className="flex justify-between text-red-700">
-                      <span>Kesinti:</span>
-                      <span>- {formatCurrency(hesaplama.ekKesintiOXIVO)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between pt-2 border-t">
-                    <span>Brüt Tutar:</span>
-                    <span>{formatCurrency(hesaplama.brutTutarOXIVO)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>KDV (%20):</span>
-                    <span>{formatCurrency(hesaplama.kdvOXIVO)}</span>
-                  </div>
-                  <div className="flex justify-between pt-2 border-t">
-                    <strong>Net Tutar:</strong>
-                    <strong>{formatCurrency(hesaplama.netTutarOXIVO)}</strong>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Genel Toplam */}
-            <div className="bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg p-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg">💰 TOPLAM NET TUTAR</h3>
-                <div className="text-2xl">{formatCurrency(hesaplama.toplamNetTutar)}</div>
-              </div>
-            </div>
+            )}
 
             {selectedHakedis.notlar && (
               <div>

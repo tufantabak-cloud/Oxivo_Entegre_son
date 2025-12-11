@@ -1,122 +1,39 @@
 /**
- * HAKEDİŞ V2 - HESAPLAMA FONKSİYONLARI
- * Tüm finansal hesaplamalar burada merkezi olarak yapılır
- */
-
-import { HakedisV2Record } from './types';
-import { TabelaRecord } from '../TabelaTab';
-
-// 💰 İşlem Hacmi Hesaplamaları - Detaylı
-export interface IslemHacmiDetay {
-  tabelaId: string;
-  // Tabela Bilgileri
-  kisaAciklama: string;
-  urun: string;
-  gelirModeli: string;
-  kartTipi: string;
-  yurtIciDisi: string;
-  vade: string;
-  
-  // Hesaplama Alanları
-  tabelaninIslemHacmi: number;  // Tabelanın kendi işlem hacmi (eğer veri varsa)
-  islemHacmi: number;            // Kullanılan işlem hacmi
-  hesaplama: number;             // İşlem Hacmi × Komisyon Oranı
-  kurulusOrani: number;          // % cinsinden
-  pfPayi: number;                // Hesaplama × (Kuruluş Oranı / 100)
-  oxivoOrani: number;            // % cinsinden  
-  oxivoPayi: number;             // Hesaplama × (OXIVO Oranı / 100)
-}
-
-export interface HakedisHesaplama {
-  // İşlem Hacmi Detayları
-  tabelaDetaylar: IslemHacmiDetay[];
-  
-  // Kümüle Toplamlar
-  toplamIslemHacmi: number;
-  toplamHesaplama: number;  // Tüm komisyonların toplamı
-  toplamPFPayi: number;
-  toplamOxivoPayi: number;
-  
-  // PF Tarafı
-  toplamKomisyon: number;
-  ekGelirPF: number;
-  ekKesintiPF: number;
-  brutTutarPF: number;
-  kdvPF: number;
-  netTutarPF: number;
-  
-  // OXİVO Tarafı
-  brutTutarOXIVO: number;
-  ekGelirOXIVO: number;
-  ekKesintiOXIVO: number;
-  kdvOXIVO: number;
-  netTutarOXIVO: number;
-  
-  // Genel Toplam
-  toplamNetTutar: number;
-}
-
-/**
  * Ana hesaplama fonksiyonu
  * Bir hakediş kaydının tüm finansal hesaplamalarını yapar
  */
 export function calculateHakedis(
   hakedis: HakedisV2Record,
-  tabelaRecords?: TabelaRecord[]
+  tabelaRecords?: TabelaRecord[],
+  tabelaGroups?: TabelaGroup[]
 ): HakedisHesaplama {
-  // 1️⃣ İşlem Hacmi Detayları - Her tabela için ayrı satır
+  // 1️⃣ YENİ: Her tabela × aktif vade için satır oluştur
   const islemHacmiMap = hakedis.islemHacmiMap || {};
-  const tabelaDetaylar: IslemHacmiDetay[] = [];
+  let tabelaDetaylar: IslemHacmiDetay[] = [];
+  
+  if (tabelaRecords && tabelaGroups) {
+    // Yeni format: generateHakedisDetayRows kullan
+    tabelaDetaylar = generateHakedisDetayRows(
+      tabelaRecords,
+      tabelaGroups,
+      islemHacmiMap
+    );
+  } else {
+    // Fallback: Eski format (tabela listesi yoksa)
+    tabelaDetaylar = [];
+  }
   
   let toplamIslemHacmi = 0;
   let toplamHesaplama = 0;
   let toplamPFPayi = 0;
   let toplamOxivoPayi = 0;
 
-  Object.entries(islemHacmiMap).forEach(([tabelaId, hacim]) => {
-    const hacimNumber = typeof hacim === 'number' ? hacim : parseFloat(String(hacim)) || 0;
-    
-    // Tabela bilgisi bul
-    const tabela = tabelaRecords?.find(t => t.id === tabelaId);
-    
-    // Vadeye göre komisyon oranı bul
-    const vadeKomisyon = tabela?.komisyonOranları?.find(
-      k => k.vade === hakedis.vade && k.aktif
-    );
-    const komisyonOrani = vadeKomisyon?.oran ? parseFloat(vadeKomisyon.oran) : 0;
-    
-    // Hesaplama: İşlem Hacmi × (Komisyon Oranı / 100)
-    const hesaplama = hacimNumber * (komisyonOrani / 100);
-    
-    // Kuruluş ve OXIVO oranları
-    const kurulusOrani = tabela?.kurulusOrani || parseFloat(tabela?.paylaşımOranları?.kurulusOrani || '0') || 0;
-    const oxivoOrani = tabela?.oxivoOrani || parseFloat(tabela?.paylaşımOranları?.oxivoOrani || '0') || 0;
-    
-    // PF ve OXIVO payları
-    const pfPayi = hesaplama * (kurulusOrani / 100);
-    const oxivoPayi = hesaplama * (oxivoOrani / 100);
-
-    tabelaDetaylar.push({
-      tabelaId,
-      kisaAciklama: tabela?.kisaAciklama || tabela?.kurulus?.ad || 'Bilinmeyen',
-      urun: tabela?.urun || tabela?.urunTipi || '-',
-      gelirModeli: tabela?.gelirModeli?.ad || '-',
-      kartTipi: tabela?.kartTipi || '-',
-      yurtIciDisi: tabela?.yurtIciDisi || '-',
-      vade: hakedis.vade,
-      tabelaninIslemHacmi: 0, // TODO: Eğer tabela kendi işlem hacmi tutuyorsa buraya eklenebilir
-      islemHacmi: hacimNumber,
-      hesaplama,
-      kurulusOrani,
-      pfPayi,
-      oxivoOrani,
-      oxivoPayi,
-    });
-
-    toplamIslemHacmi += hacimNumber;
-    toplamHesaplama += hesaplama;
-    toplamPFPayi += pfPayi;
-    toplamOxivoPayi += oxivoPayi;
+  // Detay satırlarından toplamları hesapla
+  tabelaDetaylar.forEach(detay => {
+    toplamIslemHacmi += detay.islemHacmi;
+    toplamHesaplama += detay.kazanc;
+    toplamPFPayi += detay.pfPayiHesaplama;
+    toplamOxivoPayi += detay.oxivoPayiHesaplama;
   });
 
   // 2️⃣ PF Ek İşlem Hacmi (varsa ekle)
@@ -240,4 +157,92 @@ export function calculateDonemOzet(hakedisler: HakedisV2Record[]): {
     taslakSayisi,
     kesinlesmis,
   };
+}
+
+/**
+ * 🚀 YENİ: Her TABELA ve aktif VADESİ için ayrı satır oluştur
+ * Excel formatındaki gibi: 2 Tabela × 2 Aktif Vade = 4 Satır
+ */
+export function generateHakedisDetayRows(
+  tabelaRecords: TabelaRecord[],
+  tabelaGroups: TabelaGroup[],
+  islemHacmiMap: Record<string, number> // tabelaId_vade → hacim
+): IslemHacmiDetay[] {
+  const rows: IslemHacmiDetay[] = [];
+  
+  tabelaRecords.forEach((tabela) => {
+    // Grup adını bul
+    const grup = tabelaGroups.find(g => g.recordIds.includes(tabela.id));
+    const grupAdi = grup?.name || 'Grupsuz';
+    
+    // Kuruluş ve OXIVO oranları
+    const kurulusOrani = tabela.kurulusOrani || parseFloat(tabela.paylaşımOranları?.kurulusOrani || '0') || 0;
+    const oxivoOrani = tabela.oxivoOrani || parseFloat(tabela.paylaşımOranları?.oxivoOrani || '0') || 0;
+    
+    // Aktif vadeleri bul
+    const aktifVadeler = tabela.komisyonOranları?.filter(k => k.aktif) || [];
+    
+    aktifVadeler.forEach((vadeKomisyon) => {
+      const vade = vadeKomisyon.vade;
+      const mapKey = `${tabela.id}_${vade}`;
+      const islemHacmi = islemHacmiMap[mapKey] || 0;
+      
+      // Gelir modeline göre komisyon oranı ve display metni
+      let tabelaOrani = '';
+      let komisyonOran = 0;
+      
+      const gelirModeliAd = tabela.gelirModeli?.ad || '';
+      
+      if (gelirModeliAd === 'Gelir Ortaklığı') {
+        // Satış TL kullan
+        const satisTL = parseFloatSafe(vadeKomisyon.satisTL);
+        tabelaOrani = `${satisTL.toFixed(3)} TL`;
+        // Komisyon oranı: Satış TL değerini % olarak kullan (örn: 0.03 TL → işlem hacmi başına 0.03 TL kazanç)
+        komisyonOran = satisTL; // Doğrudan kullanılacak (hacim × satisTL)
+      } else if (gelirModeliAd === 'Sabit Komisyon') {
+        // Oran % kullan
+        komisyonOran = parseFloatSafe(vadeKomisyon.oran);
+        tabelaOrani = `${komisyonOran.toFixed(2)}%`;
+      } else {
+        // Diğer durumlar
+        komisyonOran = parseFloatSafe(vadeKomisyon.oran);
+        tabelaOrani = komisyonOran > 0 ? `${komisyonOran.toFixed(2)}%` : '-';
+      }
+      
+      // Kazanç hesaplama
+      let kazanc = 0;
+      if (gelirModeliAd === 'Gelir Ortaklığı') {
+        // Satış TL × İşlem Hacmi
+        kazanc = islemHacmi * komisyonOran;
+      } else {
+        // (Komisyon % / 100) × İşlem Hacmi
+        kazanc = islemHacmi * (komisyonOran / 100);
+      }
+      
+      // PF ve OXIVO payları
+      const pfPayiHesaplama = kazanc * (kurulusOrani / 100);
+      const oxivoPayiHesaplama = kazanc * (oxivoOrani / 100);
+      
+      rows.push({
+        tabelaId: tabela.id,
+        grupAdi,
+        kisaAciklama: tabela.kisaAciklama || tabela.kurulus?.ad || 'Bilinmeyen',
+        urun: tabela.urun || tabela.urunTipi || '-',
+        gelirModeli: gelirModeliAd,
+        kartTipi: tabela.kartTipi || '-',
+        yurtIciDisi: tabela.yurtIciDisi || '-',
+        vade,
+        tabelaOrani,
+        komisyonOran,
+        kurulusOrani,
+        oxivoOrani,
+        islemHacmi,
+        kazanc,
+        pfPayiHesaplama,
+        oxivoPayiHesaplama,
+      });
+    });
+  });
+  
+  return rows;
 }
