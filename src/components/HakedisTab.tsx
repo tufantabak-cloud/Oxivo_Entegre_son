@@ -302,6 +302,12 @@ export function HakedisTab({
         firmaId: newHakedis.firmaId, // ✅ FirmaId kontrolü
         donem: newHakedis.donem,
         durum: newHakedis.durum,
+        pfIslemHacmi: newHakedis.pfIslemHacmi, // ✅ PF İşlem Hacmi kontrolü
+        pfIslemHacmiType: typeof newHakedis.pfIslemHacmi,
+        oxivoIslemHacmi: newHakedis.oxivoIslemHacmi, // ✅ OXİVO İşlem Hacmi kontrolü
+        oxivoIslemHacmiType: typeof newHakedis.oxivoIslemHacmi,
+        ekGelirPFTL: newHakedis.ekGelirPFTL,
+        ekGelirOXTL: newHakedis.ekGelirOXTL,
         totalIslemHacmi: newHakedis.totalIslemHacmi,
         totalPFPay: newHakedis.totalPFPay,
         totalOxivoPay: newHakedis.totalOxivoPay,
@@ -372,6 +378,12 @@ export function HakedisTab({
         firmaId: updatedHakedis.firmaId, // ✅ FirmaId kontrolü
         donem: updatedHakedis.donem,
         durum: updatedHakedis.durum,
+        pfIslemHacmi: updatedHakedis.pfIslemHacmi, // ✅ PF İşlem Hacmi kontrolü
+        pfIslemHacmiType: typeof updatedHakedis.pfIslemHacmi,
+        oxivoIslemHacmi: updatedHakedis.oxivoIslemHacmi, // ✅ OXİVO İşlem Hacmi kontrolü
+        oxivoIslemHacmiType: typeof updatedHakedis.oxivoIslemHacmi,
+        ekGelirPFTL: updatedHakedis.ekGelirPFTL,
+        ekGelirOXTL: updatedHakedis.ekGelirOXTL,
         totalIslemHacmi: updatedHakedis.totalIslemHacmi,
         totalPFPay: updatedHakedis.totalPFPay,
         totalOxivoPay: updatedHakedis.totalOxivoPay,
