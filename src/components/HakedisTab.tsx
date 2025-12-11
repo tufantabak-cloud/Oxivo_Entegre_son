@@ -1413,6 +1413,22 @@ export function HakedisTab({
             />
           </div>
 
+          {/* 🧪 TEST INPUT - Card Dışında */}
+          <div className="p-4 bg-yellow-100 border-2 border-yellow-500 rounded">
+            <p className="text-sm mb-2">🧪 TEST INPUT (Card dışında):</p>
+            <Input
+              type="text"
+              placeholder="Test - buraya yazın"
+              onClick={(e) => {
+                console.log('🧪 TEST Input CLICKED!', e.target);
+                e.stopPropagation();
+              }}
+              onFocus={() => console.log('🧪 TEST Input FOCUSED')}
+              onChange={(e) => console.log('🧪 TEST Input onChange:', e.target.value)}
+              className="bg-white"
+            />
+          </div>
+
           {/* İşlem Hacmi Tablosu */}
           <div className="border rounded-lg overflow-hidden bg-white relative z-[9999] pointer-events-auto" style={{ isolation: 'isolate' }}>
             <Table>
