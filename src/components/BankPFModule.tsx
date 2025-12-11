@@ -252,10 +252,12 @@ export const BankPFModule = React.memo(function BankPFModule({
       
       // ✅ INSTANT SYNC: Yeni kayıt hemen Supabase'e yazılsın
       try {
-        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(record.id);
-        console.log(`✅ Banka-PF kaydı oluşturuldu: ${record.id} ${isUUID ? '(UUID ✅)' : '(TIMESTAMP ❌)'}`);
-        if (!isUUID) {
-          console.error('🚨 CACHE SORUNU: Browser eski JavaScript kodunu çalıştırıyor! Hard refresh gerekli (Ctrl+Shift+R)');
+        if (process.env.NODE_ENV === 'development') {
+          const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(record.id);
+          console.log(`✅ Banka-PF kaydı oluşturuldu: ${record.id} ${isUUID ? '(UUID ✅)' : '(TIMESTAMP ❌)'}`);
+          if (!isUUID) {
+            console.error('🚨 CACHE SORUNU: Browser eski JavaScript kodunu çalıştırıyor! Hard refresh gerekli (Ctrl+Shift+R)');
+          }
         }
         await bankPFApi.create(record);
         toast.success('Kayıt eklendi ve Supabase\'e senkronize edildi');
@@ -299,7 +301,9 @@ export const BankPFModule = React.memo(function BankPFModule({
     // ✅ INSTANT SYNC: Silme işlemi hemen Supabase'e yansısın
     try {
       await bankPFApi.delete(id);
-      console.log('✅ Kayıt Supabase\'den silindi');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('✅ Kayıt Supabase\'den silindi');
+      }
     } catch (error) {
       console.error('❌ Supabase silme hatası:', error);
       toast.error('Kayıt silindi ama Supabase senkronizasyonu başarısız');

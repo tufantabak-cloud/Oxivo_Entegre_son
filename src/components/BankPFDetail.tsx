@@ -131,7 +131,9 @@ export function BankPFDetail({
       autoSaveTimeoutRef.current = window.setTimeout(() => {
         onSave(formData);
         setOriginalData(formData);
-        console.log('✅ BankPF otomatik kayıt yapıldı:', new Date().toLocaleTimeString('tr-TR'));
+        if (process.env.NODE_ENV === 'development') {
+          console.log('✅ BankPF otomatik kayıt yapıldı:', new Date().toLocaleTimeString('tr-TR'));
+        }
       }, 1500);
     }
 
@@ -150,12 +152,16 @@ export function BankPFDetail({
       if (autoSaveTimeoutRef.current) {
         clearTimeout(autoSaveTimeoutRef.current);
         autoSaveTimeoutRef.current = null;
-        console.log('⚠️ BankPFDetail: Pending auto-save CANCELLED (record updated from parent)');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('⚠️ BankPFDetail: Pending auto-save CANCELLED (record updated from parent)');
+        }
       }
       
       setFormData(record);
       setOriginalData(record);
-      console.log('🔄 BankPFDetail: formData güncellendi (tabelaRecords sayısı:', record.tabelaRecords?.length || 0, ')');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔄 BankPFDetail: formData güncellendi (tabelaRecords sayısı:', record.tabelaRecords?.length || 0, ')');
+      }
     }
   }, [record]);
   
@@ -165,9 +171,13 @@ export function BankPFDetail({
       if (!formData.id || isCreating) return;
       
       try {
-        console.log(`📥 Hakediş kayıtları yükleniyor (firmaId: ${formData.id})...`);
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`📥 Hakediş kayıtları yükleniyor (firmaId: ${formData.id})...`);
+        }
         const earnings = await earningsApi.getByFirmaId(formData.id);
-        console.log(`✅ ${earnings.length} hakediş kaydı yüklendi`);
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`✅ ${earnings.length} hakediş kaydı yüklendi`);
+        }
         
         // FormData'yı güncelle
         setFormData(prev => ({ ...prev, hakedisRecords: earnings }));

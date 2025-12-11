@@ -286,84 +286,59 @@ function DomainTreeNode({
 function extractBankPFIdsFromAssignments(assignments: BankDeviceAssignment[], bankPFRecords: BankPF[]): string[] {
   const bankPFIds: string[] = [];
   
-  console.log('🔍 extractBankPFIdsFromAssignments başladı:', {
-    assignmentsCount: assignments.length,
-    bankPFRecordsCount: bankPFRecords.length
-  });
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔍 extractBankPFIdsFromAssignments başladı:', {
+      assignmentsCount: assignments.length,
+      bankPFRecordsCount: bankPFRecords.length
+    });
+  }
   
   assignments.forEach(assignment => {
     // assignment.bankId formatı: "bank-{id}", "ok-epk-{id}", "ok-ok-{id}"
     // Bu ID'lerden asıl BankPF kaydının ID'sini bul
     
     const bankId = assignment.bankId;
-    console.log('🔍 Assignment işleniyor:', { 
-      bankId, 
-      bankName: assignment.bankName,
-      deviceCount: assignment.deviceIds?.length || 0
-    });
     
     if (bankId.startsWith('bank-')) {
       // Banka ID'si
       const actualBankId = bankId.replace('bank-', '');
-      console.log('  → Banka ID çıkarıldı:', actualBankId);
       
       // BankPF records içinde bu banka ile eşleşen kaydı bul
       const matchingRecord = bankPFRecords.find((record: BankPF) => 
         record.linkedBankIds?.includes(actualBankId)
       );
       
-      console.log('  → Eşleşen BankPF kaydı:', matchingRecord ? {
-        id: matchingRecord.id,
-        firmaUnvan: matchingRecord.firmaUnvan,
-        linkedBankIds: matchingRecord.linkedBankIds
-      } : 'BULUNAMADI');
-      
       if (matchingRecord && !bankPFIds.includes(matchingRecord.id)) {
         bankPFIds.push(matchingRecord.id);
-        console.log('  ✅ BankPF ID eklendi:', matchingRecord.id);
       }
     } else if (bankId.startsWith('ok-epk-')) {
       // EPK ID'si
       const actualEPKId = bankId.replace('ok-epk-', '');
-      console.log('  → EPK ID çıkarıldı:', actualEPKId);
       
       const matchingRecord = bankPFRecords.find((record: BankPF) => 
         record.linkedEPKIds?.includes(actualEPKId)
       );
       
-      console.log('  → Eşleşen BankPF kaydı:', matchingRecord ? {
-        id: matchingRecord.id,
-        firmaUnvan: matchingRecord.firmaUnvan,
-        linkedEPKIds: matchingRecord.linkedEPKIds
-      } : 'BULUNAMADI');
-      
       if (matchingRecord && !bankPFIds.includes(matchingRecord.id)) {
         bankPFIds.push(matchingRecord.id);
-        console.log('  ✅ BankPF ID eklendi:', matchingRecord.id);
       }
     } else if (bankId.startsWith('ok-ok-')) {
       // ÖK ID'si
       const actualOKId = bankId.replace('ok-ok-', '');
-      console.log('  → ÖK ID çıkarıldı:', actualOKId);
       
       const matchingRecord = bankPFRecords.find((record: BankPF) => 
         record.linkedOKIds?.includes(actualOKId)
       );
       
-      console.log('  → Eşleşen BankPF kaydı:', matchingRecord ? {
-        id: matchingRecord.id,
-        firmaUnvan: matchingRecord.firmaUnvan,
-        linkedOKIds: matchingRecord.linkedOKIds
-      } : 'BULUNAMADI');
-      
       if (matchingRecord && !bankPFIds.includes(matchingRecord.id)) {
         bankPFIds.push(matchingRecord.id);
-        console.log('  ✅ BankPF ID eklendi:', matchingRecord.id);
       }
     }
   });
   
-  console.log('✅ extractBankPFIdsFromAssignments tamamlandı, bulunan IDs:', bankPFIds);
+  if (process.env.NODE_ENV === 'development') {
+    console.log('✅ extractBankPFIdsFromAssignments tamamlandı, bulunan IDs:', bankPFIds);
+  }
   return bankPFIds;
 }
 
@@ -491,16 +466,19 @@ export function CustomerDetail({
       value: mcc.kod,
       label: `${mcc.kod} - ${mcc.kategori}`
     }));
-    console.log('🔍 [CustomerDetail] mccOptions created:', {
-      mccListLength: mccList.length,
-      optionsLength: options.length,
-      sampleOptions: options.slice(0, 5),
-      allOptions: options
-    });
     
-    // 🚨 ALERT DEBUG - Console çalışmıyorsa popup ile göster
-    if (mccList.length < 10) {
-      alert(`⚠️ MCC DROPDOWN DEBUG:\n\nmccList.length = ${mccList.length}\noptions.length = ${options.length}\n\nİlk 3 MCC:\n${JSON.stringify(mccList.slice(0, 3), null, 2)}`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 [CustomerDetail] mccOptions created:', {
+        mccListLength: mccList.length,
+        optionsLength: options.length,
+        sampleOptions: options.slice(0, 5),
+        allOptions: options
+      });
+      
+      // 🚨 ALERT DEBUG - Console çalışmıyorsa popup ile göster
+      if (mccList.length < 10) {
+        alert(`⚠️ MCC DROPDOWN DEBUG:\n\nmccList.length = ${mccList.length}\noptions.length = ${options.length}\n\nİlk 3 MCC:\n${JSON.stringify(mccList.slice(0, 3), null, 2)}`);
+      }
     }
     
     return options;

@@ -48,15 +48,17 @@ export function BankPFCategorySelector({
   selectedOKIds = [],
   onSelectionChange,
 }: BankPFCategorySelectorProps) {
-  // Debug log
-  console.log('🏦 BankPFCategorySelector yüklendi:', {
-    bankaSayısı: banks.length,
-    epkSayısı: epkList.length,
-    okSayısı: okList.length,
-    seçiliBankalar: selectedBankIds.length,
-    seçiliEPKler: selectedEPKIds.length,
-    seçiliÖKler: selectedOKIds.length,
-  });
+  // Debug log (development only)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🏦 BankPFCategorySelector yüklendi:', {
+      bankaSayısı: banks.length,
+      epkSayısı: epkList.length,
+      okSayısı: okList.length,
+      seçiliBankalar: selectedBankIds.length,
+      seçiliEPKler: selectedEPKIds.length,
+      seçiliÖKler: selectedOKIds.length,
+    });
+  }
   
   const [selectedBanks, setSelectedBanks] = useState<string[]>(selectedBankIds);
   const [selectedEPKs, setSelectedEPKs] = useState<string[]>(selectedEPKIds);
