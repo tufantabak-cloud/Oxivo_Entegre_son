@@ -204,7 +204,7 @@ export function HakedisV2({
   // 📝 Görüntüleme
   if (view === 'view' && selectedHakedis) {
     // Hesaplamaları yap
-    const hesaplama = calculateHakedis(selectedHakedis);
+    const hesaplama = calculateHakedis(selectedHakedis, tabelaRecords);
     
     return (
       <Card>
@@ -214,7 +214,7 @@ export function HakedisV2({
         <CardContent>
           <div className="space-y-6">
             {/* Temel Bilgiler */}
-            <div className="grid grid-cols-2 gap-4 pb-4 border-b">
+            <div className="grid grid-cols-4 gap-4 pb-4 border-b">
               <div>
                 <label className="text-sm text-gray-600">Dönem</label>
                 <div>{selectedHakedis.donem}</div>
@@ -241,37 +241,91 @@ export function HakedisV2({
               </div>
             </div>
 
-            {/* İşlem Hacmi Detayları */}
+            {/* İşlem Hacmi Detayları - Excel Formatı */}
             {hesaplama.tabelaDetaylar.length > 0 && (
               <div>
                 <h3 className="mb-3">📊 İşlem Hacmi Detayları</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full border">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-3 py-2 text-left border">Tabela</th>
-                        <th className="px-3 py-2 text-right border">İşlem Hacmi</th>
-                        <th className="px-3 py-2 text-right border">Kom. Oranı</th>
-                        <th className="px-3 py-2 text-right border">Komisyon</th>
+                <div className="overflow-x-auto border rounded-lg">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-gray-100">
+                        <th className="px-2 py-2 border text-left">KLM</th>
+                        <th className="px-2 py-2 border text-left">Kısa Açıklama</th>
+                        <th className="px-2 py-2 border text-left">Ürün</th>
+                        <th className="px-2 py-2 border text-left">Gelir Modeli</th>
+                        <th className="px-2 py-2 border text-center">Kart Tipi</th>
+                        <th className="px-2 py-2 border text-center">Vade</th>
+                        <th className="px-2 py-2 border text-right bg-blue-50">Tabelanın<br/>İşlem Hacmi</th>
+                        <th className="px-2 py-2 border text-right bg-green-50">İşlem Hacmi</th>
+                        <th className="px-2 py-2 border text-right bg-yellow-50">Hesaplama<br/>(Kom. TL)</th>
+                        <th className="px-2 py-2 border text-right bg-blue-100">Kuruluş<br/>Oranı %</th>
+                        <th className="px-2 py-2 border text-right bg-blue-200">PF Payı</th>
+                        <th className="px-2 py-2 border text-right bg-purple-100">OXIVO<br/>Oranı %</th>
+                        <th className="px-2 py-2 border text-right bg-purple-200">OXIVO Payı</th>
                       </tr>
                     </thead>
                     <tbody>
                       {hesaplama.tabelaDetaylar.map((detay, idx) => (
                         <tr key={idx} className="hover:bg-gray-50">
-                          <td className="px-3 py-2 border">{detay.tabelaAd}</td>
-                          <td className="px-3 py-2 text-right border">{formatNumber(detay.hacim)}</td>
-                          <td className="px-3 py-2 text-right border">%{detay.komisyonOrani.toFixed(2)}</td>
-                          <td className="px-3 py-2 text-right border">{formatCurrency(detay.komisyon)}</td>
+                          <td className="px-2 py-2 border text-center">{idx + 1}</td>
+                          <td className="px-2 py-2 border">{detay.kisaAciklama}</td>
+                          <td className="px-2 py-2 border">{detay.urun}</td>
+                          <td className="px-2 py-2 border">{detay.gelirModeli}</td>
+                          <td className="px-2 py-2 border text-center">{detay.kartTipi}</td>
+                          <td className="px-2 py-2 border text-center">{detay.vade}</td>
+                          <td className="px-2 py-2 border text-right bg-blue-50">
+                            {formatNumber(detay.tabelaninIslemHacmi)}
+                          </td>
+                          <td className="px-2 py-2 border text-right bg-green-50">
+                            {formatNumber(detay.islemHacmi)}
+                          </td>
+                          <td className="px-2 py-2 border text-right bg-yellow-50">
+                            {formatCurrency(detay.hesaplama)}
+                          </td>
+                          <td className="px-2 py-2 border text-right bg-blue-100">
+                            %{detay.kurulusOrani.toFixed(2)}
+                          </td>
+                          <td className="px-2 py-2 border text-right bg-blue-200">
+                            {formatCurrency(detay.pfPayi)}
+                          </td>
+                          <td className="px-2 py-2 border text-right bg-purple-100">
+                            %{detay.oxivoOrani.toFixed(2)}
+                          </td>
+                          <td className="px-2 py-2 border text-right bg-purple-200">
+                            {formatCurrency(detay.oxivoPayi)}
+                          </td>
                         </tr>
                       ))}
-                      <tr className="bg-blue-50">
-                        <td className="px-3 py-2 border">TOPLAM</td>
-                        <td className="px-3 py-2 text-right border">{formatNumber(hesaplama.toplamIslemHacmi)}</td>
-                        <td className="px-3 py-2 border"></td>
-                        <td className="px-3 py-2 text-right border">{formatCurrency(hesaplama.toplamKomisyon)}</td>
+                      
+                      {/* KÜMÜLE TOPLAMLAR */}
+                      <tr className="bg-gradient-to-r from-blue-100 to-purple-100">
+                        <td colSpan={7} className="px-2 py-2 border text-right">
+                          <strong>KÜMÜLE TOPLAMLAR:</strong>
+                        </td>
+                        <td className="px-2 py-2 border text-right bg-green-100">
+                          <strong>{formatNumber(hesaplama.toplamIslemHacmi)}</strong>
+                        </td>
+                        <td className="px-2 py-2 border text-right bg-yellow-100">
+                          <strong>{formatCurrency(hesaplama.toplamHesaplama)}</strong>
+                        </td>
+                        <td className="px-2 py-2 border"></td>
+                        <td className="px-2 py-2 border text-right bg-blue-200">
+                          <strong>{formatCurrency(hesaplama.toplamPFPayi)}</strong>
+                        </td>
+                        <td className="px-2 py-2 border"></td>
+                        <td className="px-2 py-2 border text-right bg-purple-200">
+                          <strong>{formatCurrency(hesaplama.toplamOxivoPayi)}</strong>
+                        </td>
                       </tr>
                     </tbody>
                   </table>
+                </div>
+                
+                {/* Açıklama Notları */}
+                <div className="mt-2 text-xs text-gray-600 space-y-1">
+                  <div>• <strong>Hesaplama:</strong> İşlem Hacmi × (Komisyon Oranı / 100)</div>
+                  <div>• <strong>PF Payı:</strong> Hesaplama × (Kuruluş Oranı % / 100)</div>
+                  <div>• <strong>OXIVO Payı:</strong> Hesaplama × (OXIVO Oranı % / 100)</div>
                 </div>
               </div>
             )}
@@ -283,7 +337,7 @@ export function HakedisV2({
                 <h3 className="mb-3">💳 PF Tarafı</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span>Komisyon:</span>
+                    <span>Komisyon (Kümüle):</span>
                     <span>{formatCurrency(hesaplama.toplamKomisyon)}</span>
                   </div>
                   {hesaplama.ekGelirPF > 0 && (
@@ -318,8 +372,8 @@ export function HakedisV2({
                 <h3 className="mb-3">🎯 OXİVO Tarafı</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span>Brüt Tutar:</span>
-                    <span>{formatCurrency(hesaplama.brutTutarOXIVO)}</span>
+                    <span>Komisyon (Kümüle):</span>
+                    <span>{formatCurrency(hesaplama.toplamOxivoPayi)}</span>
                   </div>
                   {hesaplama.ekGelirOXIVO > 0 && (
                     <div className="flex justify-between text-green-700">
@@ -334,6 +388,10 @@ export function HakedisV2({
                     </div>
                   )}
                   <div className="flex justify-between pt-2 border-t">
+                    <span>Brüt Tutar:</span>
+                    <span>{formatCurrency(hesaplama.brutTutarOXIVO)}</span>
+                  </div>
+                  <div className="flex justify-between">
                     <span>KDV (%20):</span>
                     <span>{formatCurrency(hesaplama.kdvOXIVO)}</span>
                   </div>

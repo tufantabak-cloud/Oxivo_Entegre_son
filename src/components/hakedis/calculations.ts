@@ -4,20 +4,38 @@
  */
 
 import { HakedisV2Record } from './types';
+import { TabelaRecord } from '../TabelaTab';
 
-// 💰 İşlem Hacmi Hesaplamaları
+// 💰 İşlem Hacmi Hesaplamaları - Detaylı
 export interface IslemHacmiDetay {
   tabelaId: string;
-  tabelaAd: string;
-  hacim: number;
-  komisyonOrani: number;
-  komisyon: number;
+  // Tabela Bilgileri
+  kisaAciklama: string;
+  urun: string;
+  gelirModeli: string;
+  kartTipi: string;
+  yurtIciDisi: string;
+  vade: string;
+  
+  // Hesaplama Alanları
+  tabelaninIslemHacmi: number;  // Tabelanın kendi işlem hacmi (eğer veri varsa)
+  islemHacmi: number;            // Kullanılan işlem hacmi
+  hesaplama: number;             // İşlem Hacmi × Komisyon Oranı
+  kurulusOrani: number;          // % cinsinden
+  pfPayi: number;                // Hesaplama × (Kuruluş Oranı / 100)
+  oxivoOrani: number;            // % cinsinden  
+  oxivoPayi: number;             // Hesaplama × (OXIVO Oranı / 100)
 }
 
 export interface HakedisHesaplama {
-  // İşlem Hacmi
-  toplamIslemHacmi: number;
+  // İşlem Hacmi Detayları
   tabelaDetaylar: IslemHacmiDetay[];
+  
+  // Kümüle Toplamlar
+  toplamIslemHacmi: number;
+  toplamHesaplama: number;  // Tüm komisyonların toplamı
+  toplamPFPayi: number;
+  toplamOxivoPayi: number;
   
   // PF Tarafı
   toplamKomisyon: number;
@@ -44,32 +62,61 @@ export interface HakedisHesaplama {
  */
 export function calculateHakedis(
   hakedis: HakedisV2Record,
-  tabelaData?: Array<{ id: string; ad: string; komisyonOrani: number }>
+  tabelaRecords?: TabelaRecord[]
 ): HakedisHesaplama {
-  // 1️⃣ İşlem Hacmi Detayları
+  // 1️⃣ İşlem Hacmi Detayları - Her tabela için ayrı satır
   const islemHacmiMap = hakedis.islemHacmiMap || {};
   const tabelaDetaylar: IslemHacmiDetay[] = [];
+  
   let toplamIslemHacmi = 0;
-  let toplamKomisyon = 0;
+  let toplamHesaplama = 0;
+  let toplamPFPayi = 0;
+  let toplamOxivoPayi = 0;
 
   Object.entries(islemHacmiMap).forEach(([tabelaId, hacim]) => {
     const hacimNumber = typeof hacim === 'number' ? hacim : parseFloat(String(hacim)) || 0;
     
     // Tabela bilgisi bul
-    const tabela = tabelaData?.find(t => t.id === tabelaId);
-    const komisyonOrani = tabela?.komisyonOrani || 0;
-    const komisyon = hacimNumber * (komisyonOrani / 100);
+    const tabela = tabelaRecords?.find(t => t.id === tabelaId);
+    
+    // Vadeye göre komisyon oranı bul
+    const vadeKomisyon = tabela?.komisyonOranları?.find(
+      k => k.vade === hakedis.vade && k.aktif
+    );
+    const komisyonOrani = vadeKomisyon?.oran ? parseFloat(vadeKomisyon.oran) : 0;
+    
+    // Hesaplama: İşlem Hacmi × (Komisyon Oranı / 100)
+    const hesaplama = hacimNumber * (komisyonOrani / 100);
+    
+    // Kuruluş ve OXIVO oranları
+    const kurulusOrani = tabela?.kurulusOrani || parseFloat(tabela?.paylaşımOranları?.kurulusOrani || '0') || 0;
+    const oxivoOrani = tabela?.oxivoOrani || parseFloat(tabela?.paylaşımOranları?.oxivoOrani || '0') || 0;
+    
+    // PF ve OXIVO payları
+    const pfPayi = hesaplama * (kurulusOrani / 100);
+    const oxivoPayi = hesaplama * (oxivoOrani / 100);
 
     tabelaDetaylar.push({
       tabelaId,
-      tabelaAd: tabela?.ad || tabelaId,
-      hacim: hacimNumber,
-      komisyonOrani,
-      komisyon,
+      kisaAciklama: tabela?.kisaAciklama || tabela?.kurulus?.ad || 'Bilinmeyen',
+      urun: tabela?.urun || tabela?.urunTipi || '-',
+      gelirModeli: tabela?.gelirModeli?.ad || '-',
+      kartTipi: tabela?.kartTipi || '-',
+      yurtIciDisi: tabela?.yurtIciDisi || '-',
+      vade: hakedis.vade,
+      tabelaninIslemHacmi: 0, // TODO: Eğer tabela kendi işlem hacmi tutuyorsa buraya eklenebilir
+      islemHacmi: hacimNumber,
+      hesaplama,
+      kurulusOrani,
+      pfPayi,
+      oxivoOrani,
+      oxivoPayi,
     });
 
     toplamIslemHacmi += hacimNumber;
-    toplamKomisyon += komisyon;
+    toplamHesaplama += hesaplama;
+    toplamPFPayi += pfPayi;
+    toplamOxivoPayi += oxivoPayi;
   });
 
   // 2️⃣ PF Ek İşlem Hacmi (varsa ekle)
@@ -77,12 +124,15 @@ export function calculateHakedis(
   if (pfEkHacim > 0) {
     toplamIslemHacmi += pfEkHacim;
     // PF ek hacim için komisyon hesapla (varsayılan %1)
-    toplamKomisyon += pfEkHacim * 0.01;
+    const ekKomisyon = pfEkHacim * 0.01;
+    toplamHesaplama += ekKomisyon;
+    toplamPFPayi += ekKomisyon; // PF'ye ait
   }
 
   // 3️⃣ PF Tarafı Hesapları
   const ekGelirPF = hakedis.ekGelirPFTL || 0;
   const ekKesintiPF = hakedis.ekKesintiPFTL || 0;
+  const toplamKomisyon = toplamPFPayi;
   const brutTutarPF = toplamKomisyon + ekGelirPF - ekKesintiPF;
   const kdvPF = brutTutarPF * 0.20; // %20 KDV
   const netTutarPF = brutTutarPF + kdvPF;
@@ -94,7 +144,7 @@ export function calculateHakedis(
   
   // OXİVO komisyon hesabı (ek hacim varsa)
   const oxivoKomisyon = oxivoEkHacim * 0.01; // Varsayılan %1
-  const brutTutarOXIVO = oxivoKomisyon + ekGelirOXIVO - ekKesintiOXIVO;
+  const brutTutarOXIVO = toplamOxivoPayi + oxivoKomisyon + ekGelirOXIVO - ekKesintiOXIVO;
   const kdvOXIVO = brutTutarOXIVO * 0.20;
   const netTutarOXIVO = brutTutarOXIVO + kdvOXIVO;
 
@@ -102,8 +152,11 @@ export function calculateHakedis(
   const toplamNetTutar = netTutarPF + netTutarOXIVO;
 
   return {
-    toplamIslemHacmi,
     tabelaDetaylar,
+    toplamIslemHacmi,
+    toplamHesaplama,
+    toplamPFPayi,
+    toplamOxivoPayi,
     toplamKomisyon,
     ekGelirPF,
     ekKesintiPF,
