@@ -25,6 +25,7 @@ export default defineConfig({
   build: {
     outDir: 'dist', // Vercel 'dist' klasörünü bekliyor
     chunkSizeWarningLimit: 2000, // Uyarı limitini yükselttik
+    // ✅ Force cache invalidation - v3.2.1-UUID-DEBUG
     commonjsOptions: {
       transformMixedEsModules: true, // CJS/ESM uyumsuzluklarını çözer
     },
@@ -36,6 +37,6 @@ export default defineConfig({
     },
     // Production build - minified & optimized
     minify: 'terser',
-    sourcemap: false,
+    sourcemap: true, // ✅ TEMPORARY: Enable sourcemap for debugging React Error #426
   },
 })

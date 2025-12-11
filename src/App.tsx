@@ -159,6 +159,13 @@ const isDev = (() => {
 })();
 
 export default function App() {
+  // ⚡ Track app mount time to prevent auto-sync during initial load
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !window.__APP_MOUNT_TIME__) {
+      window.__APP_MOUNT_TIME__ = Date.now();
+    }
+  }, []);
+  
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // AUTHENTICATION
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -463,6 +470,16 @@ export default function App() {
   // ✅ NEW: Auto-sync ALL data types to Supabase (runs when ANY data changes)
   useEffect(() => {
     if (!dataLoaded) return;
+    
+    // ⚠️ CRITICAL FIX: Prevent auto-sync during initial data load from Supabase
+    // This prevents React Error #426 (setState during render/concurrent updates)
+    const INITIAL_LOAD_DELAY = 5000; // 5 seconds grace period
+    const timeSinceMount = Date.now() - (window.__APP_MOUNT_TIME__ || Date.now());
+    
+    if (timeSinceMount < INITIAL_LOAD_DELAY) {
+      logger.debug('⏭️ Skipping auto-sync during initial load period');
+      return;
+    }
     
     // Debounce sync to avoid too many requests (wait 2 seconds after last change)
     const syncTimer = setTimeout(() => {
