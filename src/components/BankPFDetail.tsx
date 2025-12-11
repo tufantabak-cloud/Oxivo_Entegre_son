@@ -6,6 +6,7 @@ import { DocumentManagement } from './DocumentManagement';
 import { FirmaTabelaTab } from './FirmaTabelaTab';
 import { FirmaBankalarTab } from './FirmaBankalarTab';
 import { HakedisTab } from './HakedisTab';
+import { HakedisV2 } from './hakedis/HakedisV2';
 import { ArrowLeft, Save, Trash2, X, Plus, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from './ui/button';
@@ -797,7 +798,7 @@ export function BankPFDetail({
 
         {/* Hakediş Tab */}
         <TabsContent value="hakedis">
-          <HakedisTab
+          <HakedisV2
             tabelaRecords={formData.tabelaRecords || []}
             tabelaGroups={formData.tabelaGroups || []}
             kurumAdi={formData.firmaUnvan}
