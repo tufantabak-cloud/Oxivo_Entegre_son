@@ -49,6 +49,8 @@ interface BankPFDetailProps {
   epkList?: Array<{ id: string; kod: string; kurumAdi: string; aktif: boolean }>;
   okList?: Array<{ id: string; kod: string; kurumAdi: string; aktif: boolean }>;
   kartProgramlar?: Array<{ id: string; kartAdi: string; aktif: boolean }>;
+  earnings?: any[]; // Global earnings state
+  onEarningsChange?: (earnings: any[]) => void; // Global earnings güncelleme
 }
 
 export function BankPFDetail({
@@ -65,6 +67,8 @@ export function BankPFDetail({
   gelirModelleri = [],
   ekGelirler = [],
   hesapKalemleri = [],
+  earnings = [],
+  onEarningsChange,
 }: BankPFDetailProps) {
   const [formData, setFormData] = useState<BankPF>(
     record || {
@@ -805,6 +809,8 @@ export function BankPFDetail({
               setFormData(prev => ({ ...prev, hakedisRecords: records }));
               // onSave(updatedFormData); // ❌ DISABLEDKaydı yapma
             }}
+            earnings={earnings}
+            onEarningsChange={onEarningsChange}
           />
         </TabsContent>
 

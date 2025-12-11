@@ -505,12 +505,6 @@ export function CustomerDetail({
   ], []);
 
   const suspensionReasonOptions: FilterOption[] = useMemo(() => {
-    // 🔍 DEBUG: Log incoming suspensionReasons
-    console.log('🔍 [CustomerDetail] suspensionReasons prop:', {
-      count: suspensionReasons?.length || 0,
-      data: suspensionReasons,
-      firstItem: suspensionReasons?.[0]
-    });
     
     // TÜM sebepleri göster (aktif olanlar + pasif olanlar disabled olarak)
     const allReasons = (suspensionReasons || []).map(r => ({

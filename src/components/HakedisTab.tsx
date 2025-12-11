@@ -24,6 +24,8 @@ interface HakedisTabProps {
   firmaId: string; // Firma ID (BankPF ID)
   hakedisRecords: HakedisRecord[];
   onHakedisRecordsChange: (records: HakedisRecord[]) => void;
+  earnings?: any[]; // Global earnings state (App.tsx'den)
+  onEarningsChange?: (earnings: any[]) => void; // Global earnings güncelleme
 }
 
 // Vade listesi
@@ -40,7 +42,9 @@ export function HakedisTab({
   kurumAdi,
   firmaId,
   hakedisRecords,
-  onHakedisRecordsChange
+  onHakedisRecordsChange,
+  earnings = [],
+  onEarningsChange
 }: HakedisTabProps) {
   // View state: 'list' | 'selectGroup' | 'create' | 'view' | 'edit'
   const [view, setView] = useState<'list' | 'selectGroup' | 'create' | 'view' | 'edit'>('list');
@@ -239,15 +243,6 @@ export function HakedisTab({
 
   // Hakediş kaydetme (yeni veya düzenleme)
   const handleSave = async (durum: 'Taslak' | 'Kesinleşmiş' = formDurum) => {
-    console.log('🔍 [SAVE] handleSave çağrıldı - State değerleri:', {
-      formPFIslemHacmi,
-      formPFIslemHacmiType: typeof formPFIslemHacmi,
-      formOxivoIslemHacmi,
-      formOxivoIslemHacmiType: typeof formOxivoIslemHacmi,
-      ekGelirPFTL,
-      ekGelirOXTL
-    });
-    
     // Kesinleştirme sırasında manuel değer uyarısı
     if (durum === 'Kesinleşmiş') {
       const hasManualValues = manualAnaTabelaIslemHacmi || manualAnaTabelaOxivoTotal;
@@ -305,34 +300,20 @@ export function HakedisTab({
       
       onHakedisRecordsChange([...hakedisRecords, newHakedis]);
       
-      // ✅ Supabase'e kaydet
-      console.log('🔍 [HakedisTab] Yeni hakediş kaydı oluşturuluyor:', {
-        id: newHakedis.id,
-        firmaId: newHakedis.firmaId, // ✅ FirmaId kontrolü
-        donem: newHakedis.donem,
-        durum: newHakedis.durum,
-        pfIslemHacmi: newHakedis.pfIslemHacmi, // ✅ PF İşlem Hacmi kontrolü
-        pfIslemHacmiType: typeof newHakedis.pfIslemHacmi,
-        oxivoIslemHacmi: newHakedis.oxivoIslemHacmi, // ✅ OXİVO İşlem Hacmi kontrolü
-        oxivoIslemHacmiType: typeof newHakedis.oxivoIslemHacmi,
-        ekGelirPFTL: newHakedis.ekGelirPFTL,
-        ekGelirOXTL: newHakedis.ekGelirOXTL,
-        totalIslemHacmi: newHakedis.totalIslemHacmi,
-        totalPFPay: newHakedis.totalPFPay,
-        totalOxivoPay: newHakedis.totalOxivoPay,
-        islemHacmiMapKeys: Object.keys(newHakedis.islemHacmiMap || {}).length
-      });
+      // ✅ CRITICAL: Global earnings state'ine de ekle (AutoSync sorunu!)
+      if (onEarningsChange && earnings) {
+        onEarningsChange([...earnings, newHakedis]);
+      }
       
+      // ✅ Supabase'e kaydet
       try {
         const result = await earningsApi.create(newHakedis);
-        if (result.success) {
-          console.log(`✅ Hakediş kaydı Supabase'e kaydedildi: ${newHakedis.id}`);
-        } else {
-          console.error(`❌ Hakediş Supabase'e kaydedilemedi:`, result.error);
+        if (!result.success) {
+          console.error('Hakediş Supabase kayıt hatası:', result.error);
           toast.error(`Supabase kayıt hatası: ${result.error}`);
         }
       } catch (error) {
-        console.error('❌ Hakediş Supabase kayıt hatası:', error);
+        console.error('Hakediş Supabase kayıt hatası:', error);
         toast.error('Beklenmeyen hata: ' + (error as Error).message);
       }
       
@@ -381,34 +362,23 @@ export function HakedisTab({
         hakedisRecords.map(h => h.id === selectedHakedis.id ? updatedHakedis : h)
       );
       
-      // ✅ Supabase'e kaydet
-      console.log('🔍 [HakedisTab] Hakediş kaydı güncelleniyor:', {
-        id: updatedHakedis.id,
-        firmaId: updatedHakedis.firmaId, // ✅ FirmaId kontrolü
-        donem: updatedHakedis.donem,
-        durum: updatedHakedis.durum,
-        pfIslemHacmi: updatedHakedis.pfIslemHacmi, // ✅ PF İşlem Hacmi kontrolü
-        pfIslemHacmiType: typeof updatedHakedis.pfIslemHacmi,
-        oxivoIslemHacmi: updatedHakedis.oxivoIslemHacmi, // ✅ OXİVO İşlem Hacmi kontrolü
-        oxivoIslemHacmiType: typeof updatedHakedis.oxivoIslemHacmi,
-        ekGelirPFTL: updatedHakedis.ekGelirPFTL,
-        ekGelirOXTL: updatedHakedis.ekGelirOXTL,
-        totalIslemHacmi: updatedHakedis.totalIslemHacmi,
-        totalPFPay: updatedHakedis.totalPFPay,
-        totalOxivoPay: updatedHakedis.totalOxivoPay,
-        islemHacmiMapKeys: Object.keys(updatedHakedis.islemHacmiMap || {}).length
-      });
+      // ✅ CRITICAL: Global earnings state'ini de güncelle (AutoSync sorunu!)
+      if (onEarningsChange && earnings) {
+        const updatedEarnings = earnings.map((e: any) => 
+          e.id === selectedHakedis.id ? updatedHakedis : e
+        );
+        onEarningsChange(updatedEarnings);
+      }
       
+      // ✅ Supabase'e kaydet
       try {
         const result = await earningsApi.create(updatedHakedis);
-        if (result.success) {
-          console.log(`✅ Hakediş kaydı Supabase'de güncellendi: ${updatedHakedis.id}`);
-        } else {
-          console.error(`❌ Hakediş Supabase'de güncellenemedi:`, result.error);
+        if (!result.success) {
+          console.error('Hakediş Supabase güncelleme hatası:', result.error);
           toast.error(`Supabase güncelleme hatası: ${result.error}`);
         }
       } catch (error) {
-        console.error('❌ Hakediş Supabase güncelleme hatası:', error);
+        console.error('Hakediş Supabase güncelleme hatası:', error);
         toast.error('Beklenmeyen hata: ' + (error as Error).message);
       }
       
@@ -425,18 +395,23 @@ export function HakedisTab({
 
   const confirmDelete = async () => {
     if (hakedisToDelete) {
+      // ✅ Local hakediş listesinden sil
       onHakedisRecordsChange(hakedisRecords.filter(h => h.id !== hakedisToDelete.id));
+      
+      // ✅ CRITICAL: Global earnings state'inden de sil (AutoSync sorunu!)
+      if (onEarningsChange && earnings) {
+        const updatedEarnings = earnings.filter((e: any) => e.id !== hakedisToDelete.id);
+        onEarningsChange(updatedEarnings);
+      }
       
       // ✅ Supabase'den sil
       try {
         const result = await earningsApi.delete(hakedisToDelete.id);
-        if (result.success) {
-          console.log(`✅ Hakediş kaydı Supabase'den silindi: ${hakedisToDelete.id}`);
-        } else {
-          console.warn(`⚠️ Hakediş Supabase'den silinemedi: ${result.error}`);
+        if (!result.success) {
+          console.error('Hakediş Supabase silme hatası:', result.error);
         }
       } catch (error) {
-        console.error('❌ Hakediş Supabase silme hatası:', error);
+        console.error('Hakediş Supabase silme hatası:', error);
       }
       
       toast.success(`${hakedisToDelete.donem} dönemi hakediş kaydı silindi`);
@@ -485,32 +460,23 @@ export function HakedisTab({
 
   // İşlem hacmi değişikliği
   const handleIslemHacmiChange = (tabelaId: string, value: string) => {
-    console.log(`🔍 [TABELA] handleIslemHacmiChange called for ${tabelaId}:`, value);
-    
     // Eğer boşsa direkt boş kaydet
     if (value === '') {
-      setFormIslemHacmiMap(prev => {
-        console.log('🔍 [TABELA] Setting empty value, prev:', prev);
-        return {
-          ...prev,
-          [tabelaId]: ''
-        };
-      });
+      setFormIslemHacmiMap(prev => ({
+        ...prev,
+        [tabelaId]: ''
+      }));
       return;
     }
     
     // Sadece sayı, virgül ve nokta kabul et (gereksiz karakterleri filtrele)
     const filtered = value.replace(/[^0-9.,]/g, '');
-    console.log(`🔍 [TABELA] Filtered value: "${value}" → "${filtered}"`);
     
     // State'e olduğu gibi kaydet (kullanıcı ne yazdıysa onu göster)
-    setFormIslemHacmiMap(prev => {
-      console.log(`🔍 [TABELA] Updating map, prev[${tabelaId}]:`, prev[tabelaId], '→', filtered);
-      return {
-        ...prev,
-        [tabelaId]: filtered
-      };
-    });
+    setFormIslemHacmiMap(prev => ({
+      ...prev,
+      [tabelaId]: filtered
+    }));
   };
 
   // Hesaplama fonksiyonu - bir TABELA kaydı için
@@ -1275,19 +1241,6 @@ export function HakedisTab({
   const isCreateMode = view === 'create';
   const totals = calculateTotals(formVade, formIslemHacmiMap);
   
-  // 🔍 DEBUG: View state kontrolü
-  console.log('🎯 [HakedisTab RENDER] View state:', {
-    view,
-    isViewMode,
-    isEditMode,
-    isCreateMode
-  });
-  console.log('🎯 [RENDER] Form Values:', {
-    formPFIslemHacmi,
-    formOxivoIslemHacmi,
-    formNotlar
-  });
-
   return (
     <div 
       className="space-y-6 pointer-events-auto" 
@@ -1446,22 +1399,6 @@ export function HakedisTab({
             />
           </div>
 
-          {/* 🧪 TEST INPUT - Card Dışında */}
-          <div className="p-4 bg-yellow-100 border-2 border-yellow-500 rounded">
-            <p className="text-sm mb-2">🧪 TEST INPUT (Card dışında):</p>
-            <Input
-              type="text"
-              placeholder="Test - buraya yazın"
-              onClick={(e) => {
-                console.log('🧪 TEST Input CLICKED!', e.target);
-                e.stopPropagation();
-              }}
-              onFocus={() => console.log('🧪 TEST Input FOCUSED')}
-              onChange={(e) => console.log('🧪 TEST Input onChange:', e.target.value)}
-              className="bg-white"
-            />
-          </div>
-
           {/* İşlem Hacmi Tablosu */}
           <div className="border rounded-lg overflow-hidden bg-white relative z-[9999] pointer-events-auto" style={{ isolation: 'isolate' }}>
             <Table>
@@ -1486,7 +1423,7 @@ export function HakedisTab({
                   <TableCell className="p-2 pointer-events-auto relative z-50" onClick={() => console.log('🎯 PF TableCell CLICKED!')}>
                   
                     {(() => {
-                      console.log('🔍 [PF INPUT RENDER CHECK]', { isViewMode, view });
+
                       return isViewMode ? (
                         <div className="text-center py-2 px-3 bg-gray-50 rounded">
                           {formPFIslemHacmi 
@@ -1495,24 +1432,14 @@ export function HakedisTab({
                         </div>
                       ) : (
                         <>
-                          {console.log('✅ [PF INPUT] RENDERING INPUT FIELD!')}
+
                           <Input
                         type="text"
                         inputMode="decimal"
                         placeholder="Manuel giriş TL tutar"
                         value={formPFIslemHacmi}
-                        onChange={(e) => {
-                          console.log('🔍 [INPUT] PF İşlem Hacmi onChange:', e.target.value);
-                          console.log('🔍 [INPUT] formPFIslemHacmi BEFORE:', formPFIslemHacmi);
-                          setFormPFIslemHacmi(e.target.value);
-                          console.log('🔍 [INPUT] formPFIslemHacmi AFTER (expected):', e.target.value);
-                        }}
-                        onFocus={() => console.log('✅ PF Input FOCUSED')}
-                        onBlur={() => console.log('❌ PF Input BLURRED')}
-                        onClick={(e) => {
-                          console.log('🖱️ PF Input CLICKED!', e.target);
-                          e.stopPropagation();
-                        }}
+                        onChange={(e) => setFormPFIslemHacmi(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
                         className="bg-white text-center relative z-50 pointer-events-auto"
                         style={{ pointerEvents: 'auto' }}
                       />
@@ -1533,18 +1460,8 @@ export function HakedisTab({
                         inputMode="decimal"
                         placeholder="Manuel giriş TL tutar"
                         value={formOxivoIslemHacmi}
-                        onChange={(e) => {
-                          console.log('🔍 [INPUT] OXİVO İşlem Hacmi onChange:', e.target.value);
-                          console.log('🔍 [INPUT] formOxivoIslemHacmi BEFORE:', formOxivoIslemHacmi);
-                          setFormOxivoIslemHacmi(e.target.value);
-                          console.log('🔍 [INPUT] formOxivoIslemHacmi AFTER (expected):', e.target.value);
-                        }}
-                        onFocus={() => console.log('✅ OXİVO Input FOCUSED')}
-                        onBlur={() => console.log('❌ OXİVO Input BLURRED')}
-                        onClick={(e) => {
-                          console.log('🖱️ OXİVO Input CLICKED!', e.target);
-                          e.stopPropagation();
-                        }}
+                        onChange={(e) => setFormOxivoIslemHacmi(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
                         className="bg-white text-center relative z-50 pointer-events-auto"
                         style={{ pointerEvents: 'auto' }}
                       />

@@ -3246,6 +3246,8 @@ export default function App() {
               kartProgramlar={activeKartProgramlar}
               bankPFRecords={bankPFRecords}
               onBankPFRecordsChange={setBankPFRecords}
+              earnings={earnings}
+              onEarningsChange={setEarnings}
               selectedBankPFId={selectedBankPFId}
               onClearSelectedBankPFId={handleClearSelectedBankPFId}
               onDeleteBankPF={handleDeleteBankPF}
