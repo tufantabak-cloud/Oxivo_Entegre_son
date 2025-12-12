@@ -42,9 +42,6 @@ function toSnakeCase(str: string): string {
     'ekGelirOXTL': 'ek_gelir_ox_tl',
     'ekKesintiPFTL': 'ek_kesinti_pf_tl',
     'ekKesintiOXTL': 'ek_kesinti_ox_tl',
-    // ✅ FIX: Date field mappings (olusturmaTarihi → created_at)
-    'olusturmaTarihi': 'created_at',
-    'guncellemeTarihi': 'updated_at',
   };
   
   if (specialCases[str]) {
@@ -98,10 +95,7 @@ function toCamelCase(str: string): string {
     'ek_gelir_pf_tl': 'ekGelirPFTL',
     'ek_gelir_ox_tl': 'ekGelirOXTL',
     'ek_kesinti_pf_tl': 'ekKesintiPFTL',
-    'ek_kesinti_ox_tl': 'ekKesintiOXTL',
-    // ✅ FIX: Date field mappings (created_at → olusturmaTarihi)
-    'created_at': 'olusturmaTarihi',
-    'updated_at': 'guncellemeTarihi'
+    'ek_kesinti_ox_tl': 'ekKesintiOXTL'
   };
   
   if (specialCases[str]) {
@@ -2523,39 +2517,10 @@ export const earningsApi = {
       console.warn(`⚠️ Step 1: Removed ${recordsArray.length - uniqueRecords.length} duplicate earnings (by id)`);
     }
     
-    // ✅ Step 2: Apply transformations and fix numeric fields
-    const transformedItems = uniqueRecords.map(record => {
-      const snakeCaseRecord = objectToSnakeCase(record);
-      
-      // ✅ FIX: Convert numeric string fields to actual numbers
-      const numericFields = [
-        'pf_islem_hacmi', 'oxivo_islem_hacmi', 
-        'manual_ek_gelir_oxivo_total', 'manual_ana_tabela_oxivo_total',
-        'manual_ana_tabela_islem_hacmi', 'total_islem_hacmi',
-        'total_pf_pay', 'total_oxivo_pay',
-        'ek_gelir_pf_tl', 'ek_gelir_ox_tl',
-        'ek_kesinti_pf_tl', 'ek_kesinti_ox_tl'
-      ];
-      
-      numericFields.forEach(field => {
-        const value = snakeCaseRecord[field];
-        if (value !== undefined && value !== null && value !== '') {
-          if (typeof value === 'string') {
-            // Parse Turkish/English format: "1.000.000,50" → 1000000.50
-            const cleanValue = value.replace(/\./g, '').replace(/,/g, '.');
-            const parsedValue = parseFloat(cleanValue);
-            snakeCaseRecord[field] = !isNaN(parsedValue) ? parsedValue : null;
-          }
-        } else {
-          snakeCaseRecord[field] = null;
-        }
-      });
-      
-      return snakeCaseRecord;
-    });
-    
+    // ✅ Step 2: Apply transformations
+    const transformedItems = uniqueRecords.map(objectToSnakeCase);
     if (process.env.NODE_ENV === 'development') {
-      console.log('🔍 [DEBUG] TRANSFORMED DATA (snake_case + numeric):', JSON.stringify(transformedItems, null, 2));
+      console.log('🔍 [DEBUG] TRANSFORMED DATA (snake_case):', JSON.stringify(transformedItems, null, 2));
     }
     
     // ✅ Step 3: CRITICAL FIX - Remove duplicates AFTER sanitization

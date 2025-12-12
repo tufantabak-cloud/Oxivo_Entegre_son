@@ -15,7 +15,7 @@ import { HakedisRecord } from './BankPFModule';
 import { Calendar, Download, Calculator, Plus, Eye, Edit, Trash2, Save, Archive, Columns3, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { kisaltUrunAdi } from '../utils/formatters';
-import { earningsApi } from '../utils/supabaseClient';4
+import { earningsApi } from '../utils/supabaseClient';
 
 interface HakedisTabProps {
   tabelaRecords: TabelaRecord[];
