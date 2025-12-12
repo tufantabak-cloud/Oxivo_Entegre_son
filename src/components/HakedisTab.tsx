@@ -2211,8 +2211,12 @@ export function HakedisTab({
                               <Input
                                 type="text"
                                 inputMode="decimal"
-                                value={ekGelirOXTL}
-                                onChange={(e) => setEkGelirOXTL(e.target.value ? parseFloat(e.target.value.replace(',', '.')) : '')}
+                                value={ekGelirOXTL === '' ? '' : String(ekGelirOXTL)}
+                                onChange={(e) => {
+                                  const val = e.target.value.replace(',', '.');
+                                  const num = parseFloat(val);
+                                  setEkGelirOXTL(val === '' ? '' : (isNaN(num) ? '' : num));
+                                }}
                                 placeholder="0,00"
                                 className="w-32 text-right text-sm bg-white"
                               />
@@ -2260,8 +2264,12 @@ export function HakedisTab({
                               <Input
                                 type="text"
                                 inputMode="decimal"
-                                value={ekKesintiOXTL}
-                                onChange={(e) => setEkKesintiOXTL(e.target.value ? parseFloat(e.target.value.replace(',', '.')) : '')}
+                                value={ekKesintiOXTL === '' ? '' : String(ekKesintiOXTL)}
+                                onChange={(e) => {
+                                  const val = e.target.value.replace(',', '.');
+                                  const num = parseFloat(val);
+                                  setEkKesintiOXTL(val === '' ? '' : (isNaN(num) ? '' : num));
+                                }}
                                 placeholder="0,00"
                                 className="w-32 text-right text-sm bg-white"
                               />
