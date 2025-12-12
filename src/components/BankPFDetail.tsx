@@ -6,7 +6,6 @@ import { DocumentManagement } from './DocumentManagement';
 import { FirmaTabelaTab } from './FirmaTabelaTab';
 import { FirmaBankalarTab } from './FirmaBankalarTab';
 import { HakedisTab } from './HakedisTab';
-import { HakedisV2 } from './hakedis/HakedisV2';
 import { ArrowLeft, Save, Trash2, X, Plus, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from './ui/button';
@@ -50,8 +49,6 @@ interface BankPFDetailProps {
   epkList?: Array<{ id: string; kod: string; kurumAdi: string; aktif: boolean }>;
   okList?: Array<{ id: string; kod: string; kurumAdi: string; aktif: boolean }>;
   kartProgramlar?: Array<{ id: string; kartAdi: string; aktif: boolean }>;
-  earnings?: any[]; // Global earnings state
-  onEarningsChange?: (earnings: any[]) => void; // Global earnings güncelleme
 }
 
 export function BankPFDetail({
@@ -68,8 +65,6 @@ export function BankPFDetail({
   gelirModelleri = [],
   ekGelirler = [],
   hesapKalemleri = [],
-  earnings = [],
-  onEarningsChange,
 }: BankPFDetailProps) {
   const [formData, setFormData] = useState<BankPF>(
     record || {
@@ -798,7 +793,7 @@ export function BankPFDetail({
 
         {/* Hakediş Tab */}
         <TabsContent value="hakedis">
-          <HakedisV2
+          <HakedisTab
             tabelaRecords={formData.tabelaRecords || []}
             tabelaGroups={formData.tabelaGroups || []}
             kurumAdi={formData.firmaUnvan}
@@ -810,8 +805,6 @@ export function BankPFDetail({
               setFormData(prev => ({ ...prev, hakedisRecords: records }));
               // onSave(updatedFormData); // ❌ DISABLEDKaydı yapma
             }}
-            earnings={earnings}
-            onEarningsChange={onEarningsChange}
           />
         </TabsContent>
 

@@ -24,8 +24,6 @@ interface HakedisTabProps {
   firmaId: string; // Firma ID (BankPF ID)
   hakedisRecords: HakedisRecord[];
   onHakedisRecordsChange: (records: HakedisRecord[]) => void;
-  earnings?: any[]; // Global earnings state (App.tsx'den)
-  onEarningsChange?: (earnings: any[]) => void; // Global earnings güncelleme
 }
 
 // Vade listesi
@@ -42,9 +40,7 @@ export function HakedisTab({
   kurumAdi,
   firmaId,
   hakedisRecords,
-  onHakedisRecordsChange,
-  earnings = [],
-  onEarningsChange
+  onHakedisRecordsChange
 }: HakedisTabProps) {
   // View state: 'list' | 'selectGroup' | 'create' | 'view' | 'edit'
   const [view, setView] = useState<'list' | 'selectGroup' | 'create' | 'view' | 'edit'>('list');
@@ -300,20 +296,28 @@ export function HakedisTab({
       
       onHakedisRecordsChange([...hakedisRecords, newHakedis]);
       
-      // ✅ CRITICAL: Global earnings state'ine de ekle (AutoSync sorunu!)
-      if (onEarningsChange && earnings) {
-        onEarningsChange([...earnings, newHakedis]);
-      }
-      
       // ✅ Supabase'e kaydet
+      console.log('🔍 [HakedisTab] Yeni hakediş kaydı oluşturuluyor:', {
+        id: newHakedis.id,
+        firmaId: newHakedis.firmaId, // ✅ FirmaId kontrolü
+        donem: newHakedis.donem,
+        durum: newHakedis.durum,
+        totalIslemHacmi: newHakedis.totalIslemHacmi,
+        totalPFPay: newHakedis.totalPFPay,
+        totalOxivoPay: newHakedis.totalOxivoPay,
+        islemHacmiMapKeys: Object.keys(newHakedis.islemHacmiMap || {}).length
+      });
+      
       try {
         const result = await earningsApi.create(newHakedis);
-        if (!result.success) {
-          console.error('Hakediş Supabase kayıt hatası:', result.error);
+        if (result.success) {
+          console.log(`✅ Hakediş kaydı Supabase'e kaydedildi: ${newHakedis.id}`);
+        } else {
+          console.error(`❌ Hakediş Supabase'e kaydedilemedi:`, result.error);
           toast.error(`Supabase kayıt hatası: ${result.error}`);
         }
       } catch (error) {
-        console.error('Hakediş Supabase kayıt hatası:', error);
+        console.error('❌ Hakediş Supabase kayıt hatası:', error);
         toast.error('Beklenmeyen hata: ' + (error as Error).message);
       }
       
@@ -362,23 +366,28 @@ export function HakedisTab({
         hakedisRecords.map(h => h.id === selectedHakedis.id ? updatedHakedis : h)
       );
       
-      // ✅ CRITICAL: Global earnings state'ini de güncelle (AutoSync sorunu!)
-      if (onEarningsChange && earnings) {
-        const updatedEarnings = earnings.map((e: any) => 
-          e.id === selectedHakedis.id ? updatedHakedis : e
-        );
-        onEarningsChange(updatedEarnings);
-      }
-      
       // ✅ Supabase'e kaydet
+      console.log('🔍 [HakedisTab] Hakediş kaydı güncelleniyor:', {
+        id: updatedHakedis.id,
+        firmaId: updatedHakedis.firmaId, // ✅ FirmaId kontrolü
+        donem: updatedHakedis.donem,
+        durum: updatedHakedis.durum,
+        totalIslemHacmi: updatedHakedis.totalIslemHacmi,
+        totalPFPay: updatedHakedis.totalPFPay,
+        totalOxivoPay: updatedHakedis.totalOxivoPay,
+        islemHacmiMapKeys: Object.keys(updatedHakedis.islemHacmiMap || {}).length
+      });
+      
       try {
         const result = await earningsApi.create(updatedHakedis);
-        if (!result.success) {
-          console.error('Hakediş Supabase güncelleme hatası:', result.error);
+        if (result.success) {
+          console.log(`✅ Hakediş kaydı Supabase'de güncellendi: ${updatedHakedis.id}`);
+        } else {
+          console.error(`❌ Hakediş Supabase'de güncellenemedi:`, result.error);
           toast.error(`Supabase güncelleme hatası: ${result.error}`);
         }
       } catch (error) {
-        console.error('Hakediş Supabase güncelleme hatası:', error);
+        console.error('❌ Hakediş Supabase güncelleme hatası:', error);
         toast.error('Beklenmeyen hata: ' + (error as Error).message);
       }
       
@@ -395,23 +404,18 @@ export function HakedisTab({
 
   const confirmDelete = async () => {
     if (hakedisToDelete) {
-      // ✅ Local hakediş listesinden sil
       onHakedisRecordsChange(hakedisRecords.filter(h => h.id !== hakedisToDelete.id));
-      
-      // ✅ CRITICAL: Global earnings state'inden de sil (AutoSync sorunu!)
-      if (onEarningsChange && earnings) {
-        const updatedEarnings = earnings.filter((e: any) => e.id !== hakedisToDelete.id);
-        onEarningsChange(updatedEarnings);
-      }
       
       // ✅ Supabase'den sil
       try {
         const result = await earningsApi.delete(hakedisToDelete.id);
-        if (!result.success) {
-          console.error('Hakediş Supabase silme hatası:', result.error);
+        if (result.success) {
+          console.log(`✅ Hakediş kaydı Supabase'den silindi: ${hakedisToDelete.id}`);
+        } else {
+          console.warn(`⚠️ Hakediş Supabase'den silinemedi: ${result.error}`);
         }
       } catch (error) {
-        console.error('Hakediş Supabase silme hatası:', error);
+        console.error('❌ Hakediş Supabase silme hatası:', error);
       }
       
       toast.success(`${hakedisToDelete.donem} dönemi hakediş kaydı silindi`);
@@ -442,20 +446,9 @@ export function HakedisTab({
   };
 
   // Virgüllü sayıları parse et (örn: "1047608,25" -> 1047608.25)
-  const parseNumber = (value: string | number | null | undefined): number => {
-    // Eğer null, undefined veya boş string ise 0 döndür
-    if (!value || value === '') return 0;
-    
-    // Eğer zaten number ise direkt döndür
-    if (typeof value === 'number') return value;
-    
-    // String ise virgülü noktaya çevir ve parse et
-    if (typeof value === 'string') {
-      return parseFloat(value.replace(',', '.'));
-    }
-    
-    // Diğer durumlarda 0 döndür
-    return 0;
+  const parseNumber = (value: string): number => {
+    if (!value) return 0;
+    return parseFloat(value.replace(',', '.'));
   };
 
   // İşlem hacmi değişikliği
@@ -1240,19 +1233,11 @@ export function HakedisTab({
   const isEditMode = view === 'edit';
   const isCreateMode = view === 'create';
   const totals = calculateTotals(formVade, formIslemHacmiMap);
-  
+
   return (
-    <div 
-      className="space-y-6 pointer-events-auto" 
-      onClick={() => console.log('🌐 TOP DIV CLICKED!')}
-      onMouseEnter={() => console.log('🖱️ TOP DIV MOUSE ENTER')}
-    >
+    <div className="space-y-6">
       {/* Başlık ve Form */}
-      <Card 
-        className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200 pointer-events-auto relative z-[999]" 
-        onClick={() => console.log('🎴 MAIN CARD CLICKED!')}
-        onMouseEnter={() => console.log('🖱️ MAIN CARD MOUSE ENTER')}
-      >
+      <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -1343,7 +1328,7 @@ export function HakedisTab({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4 pointer-events-auto relative z-50" onClick={() => console.log('📦 CardContent CLICKED!')}>
+        <CardContent className="space-y-4">
           {/* TABELA Grubu Bilgisi */}
           <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
             <div className="flex items-center justify-between">
@@ -1400,7 +1385,7 @@ export function HakedisTab({
           </div>
 
           {/* İşlem Hacmi Tablosu */}
-          <div className="border rounded-lg overflow-hidden bg-white relative z-[9999] pointer-events-auto" style={{ isolation: 'isolate' }}>
+          <div className="border rounded-lg overflow-hidden bg-white">
             <Table>
               <TableHeader>
                 <TableRow className="bg-gradient-to-r from-blue-50 to-indigo-50">
@@ -1420,34 +1405,25 @@ export function HakedisTab({
               </TableHeader>
               <TableBody>
                 <TableRow>
-                  <TableCell className="p-2 pointer-events-auto relative z-50" onClick={() => console.log('🎯 PF TableCell CLICKED!')}>
-                  
-                    {(() => {
-
-                      return isViewMode ? (
-                        <div className="text-center py-2 px-3 bg-gray-50 rounded">
-                          {formPFIslemHacmi 
-                            ? `${parseNumber(formPFIslemHacmi).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`
-                            : '-'}
-                        </div>
-                      ) : (
-                        <>
-
-                          <Input
+                  <TableCell className="p-2">
+                    {isViewMode ? (
+                      <div className="text-center py-2 px-3 bg-gray-50 rounded">
+                        {formPFIslemHacmi 
+                          ? `${parseNumber(formPFIslemHacmi).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`
+                          : '-'}
+                      </div>
+                    ) : (
+                      <Input
                         type="text"
                         inputMode="decimal"
                         placeholder="Manuel giriş TL tutar"
                         value={formPFIslemHacmi}
                         onChange={(e) => setFormPFIslemHacmi(e.target.value)}
-                        onClick={(e) => e.stopPropagation()}
-                        className="bg-white text-center relative z-50 pointer-events-auto"
-                        style={{ pointerEvents: 'auto' }}
+                        className="bg-white text-center"
                       />
-                        </>
-                      );
-                    })()}
+                    )}
                   </TableCell>
-                  <TableCell className="p-2 pointer-events-auto relative z-50" onClick={() => console.log('🎯 OXIVO TableCell CLICKED!')}>
+                  <TableCell className="p-2">
                     {isViewMode ? (
                       <div className="text-center py-2 px-3 bg-gray-50 rounded">
                         {formOxivoIslemHacmi 
@@ -1461,9 +1437,7 @@ export function HakedisTab({
                         placeholder="Manuel giriş TL tutar"
                         value={formOxivoIslemHacmi}
                         onChange={(e) => setFormOxivoIslemHacmi(e.target.value)}
-                        onClick={(e) => e.stopPropagation()}
-                        className="bg-white text-center relative z-50 pointer-events-auto"
-                        style={{ pointerEvents: 'auto' }}
+                        className="bg-white text-center"
                       />
                     )}
                   </TableCell>
@@ -1544,7 +1518,7 @@ export function HakedisTab({
 
       {/* Ana TABELA Tablosu */}
       {(normalRecords || []).length > 0 && (
-        <Card className="relative z-0">
+        <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
