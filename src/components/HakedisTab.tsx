@@ -2230,7 +2230,6 @@ export function HakedisTab({
                             )}
                           </TableCell>
                         )}
-                        <TableCell className="text-center text-xs text-green-600">Ek Gelir</TableCell>
                       </TableRow>
 
                       {/* ═══════════════════════════════════════════════════════════ */}
@@ -2291,7 +2290,6 @@ export function HakedisTab({
                             )}
                           </TableCell>
                         )}
-                        <TableCell className="text-center text-xs text-red-600">Ek Kesinti</TableCell>
                       </TableRow>
 
                       {/* ═══════════════════════════════════════════════════════════ */}
