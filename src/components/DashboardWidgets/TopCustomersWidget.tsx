@@ -105,12 +105,13 @@ export function TopCustomersWidget({ customers, payterProducts }: TopCustomersWi
   // Gelire göre sırala
   const topByRevenue = [...rankings]
     .sort((a, b) => b.revenue - a.revenue)
-    .slice(0, 10); // ✅ Top 6'dan Top 10'a güncellendi
+    .slice(0, 6);
 
-  // Toplam istatistikler
-  const totalDevices = rankings.reduce((sum, r) => sum + r.deviceCount, 0);
-  const totalRevenue = rankings.reduce((sum, r) => sum + r.revenue, 0);
-  const enterpriseCount = rankings.filter((r) => r.category === 'Enterprise').length;
+  // ✅ FIX: Toplam istatistikler - SADECE Top 10 için hesapla
+  const top10Customers = topByDevices.slice(0, 10);
+  const totalDevices = top10Customers.reduce((sum, r) => sum + r.deviceCount, 0);
+  const totalRevenue = top10Customers.reduce((sum, r) => sum + r.revenue, 0);
+  const enterpriseCount = top10Customers.filter((r) => r.category === 'Enterprise').length;
 
   const getCategoryColor = (category: string) => {
     switch (category) {
