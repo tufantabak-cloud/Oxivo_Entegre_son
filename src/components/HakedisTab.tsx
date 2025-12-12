@@ -2196,20 +2196,9 @@ export function HakedisTab({
                         {visibleColumns.vade && <TableCell></TableCell>}
                         {visibleColumns.kazancTL && (
                           <TableCell className="text-right">
-                            {view === 'view' ? (
-                              <span className="text-green-700">
-                                {ekGelirPFTL ? `${(ekGelirPFTL || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺` : '—'}
-                              </span>
-                            ) : (
-                              <Input
-                                type="text"
-                                inputMode="decimal"
-                                value={ekGelirPFTL}
-                                onChange={(e) => setEkGelirPFTL(e.target.value ? parseFloat(e.target.value.replace(',', '.')) : '')}
-                                placeholder="0,00"
-                                className="w-32 text-right text-sm bg-white"
-                              />
-                            )}
+                            <span className="text-green-700">
+                              {ekGelirPFTL ? `${(ekGelirPFTL || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺` : '—'}
+                            </span>
                           </TableCell>
                         )}
                         {visibleColumns.oxivoPayi && (
@@ -2256,20 +2245,9 @@ export function HakedisTab({
                         {visibleColumns.vade && <TableCell></TableCell>}
                         {visibleColumns.kazancTL && (
                           <TableCell className="text-right">
-                            {view === 'view' ? (
-                              <span className="text-red-700">
-                                {ekKesintiPFTL ? `${(ekKesintiPFTL || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺` : '—'}
-                              </span>
-                            ) : (
-                              <Input
-                                type="text"
-                                inputMode="decimal"
-                                value={ekKesintiPFTL}
-                                onChange={(e) => setEkKesintiPFTL(e.target.value ? parseFloat(e.target.value.replace(',', '.')) : '')}
-                                placeholder="0,00"
-                                className="w-32 text-right text-sm bg-white"
-                              />
-                            )}
+                            <span className="text-red-700">
+                              {ekKesintiPFTL ? `${(ekKesintiPFTL || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺` : '—'}
+                            </span>
                           </TableCell>
                         )}
                         {visibleColumns.oxivoPayi && (
