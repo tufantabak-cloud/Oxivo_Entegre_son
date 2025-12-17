@@ -154,6 +154,63 @@ export function objectToCamelCase(obj: any): any {
   const converted: any = {};
   for (const [key, value] of Object.entries(obj)) {
     const camelKey = toCamelCase(key);
+    
+    // 🔧 CRITICAL FIX: Parse JSON strings from TEXT columns OR handle JSONB (migration compatibility)
+    // Supabase'de TEXT olarak saklanan JSONB verilerini parse et veya JSONB'yi direkt kullan
+    if (camelKey === 'bankDeviceAssignments' || 
+        camelKey === 'serviceFeeSettings' || 
+        camelKey === 'deviceSubscriptions' ||
+        camelKey === 'serviceFeeInvoices' ||
+        camelKey === 'paymentReminders' ||
+        camelKey === 'suspensionHistory' ||
+        camelKey === 'reminderSettings') {
+      
+      // ✅ NULL veya undefined ise boş array yap
+      if (value === null || value === undefined) {
+        converted[camelKey] = [];
+        continue;
+      }
+      
+      // ✅ STRING ise parse et (TEXT kolon formatı VEYA double-encoded JSONB)
+      if (typeof value === 'string') {
+        // Boş string kontrolü
+        if (value === '' || value === 'null' || value === 'undefined') {
+          converted[camelKey] = [];
+          continue;
+        }
+        
+        try {
+          const parsed = JSON.parse(value);
+          // 🔧 NESTED CAMELCASE: Array içindeki her object'i de camelCase'e çevir
+          converted[camelKey] = Array.isArray(parsed) 
+            ? parsed.map(item => typeof item === 'object' && item !== null ? objectToCamelCase(item) : item)
+            : (typeof parsed === 'object' && parsed !== null ? objectToCamelCase(parsed) : parsed);
+          continue;
+        } catch (e) {
+          console.error(`❌ JSON parse FAILED for ${camelKey}:`, value?.substring(0, 100), e);
+          converted[camelKey] = [];
+          continue;
+        }
+      }
+      
+      // ✅ OBJECT ise direkt kullan (JSONB kolon formatı) - ama içindeki item'ları camelCase yap
+      else if (typeof value === 'object' && value !== null) {
+        // 🔧 NESTED CAMELCASE: JSONB array içindeki her object'i de camelCase'e çevir
+        converted[camelKey] = Array.isArray(value)
+          ? value.map(item => typeof item === 'object' && item !== null ? objectToCamelCase(item) : item)
+          : objectToCamelCase(value);
+        continue;
+      }
+      
+      // ✅ Başka bir tip ise boş array yap
+      else {
+        console.warn(`⚠️ Unexpected type for ${camelKey}:`, typeof value);
+        converted[camelKey] = [];
+        continue;
+      }
+    }
+    
+    // Normal field'lar için standart dönüşüm
     converted[camelKey] = (value && typeof value === 'object') 
       ? objectToCamelCase(value) 
       : value;
