@@ -5,6 +5,13 @@
 
 import { customerApi, domainMappingApi, signApi } from './supabaseClient';
 import { toast } from 'sonner';
+import {
+  mapCustomerToSupabase,
+  mapBankAccountToSupabase,
+  mapProductToSupabase,
+  mapEarningToSupabase,
+  mapSignToSupabase
+} from '../types/supabaseFieldMapping';
 
 interface SyncData {
   customers?: any[];
@@ -32,7 +39,11 @@ export async function syncToSupabase(data: SyncData): Promise<void> {
     if (data.customers && data.customers.length > 0) {
       try {
         console.log(`  📤 Syncing ${data.customers.length} customers...`);
-        const result = await customerApi.create(data.customers);
+        
+        // Frontend formatından Supabase formatına dönüştür
+        const mappedCustomers = data.customers.map(mapCustomerToSupabase);
+        
+        const result = await customerApi.create(mappedCustomers);
         if (result.success) {
           syncedCount++;
           console.log(`  ✅ Customers synced: ${result.count} kayıt`);
@@ -46,7 +57,7 @@ export async function syncToSupabase(data: SyncData): Promise<void> {
       }
     }
     
-    // Domain Mappings sync
+    // Domain Mappings sync - mapping gerekmez, şema uyumlu
     if (data.domainMappings && data.domainMappings.length > 0) {
       try {
         console.log(`  📤 Syncing ${data.domainMappings.length} domain mappings...`);
@@ -68,7 +79,11 @@ export async function syncToSupabase(data: SyncData): Promise<void> {
     if (data.signs && data.signs.length > 0) {
       try {
         console.log(`  📤 Syncing ${data.signs.length} signs...`);
-        const result = await signApi.create(data.signs);
+        
+        // Frontend formatından Supabase formatına dönüştür
+        const mappedSigns = data.signs.map(mapSignToSupabase);
+        
+        const result = await signApi.create(mappedSigns);
         if (result.success) {
           syncedCount++;
           console.log(`  ✅ Signs synced: ${result.count} kayıt`);
@@ -93,7 +108,7 @@ export async function syncToSupabase(data: SyncData): Promise<void> {
     
     if (syncErrors.length > 0) {
       console.warn('⚠️ Bazı kategoriler sync edilemedi:', syncErrors);
-      toast.warning('Bazı veriler Supabase\\'e sync edilemedi - localStorage\\'da mevcut', {
+      toast.warning('Bazı veriler Supabase\'e sync edilemedi - localStorage\'da mevcut', {
         duration: 5000
       });
     }

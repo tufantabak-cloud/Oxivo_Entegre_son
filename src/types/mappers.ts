@@ -1,12 +1,13 @@
 /**
  * Type Mappers - App Types ↔ Database Types (COMPREHENSIVE VERSION)
  * 
- * Created: 2025-11-22 (Updated)
+ * Created: 2025-11-22 (Updated: 2025-12-12)
  * 
  * Bu dosya, React App'teki camelCase type'ları Supabase'deki snake_case
  * row type'larına çevirir (ve tersini yapar)
  * 
  * ✅ COMPREHENSIVE: Tüm JSONB field'lar serialize/deserialize edilir
+ * ✅ FIELD MAPPING: Mevcut Supabase şemasına uyumlu
  */
 
 import type { Customer, DomainNode, BankDeviceAssignment, DeviceSubscription, ServiceFeeInvoice, PaymentReminder, ReminderSettings, SuspensionHistoryRecord } from '../components/CustomerModule';
@@ -16,29 +17,31 @@ import type { PayterProduct } from '../components/PayterProductTab';
 import type { CustomersRow, ProductsRow, BankAccountsRow } from './database';
 
 // ========================================
-// CUSTOMER MAPPERS (COMPREHENSIVE)
+// CUSTOMER MAPPERS (FIELD MAPPING AWARE)
 // ========================================
 
 /**
  * App Customer → Database Row (camelCase → snake_case + JSONB serialize)
+ * MEVCUT ŞEMA: cari_adi, tel, yetkili, vb.
  */
 export function customerToRow(customer: Customer): Partial<CustomersRow> {
   return {
     id: customer.id,
-    customer_code: customer.cariHesapKodu,
-    name: customer.cariAdi,
-    contact_person: customer.yetkiliKisi || null,
-    phone: customer.telefon || null,
+    cari_hesap_kodu: customer.cariHesapKodu,
+    cari_adi: customer.cariAdi || customer.firmaUnvani, // firma_unvani → cari_adi
+    yetkili: customer.yetkiliKisi || null,
+    tel: customer.telefon || null,
     email: customer.email || null,
-    address: customer.adres || null,
-    city: customer.il || null,
-    tax_office: customer.vergiDairesi || null,
-    tax_number: customer.vergiNo || null,
-    customer_type: customer.segment || 'individual',
-    balance: 0, // TODO: Calculate from transactions
-    credit_limit: 0, // TODO: From settings
-    notes: customer.notlar || null,
-    is_active: customer.durum === 'Aktif',
+    adres: customer.adres || null,
+    ilce: customer.ilce || customer.il || null, // il → ilce
+    vergi_dairesi: customer.vergiDairesi || null,
+    vergi_no: customer.vergiNo || null,
+    musteri_tipi: customer.segment || null,
+    durum: customer.aktif ? 'Aktif' : 'Pasif', // aktif boolean → durum string
+    bloke_durumu: customer.askida || false,
+    mcc: customer.mccCode || customer.mcc || null, // mcc_code → mcc
+    sektor: customer.sektor || null,
+    sales_rep_name: customer.satisTemsilcisi || null,
     // ✅ COMPREHENSIVE FIELDS (JSONB)
     domain_hierarchy: customer.domainHierarchy || null,
     bank_device_assignments: customer.bankDeviceAssignments || null,
@@ -47,92 +50,75 @@ export function customerToRow(customer: Customer): Partial<CustomersRow> {
     payment_reminders: customer.paymentReminders || null,
     reminder_settings: customer.reminderSettings || null,
     suspension_history: customer.suspensionHistory || null,
-    linked_bankpf_ids: customer.linkedBankPFIds || null,
-    mcc_code: customer.mcc || null,
-    sector: customer.sektor || null,
-    segment: customer.segment || null,
+    linked_bank_pf_ids: customer.linkedBankPFIds || null,
   };
 }
 
 /**
- * Database Row → App Customer (camelCase schema uyumlu)
+ * Database Row → App Customer (snake_case → camelCase)
+ * MEVCUT ŞEMA: cari_adi, tel, yetkili, vb.
  */
 export function rowToCustomer(row: CustomersRow): Partial<Customer> {
   return {
     id: row.id,
-    cariHesapKodu: row.customer_code || (row as any).cariHesapKodu || '',
-    cariAdi: row.name || (row as any).cariAdi || '',
-    yetkiliKisi: row.contact_person || (row as any).yetkili || (row as any).sorumluKisi || undefined,
-    telefon: row.phone || (row as any).telefon || (row as any).tel || undefined,
-    email: row.email || (row as any).email || undefined,
-    adres: row.address || (row as any).adres || undefined,
-    il: row.city || (row as any).il || undefined,
-    vergiDairesi: row.tax_office || (row as any).vergiDairesi || undefined,
-    vergiNo: row.tax_number || (row as any).vergiNo || undefined,
-    segment: (row.customer_type || (row as any).segment) as any,
-    notlar: row.notes || undefined,
-    durum: row.is_active ? 'Aktif' : ((row as any).durum || 'Pasif'),
-    // ✅ JSONB FIELDS (camelCase schema'dan okuma)
-    domainHierarchy: (row.domain_hierarchy || (row as any).domainHierarchy || (row as any).domainHiyerarsisi) as DomainNode | undefined,
-    bankDeviceAssignments: (row.bank_device_assignments || (row as any).bankDeviceAssignments) as BankDeviceAssignment[] | undefined,
-    deviceSubscriptions: (row.device_subscriptions || (row as any).deviceSubscriptions) as DeviceSubscription[] | undefined,
-    serviceFeeInvoices: (row.service_fee_invoices || (row as any).serviceFeeInvoices) as ServiceFeeInvoice[] | undefined,
-    paymentReminders: (row.payment_reminders || (row as any).paymentReminders) as PaymentReminder[] | undefined,
-    reminderSettings: (row.reminder_settings || (row as any).reminderSettings) as ReminderSettings | undefined,
-    suspensionHistory: (row.suspension_history || (row as any).suspensionHistory) as SuspensionHistoryRecord[] | undefined,
-    linkedBankPFIds: (row.linked_bankpf_ids || (row as any).linkedBankPFIds) as string[] | undefined,
-    mcc: (row.mcc_code || (row as any).mcc) || undefined,
-    sektor: (row.sector || (row as any).sektor) || undefined,
+    cariHesapKodu: row.cari_hesap_kodu || '',
+    cariAdi: row.cari_adi || '',
+    firmaUnvani: row.cari_adi || '', // cari_adi → firma_unvani
+    yetkiliKisi: row.yetkili || undefined,
+    telefon: row.tel || undefined,
+    email: row.email || undefined,
+    adres: row.adres || undefined,
+    ilce: row.ilce || undefined,
+    il: row.ilce || undefined, // ilce → il
+    vergiDairesi: row.vergi_dairesi || undefined,
+    vergiNo: row.vergi_no || undefined,
+    segment: row.musteri_tipi as any || undefined,
+    durum: row.durum || 'Aktif',
+    aktif: row.durum === 'Aktif', // durum string → aktif boolean
+    askida: row.bloke_durumu || false,
+    mccCode: row.mcc || undefined, // mcc → mcc_code
+    mcc: row.mcc || undefined,
+    sektor: row.sektor || undefined,
+    satisTemsilcisi: row.sales_rep_name || undefined,
+    // ✅ JSONB FIELDS
+    domainHierarchy: row.domain_hierarchy as DomainNode | undefined,
+    bankDeviceAssignments: row.bank_device_assignments as BankDeviceAssignment[] | undefined,
+    deviceSubscriptions: row.device_subscriptions as DeviceSubscription[] | undefined,
+    serviceFeeInvoices: row.service_fee_invoices as ServiceFeeInvoice[] | undefined,
+    paymentReminders: row.payment_reminders as PaymentReminder[] | undefined,
+    reminderSettings: row.reminder_settings as ReminderSettings | undefined,
+    suspensionHistory: row.suspension_history as SuspensionHistoryRecord[] | undefined,
+    linkedBankPFIds: row.linked_bank_pf_ids as string[] | undefined,
   };
 }
 
 // ========================================
-// PRODUCT MAPPERS (COMPREHENSIVE)
+// PRODUCT MAPPERS (TERMINAL/POS AWARE)
 // ========================================
 
 /**
- * App PayterProduct → Database Row (ALL FIELDS)
+ * App PayterProduct → Database Row (Terminal/POS fields)
+ * MEVCUT ŞEMA: serial_number, tid, terminal_type, name
  */
 export function productToRow(product: PayterProduct): Partial<ProductsRow> {
   return {
     id: product.id,
-    product_code: product.serialNumber || product.tid || '',
-    barcode: product.serialNumber || null,
-    name: product.name || product.serialNumber || 'Unknown',
-    description: product.terminalType || null,
-    unit: 'piece',
-    purchase_price: 0,
-    sale_price: 0,
-    currency: 'EUR',
-    tax_rate: 0,
-    stock_quantity: 1,
-    min_stock_level: 0,
-    brand: 'Payter',
-    model: product.terminalModel || null,
-    is_active: true,
-    is_for_sale: true,
-    is_for_purchase: false,
-    // ✅ PAYTER SPECIFIC FIELDS (Direct mapping)
-    serial_number: product.serialNumber || null,
-    tid: product.tid || null,
-    mid: product.mid || null,
-    domain: product.domain || null,
-    firmware: product.firmware || null,
-    sam1: product.sam1 || null,
-    sam2: product.sam2 || null,
-    sam3: product.sam3 || null,
-    sim: product.sim || null,
-    terminal_type: product.terminalType || null,
-    online_status: product.onlineStatus || null,
+    serial_number: product.serialNumber || product.urunKodu || null, // urun_kodu → serial_number
+    tid: product.tid || product.seriNo || null, // seri_no → tid
+    name: product.name || product.urunAdi || 'Unknown', // urun_adi → name
+    terminal_type: product.terminalType || product.kategori || null, // kategori → terminal_type
+    terminal_model: product.terminalModel || product.model || null,
+    domain: product.musteriId || null, // musteri_id → domain (relation)
+    online_status: product.aktif || 'offline',
     sync_status: product.syncStatus || null,
-    terminal_model: product.terminalModel || null,
     mac_address: product.macAddress || null,
     ptid: product.ptid || null,
   };
 }
 
 /**
- * Database Row → App PayterProduct (ALL FIELDS)
+ * Database Row → App PayterProduct (Terminal/POS fields)
+ * MEVCUT ŞEMA: serial_number, tid, terminal_type, name
  */
 export function rowToProduct(row: ProductsRow): Partial<PayterProduct> {
   return {
