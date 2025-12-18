@@ -10,9 +10,9 @@ import { SharingTab, Sharing } from './SharingTab';
 import { KartProgramTab, KartProgram } from './KartProgramTab';
 import { SalesRepresentativesTab, SalesRepresentative } from './SalesRepresentativesTab';
 import { SuspensionReasonsTab } from './SuspensionReasonsTab';
+import { BulkOperationsTab } from './BulkOperationsTab';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { SupabaseDataImporter } from './SupabaseDataImporter';
-import type { UserInfo } from '../hooks/useUserRole'; // 🔐 User role types
 
 export interface JobTitle {
   id: string;
@@ -544,7 +544,6 @@ export const defaultKartProgramlar: KartProgram[] = [
 ];
 
 interface DefinitionsModuleProps {
-  userInfo?: UserInfo; // 🔐 User permissions
   jobTitles: JobTitle[];
   onJobTitlesChange: (titles: JobTitle[]) => void;
   mccList: MCC[];
@@ -575,7 +574,6 @@ interface DefinitionsModuleProps {
 
 // PERFORMANCE: React.memo prevents unnecessary re-renders (critical for 22 props!)
 export const DefinitionsModule = React.memo(function DefinitionsModule({ 
-  userInfo, // 🔐 User permissions
   jobTitles, 
   onJobTitlesChange,
   mccList,
@@ -678,6 +676,7 @@ export const DefinitionsModule = React.memo(function DefinitionsModule({
           <TabsTrigger value="paylasimmodelleri" className="text-xs sm:text-sm">Paylaşım Modelleri</TabsTrigger>
           <TabsTrigger value="gelirmodelleri" className="text-xs sm:text-sm">Hesap Kalemleri</TabsTrigger>
           <TabsTrigger value="kartprogram" className="text-xs sm:text-sm">Kart Program</TabsTrigger>
+          <TabsTrigger value="bulkOperations" className="text-xs sm:text-sm">Toplu İşlemler</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dataImport">
@@ -738,6 +737,10 @@ export const DefinitionsModule = React.memo(function DefinitionsModule({
             kartProgramlar={kartProgramlar}
             onKartProgramlarChange={handleKartProgramlarChange}
           />
+        </TabsContent>
+
+        <TabsContent value="bulkOperations">
+          <BulkOperationsTab />
         </TabsContent>
       </Tabs>
     </div>
