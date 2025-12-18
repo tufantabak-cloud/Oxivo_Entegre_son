@@ -5,7 +5,7 @@ import { Label } from './ui/label';
 import { Checkbox } from './ui/checkbox';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
-import { supabase, SUPABASE_ENABLED } from '../utils/supabaseClient';
+import { supabase } from '../utils/supabaseClient';
 import { toast } from 'sonner';
 import { Users, Building2, CheckCircle2, XCircle, Loader2, Tag, BarChart3, Euro } from 'lucide-react';
 import { FilterDropdown } from './FilterDropdown';
@@ -70,7 +70,7 @@ export function BulkOperationsTab() {
     setLoading(true);
     try {
       // Check if Supabase is available
-      if (!SUPABASE_ENABLED || !supabase) {
+      if (!supabase) {
         toast.error('Supabase bağlantısı mevcut değil');
         return;
       }

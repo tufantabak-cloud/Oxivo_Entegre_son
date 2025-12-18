@@ -25,6 +25,8 @@ import {
   sanitizeSuspensionReason
 } from './fieldSanitizer';
 import { isFigmaMakeEnvironment } from './environmentDetection';
+import { softDelete, restoreDeleted, hardDelete, getDeletedRecords } from './softDelete';
+import { addBackup } from './autoBackup';
 
 // ========================================
 // CASE CONVERTER UTILITIES (Inline to avoid import issues)
@@ -167,7 +169,7 @@ export function objectToCamelCase(obj: any): any {
 
 // ✅ Detect Figma Make environment
 // ✅ Disable Supabase in Figma Make environment (CORS restrictions)
-const SUPABASE_ENABLED = !isFigmaMakeEnvironment();
+export const SUPABASE_ENABLED = !isFigmaMakeEnvironment();
 
 if (isFigmaMakeEnvironment()) {
   console.log('🎨 Figma Make environment detected - Supabase disabled, using localStorage only');
@@ -341,6 +343,7 @@ export const customerApi = {
       const result = await supabase
         .from('customers')
         .select('*')
+        .eq('is_deleted', false) // ✅ SOFT DELETE: Sadece silinmemiş kayıtlar
         .order('created_at', { ascending: false });
       data = result.data;
       error = result.error;
@@ -750,6 +753,11 @@ export const customerApi = {
       return parsed;
     });
     
+    // ✅ AUTO-BACKUP: Kayıtları yedekle
+    parsedData.forEach(record => {
+      addBackup('customers', 'CREATE', record.id, record);
+    });
+    
     return { success: true, data: parsedData.map(objectToCamelCase), count: data.length };
     
     } catch (outerError: any) {
@@ -788,36 +796,41 @@ export const customerApi = {
       return { success: false, error: error.message };
     }
 
+    // ✅ AUTO-BACKUP: Güncellenmiş kaydı yedekle
+    addBackup('customers', 'UPDATE', id, data);
+
     console.log(`✅ Updated customer ${id} in Supabase`);
     return { success: true, data: objectToCamelCase(data) };
   },
 
   /**
-   * Müşteri siler
+   * Müşteri siler (SOFT DELETE)
+   * ✅ Kayıt veritabanından silinmez, sadece is_deleted=true yapılır
    */
   async delete(id: string) {
-    let error;
-    try {
-      const result = await supabase
-        .from('customers')
-        .delete()
-        .eq('id', id);
-      error = result.error;
-    } catch (fetchError: any) {
-      console.error('❌ Network error during Supabase fetch:', fetchError);
-      return { 
-        success: false, 
-        error: 'Supabase bağlantısı kurulamadı. Lütfen internet bağlantınızı kontrol edin.' 
-      };
-    }
+    return softDelete(supabase, 'customers', id);
+  },
 
-    if (error) {
-      console.error('❌ Error deleting customer:', error);
-      return { success: false, error: error.message };
-    }
+  /**
+   * Silinen müşterileri getirir
+   */
+  async getDeleted() {
+    return getDeletedRecords(supabase, 'customers');
+  },
 
-    console.log(`✅ Deleted customer ${id} from Supabase`);
-    return { success: true };
+  /**
+   * Silinen müşteriyi geri getirir
+   */
+  async restore(id: string) {
+    return restoreDeleted(supabase, 'customers', id);
+  },
+
+  /**
+   * Müşteriyi kalıcı olarak siler (SADECE ADMIN!)
+   * ⚠️ DİKKAT: Bu işlem geri alınamaz!
+   */
+  async hardDelete(id: string, confirmationToken: string) {
+    return hardDelete(supabase, 'customers', id, confirmationToken);
   },
 
   /**
@@ -855,6 +868,7 @@ export const productApi = {
         const { data, error, count } = await supabase
           .from('products')
           .select('*', { count: 'exact' })
+          .eq('is_deleted', false) // ✅ SOFT DELETE: Sadece silinmemiş kayıtlar
           .order('created_at', { ascending: false })
           .range(page * pageSize, (page + 1) * pageSize - 1);
 
@@ -996,6 +1010,12 @@ export const productApi = {
     if (process.env.NODE_ENV === 'development') {
       console.log(`✅ All batches completed! Total upserted: ${totalUpserted} products`);
     }
+    
+    // ✅ AUTO-BACKUP: Kayıtları yedekle
+    allData.forEach(record => {
+      addBackup('products', 'CREATE', record.id, record);
+    });
+    
     return { success: true, data: allData.map(objectToCamelCase), count: totalUpserted };
   },
 
@@ -1030,6 +1050,7 @@ export const bankPFApi = {
     const { data: bankAccounts, error: bankError } = await supabase!
       .from('bank_accounts')
       .select('*')
+      .eq('is_deleted', false) // ✅ SOFT DELETE: Sadece silinmemiş kayıtlar
       .order('created_at', { ascending: false });
 
     if (bankError) {
@@ -1041,6 +1062,7 @@ export const bankPFApi = {
     const { data: allSigns, error: signsError } = await supabase!
       .from('signs')
       .select('*')
+      .eq('is_deleted', false) // ✅ SOFT DELETE
       .order('created_at', { ascending: false });
 
     if (signsError) {
@@ -1130,6 +1152,12 @@ export const bankPFApi = {
     }
 
     console.log(`✅ Upserted ${data.length} bankPF records in Supabase`);
+    
+    // ✅ AUTO-BACKUP: Kayıtları yedekle
+    data.forEach(record => {
+      addBackup('bank_accounts', 'CREATE', record.id, record);
+    });
+    
     return { success: true, data: data.map(objectToCamelCase), count: data.length };
   },
 
@@ -1137,20 +1165,19 @@ export const bankPFApi = {
    * Bank/PF kaydı siler
    */
   async delete(id: string) {
-    console.log(`🗑️ Deleting bankPF record ${id} from Supabase...`);
-    
-    const { error } = await supabase
-      .from('bank_accounts')
-      .delete()
-      .eq('id', id);
+    return softDelete(supabase, 'bank_accounts', id);
+  },
 
-    if (error) {
-      console.error('❌ Error deleting bankPF record:', error);
-      return { success: false, error: error.message };
-    }
+  async getDeleted() {
+    return getDeletedRecords(supabase, 'bank_accounts');
+  },
 
-    console.log(`✅ Deleted bankPF record ${id} from Supabase`);
-    return { success: true };
+  async restore(id: string) {
+    return restoreDeleted(supabase, 'bank_accounts', id);
+  },
+
+  async hardDelete(id: string, confirmationToken: string) {
+    return hardDelete(supabase, 'bank_accounts', id, confirmationToken);
   },
 
   /**
@@ -1174,6 +1201,7 @@ export const mccCodesApi = {
     const { data, error } = await supabase!
       .from('mcc_codes')
       .select('*')
+      .eq('is_deleted', false) // ✅ SOFT DELETE: Sadece silinmemiş kayıtlar
       .order('kod', { ascending: true });
 
     if (error) {
@@ -1228,24 +1256,29 @@ export const mccCodesApi = {
     }
 
     console.log(`✅ Upserted ${data.length} MCC codes in Supabase`);
+    
+    // ✅ AUTO-BACKUP: Kayıtları yedekle
+    data.forEach(record => {
+      addBackup('mcc_codes', 'CREATE', record.kod || record.id, record);
+    });
+    
     return { success: true, data: data.map(objectToCamelCase), count: data.length };
   },
 
   async delete(id: string) {
-    console.log(`🗑️ Deleting MCC code ${id} from Supabase...`);
-    
-    const { error } = await supabase
-      .from('mcc_codes')
-      .delete()
-      .eq('id', id);
+    return softDelete(supabase, 'mcc_codes', id);
+  },
 
-    if (error) {
-      console.error('❌ Error deleting MCC code:', error);
-      return { success: false, error: error.message };
-    }
+  async getDeleted() {
+    return getDeletedRecords(supabase, 'mcc_codes');
+  },
 
-    console.log(`✅ Deleted MCC code ${id} from Supabase`);
-    return { success: true };
+  async restore(id: string) {
+    return restoreDeleted(supabase, 'mcc_codes', id);
+  },
+
+  async hardDelete(id: string, confirmationToken: string) {
+    return hardDelete(supabase, 'mcc_codes', id, confirmationToken);
   },
 };
 
@@ -1261,6 +1294,7 @@ export const banksApi = {
     const { data, error } = await supabase!
       .from('banks')
       .select('*')
+      .eq('is_deleted', false) // ✅ SOFT DELETE
       .order('kod', { ascending: true });
 
     if (error) {
@@ -1331,24 +1365,29 @@ export const banksApi = {
       }
       return camelItem;
     });
+    
+    // ✅ AUTO-BACKUP: Kayıtları yedekle
+    data.forEach(record => {
+      addBackup('banks', 'CREATE', record.kod || record.id, record);
+    });
+    
     return { success: true, data: mappedData, count: data.length };
   },
 
   async delete(id: string) {
-    console.log(`🗑️ Deleting bank ${id} from Supabase...`);
-    
-    const { error } = await supabase
-      .from('banks')
-      .delete()
-      .eq('id', id);
+    return softDelete(supabase, 'banks', id);
+  },
 
-    if (error) {
-      console.error('❌ Error deleting bank:', error);
-      return { success: false, error: error.message };
-    }
+  async getDeleted() {
+    return getDeletedRecords(supabase, 'banks');
+  },
 
-    console.log(`✅ Deleted bank ${id} from Supabase`);
-    return { success: true };
+  async restore(id: string) {
+    return restoreDeleted(supabase, 'banks', id);
+  },
+
+  async hardDelete(id: string, confirmationToken: string) {
+    return hardDelete(supabase, 'banks', id, confirmationToken);
   },
 };
 
@@ -1364,6 +1403,7 @@ export const epkListApi = {
     const { data, error } = await supabase!
       .from('epk_institutions')
       .select('*')
+      .eq('is_deleted', false) // ✅ SOFT DELETE
       .order('kod', { ascending: true });
 
     if (error) {
@@ -1434,24 +1474,29 @@ export const epkListApi = {
       }
       return camelItem;
     });
+    
+    // ✅ AUTO-BACKUP: Kayıtları yedekle
+    data.forEach(record => {
+      addBackup('epk_institutions', 'CREATE', record.kod || record.id, record);
+    });
+    
     return { success: true, data: mappedData, count: data.length };
   },
 
   async delete(id: string) {
-    console.log(`🗑️ Deleting EPK entry ${id} from Supabase...`);
-    
-    const { error } = await supabase
-      .from('epk_institutions')
-      .delete()
-      .eq('id', id);
+    return softDelete(supabase, 'epk_institutions', id);
+  },
 
-    if (error) {
-      console.error('❌ Error deleting EPK entry:', error);
-      return { success: false, error: error.message };
-    }
+  async getDeleted() {
+    return getDeletedRecords(supabase, 'epk_institutions');
+  },
 
-    console.log(`✅ Deleted EPK entry ${id} from Supabase`);
-    return { success: true };
+  async restore(id: string) {
+    return restoreDeleted(supabase, 'epk_institutions', id);
+  },
+
+  async hardDelete(id: string, confirmationToken: string) {
+    return hardDelete(supabase, 'epk_institutions', id, confirmationToken);
   },
 };
 
@@ -1467,6 +1512,7 @@ export const okListApi = {
     const { data, error } = await supabase!
       .from('ok_institutions')
       .select('*')
+      .eq('is_deleted', false) // ✅ SOFT DELETE
       .order('kod', { ascending: true });
 
     if (error) {
@@ -1537,24 +1583,29 @@ export const okListApi = {
       }
       return camelItem;
     });
+    
+    // ✅ AUTO-BACKUP: Kayıtları yedekle
+    data.forEach(record => {
+      addBackup('ok_institutions', 'CREATE', record.kod || record.id, record);
+    });
+    
     return { success: true, data: mappedData, count: data.length };
   },
 
   async delete(id: string) {
-    console.log(`🗑️ Deleting OK entry ${id} from Supabase...`);
-    
-    const { error } = await supabase
-      .from('ok_institutions')
-      .delete()
-      .eq('id', id);
+    return softDelete(supabase, 'ok_institutions', id);
+  },
 
-    if (error) {
-      console.error('❌ Error deleting OK entry:', error);
-      return { success: false, error: error.message };
-    }
+  async getDeleted() {
+    return getDeletedRecords(supabase, 'ok_institutions');
+  },
 
-    console.log(`✅ Deleted OK entry ${id} from Supabase`);
-    return { success: true };
+  async restore(id: string) {
+    return restoreDeleted(supabase, 'ok_institutions', id);
+  },
+
+  async hardDelete(id: string, confirmationToken: string) {
+    return hardDelete(supabase, 'ok_institutions', id, confirmationToken);
   },
 };
 
@@ -1570,6 +1621,7 @@ export const salesRepsApi = {
     const { data, error } = await supabase!
       .from('sales_representatives')
       .select('*')
+      .eq('is_deleted', false) // ✅ SOFT DELETE
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -1621,6 +1673,7 @@ export const jobTitlesApi = {
     const { data, error } = await supabase!
       .from('job_titles')
       .select('*')
+      .eq('is_deleted', false) // ✅ SOFT DELETE
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -1672,6 +1725,7 @@ export const partnershipsApi = {
     const { data, error } = await supabase!
       .from('partnerships')
       .select('*')
+      .eq('is_deleted', false) // ✅ SOFT DELETE
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -1726,24 +1780,29 @@ export const partnershipsApi = {
     }
 
     console.log(`✅ Upserted ${data.length} partnerships in Supabase`);
+    
+    // ✅ AUTO-BACKUP: Kayıtları yedekle
+    data.forEach(record => {
+      addBackup('partnerships', 'CREATE', record.id, record);
+    });
+    
     return { success: true, data: data.map(objectToCamelCase), count: data.length };
   },
 
   async delete(id: string) {
-    console.log(`🗑️ Deleting partnership ${id} from Supabase...`);
-    
-    const { error } = await supabase
-      .from('partnerships')
-      .delete()
-      .eq('id', id);
+    return softDelete(supabase, 'partnerships', id);
+  },
 
-    if (error) {
-      console.error('❌ Error deleting partnership:', error);
-      return { success: false, error: error.message };
-    }
+  async getDeleted() {
+    return getDeletedRecords(supabase, 'partnerships');
+  },
 
-    console.log(`✅ Deleted partnership ${id} from Supabase`);
-    return { success: true };
+  async restore(id: string) {
+    return restoreDeleted(supabase, 'partnerships', id);
+  },
+
+  async hardDelete(id: string, confirmationToken: string) {
+    return hardDelete(supabase, 'partnerships', id, confirmationToken);
   },
 };
 
@@ -1845,6 +1904,12 @@ export const fixedCommissionsApi = {
     }
 
     console.log(`✅ Upserted ${data.length} fixed commissions in Supabase`);
+    
+    // ✅ AUTO-BACKUP: Kayıtları yedekle
+    data.forEach(record => {
+      addBackup('partnerships', 'CREATE', record.id, record);
+    });
+    
     return { success: true, data: data.map(objectToCamelCase), count: data.length };
   },
 };
@@ -1912,6 +1977,7 @@ export const sharingApi = {
     const { data, error } = await supabase!
       .from('sharings') // ✅ FIXED: 'sharing' → 'sharings' (plural)
       .select('*')
+      .eq('is_deleted', false) // ✅ SOFT DELETE
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -1966,24 +2032,29 @@ export const sharingApi = {
     }
 
     console.log(`✅ Upserted ${data.length} sharing records in Supabase`);
+    
+    // ✅ AUTO-BACKUP: Kayıtları yedekle
+    data.forEach(record => {
+      addBackup('sharings', 'CREATE', record.id, record);
+    });
+    
     return { success: true, data: data.map(objectToCamelCase), count: data.length };
   },
 
   async delete(id: string) {
-    console.log(`🗑️ Deleting sharing record ${id} from Supabase...`);
-    
-    const { error } = await supabase
-      .from('sharings')
-      .delete()
-      .eq('id', id);
+    return softDelete(supabase, 'sharings', id);
+  },
 
-    if (error) {
-      console.error('❌ Error deleting sharing record:', error);
-      return { success: false, error: error.message };
-    }
+  async getDeleted() {
+    return getDeletedRecords(supabase, 'sharings');
+  },
 
-    console.log(`✅ Deleted sharing record ${id} from Supabase`);
-    return { success: true };
+  async restore(id: string) {
+    return restoreDeleted(supabase, 'sharings', id);
+  },
+
+  async hardDelete(id: string, confirmationToken: string) {
+    return hardDelete(supabase, 'sharings', id, confirmationToken);
   },
 };
 
@@ -1999,6 +2070,7 @@ export const kartProgramApi = {
     const { data, error } = await supabase!
       .from('card_programs') // ✅ FIXED: 'kart_program' → 'card_programs' (English + plural)
       .select('*')
+      .eq('is_deleted', false) // ✅ SOFT DELETE
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -2053,24 +2125,29 @@ export const kartProgramApi = {
     }
 
     console.log(`✅ Upserted ${data.length} kart program records in Supabase`);
+    
+    // ✅ AUTO-BACKUP: Kayıtları yedekle
+    data.forEach(record => {
+      addBackup('card_programs', 'CREATE', record.id, record);
+    });
+    
     return { success: true, data: data.map(objectToCamelCase), count: data.length };
   },
 
   async delete(id: string) {
-    console.log(`🗑️ Deleting kart program ${id} from Supabase...`);
-    
-    const { error } = await supabase
-      .from('card_programs')
-      .delete()
-      .eq('id', id);
+    return softDelete(supabase, 'card_programs', id);
+  },
 
-    if (error) {
-      console.error('❌ Error deleting kart program:', error);
-      return { success: false, error: error.message };
-    }
+  async getDeleted() {
+    return getDeletedRecords(supabase, 'card_programs');
+  },
 
-    console.log(`✅ Deleted kart program ${id} from Supabase`);
-    return { success: true };
+  async restore(id: string) {
+    return restoreDeleted(supabase, 'card_programs', id);
+  },
+
+  async hardDelete(id: string, confirmationToken: string) {
+    return hardDelete(supabase, 'card_programs', id, confirmationToken);
   },
 };
 
@@ -2086,6 +2163,7 @@ export const suspensionReasonApi = {
     const { data, error } = await supabase!
       .from('suspension_reasons') // ✅ FIXED: 'suspension_reason' → 'suspension_reasons' (plural)
       .select('*')
+      .eq('is_deleted', false) // ✅ SOFT DELETE
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -2232,24 +2310,28 @@ export const suspensionReasonApi = {
       return mapped;
     });
     
+    // ✅ AUTO-BACKUP: Kayıtları yedekle
+    data.forEach(record => {
+      addBackup('suspension_reasons', 'CREATE', record.id, record);
+    });
+    
     return { success: true, data: mappedData, count: data.length };
   },
 
   async delete(id: string) {
-    console.log(`🗑️ Deleting suspension reason ${id} from Supabase...`);
-    
-    const { error } = await supabase
-      .from('suspension_reasons')
-      .delete()
-      .eq('id', id);
+    return softDelete(supabase, 'suspension_reasons', id);
+  },
 
-    if (error) {
-      console.error('❌ Error deleting suspension reason:', error);
-      return { success: false, error: error.message };
-    }
+  async getDeleted() {
+    return getDeletedRecords(supabase, 'suspension_reasons');
+  },
 
-    console.log(`✅ Deleted suspension reason ${id} from Supabase`);
-    return { success: true };
+  async restore(id: string) {
+    return restoreDeleted(supabase, 'suspension_reasons', id);
+  },
+
+  async hardDelete(id: string, confirmationToken: string) {
+    return hardDelete(supabase, 'suspension_reasons', id, confirmationToken);
   },
 };
 
@@ -2265,6 +2347,7 @@ export const domainMappingApi = {
     const { data, error } = await supabase!
       .from('domain_mappings')
       .select('*')
+      .eq('is_deleted', false) // ✅ SOFT DELETE
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -2315,24 +2398,29 @@ export const domainMappingApi = {
     }
 
     console.log(`✅ Created/updated ${data.length} domain mapping records in Supabase`);
+    
+    // ✅ AUTO-BACKUP: Kayıtları yedekle
+    data.forEach(record => {
+      addBackup('domain_mappings', 'CREATE', record.id, record);
+    });
+    
     return { success: true, count: data.length };
   },
 
   async delete(id: string) {
-    console.log(`🗑️ Deleting domain mapping ${id} from Supabase...`);
-    
-    const { error } = await supabase
-      .from('domain_mappings')
-      .delete()
-      .eq('id', id);
+    return softDelete(supabase, 'domain_mappings', id);
+  },
 
-    if (error) {
-      console.error(`❌ Error deleting domain mapping ${id}:`, error);
-      return { success: false, error: error.message };
-    }
+  async getDeleted() {
+    return getDeletedRecords(supabase, 'domain_mappings');
+  },
 
-    console.log(`✅ Deleted domain mapping ${id} from Supabase`);
-    return { success: true };
+  async restore(id: string) {
+    return restoreDeleted(supabase, 'domain_mappings', id);
+  },
+
+  async hardDelete(id: string, confirmationToken: string) {
+    return hardDelete(supabase, 'domain_mappings', id, confirmationToken);
   },
 };
 
@@ -2348,6 +2436,7 @@ export const signApi = {
     const { data, error } = await supabase!
       .from('signs')
       .select('*')
+      .eq('is_deleted', false) // ✅ SOFT DELETE
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -2428,24 +2517,29 @@ export const signApi = {
     }
 
     console.log(`✅ Created/updated ${data.length} sign records in Supabase`);
+    
+    // ✅ AUTO-BACKUP: Kayıtları yedekle
+    data.forEach(record => {
+      addBackup('signs', 'CREATE', record.id, record);
+    });
+    
     return { success: true, count: data.length };
   },
 
   async delete(id: string) {
-    console.log(`🗑️ Deleting sign ${id} from Supabase...`);
-    
-    const { error } = await supabase
-      .from('signs')
-      .delete()
-      .eq('id', id);
+    return softDelete(supabase, 'signs', id);
+  },
 
-    if (error) {
-      console.error(`❌ Error deleting sign ${id}:`, error);
-      return { success: false, error: error.message };
-    }
+  async getDeleted() {
+    return getDeletedRecords(supabase, 'signs');
+  },
 
-    console.log(`✅ Deleted sign ${id} from Supabase`);
-    return { success: true };
+  async restore(id: string) {
+    return restoreDeleted(supabase, 'signs', id);
+  },
+
+  async hardDelete(id: string, confirmationToken: string) {
+    return hardDelete(supabase, 'signs', id, confirmationToken);
   },
 };
 
@@ -2461,6 +2555,7 @@ export const earningsApi = {
     const { data, error } = await supabase!
       .from('earnings')
       .select('*')
+      .eq('is_deleted', false) // ✅ SOFT DELETE
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -2487,6 +2582,7 @@ export const earningsApi = {
       .from('earnings')
       .select('*')
       .eq('firma_id', firmaId)
+      .eq('is_deleted', false) // ✅ SOFT DELETE
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -2558,24 +2654,31 @@ export const earningsApi = {
     if (process.env.NODE_ENV === 'development') {
       console.log('🔍 [DEBUG] RESPONSE DATA:', JSON.stringify(data, null, 2));
     }
+    
+    // ✅ AUTO-BACKUP: Kayıtları yedekle
+    if (data) {
+      data.forEach(record => {
+        addBackup('earnings', 'CREATE', record.id, record);
+      });
+    }
+    
     return { success: true, count: data.length };
   },
 
   async delete(id: string) {
-    console.log(`🗑️ Deleting earnings ${id} from Supabase...`);
-    
-    const { error } = await supabase
-      .from('earnings')
-      .delete()
-      .eq('id', id);
+    return softDelete(supabase, 'earnings', id);
+  },
 
-    if (error) {
-      console.error(`❌ Error deleting earnings ${id}:`, error);
-      return { success: false, error: error.message };
-    }
+  async getDeleted() {
+    return getDeletedRecords(supabase, 'earnings');
+  },
 
-    console.log(`✅ Deleted earnings ${id} from Supabase`);
-    return { success: true };
+  async restore(id: string) {
+    return restoreDeleted(supabase, 'earnings', id);
+  },
+
+  async hardDelete(id: string, confirmationToken: string) {
+    return hardDelete(supabase, 'earnings', id, confirmationToken);
   },
 };
 
