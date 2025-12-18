@@ -6,7 +6,7 @@ import { Checkbox } from './ui/checkbox';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { supabase, SUPABASE_ENABLED } from '../utils/supabaseClient';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { Users, Building2, CheckCircle2, XCircle, Loader2, Tag, BarChart3, Euro } from 'lucide-react';
 import { FilterDropdown } from './FilterDropdown';
 
