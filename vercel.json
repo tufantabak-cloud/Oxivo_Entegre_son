@@ -1,7 +1,5 @@
 {
-  "buildCommand": "rm -rf node_modules && npm install --legacy-peer-deps && vite build",
   "framework": null,
-  "installCommand": "npm install --legacy-peer-deps",
   "outputDirectory": "dist",
   "devCommand": "vite",
   "cleanUrls": true,
