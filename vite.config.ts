@@ -4,16 +4,16 @@ import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  root: '.', // Explicitly set root to current directory
+  root: '.', // Root directory
   publicDir: 'public', // Public assets directory
   plugins: [react()],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./"),
-      "@components": path.resolve(__dirname, "./components"),
-      "@utils": path.resolve(__dirname, "./utils"),
-      "components": path.resolve(__dirname, "./components"),
-      "utils": path.resolve(__dirname, "./utils"),
+      "@": path.resolve(__dirname, "./src"),
+      "@components": path.resolve(__dirname, "./src/components"),
+      "@utils": path.resolve(__dirname, "./src/utils"),
+      "components": path.resolve(__dirname, "./src/components"),
+      "utils": path.resolve(__dirname, "./src/utils"),
     },
     // React kopyalarını tekilleştirme (Çok önemli)
     dedupe: ['react', 'react-dom'],

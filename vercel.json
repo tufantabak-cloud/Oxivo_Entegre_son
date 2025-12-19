@@ -2,9 +2,9 @@
   "framework": null,
   "outputDirectory": "dist",
   "devCommand": "vite",
+  "buildCommand": "vite build",
   "cleanUrls": true,
   "trailingSlash": false,
-  "ignoreCommand": "echo 'Skipping build verification'",
   "headers": [
     {
       "source": "/assets/(.*)",
