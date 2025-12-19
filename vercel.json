@@ -3,6 +3,7 @@
   "outputDirectory": "dist",
   "devCommand": "vite",
   "buildCommand": "vite build",
+  "installCommand": "npm ci --legacy-peer-deps",
   "cleanUrls": true,
   "trailingSlash": false,
   "headers": [
