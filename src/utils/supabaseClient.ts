@@ -195,6 +195,46 @@ if (import.meta.hot) {
 }
 
 // ========================================
+// SOFT DELETE & BACKUP HELPERS
+// ========================================
+
+/**
+ * Soft Delete with Auto-Backup
+ * Wrapper that calls softDelete and automatically backs up the deleted record
+ */
+async function softDeleteWithBackup(tableName: string, id: string, deletedBy?: string) {
+  const result = await softDelete(supabase, tableName, id, deletedBy);
+  if (result.success && result.data) {
+    addBackup(tableName, 'SOFT_DELETE', id, result.data);
+  }
+  return result;
+}
+
+/**
+ * Restore with Auto-Backup
+ * Wrapper that calls restoreDeleted and automatically backs up the restore action
+ */
+async function restoreDeletedWithBackup(tableName: string, id: string, restoredBy?: string) {
+  const result = await restoreDeleted(supabase, tableName, id, restoredBy);
+  if (result.success && result.data) {
+    addBackup(tableName, 'RESTORE', id, result.data);
+  }
+  return result;
+}
+
+/**
+ * Hard Delete with Auto-Backup
+ * Wrapper that calls hardDelete and automatically backs up before permanent deletion
+ */
+async function hardDeleteWithBackup(tableName: string, id: string, confirmationToken: string) {
+  const result = await hardDelete(supabase, tableName, id, confirmationToken);
+  if (result.success && result.data) {
+    addBackup(tableName, 'DELETE', id, result.data);
+  }
+  return result;
+}
+
+// ========================================
 // CUSTOMER API
 // ========================================
 
@@ -683,7 +723,7 @@ export const customerApi = {
    * ✅ Kayıt veritabanından silinmez, sadece is_deleted=true yapılır
    */
   async delete(id: string) {
-    return softDelete(supabase, 'customers', id);
+    return softDeleteWithBackup('customers', id);
   },
 
   /**
@@ -697,7 +737,7 @@ export const customerApi = {
    * Silinen müşteriyi geri getirir
    */
   async restore(id: string) {
-    return restoreDeleted(supabase, 'customers', id);
+    return restoreDeletedWithBackup('customers', id);
   },
 
   /**
@@ -705,7 +745,7 @@ export const customerApi = {
    * ⚠️ DİKKAT: Bu işlem geri alınamaz!
    */
   async hardDelete(id: string, confirmationToken: string) {
-    return hardDelete(supabase, 'customers', id, confirmationToken);
+    return hardDeleteWithBackup('customers', id, confirmationToken);
   },
 
   /**
@@ -1040,7 +1080,7 @@ export const bankPFApi = {
    * Bank/PF kaydı siler
    */
   async delete(id: string) {
-    return softDelete(supabase, 'bank_accounts', id);
+    return softDeleteWithBackup('bank_accounts', id);
   },
 
   async getDeleted() {
@@ -1048,11 +1088,11 @@ export const bankPFApi = {
   },
 
   async restore(id: string) {
-    return restoreDeleted(supabase, 'bank_accounts', id);
+    return restoreDeletedWithBackup('bank_accounts', id);
   },
 
   async hardDelete(id: string, confirmationToken: string) {
-    return hardDelete(supabase, 'bank_accounts', id, confirmationToken);
+    return hardDeleteWithBackup('bank_accounts', id, confirmationToken);
   },
 
   /**
@@ -1141,7 +1181,7 @@ export const mccCodesApi = {
   },
 
   async delete(id: string) {
-    return softDelete(supabase, 'mcc_codes', id);
+    return softDeleteWithBackup('mcc_codes', id);
   },
 
   async getDeleted() {
@@ -1149,11 +1189,11 @@ export const mccCodesApi = {
   },
 
   async restore(id: string) {
-    return restoreDeleted(supabase, 'mcc_codes', id);
+    return restoreDeletedWithBackup('mcc_codes', id);
   },
 
   async hardDelete(id: string, confirmationToken: string) {
-    return hardDelete(supabase, 'mcc_codes', id, confirmationToken);
+    return hardDeleteWithBackup('mcc_codes', id, confirmationToken);
   },
 };
 
@@ -1250,7 +1290,7 @@ export const banksApi = {
   },
 
   async delete(id: string) {
-    return softDelete(supabase, 'banks', id);
+    return softDeleteWithBackup('banks', id);
   },
 
   async getDeleted() {
@@ -1258,11 +1298,11 @@ export const banksApi = {
   },
 
   async restore(id: string) {
-    return restoreDeleted(supabase, 'banks', id);
+    return restoreDeletedWithBackup('banks', id);
   },
 
   async hardDelete(id: string, confirmationToken: string) {
-    return hardDelete(supabase, 'banks', id, confirmationToken);
+    return hardDeleteWithBackup('banks', id, confirmationToken);
   },
 };
 
@@ -1359,7 +1399,7 @@ export const epkListApi = {
   },
 
   async delete(id: string) {
-    return softDelete(supabase, 'epk_institutions', id);
+    return softDeleteWithBackup('epk_institutions', id);
   },
 
   async getDeleted() {
@@ -1367,11 +1407,11 @@ export const epkListApi = {
   },
 
   async restore(id: string) {
-    return restoreDeleted(supabase, 'epk_institutions', id);
+    return restoreDeletedWithBackup('epk_institutions', id);
   },
 
   async hardDelete(id: string, confirmationToken: string) {
-    return hardDelete(supabase, 'epk_institutions', id, confirmationToken);
+    return hardDeleteWithBackup('epk_institutions', id, confirmationToken);
   },
 };
 
@@ -1468,7 +1508,7 @@ export const okListApi = {
   },
 
   async delete(id: string) {
-    return softDelete(supabase, 'ok_institutions', id);
+    return softDeleteWithBackup('ok_institutions', id);
   },
 
   async getDeleted() {
@@ -1476,7 +1516,7 @@ export const okListApi = {
   },
 
   async restore(id: string) {
-    return restoreDeleted(supabase, 'ok_institutions', id);
+    return restoreDeletedWithBackup('ok_institutions', id);
   },
 
   async hardDelete(id: string, confirmationToken: string) {
@@ -1665,7 +1705,7 @@ export const partnershipsApi = {
   },
 
   async delete(id: string) {
-    return softDelete(supabase, 'partnerships', id);
+    return softDeleteWithBackup('partnerships', id);
   },
 
   async getDeleted() {
@@ -1673,7 +1713,7 @@ export const partnershipsApi = {
   },
 
   async restore(id: string) {
-    return restoreDeleted(supabase, 'partnerships', id);
+    return restoreDeletedWithBackup('partnerships', id);
   },
 
   async hardDelete(id: string, confirmationToken: string) {
@@ -1917,7 +1957,7 @@ export const sharingApi = {
   },
 
   async delete(id: string) {
-    return softDelete(supabase, 'sharings', id);
+    return softDeleteWithBackup('sharings', id);
   },
 
   async getDeleted() {
@@ -1925,7 +1965,7 @@ export const sharingApi = {
   },
 
   async restore(id: string) {
-    return restoreDeleted(supabase, 'sharings', id);
+    return restoreDeletedWithBackup('sharings', id);
   },
 
   async hardDelete(id: string, confirmationToken: string) {
@@ -2010,7 +2050,7 @@ export const kartProgramApi = {
   },
 
   async delete(id: string) {
-    return softDelete(supabase, 'card_programs', id);
+    return softDeleteWithBackup('card_programs', id);
   },
 
   async getDeleted() {
@@ -2018,7 +2058,7 @@ export const kartProgramApi = {
   },
 
   async restore(id: string) {
-    return restoreDeleted(supabase, 'card_programs', id);
+    return restoreDeletedWithBackup('card_programs', id);
   },
 
   async hardDelete(id: string, confirmationToken: string) {
@@ -2194,7 +2234,7 @@ export const suspensionReasonApi = {
   },
 
   async delete(id: string) {
-    return softDelete(supabase, 'suspension_reasons', id);
+    return softDeleteWithBackup('suspension_reasons', id);
   },
 
   async getDeleted() {
@@ -2202,7 +2242,7 @@ export const suspensionReasonApi = {
   },
 
   async restore(id: string) {
-    return restoreDeleted(supabase, 'suspension_reasons', id);
+    return restoreDeletedWithBackup('suspension_reasons', id);
   },
 
   async hardDelete(id: string, confirmationToken: string) {
@@ -2283,7 +2323,7 @@ export const domainMappingApi = {
   },
 
   async delete(id: string) {
-    return softDelete(supabase, 'domain_mappings', id);
+    return softDeleteWithBackup('domain_mappings', id);
   },
 
   async getDeleted() {
@@ -2291,7 +2331,7 @@ export const domainMappingApi = {
   },
 
   async restore(id: string) {
-    return restoreDeleted(supabase, 'domain_mappings', id);
+    return restoreDeletedWithBackup('domain_mappings', id);
   },
 
   async hardDelete(id: string, confirmationToken: string) {
@@ -2402,7 +2442,7 @@ export const signApi = {
   },
 
   async delete(id: string) {
-    return softDelete(supabase, 'signs', id);
+    return softDeleteWithBackup('signs', id);
   },
 
   async getDeleted() {
@@ -2410,7 +2450,7 @@ export const signApi = {
   },
 
   async restore(id: string) {
-    return restoreDeleted(supabase, 'signs', id);
+    return restoreDeletedWithBackup('signs', id);
   },
 
   async hardDelete(id: string, confirmationToken: string) {
@@ -2541,7 +2581,7 @@ export const earningsApi = {
   },
 
   async delete(id: string) {
-    return softDelete(supabase, 'earnings', id);
+    return softDeleteWithBackup('earnings', id);
   },
 
   async getDeleted() {
@@ -2549,7 +2589,7 @@ export const earningsApi = {
   },
 
   async restore(id: string) {
-    return restoreDeleted(supabase, 'earnings', id);
+    return restoreDeletedWithBackup('earnings', id);
   },
 
   async hardDelete(id: string, confirmationToken: string) {

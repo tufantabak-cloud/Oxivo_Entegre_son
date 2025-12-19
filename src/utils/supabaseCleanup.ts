@@ -4,8 +4,8 @@
  */
 
 const SUPABASE_STORAGE_KEYS = [
-  'sb-tveqpmzgqtoyagtpapev-auth-token',
-  'sb-tveqpmzgqtoyagtpapev-auth-token-code-verifier',
+  'sb-okgeyuhmumlkkcpoholh-auth-token',
+  'sb-okgeyuhmumlkkcpoholh-auth-token-code-verifier',
 ];
 
 /**
