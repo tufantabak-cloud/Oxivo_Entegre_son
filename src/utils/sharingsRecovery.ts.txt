@@ -1,0 +1,83 @@
+/**
+ * Sharings Recovery Utility
+ * Eksik sharings verilerini localStorage'dan kurtarır
+ */
+
+export interface SharingRecord {
+  id: string;
+  musteri_id: string;
+  banka_id: string;
+  pf_id: string;
+  created_at?: string;
+  updated_at?: string;
+  is_deleted?: boolean;
+}
+
+/**
+ * LocalStorage'dan sharings verilerini okur
+ */
+export function recoverSharingsFromLocalStorage(): SharingRecord[] {
+  try {
+    const sharingsData = localStorage.getItem('sharings');
+    if (!sharingsData) {
+      console.warn('⚠️ LocalStorage\'da sharings verisi bulunamadı');
+      return [];
+    }
+
+    const parsed = JSON.parse(sharingsData);
+    console.log(`✅ ${parsed.length} adet sharing kaydı localStorage'dan okundu`);
+    return parsed;
+  } catch (error) {
+    console.error('❌ LocalStorage sharings okuma hatası:', error);
+    return [];
+  }
+}
+
+/**
+ * Sharings verilerini temizler ve doğrular
+ */
+export function validateSharings(sharings: SharingRecord[]): SharingRecord[] {
+  return sharings.filter((sharing) => {
+    // Gerekli alanları kontrol et
+    if (!sharing.musteri_id || !sharing.banka_id || !sharing.pf_id) {
+      console.warn('⚠️ Eksik veri:', sharing);
+      return false;
+    }
+
+    // Soft delete kontrolü
+    if (sharing.is_deleted === true) {
+      return false;
+    }
+
+    return true;
+  });
+}
+
+/**
+ * Sharings verilerini Supabase formatına dönüştürür
+ */
+export function convertToSupabaseFormat(sharings: SharingRecord[]): any[] {
+  return sharings.map((sharing) => ({
+    id: sharing.id || crypto.randomUUID(),
+    musteri_id: sharing.musteri_id,
+    banka_id: sharing.banka_id,
+    pf_id: sharing.pf_id,
+    created_at: sharing.created_at || new Date().toISOString(),
+    updated_at: sharing.updated_at || new Date().toISOString(),
+    is_deleted: false,
+  }));
+}
+
+/**
+ * Ana kurtarma fonksiyonu
+ */
+export function performSharingsRecovery(): any[] {
+  console.log('🔄 Sharings kurtarma işlemi başlatılıyor...');
+
+  const rawData = recoverSharingsFromLocalStorage();
+  const validData = validateSharings(rawData);
+  const supabaseData = convertToSupabaseFormat(validData);
+
+  console.log(`✅ ${supabaseData.length} adet sharing kaydı kurtarıldı`);
+  return supabaseData;
+}

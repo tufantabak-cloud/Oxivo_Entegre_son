@@ -1,11 +1,12 @@
 {
   "buildCommand": "rm -rf node_modules && npm install --legacy-peer-deps && vite build",
   "framework": null,
-  "installCommand": null,
+  "installCommand": "npm install --legacy-peer-deps",
   "outputDirectory": "dist",
   "devCommand": "vite",
   "cleanUrls": true,
   "trailingSlash": false,
+  "ignoreCommand": "echo 'Skipping build verification'",
   "headers": [
     {
       "source": "/assets/(.*)",
