@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { Customer, DomainNode } from './CustomerModule';
 import { BankPF } from './BankPFModule';
 import { Search, ArrowUpDown, ArrowUp, ArrowDown, Eye, Filter, Download, CheckSquare, Square, ListChecks, Bug, ExternalLink, Copy, Edit } from 'lucide-react';
-import { DeviceCountAnalyzer } from './DeviceCountAnalyzer';
+// Removed: DeviceCountAnalyzer module has been deleted
 import { Switch } from './ui/switch';
 import { toast } from 'sonner';
 import { Input } from './ui/input';
@@ -123,8 +123,7 @@ export const CustomerList = React.memo(function CustomerList({ customers, onSele
   const [selectedCustomerIds, setSelectedCustomerIds] = useState<string[]>([]);
   const [isBatchDialogOpen, setIsBatchDialogOpen] = useState(false);
   
-  // Cihaz sayısı analiz tool
-  const [showAnalyzer, setShowAnalyzer] = useState(false);
+  // Removed: showAnalyzer state (DeviceCountAnalyzer deleted)
 
   const handleSort = (field: keyof Customer | 'cihazAdedi' | 'bankaPF') => {
     if (sortField === field) {
@@ -940,13 +939,7 @@ export const CustomerList = React.memo(function CustomerList({ customers, onSele
 
   return (
     <div className="space-y-6">
-      {/* Cihaz Sayısı Analiz Tool */}
-      {showAnalyzer && (
-        <DeviceCountAnalyzer
-          customers={customers}
-          payterProducts={payterProducts}
-        />
-      )}
+      {/* Removed: DeviceCountAnalyzer component (module deleted) */}
       
       {/* Müşteri İstatistikleri */}
       <div className="flex items-center gap-2 flex-wrap">
@@ -1001,17 +994,7 @@ export const CustomerList = React.memo(function CustomerList({ customers, onSele
                 <span className="sm:hidden">Toplu ({selectedCustomerIds.length})</span>
               </Button>
             )}
-            <Button
-              variant={showAnalyzer ? "default" : "outline"}
-              size="sm"
-              onClick={() => setShowAnalyzer(!showAnalyzer)}
-              className="flex items-center justify-center gap-2"
-              title="Cihaz Adedi tutarlılık analizi - Domain eşleştirme vs Manuel atama karşılaştırması"
-            >
-              <Bug size={16} />
-              <span className="hidden md:inline">{showAnalyzer ? 'Analizi Kapat' : 'Cihaz Analizi'}</span>
-              <span className="md:hidden">Analiz</span>
-            </Button>
+            {/* Removed: Cihaz Analizi button (DeviceCountAnalyzer deleted) */}
             <Button
               variant="outline"
               size="sm"
