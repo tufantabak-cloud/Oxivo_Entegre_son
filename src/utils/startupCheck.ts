@@ -9,7 +9,7 @@
 
 import { connectionManager } from './connectionManager';
 import { toast } from 'sonner';
-import { checkSharingsStatus, diagnosticAndRepair } from './sharingsRecovery';
+// Removed: sharingsRecovery module has been deleted
 
 interface StartupCheckResult {
   success: boolean;
@@ -17,7 +17,7 @@ interface StartupCheckResult {
     network: boolean;
     localStorage: boolean;
     browser: boolean;
-    sharingsData: boolean;
+    // sharingsData: boolean; // Removed: sharingsRecovery deleted
   };
   warnings: string[];
   errors: string[];
@@ -71,7 +71,7 @@ export async function runStartupCheck(): Promise<StartupCheckResult> {
       network: false,
       localStorage: false,
       browser: false,
-      sharingsData: false,
+      // sharingsData: false, // Removed: sharingsRecovery deleted
     },
     warnings,
     errors,
@@ -107,32 +107,7 @@ export async function runStartupCheck(): Promise<StartupCheckResult> {
     warnings.push('Bağlantı durumu kontrol edilemedi');
   }
 
-  // 4. ✅ AUTO-REPAIR: Sharings data check and auto-repair
-  try {
-    const sharingsStatus = checkSharingsStatus();
-    result.checks.sharingsData = sharingsStatus.isValid;
-    
-    if (!sharingsStatus.isValid || sharingsStatus.count === 0) {
-      console.log('[STARTUP] Sharings data needs repair:', sharingsStatus);
-      
-      // Attempt auto-repair
-      const repairResult = diagnosticAndRepair(false); // Silent repair
-      
-      if (repairResult.repaired) {
-        autoRepairs.push('Paylaşım modelleri otomatik olarak düzeltildi');
-        result.checks.sharingsData = true;
-        console.log('[STARTUP] ✅ Sharings auto-repair successful');
-      } else {
-        warnings.push('Paylaşım modelleri verisi sorunlu. Tanımlar sekmesinde kontrol edin.');
-        console.warn('[STARTUP] ⚠️ Sharings auto-repair failed');
-      }
-    } else {
-      console.log('[STARTUP] ✅ Sharings data is valid');
-    }
-  } catch (error) {
-    console.error('[STARTUP] Error checking sharings:', error);
-    warnings.push('Paylaşım modelleri verisi kontrol edilemedi');
-  }
+  // 4. Removed: Sharings data check (sharingsRecovery module deleted)
 
   // Set overall success
   result.success = errors.length === 0;
