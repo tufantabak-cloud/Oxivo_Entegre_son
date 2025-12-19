@@ -1,27 +1,42 @@
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import path from 'path'
 
-  import { defineConfig } from 'vite';
-  import react from '@vitejs/plugin-react-swc';
-  import path from 'path';
-
-  export default defineConfig({
-    plugins: [react()],
-    resolve: {
-      extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
-      alias: {
-        'sonner@2.0.3': 'sonner',
-        'react-hook-form@7.55.0': 'react-hook-form',
-        'hono@4.6.14': 'hono',
-        '@jsr/supabase__supabase-js@2.49.8': '@jsr/supabase__supabase-js',
-        '@jsr/supabase__supabase-js@2': '@jsr/supabase__supabase-js',
-        '@': path.resolve(__dirname, './src'),
+// https://vitejs.dev/config/
+export default defineConfig({
+  root: '.', // Explicitly set root to current directory
+  publicDir: 'public', // Public assets directory
+  plugins: [react()],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./"),
+      "@components": path.resolve(__dirname, "./components"),
+      "@utils": path.resolve(__dirname, "./utils"),
+      "components": path.resolve(__dirname, "./components"),
+      "utils": path.resolve(__dirname, "./utils"),
+    },
+    // React kopyalarını tekilleştirme (Çok önemli)
+    dedupe: ['react', 'react-dom'],
+  },
+  optimizeDeps: {
+    // Bu kütüphaneleri önceden işlemesini söylüyoruz
+    include: ['react', 'react-dom', 'xlsx', 'recharts'],
+  },
+  build: {
+    outDir: 'dist', // Vercel 'dist' klasörünü bekliyor
+    chunkSizeWarningLimit: 2000, // Uyarı limitini yükselttik
+    // ✅ Force cache invalidation - v3.2.1-UUID-DEBUG
+    commonjsOptions: {
+      transformMixedEsModules: true, // CJS/ESM uyumsuzluklarını çözer
+    },
+    rollupOptions: {
+      output: {
+        // manualChunks KISMINI KALDIRDIK.
+        // Vite artık yükleme sırasını kendisi yönetecek.
       },
     },
-    build: {
-      target: 'esnext',
-      outDir: 'build',
-    },
-    server: {
-      port: 3000,
-      open: true,
-    },
-  });
+    // Production build - minified & optimized
+    minify: 'terser',
+    sourcemap: true, // ✅ TEMPORARY: Enable sourcemap for debugging React Error #426
+  },
+})
