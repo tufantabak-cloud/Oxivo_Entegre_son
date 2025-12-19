@@ -97,9 +97,11 @@ export function PeriodicalRevenueReport({
 
         matchedProducts.forEach(product => {
           // Banka ataması kontrolü
-          const hasBankAssignment = customer.bankDeviceAssignments?.some(
-            ba => ba.deviceIds.includes(product.id)
-          );
+          const hasBankAssignment = customer.bankDeviceAssignments && Array.isArray(customer.bankDeviceAssignments)
+            ? customer.bankDeviceAssignments.some(
+                ba => ba.deviceIds && Array.isArray(ba.deviceIds) && ba.deviceIds.includes(product.id)
+              )
+            : false;
 
           // Banka ataması olmayan cihazlar gelir hesabına dahil olmaz
           if (!hasBankAssignment) return;

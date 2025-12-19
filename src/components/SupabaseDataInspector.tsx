@@ -41,9 +41,9 @@ import {
   sharingApi,
   kartProgramApi,
   suspensionReasonApi,
-  domainMappingApi,
   signApi,
-  earningsApi
+  earningsApi,
+  domainMappingApi
 } from '../utils/supabaseClient';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

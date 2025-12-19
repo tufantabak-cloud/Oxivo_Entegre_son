@@ -1,7 +1,7 @@
 
-  # Müşteri Modülü Uygulaması
+  # OXİVO-BOX
 
-  This is a code bundle for Müşteri Modülü Uygulaması. The original project is available at https://www.figma.com/design/nanVkSnowlvQGkHsKxGEh3/M%C3%BC%C5%9Fteri-Mod%C3%BCl%C3%BC-Uygulamas%C4%B1.
+  This is a code bundle for OXİVO-BOX. The original project is available at https://www.figma.com/design/5lMORdSqmOsedSAVUx3kGN/OX%C4%B0VO-BOX.
 
   ## Running the code
 

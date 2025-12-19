@@ -463,7 +463,7 @@ export function BatchOperationsDialog({
           </div>
 
           <DialogFooter>
-            <Button onClick={handleClose}>Kapat</Button>
+            <Button size="default" onClick={handleClose}>Kapat</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -541,7 +541,8 @@ export function BatchOperationsDialog({
                       <Button
                         onClick={handleActivate}
                         disabled={isProcessing}
-                        className="w-full gap-2 bg-green-600 hover:bg-green-700"
+                        variant="success"
+                        className="w-full gap-2"
                       >
                         <CheckCircle2 className="h-4 w-4" />
                         Aktif Yap
@@ -969,7 +970,8 @@ export function BatchOperationsDialog({
                       <Button
                         onClick={handleActivateServiceFee}
                         disabled={isProcessing}
-                        className="w-full gap-2 bg-green-600 hover:bg-green-700"
+                        variant="success"
+                        className="w-full gap-2"
                       >
                         <PlayCircle className="h-4 w-4" />
                         Aktif Yap
@@ -1104,7 +1106,8 @@ export function BatchOperationsDialog({
                       <Button
                         onClick={handleResumeServiceFee}
                         disabled={isProcessing}
-                        className="w-full gap-2 bg-green-600 hover:bg-green-700"
+                        variant="success"
+                        className="w-full gap-2"
                       >
                         <PlayCircle className="h-4 w-4" />
                         Devam Ettir

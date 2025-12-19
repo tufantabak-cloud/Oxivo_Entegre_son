@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
 import { ScrollArea } from '../ui/scroll-area';
 import { Badge } from '../ui/badge';
 import { X } from 'lucide-react';
@@ -9,6 +9,7 @@ interface FullListModalProps {
   onClose: () => void;
   title: string;
   items: Array<{
+    id?: string; // ✅ ADD: Optional unique ID
     label: string;
     value: string | number;
     badge?: string;
@@ -25,6 +26,9 @@ export function FullListModal({ isOpen, onClose, title, items }: FullListModalPr
           <DialogTitle className="text-left pr-8">
             {title}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            {title} için detaylı liste görünümü
+          </DialogDescription>
           <Button 
             variant="ghost" 
             size="icon" 
@@ -45,7 +49,7 @@ export function FullListModal({ isOpen, onClose, title, items }: FullListModalPr
             ) : (
               items.map((item, index) => (
                 <div
-                  key={index}
+                  key={item.id || `item-${index}`} // ✅ FIX: Use unique ID or fallback to index
                   className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all"
                 >
                   {/* Sol: Sıra numarası */}

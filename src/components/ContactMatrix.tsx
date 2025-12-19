@@ -133,9 +133,9 @@ export function ContactMatrix({ contacts, onContactsChange, gorevListesi }: Cont
               storageKey="contactMatrix"
               onVisibilityChange={handleVisibilityChange}
             />
-            <Button onClick={handleAdd} className="flex items-center space-x-2">
+            <Button size="default" onClick={handleAdd} className="flex items-center space-x-2">
               <Plus size={18} />
-              <span>Kişi Ekle</span>
+              <span>Yeni Yetkili Ekle</span>
             </Button>
           </div>
         </div>
@@ -144,7 +144,7 @@ export function ContactMatrix({ contacts, onContactsChange, gorevListesi }: Cont
         {contacts.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
             <p>Henüz yetkili kişi eklenmemiş.</p>
-            <Button onClick={handleAdd} variant="outline" className="mt-4">
+            <Button size="default" onClick={handleAdd} variant="outline" className="mt-4">
               <Plus size={18} className="mr-2" />
               İlk Kişiyi Ekle
             </Button>

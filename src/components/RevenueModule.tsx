@@ -107,7 +107,9 @@ export const RevenueModule = React.memo(function RevenueModule({ customers, payt
 
       matchedProducts.forEach(product => {
         // Cihaz abonelik kaydını bul
-        const subscription = serviceFee.deviceSubscriptions.find(d => d.deviceId === product.id);
+        const subscription = serviceFee.deviceSubscriptions && Array.isArray(serviceFee.deviceSubscriptions)
+          ? serviceFee.deviceSubscriptions.find(d => d.deviceId === product.id)
+          : undefined;
         const deviceSub: DeviceSubscription = subscription || {
           deviceId: product.id,
           deviceSerialNumber: product.serialNumber || '',
@@ -122,9 +124,11 @@ export const RevenueModule = React.memo(function RevenueModule({ customers, payt
         totalDevices++;
 
         // Banka ataması kontrolü
-        const hasBankAssignment = customer.bankDeviceAssignments?.some(
-          ba => ba.deviceIds.includes(product.id)
-        );
+        const hasBankAssignment = customer.bankDeviceAssignments && Array.isArray(customer.bankDeviceAssignments)
+          ? customer.bankDeviceAssignments.some(
+              ba => ba.deviceIds && Array.isArray(ba.deviceIds) && ba.deviceIds.includes(product.id)
+            )
+          : false;
 
         // Toplam banka durumu istatistikleri (aktif + pasif tüm cihazlar)
         if (hasBankAssignment) {
@@ -134,7 +138,9 @@ export const RevenueModule = React.memo(function RevenueModule({ customers, payt
         }
 
         // Mevcut dönem faturasını bul
-        const currentInvoice = serviceFee.invoices.find(inv => inv.period === selectedPeriod);
+        const currentInvoice = serviceFee.invoices && Array.isArray(serviceFee.invoices)
+          ? serviceFee.invoices.find(inv => inv.period === selectedPeriod)
+          : undefined;
 
         // Cihazın askıya alınma durumu
         const isSuspended = currentInvoice?.isSuspended || false;

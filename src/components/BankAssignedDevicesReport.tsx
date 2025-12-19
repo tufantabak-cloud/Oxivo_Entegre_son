@@ -45,20 +45,30 @@ export function BankAssignedDevicesReport({ customers, payterProducts }: BankAss
       });
 
       matchedProducts.forEach(product => {
+        // ✅ ARRAY SAFETY: bankDeviceAssignments kontrolü
+        const bankAssignments = Array.isArray(customer.bankDeviceAssignments)
+          ? customer.bankDeviceAssignments
+          : [];
+        
         // Banka ataması kontrolü
-        const bankAssignment = customer.bankDeviceAssignments?.find(
-          ba => ba.deviceIds.includes(product.id)
+        const bankAssignment = bankAssignments.find(
+          ba => Array.isArray(ba.deviceIds) && ba.deviceIds.includes(product.id)
         );
 
         if (!bankAssignment) return; // Gerçek banka ataması yoksa atla
 
+        // ✅ ARRAY SAFETY: deviceSubscriptions kontrolü
+        const deviceSubscriptions = Array.isArray(serviceFee.deviceSubscriptions)
+          ? serviceFee.deviceSubscriptions
+          : [];
+        
         // Cihaz abonelik kaydını bul
-        const subscription = serviceFee.deviceSubscriptions.find(d => d.deviceId === product.id);
+        const subscription = deviceSubscriptions.find(d => d.deviceId === product.id);
         const deviceSub: DeviceSubscription = subscription || {
           deviceId: product.id,
           deviceSerialNumber: product.serialNumber || '',
           deviceName: product.name || '',
-          monthlyFee: serviceFee.customFeePerDevice || serviceFee.standardFeePerDevice,
+          monthlyFee: serviceFee.customFeePerDevice || serviceFee.standardFeePerDevice || 0,
           isActive: true,
           activationDate: new Date().toISOString().split('T')[0],
           paymentStatus: 'pending'
@@ -180,7 +190,7 @@ export function BankAssignedDevicesReport({ customers, payterProducts }: BankAss
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-emerald-700">Aylık Gelir</p>
-                <p className="text-3xl text-emerald-900 mt-1">{totalMonthlyRevenue.toFixed(2)} €</p>
+                <p className="text-3xl text-emerald-900 mt-1">{(totalMonthlyRevenue || 0).toFixed(2)} €</p>
               </div>
               <Euro className="text-emerald-600" size={40} />
             </div>
@@ -192,7 +202,7 @@ export function BankAssignedDevicesReport({ customers, payterProducts }: BankAss
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-teal-700">Yıllık Gelir</p>
-                <p className="text-3xl text-teal-900 mt-1">{yearlyRevenue.toFixed(2)} €</p>
+                <p className="text-3xl text-teal-900 mt-1">{(yearlyRevenue || 0).toFixed(2)} €</p>
               </div>
               <TrendingUp className="text-teal-600" size={40} />
             </div>
@@ -272,10 +282,10 @@ export function BankAssignedDevicesReport({ customers, payterProducts }: BankAss
                       </Badge>
                     </td>
                     <td className="py-3 px-3">
-                      <p className="text-green-600">{item.monthlyFee.toFixed(2)} €</p>
+                      <p className="text-green-600">{(item.monthlyFee || 0).toFixed(2)} €</p>
                     </td>
                     <td className="py-3 px-3">
-                      <p className="text-teal-600">{(item.monthlyFee * 12).toFixed(2)} €</p>
+                      <p className="text-teal-600">{((item.monthlyFee || 0) * 12).toFixed(2)} €</p>
                     </td>
                     <td className="py-3 px-3 text-center">
                       <Badge variant="default" className="text-xs bg-green-600">
@@ -294,13 +304,13 @@ export function BankAssignedDevicesReport({ customers, payterProducts }: BankAss
             <p className="font-medium text-blue-900 mb-3">📊 Banka Bazlı Dağılım:</p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {Array.from(devicesByBank.entries()).map(([bankKey, devices]) => {
-                const bankRevenue = devices.reduce((sum, d) => sum + d.monthlyFee, 0);
+                const bankRevenue = devices.reduce((sum, d) => sum + (d.monthlyFee || 0), 0);
                 return (
                   <div key={bankKey} className="bg-white p-3 rounded border border-blue-200">
                     <p className="text-sm text-gray-900">{bankKey}</p>
                     <div className="flex justify-between items-center mt-2">
                       <Badge variant="secondary">{devices.length} cihaz</Badge>
-                      <p className="text-sm text-green-600">{bankRevenue.toFixed(2)} €/ay</p>
+                      <p className="text-sm text-green-600">{(bankRevenue || 0).toFixed(2)} €/ay</p>
                     </div>
                   </div>
                 );

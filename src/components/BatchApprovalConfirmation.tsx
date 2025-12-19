@@ -1,8 +1,14 @@
 import { Badge } from './ui/badge';
+import { Button } from './ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
 import { Progress } from './ui/progress';
 import { toast } from 'sonner';
 import { Checkbox } from './ui/checkbox';
 import { Label } from './ui/label';
+import { Alert, AlertDescription } from './ui/alert';
+import { CheckCircle, AlertCircle, FileText, X } from 'lucide-react';
+import { ServiceFeeInvoice } from './SubscriptionFeesTable';
+import { useState } from 'react';
 
 interface DeviceForApproval {
   customerId: string;
@@ -180,11 +186,11 @@ export function BatchApprovalConfirmation({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onCancel} disabled={processing}>
+          <Button variant="outline" size="default" onClick={onCancel} disabled={processing}>
             <X size={16} className="mr-2" />
             İptal
           </Button>
-          <Button onClick={handleConfirm} disabled={processing}>
+          <Button size="default" onClick={handleConfirm} disabled={processing}>
             <CheckCircle size={16} className="mr-2" />
             {processing ? 'İşleniyor...' : `${devices.length} Ödemeyi Onayla`}
           </Button>

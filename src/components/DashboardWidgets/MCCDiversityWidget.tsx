@@ -198,6 +198,7 @@ export function MCCDiversityWidget({ customers, payterProducts, mccList }: MCCDi
 
   const handleShowFullList = () => {
     const allItems = mccAnalysis.allMCCs.map((mcc) => ({
+      id: mcc.mcc, // ✅ FIX: Use MCC code as unique ID
       label: `${mcc.mcc} - ${mcc.description}`,
       value: `${mcc.customerCount} müşteri • ${mcc.totalDevices} cihaz`,
       badge: `€${mcc.monthlyRevenue.toLocaleString()}`,
@@ -248,7 +249,7 @@ export function MCCDiversityWidget({ customers, payterProducts, mccList }: MCCDi
             <h4 className="text-sm font-semibold text-gray-700 mb-3">Kategori Gruplaması</h4>
             <div className="space-y-2">
               {mccAnalysis.categoryGroups.slice(0, 5).map((group, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-white border rounded-lg">
+                <div key={group.category || `category-${index}`} className="flex items-center justify-between p-3 bg-white border rounded-lg">
                   <div className="flex-1">
                     <div className="text-sm font-semibold text-gray-900">{group.category}</div>
                     <div className="text-xs text-gray-500">
@@ -286,7 +287,7 @@ export function MCCDiversityWidget({ customers, payterProducts, mccList }: MCCDi
             </div>
             <div className="space-y-2">
               {mccAnalysis.topMCCs.slice(0, 6).map((mcc, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div key={mcc.mcc || `mcc-${index}`} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <span className="font-mono font-semibold text-sm">{mcc.mcc}</span>
                     <Badge variant="outline" className="text-xs">

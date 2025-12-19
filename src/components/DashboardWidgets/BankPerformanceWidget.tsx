@@ -75,6 +75,7 @@ export function BankPerformanceWidget({ customers, bankPFRecords, banks }: BankP
 
   const handleShowFullList = () => {
     const allItems = bankStats.map((bank) => ({
+      id: bank.bankCode, // ✅ FIX: Add unique ID
       label: `${bank.bankName} (${bank.bankCode})`,
       value: `${bank.deviceCount} cihaz • ${bank.customerCount} müşteri`,
       badge: `€${bank.totalRevenue.toLocaleString()}`,

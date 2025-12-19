@@ -440,13 +440,30 @@ export function ActivityLogViewer({ isOpen, onClose }: ActivityLogViewerProps) {
                           </div>
                         )}
 
+                        {/* Changes */}
+                        {activity.changes && Object.keys(activity.changes).length > 0 && (
+                          <div className="mt-2 space-y-1">
+                            <p className="text-xs text-gray-500">Değişiklikler:</p>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {Object.entries(activity.changes || {}).map(([key, change]) => (
+                                <span
+                                  key={key}
+                                  className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded"
+                                >
+                                  {key}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
                         {/* Metadata */}
                         {activity.metadata && Object.keys(activity.metadata).length > 0 && (
                           <div className="flex items-center gap-2 mt-2 flex-wrap">
                             {Object.entries(activity.metadata).map(([key, value]) => (
                               <span
                                 key={key}
-                                className="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded"
+                                className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded"
                               >
                                 {key}: {String(value)}
                               </span>
@@ -457,7 +474,7 @@ export function ActivityLogViewer({ isOpen, onClose }: ActivityLogViewerProps) {
                     </div>
 
                     {/* Timestamp */}
-                    <div className="flex items-center gap-1.5 text-xs text-gray-400 whitespace-nowrap">
+                    <div className="flex items-center gap-2 text-xs text-gray-400 whitespace-nowrap">
                       <Clock className="h-3 w-3" />
                       {formatTimestamp(activity.timestamp)}
                     </div>

@@ -140,8 +140,10 @@ function DomainTreeNode({
     return `${index + 1}.`; // Fallback
   };
 
-  const numbering = getNumbering(level, path[path.length - 1]);
-  const indent = level * 20; // Kompakt girinti (20px per level)
+  // ✅ SAFETY: level NaN kontrolü
+  const safeLevel = typeof level === 'number' && !isNaN(level) ? level : 0;
+  const numbering = getNumbering(safeLevel, path[path.length - 1]);
+  const indent = safeLevel * 20; // Kompakt girinti (20px per level)
 
   const handleSave = () => {
     if (editValue.trim()) {
@@ -269,7 +271,7 @@ function DomainTreeNode({
               key={child.id}
               node={child}
               path={[...path, index]}
-              level={level + 1}
+              level={safeLevel + 1}
               onUpdate={onUpdate}
               onDelete={onDelete}
               onAddChild={onAddChild}
@@ -283,21 +285,62 @@ function DomainTreeNode({
 }
 
 // Helper fonksiyon: BankDeviceAssignments'tan linkedBankPFIds'i çıkar
-function extractBankPFIdsFromAssignments(assignments: BankDeviceAssignment[], bankPFRecords: BankPF[]): string[] {
+function extractBankPFIdsFromAssignments(assignments: BankDeviceAssignment[] | any, bankPFRecords: BankPF[]): string[] {
   const bankPFIds: string[] = [];
+  
+  // ✅ CRITICAL ARRAY SAFETY: assignments derin kontrolü
+  if (!assignments) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('⚠️ extractBankPFIdsFromAssignments: assignments is null/undefined');
+    }
+    return bankPFIds;
+  }
+  
+  if (!Array.isArray(assignments)) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('⚠️ extractBankPFIdsFromAssignments: assignments is not an array, type:', typeof assignments, assignments);
+    }
+    return bankPFIds;
+  }
+  
+  if (assignments.length === 0) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('⚠️ extractBankPFIdsFromAssignments: assignments array is empty');
+    }
+    return bankPFIds;
+  }
+  
+  // ✅ ARRAY SAFETY: bankPFRecords kontrolü
+  if (!Array.isArray(bankPFRecords) || bankPFRecords.length === 0) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('⚠️ extractBankPFIdsFromAssignments: bankPFRecords is not a valid array');
+    }
+    return bankPFIds;
+  }
   
   if (process.env.NODE_ENV === 'development') {
     console.log('🔍 extractBankPFIdsFromAssignments başladı:', {
       assignmentsCount: assignments.length,
-      bankPFRecordsCount: bankPFRecords.length
+      bankPFRecordsCount: bankPFRecords.length,
+      assignmentsType: typeof assignments,
+      isArray: Array.isArray(assignments)
     });
   }
   
   assignments.forEach(assignment => {
+    // ✅ NULL SAFETY: assignment ve bankId kontrolü
+    // NOT: JSONB'den gelen veri snake_case (bank_id) olabilir, camelCase (bankId) de olabilir
+    const bankId = assignment.bankId || assignment.bank_id; // Her iki formatı da destekle
+    
+    if (!assignment || !bankId || typeof bankId !== 'string') {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('⚠️ Invalid assignment object:', assignment);
+      }
+      return; // Bu assignment'ı atla
+    }
+    
     // assignment.bankId formatı: "bank-{id}", "ok-epk-{id}", "ok-ok-{id}"
     // Bu ID'lerden asıl BankPF kaydının ID'sini bul
-    
-    const bankId = assignment.bankId;
     
     if (bankId.startsWith('bank-')) {
       // Banka ID'si
@@ -505,6 +548,12 @@ export function CustomerDetail({
   ], []);
 
   const suspensionReasonOptions: FilterOption[] = useMemo(() => {
+    // 🔍 DEBUG: Log incoming suspensionReasons
+    console.log('🔍 [CustomerDetail] suspensionReasons prop:', {
+      count: suspensionReasons?.length || 0,
+      data: suspensionReasons,
+      firstItem: suspensionReasons?.[0]
+    });
     
     // TÜM sebepleri göster (aktif olanlar + pasif olanlar disabled olarak)
     const allReasons = (suspensionReasons || []).map(r => ({
@@ -562,7 +611,7 @@ export function CustomerDetail({
     }
     
     // FALLBACK: Domain eşleştirmesi bulunamazsa, bankDeviceAssignments'a bak
-    if (!formData.bankDeviceAssignments || formData.bankDeviceAssignments.length === 0) {
+    if (!formData.bankDeviceAssignments || !Array.isArray(formData.bankDeviceAssignments) || formData.bankDeviceAssignments.length === 0) {
       return 0;
     }
     return formData.bankDeviceAssignments.reduce(
@@ -612,8 +661,15 @@ export function CustomerDetail({
   useEffect(() => {
     if (customer && customer.id !== formData.id) {
       // Farklı bir müşteri seçildi - formData'yı yeniden başlat
-      setFormData(customer);
-      setOriginalData(customer);
+      // ✅ CRITICAL FIX: bankDeviceAssignments array güvenliği
+      const safeCustomer = {
+        ...customer,
+        bankDeviceAssignments: Array.isArray(customer.bankDeviceAssignments) 
+          ? customer.bankDeviceAssignments 
+          : []
+      };
+      setFormData(safeCustomer);
+      setOriginalData(safeCustomer);
       setHasUnsavedChanges(false);
       // SEVIYE 1 FIX: Navigation sırasında sekmeyi sıfırla
       setActiveTab('genel');
@@ -665,9 +721,53 @@ export function CustomerDetail({
       return;
     }
     
+    // 🔍 DEBUG: Supabase'den gelen müşteri verisini logla
+    console.log('🔍 [CustomerDetail] Supabase\'den gelen customer verisi:', {
+      id: customer.id,
+      cariAdi: customer.cariAdi,
+      linkedBankPfIds: customer.linkedBankPfIds,
+      bankDeviceAssignments: customer.bankDeviceAssignments,
+      serviceFeeSettings: customer.serviceFeeSettings,
+      rawCustomer: customer
+    });
+    
     // 1. bankDeviceAssignments'tan gelen ID'ler
-    const assignmentBasedIds = customer.bankDeviceAssignments && customer.bankDeviceAssignments.length > 0
-      ? extractBankPFIdsFromAssignments(customer.bankDeviceAssignments, bankPFRecords)
+    // ✅ CRITICAL ARRAY SAFETY: bankDeviceAssignments derin kontrolü ve JSONB parsing
+    let safeAssignments: BankDeviceAssignment[] = [];
+    
+    try {
+      const rawAssignments = customer.bankDeviceAssignments;
+      
+      if (!rawAssignments) {
+        // undefined veya null
+        safeAssignments = [];
+      } else if (Array.isArray(rawAssignments)) {
+        // Zaten array
+        safeAssignments = rawAssignments;
+      } else if (typeof rawAssignments === 'string') {
+        // String ise parse et (JSONB'den string gelebilir)
+        try {
+          const parsed = JSON.parse(rawAssignments);
+          safeAssignments = Array.isArray(parsed) ? parsed : [];
+        } catch (parseError) {
+          console.error('❌ bankDeviceAssignments parse error:', parseError);
+          safeAssignments = [];
+        }
+      } else if (typeof rawAssignments === 'object') {
+        // Object ise array'e dönüştür
+        safeAssignments = Object.values(rawAssignments).filter(v => v !== null && v !== undefined);
+      } else {
+        // Başka bir tip - güvenli fallback
+        console.warn('⚠️ Unexpected bankDeviceAssignments type:', typeof rawAssignments, rawAssignments);
+        safeAssignments = [];
+      }
+    } catch (error) {
+      console.error('❌ Error processing bankDeviceAssignments:', error);
+      safeAssignments = [];
+    }
+    
+    const assignmentBasedIds = safeAssignments.length > 0
+      ? extractBankPFIdsFromAssignments(safeAssignments, bankPFRecords)
       : [];
     
     // 2. Otomatik eşleşen BankPF kayıtları (firma ünvanı = cari adı)
@@ -1328,7 +1428,9 @@ export function CustomerDetail({
           'Seviye': level,
           'Domain Sayısı': items.length,
           'Toplam Alt Birim': items.reduce((sum, item) => sum + item['Alt Birim Sayısı'], 0),
-          'Ortalama Alt Birim': (items.reduce((sum, item) => sum + item['Alt Birim Sayısı'], 0) / items.length).toFixed(2)
+          'Ortalama Alt Birim': items.length > 0 
+            ? (items.reduce((sum, item) => sum + item['Alt Birim Sayısı'], 0) / items.length).toFixed(2)
+            : '0.00'
         };
       });
       
@@ -1391,7 +1493,9 @@ export function CustomerDetail({
           `Seviye ${level}`,
           items.length.toString(),
           items.reduce((sum, item) => sum + item['Alt Birim Sayısı'], 0).toString(),
-          (items.reduce((sum, item) => sum + item['Alt Birim Sayısı'], 0) / items.length).toFixed(2)
+          items.length > 0
+            ? (items.reduce((sum, item) => sum + item['Alt Birim Sayısı'], 0) / items.length).toFixed(2)
+            : '0.00'
         ];
       });
       
@@ -2857,12 +2961,15 @@ export function CustomerDetail({
             <div className="space-y-6">
               {/* Banka - Cihaz İlişkilendirme Yönetimi */}
               <BankDeviceManagementTab
-                assignments={formData.bankDeviceAssignments || []}
+                assignments={Array.isArray(formData.bankDeviceAssignments) ? formData.bankDeviceAssignments : []}
                 onAssignmentsChange={(assignments) => {
                   // CRITICAL FIX: Functional state update kullan - stale closure'ı önle
                   setFormData(prevFormData => {
+                    // ✅ ARRAY SAFETY: assignments kontrolü
+                    const safeAssignments = Array.isArray(assignments) ? assignments : [];
+                    
                     // bankDeviceAssignments güncellendiğinde linkedBankPFIds'i de senkronize et
-                    const assignmentBasedIds = extractBankPFIdsFromAssignments(assignments, bankPFRecords);
+                    const assignmentBasedIds = extractBankPFIdsFromAssignments(safeAssignments, bankPFRecords);
                     
                     // Otomatik eşleşen kayıtları da ekle
                     const normalizedCariAdi = prevFormData.cariAdi.trim().toLowerCase();
@@ -2887,8 +2994,8 @@ export function CustomerDetail({
                     
                     console.log('🔄 BankDeviceAssignments güncellendi, linkedBankPFIds senkronize ediliyor:', {
                       cariAdi: prevFormData.cariAdi,
-                      assignmentsCount: assignments.length,
-                      assignments: assignments.map(a => ({ bankId: a.bankId, bankName: a.bankName, deviceCount: a.deviceIds?.length || 0 })),
+                      assignmentsCount: safeAssignments.length,
+                      assignments: safeAssignments.map(a => ({ bankId: a.bankId, bankName: a.bankName, deviceCount: a.deviceIds?.length || 0 })),
                       currentManualIds,
                       assignmentBasedIds,
                       autoMatchedIds,
@@ -2905,7 +3012,7 @@ export function CustomerDetail({
                     
                     const updatedFormData = { 
                       ...prevFormData, 
-                      bankDeviceAssignments: assignments,
+                      bankDeviceAssignments: safeAssignments,
                       linkedBankPFIds: allLinkedIds // Boş array da sakla, undefined yapma
                     };
                     
@@ -2951,6 +3058,11 @@ export function CustomerDetail({
               </div>
 
               {(() => {
+                // linkedBankPFIds ile eşleşen kayıtları bul
+                const linkedRecords = bankPFRecords?.filter((record: BankPF) => 
+                  formData.linkedBankPFIds?.includes(record.id)
+                ) || [];
+
                 return (
                   <>
                     {/* Kullanım Bilgisi */}
@@ -2971,6 +3083,156 @@ export function CustomerDetail({
                         </div>
                       </CardContent>
                     </Card>
+
+                    {/* Eşleşen Banka/PF Kayıtları Listesi */}
+                    {linkedRecords.length === 0 ? (
+                      <Card className="bg-gray-50 border-gray-200">
+                        <CardContent className="pt-6">
+                          <div className="text-center text-gray-500 py-8">
+                            <div className="text-4xl mb-2">📂</div>
+                            <p className="text-sm">Bu müşteri ile eşleştirilmiş Banka/PF kaydı bulunamadı</p>
+                            <p className="text-xs mt-1">Yukarıdaki "Banka-Cihaz İlişkilendirme" bölümünden atama yapabilirsiniz</p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <span>🏦 Eşleştirilmiş Banka/PF Kayıtları</span>
+                            <Badge variant="outline">{linkedRecords.length} kayıt</Badge>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-4">
+                            {linkedRecords.map((record: BankPF) => {
+                              // Banka isimlerini getir
+                              const bankNames = record.linkedBankIds?.map(bankId => {
+                                const bank = banks?.find(b => b.id === bankId);
+                                return bank?.bankaAdi || bankId;
+                              }) || [];
+
+                              // EPK isimlerini getir
+                              const epkNames = record.linkedEPKIds?.map(epkId => {
+                                const epk = epkList?.find(e => e.id === epkId);
+                                return epk?.kurumAdi || epkId;
+                              }) || [];
+
+                              // OK isimlerini getir
+                              const okNames = record.linkedOKIds?.map(okId => {
+                                const ok = okList?.find(o => o.id === okId);
+                                return ok?.kurumAdi || okId;
+                              }) || [];
+
+                              return (
+                                <div 
+                                  key={record.id} 
+                                  className="border rounded-lg p-4 hover:border-blue-300 transition-colors cursor-pointer"
+                                  onClick={() => {
+                                    if (onBankPFNavigate) {
+                                      onBankPFNavigate(record.id);
+                                    }
+                                  }}
+                                >
+                                  <div className="flex items-start justify-between gap-4">
+                                    {/* Sol: Ana Bilgiler */}
+                                    <div className="flex-1 space-y-2">
+                                      <div className="flex items-center gap-2">
+                                        <h4 className="font-medium text-gray-900">
+                                          {record.firmaUnvan || 'İsimsiz Kayıt'}
+                                        </h4>
+                                        {record.firmaUnvan?.trim().toLowerCase() === formData.cariAdi.trim().toLowerCase() && (
+                                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
+                                            Otomatik Eşleşme
+                                          </Badge>
+                                        )}
+                                      </div>
+
+                                      {/* Eşleşme Bilgileri */}
+                                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        {/* Bankalar */}
+                                        {bankNames.length > 0 && (
+                                          <div className="flex items-start gap-2">
+                                            <div className="text-xs text-gray-500 font-medium min-w-[60px]">Bankalar:</div>
+                                            <div className="flex flex-wrap gap-1">
+                                              {bankNames.map((name, idx) => (
+                                                <Badge key={idx} variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
+                                                  {name}
+                                                </Badge>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )}
+
+                                        {/* EPK */}
+                                        {epkNames.length > 0 && (
+                                          <div className="flex items-start gap-2">
+                                            <div className="text-xs text-gray-500 font-medium min-w-[60px]">EPK:</div>
+                                            <div className="flex flex-wrap gap-1">
+                                              {epkNames.map((name, idx) => (
+                                                <Badge key={idx} variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 text-xs">
+                                                  {name}
+                                                </Badge>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )}
+
+                                        {/* OK */}
+                                        {okNames.length > 0 && (
+                                          <div className="flex items-start gap-2">
+                                            <div className="text-xs text-gray-500 font-medium min-w-[60px]">ÖK:</div>
+                                            <div className="flex flex-wrap gap-1">
+                                              {okNames.map((name, idx) => (
+                                                <Badge key={idx} variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 text-xs">
+                                                  {name}
+                                                </Badge>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+
+                                      {/* Eğer hiç eşleşme yoksa uyarı */}
+                                      {bankNames.length === 0 && epkNames.length === 0 && okNames.length === 0 && (
+                                        <div className="text-xs text-amber-600 flex items-center gap-1">
+                                          <AlertTriangle size={12} />
+                                          <span>Bu kayıtta banka/EPK/ÖK eşleşmesi yapılmamış</span>
+                                        </div>
+                                      )}
+
+                                      {/* Ek Bilgiler (varsa) */}
+                                      <div className="flex gap-4 text-xs text-gray-500">
+                                        {record.vergiNumarasi && (
+                                          <span>VKN: {record.vergiNumarasi}</span>
+                                        )}
+                                        {record.ilce && (
+                                          <span>📍 {record.ilce}/{record.il}</span>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {/* Sağ: Detaya Git */}
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (onBankPFNavigate) {
+                                          onBankPFNavigate(record.id);
+                                        }
+                                      }}
+                                    >
+                                      Detay
+                                    </Button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
                   </>
                 );
               })()}
@@ -3186,11 +3448,12 @@ export function CustomerDetail({
                                   step="0.01"
                                   value={serviceFee.customFeePerDevice || serviceFee.standardFeePerDevice}
                                   onChange={(e) => {
+                                    const value = e.target.value ? parseFloat(e.target.value) : undefined;
                                     setFormData({
                                       ...formData,
                                       serviceFeeSettings: {
                                         ...serviceFee,
-                                        customFeePerDevice: parseFloat(e.target.value)
+                                        customFeePerDevice: !isNaN(value as number) ? value : undefined
                                       }
                                     });
                                   }}
@@ -3500,7 +3763,8 @@ export function CustomerDetail({
                                                 return;
                                               }
                                               const updated = [...serviceFee.deviceSubscriptions];
-                                              updated[deviceIndex].monthlyFee = parseFloat(e.target.value);
+                                              const value = e.target.value ? parseFloat(e.target.value) : 0;
+                                              updated[deviceIndex].monthlyFee = !isNaN(value) ? value : 0;
                                               setFormData({
                                                 ...formData,
                                                 serviceFeeSettings: {
@@ -3668,7 +3932,10 @@ export function CustomerDetail({
                                     <strong className="text-green-600">
                                       {displayDevices
                                         .filter((d: DisplayDevice) => d.isActive)
-                                        .reduce((sum: number, d: DisplayDevice) => sum + d.monthlyFee, 0)
+                                        .reduce((sum: number, d: DisplayDevice) => {
+                                          const fee = typeof d.monthlyFee === 'number' && !isNaN(d.monthlyFee) ? d.monthlyFee : 0;
+                                          return sum + fee;
+                                        }, 0)
                                         .toFixed(2)} €
                                     </strong>
                                   </td>
@@ -3778,7 +4045,11 @@ export function CustomerDetail({
                                       </div>
                                       <div>
                                         <span className="text-gray-600">Tutar:</span>
-                                        <p className="text-green-600">{invoice.totalAmount.toFixed(2)} €</p>
+                                        <p className="text-green-600">
+                                          {(typeof invoice.totalAmount === 'number' && !isNaN(invoice.totalAmount) 
+                                            ? invoice.totalAmount 
+                                            : 0).toFixed(2)} €
+                                        </p>
                                       </div>
                                     </div>
                                     <div className="mt-2 text-sm">

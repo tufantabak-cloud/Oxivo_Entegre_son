@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -104,6 +104,118 @@ export function HakedisTab({
   // Eksi değerleri toplama dahil et/etme (varsayılan: false - eksi değerler hariç tutulur)
   const [includeNegativeValues, setIncludeNegativeValues] = useState(false);
 
+  // ============================================================================
+  // 💾 DRAFT PERSISTENCE (Refresh Protection)
+  // ============================================================================
+  const DRAFT_KEY = `hakedis_draft_${firmaId}`;
+
+  // ✅ Taslağı temizle (kayıt başarılı olduğunda çağırılacak)
+  const clearDraft = () => {
+    try {
+      localStorage.removeItem(DRAFT_KEY);
+      console.log('🗑️ Hakediş taslağı temizlendi');
+    } catch (e) {
+      console.error('Taslak temizleme hatası:', e);
+    }
+  };
+
+  // ✅ LOAD DRAFT: Sayfa yüklendiğinde taslak varsa yükle
+  useEffect(() => {
+    try {
+      const savedDraft = localStorage.getItem(DRAFT_KEY);
+      if (!savedDraft) return;
+      
+      const draft = JSON.parse(savedDraft);
+      
+      // Son 24 saat içindeki taslakları yükle
+      const draftTime = new Date(draft.timestamp).getTime();
+      const now = new Date().getTime();
+      
+      if (now - draftTime > 24 * 60 * 60 * 1000) {
+        // 24 saatten eski taslakları sil
+        localStorage.removeItem(DRAFT_KEY);
+        console.log('⏰ Eski hakediş taslağı silindi (24 saat doldu)');
+        return;
+      }
+      
+      // Taslağı yükle (sadece uygun view'larda)
+      if (view === 'list' || view === 'create') {
+        console.log('📥 Hakediş taslağı yüklendi:', draft);
+        
+        // Form alanlarını yükle
+        if (draft.formTabelaGroupId) setFormTabelaGroupId(draft.formTabelaGroupId);
+        if (draft.formDonem) setFormDonem(draft.formDonem);
+        if (draft.formVade) setFormVade(draft.formVade);
+        if (draft.formIslemHacmiMap) setFormIslemHacmiMap(draft.formIslemHacmiMap);
+        if (draft.formNotlar) setFormNotlar(draft.formNotlar);
+        if (draft.formPFIslemHacmi) setFormPFIslemHacmi(draft.formPFIslemHacmi);
+        if (draft.formOxivoIslemHacmi) setFormOxivoIslemHacmi(draft.formOxivoIslemHacmi);
+        
+        // Ek alanları yükle
+        setEkGelirAciklama(draft.ekGelirAciklama || '');
+        setEkGelirPFTL(draft.ekGelirPFTL || '');
+        setEkGelirOXTL(draft.ekGelirOXTL || '');
+        setEkKesintiAciklama(draft.ekKesintiAciklama || '');
+        setEkKesintiPFTL(draft.ekKesintiPFTL || '');
+        setEkKesintiOXTL(draft.ekKesintiOXTL || '');
+        setManualAnaTabelaOxivoTotal(draft.manualAnaTabelaOxivoTotal || '');
+        setManualAnaTabelaIslemHacmi(draft.manualAnaTabelaIslemHacmi || '');
+        
+        // Kullanıcıya bilgi ver
+        if (draft.formTabelaGroupId && view === 'list') {
+          toast.info('Yarım kalan hakediş işleminiz yüklendi', { duration: 3000 });
+        }
+      }
+    } catch (e) {
+      console.error('❌ Taslak yükleme hatası:', e);
+      // Bozuk taslağı sil
+      localStorage.removeItem(DRAFT_KEY);
+      toast.error('Önceki taslak bozuk olduğu için temizlendi');
+    }
+  }, [firmaId, view]); // ✅ view dependency eklendi
+
+  // ✅ SAVE DRAFT: Form değiştiğinde taslağı kaydet (debounced)
+  useEffect(() => {
+    if ((view === 'create' || view === 'edit') && formTabelaGroupId) {
+      // 500ms debounce ile kaydet (her tuş vuruşunda değil)
+      const timeoutId = setTimeout(() => {
+        const draft = {
+          timestamp: new Date().toISOString(),
+          formTabelaGroupId,
+          formDonem,
+          formVade,
+          formIslemHacmiMap,
+          formNotlar,
+          formPFIslemHacmi,
+          formOxivoIslemHacmi,
+          ekGelirAciklama,
+          ekGelirPFTL,
+          ekGelirOXTL,
+          ekKesintiAciklama,
+          ekKesintiPFTL,
+          ekKesintiOXTL,
+          manualAnaTabelaOxivoTotal,
+          manualAnaTabelaIslemHacmi,
+        };
+        
+        try {
+          localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+          console.log('💾 Hakediş taslağı otomatik kaydedildi');
+        } catch (e) {
+          console.error('❌ Taslak kaydetme hatası:', e);
+        }
+      }, 500); // 500ms debounce
+      
+      // Cleanup: Timeout'u iptal et
+      return () => clearTimeout(timeoutId);
+    }
+  }, [
+    view, formTabelaGroupId, formDonem, formVade, formIslemHacmiMap,
+    formNotlar, formPFIslemHacmi, formOxivoIslemHacmi, ekGelirAciklama,
+    ekGelirPFTL, ekGelirOXTL, ekKesintiAciklama, ekKesintiPFTL,
+    ekKesintiOXTL, manualAnaTabelaOxivoTotal, manualAnaTabelaIslemHacmi, firmaId
+  ]);
+
   // Aktif TABELA grupları
   const aktifTabelaGroups = useMemo(() => {
     return tabelaGroups.filter(g => g.aktif);
@@ -111,15 +223,31 @@ export function HakedisTab({
 
   // Seçili gruba ait TABELA kayıtlarını filtrele
   const aktifTabelaRecords = useMemo(() => {
-    if (!formTabelaGroupId) return [];
+    if (!formTabelaGroupId) {
+      console.log('⚠️ [aktifTabelaRecords] formTabelaGroupId boş');
+      return [];
+    }
     
     const selectedGroup = tabelaGroups.find(g => g.id === formTabelaGroupId);
-    if (!selectedGroup) return [];
+    if (!selectedGroup) {
+      console.log('⚠️ [aktifTabelaRecords] Grup bulunamadı:', formTabelaGroupId);
+      return [];
+    }
     
-    return tabelaRecords.filter(record => 
+    const filtered = tabelaRecords.filter(record => 
       selectedGroup.recordIds?.includes(record.id) &&
       !record.kapanmaTarihi
     );
+    
+    console.log('🔍 [aktifTabelaRecords] Filtreleme sonucu:', {
+      groupId: formTabelaGroupId,
+      groupName: selectedGroup.name,
+      groupRecordIds: selectedGroup.recordIds?.length || 0,
+      totalTabelaRecords: tabelaRecords.length,
+      filteredCount: filtered.length
+    });
+    
+    return filtered;
   }, [tabelaRecords, tabelaGroups, formTabelaGroupId]);
 
   // ✅ Sadece normal TABELA kayıtları
@@ -195,6 +323,13 @@ export function HakedisTab({
 
   // Hakediş görüntüleme
   const handleView = (hakedis: HakedisRecord) => {
+    console.log('🔍 [handleView] Hakediş görüntüleme başlıyor:', {
+      id: hakedis.id,
+      donem: hakedis.donem,
+      tabelaGroupId: hakedis.tabelaGroupId,
+      islemHacmiMapKeys: Object.keys(hakedis.islemHacmiMap || {}).length
+    });
+    
     setSelectedHakedis(hakedis);
     setFormTabelaGroupId(hakedis.tabelaGroupId);
     setFormDonem(hakedis.donem);
@@ -213,10 +348,19 @@ export function HakedisTab({
     setManualAnaTabelaOxivoTotal((hakedis as any).manualAnaTabelaOxivoTotal || '');
     setManualAnaTabelaIslemHacmi((hakedis as any).manualAnaTabelaIslemHacmi || '');
     setView('view');
+    
+    console.log('✅ [handleView] State güncellendi, view moduna geçildi');
   };
 
   // Hakediş düzenleme
   const handleEdit = (hakedis: HakedisRecord) => {
+    console.log('🔍 [handleEdit] Hakediş düzenleme başlıyor:', {
+      id: hakedis.id,
+      donem: hakedis.donem,
+      tabelaGroupId: hakedis.tabelaGroupId,
+      islemHacmiMapKeys: Object.keys(hakedis.islemHacmiMap || {}).length
+    });
+    
     setSelectedHakedis(hakedis);
     setFormTabelaGroupId(hakedis.tabelaGroupId);
     setFormDonem(hakedis.donem);
@@ -235,6 +379,8 @@ export function HakedisTab({
     setManualAnaTabelaOxivoTotal((hakedis as any).manualAnaTabelaOxivoTotal || '');
     setManualAnaTabelaIslemHacmi((hakedis as any).manualAnaTabelaIslemHacmi || '');
     setView('edit');
+    
+    console.log('✅ [handleEdit] State güncellendi, edit moduna geçildi');
   };
 
   // Hakediş kaydetme (yeni veya düzenleme)
@@ -322,6 +468,7 @@ export function HakedisTab({
       }
       
       toast.success(`${formDonem} dönemi hakediş kaydı ${durum === 'Taslak' ? 'taslak olarak' : ''} oluşturuldu`);
+      clearDraft(); // ✅ Taslağı temizle
       setView('list');
     } else if (view === 'edit' && selectedHakedis) {
       // TABELA grubu bilgisini al
@@ -392,6 +539,7 @@ export function HakedisTab({
       }
       
       toast.success(`${formDonem} dönemi hakediş kaydı ${durum === 'Taslak' ? 'taslak olarak' : ''} güncellendi`);
+      clearDraft(); // ✅ Taslağı temizle
       setView('list');
     }
   };
@@ -445,10 +593,28 @@ export function HakedisTab({
     return parseFloat(cleaned);
   };
 
-  // Virgüllü sayıları parse et (örn: "1047608,25" -> 1047608.25)
-  const parseNumber = (value: string): number => {
+  // ✅ İYİLEŞTİRİLMİŞ: Türkçe formatlı sayıları parse et (örn: "1.047.608,25" -> 1047608.25)
+  const parseNumber = (value: string | number | null | undefined): number => {
+    // ✅ Type guard: Eğer zaten number ise direkt döndür
+    if (typeof value === 'number') return isNaN(value) ? 0 : value;
+    
+    // ✅ Null/undefined kontrolü
     if (!value) return 0;
-    return parseFloat(value.replace(',', '.'));
+    
+    // ✅ String'e çevir (eğer değilse)
+    const stringValue = String(value);
+    
+    // ✅ Boş string kontrolü
+    if (stringValue.trim() === '') return 0;
+    
+    // 1. Binlik ayırıcıları (.) kaldır
+    // 2. Ondalık ayırıcıyı (,) noktaya (.) çevir
+    // 3. Başta/sonda boşlukları temizle
+    const cleanValue = stringValue.replace(/\./g, '').replace(',', '.');
+    const result = parseFloat(cleanValue);
+    
+    // NaN koruması
+    return isNaN(result) ? 0 : result;
   };
 
   // İşlem hacmi değişikliği
@@ -474,7 +640,7 @@ export function HakedisTab({
 
   // Hesaplama fonksiyonu - bir TABELA kaydı için
   const calculateHakedis = (record: TabelaRecord, vade: string, islemHacmiMap: Record<string, string>) => {
-    const islemHacmi = parseFloat(islemHacmiMap[record.id] || '0');
+    const islemHacmi = parseNumber(islemHacmiMap[record.id] || '0');
     
     if (islemHacmi === 0) {
       return {
@@ -566,7 +732,7 @@ export function HakedisTab({
       
       aktifVadeler.forEach(vadeData => {
         const vadeKey = `${record.id}-${vadeData.vade}`;
-        const islemHacmi = parseFloat(islemHacmiMap[vadeKey] || '0');
+        const islemHacmi = parseNumber(islemHacmiMap[vadeKey] || '0');
         
         // Gelir modeline göre hesaplama
         let alisTL = 0;
@@ -655,38 +821,68 @@ export function HakedisTab({
       
       const rows: string[] = [];
       
-      // Normal kayıtlar
+      // ✅ Normal kayıtlar - HER VADE İÇİN AYRI SATIR
       normalRecords.forEach(record => {
-        const islemHacmi = parseFloat(hakedis.islemHacmiMap[record.id] || '0');
-        const calc = calculateHakedis(record, hakedis.vade, hakedis.islemHacmiMap);
-        const vadeData = record.komisyonOranları?.find(ko => ko.vade === hakedis.vade && ko.aktif !== false);
+        // Her kayıt için aktif vadeleri bul
+        const aktifVadeler = record.komisyonOranları?.filter(ko => ko.aktif !== false) || [];
         
-        let komisyonStr = '-';
-        if (record.gelirModeli?.ad === 'Gelir Ortaklığı') {
-          komisyonStr = `A:%${vadeData?.alisTL || '0'} S:%${vadeData?.satisTL || '0'}`;
-        } else if (record.gelirModeli?.ad === 'Sabit Komisyon') {
-          komisyonStr = `%${vadeData?.oran || '0'}`;
-        } else {
-          komisyonStr = `${record.hazineGeliri?.tutarTL || '0'}₺ (OX:%${record.hazineGeliri?.oxivoYuzde || '0'})`;
-        }
-        
-        rows.push([
-          'Ana TABELA',
-          kisaltUrunAdi(record.urun || '-'),
-          record.gelirModeli?.ad || 'Gelir Modeli Yok',
-          '-',
-          record.kartProgramIds?.includes('ALL') ? 'Tümü' : `${record.kartProgramIds?.length || 0} program`,
-          record.yurtIciDisi,
-          record.kartTipi,
-          hakedis.vade,
-          komisyonStr,
-          islemHacmi.toFixed(2),
-          calc.maliyet.toFixed(2),
-          calc.satis.toFixed(2),
-          calc.kazanc.toFixed(2),
-          calc.pfPay.toFixed(2),
-          calc.oxivoPay.toFixed(2)
-        ].join(','));
+        aktifVadeler.forEach(vadeData => {
+          const vadeKey = `${record.id}-${vadeData.vade}`;
+          const islemHacmi = parseFloat((hakedis.islemHacmiMap[vadeKey] || '0').replace(',', '.'));
+          
+          // Gelir modeline göre hesaplama
+          let alisTL = 0;
+          let satisTL = 0;
+          let kazancTL = 0;
+          
+          if (record.gelirModeli?.ad === 'Sabit Komisyon') {
+            // Sabit Komisyon: Kar = İşlem Hacmi × (Komisyon Oranı / 100)
+            const komisyonOrani = parseFloat(vadeData.oran || '0');
+            kazancTL = islemHacmi * (komisyonOrani / 100);
+            alisTL = 0;
+            satisTL = kazancTL;
+          } else {
+            // Gelir Ortaklığı ve diğer modeller
+            const alisYuzde = parseFloat(vadeData.alisTL || '0');
+            const satisYuzde = parseFloat(vadeData.satisTL || '0');
+            
+            alisTL = islemHacmi * (alisYuzde / 100);
+            satisTL = islemHacmi * (satisYuzde / 100);
+            kazancTL = satisTL - alisTL;
+          }
+          
+          const pfOrani = parseFloat(record.paylaşımOranları?.kurulusOrani || '0');
+          const oxivoOrani = parseFloat(record.paylaşımOranları?.oxivoOrani || '0');
+          const pfPayi = kazancTL * (pfOrani / 100);
+          const oxivoPayi = kazancTL * (oxivoOrani / 100);
+          
+          let komisyonStr = '-';
+          if (record.gelirModeli?.ad === 'Gelir Ortaklığı') {
+            komisyonStr = `A:%${vadeData.alisTL || '0'} S:%${vadeData.satisTL || '0'}`;
+          } else if (record.gelirModeli?.ad === 'Sabit Komisyon') {
+            komisyonStr = `%${vadeData.oran || '0'}`;
+          } else {
+            komisyonStr = `${record.hazineGeliri?.tutarTL || '0'}₺ (OX:%${record.hazineGeliri?.oxivoYuzde || '0'})`;
+          }
+          
+          rows.push([
+            'Ana TABELA',
+            kisaltUrunAdi(record.urun || '-'),
+            record.gelirModeli?.ad || 'Gelir Modeli Yok',
+            '-',
+            record.kartProgramIds?.includes('ALL') ? 'Tümü' : `${record.kartProgramIds?.length || 0} program`,
+            record.yurtIciDisi,
+            record.kartTipi,
+            vadeData.vade,
+            komisyonStr,
+            islemHacmi.toFixed(2),
+            alisTL.toFixed(2),
+            satisTL.toFixed(2),
+            kazancTL.toFixed(2),
+            pfPayi.toFixed(2),
+            oxivoPayi.toFixed(2)
+          ].join(','));
+        });
       });
 
       // Toplam satırları
@@ -927,7 +1123,7 @@ export function HakedisTab({
                 </p>
               </div>
             ) : (
-              <div className="border rounded-lg overflow-hidden">
+              <div className="border rounded-lg overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-gray-50">
@@ -1385,7 +1581,7 @@ export function HakedisTab({
           </div>
 
           {/* İşlem Hacmi Tablosu */}
-          <div className="border rounded-lg overflow-hidden bg-white">
+          <div className="border rounded-lg overflow-x-auto bg-white">
             <Table>
               <TableHeader>
                 <TableRow className="bg-gradient-to-r from-blue-50 to-indigo-50">
@@ -1490,8 +1686,54 @@ export function HakedisTab({
         </CardContent>
       </Card>
 
-      {/* Bilgilendirme - Boş Grup Uyarısı */}
-      {aktifTabelaRecords.length === 0 && (
+      {/* Bilgilendirme - Boş Grup Uyarısı - VIEW/EDIT Modu */}
+      {(view === 'view' || view === 'edit') && aktifTabelaRecords.length === 0 && formTabelaGroupId && (
+        <Card className="bg-red-50 border-2 border-red-300 shadow-lg">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3 text-sm text-red-900">
+              <span className="text-3xl">⚠️</span>
+              <div className="flex-1">
+                <p className="mb-2 text-base"><strong>🚫 TABELA Kayıtları Görüntülenemiyor</strong></p>
+                <p className="mb-3">
+                  <strong className="text-red-700">"{tabelaGroups.find(g => g.id === formTabelaGroupId)?.name || 'Grup bulunamadı'}"</strong> adlı TABELA grubunda hiç aktif kayıt bulunmuyor.
+                </p>
+                
+                <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                  <p className="text-xs text-yellow-900">
+                    <strong>💡 Olası Nedenler:</strong>
+                    <br />• TABELA grubu oluşturulmuş ancak içine kayıt eklenmemiş
+                    <br />• Grubun kayıtları silinmiş veya başka bir gruba taşınmış
+                    <br />• TABELA kayıtlarının tümü kapanmış olabilir
+                  </p>
+                </div>
+                
+                <div className="mb-3 p-3 bg-white border border-gray-200 rounded text-xs">
+                  <strong>🔍 Debug Bilgisi:</strong>
+                  <br />• Grup ID: <code className="bg-gray-100 px-1 rounded">{formTabelaGroupId}</code>
+                  <br />• Grup Adı: {tabelaGroups.find(g => g.id === formTabelaGroupId)?.name || 'Bulunamadı'}
+                  <br />• Grup Kayıt Sayısı: {tabelaGroups.find(g => g.id === formTabelaGroupId)?.recordIds?.length || 0}
+                  <br />• Sistemdeki Toplam TABELA: {tabelaRecords.length}
+                  <br />• Mevcut Mod: {view}
+                </div>
+                
+                <div className="flex gap-2 flex-wrap">
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setView('list')}
+                    className="bg-white border-red-300 hover:bg-red-50"
+                  >
+                    ← Hakediş Listesine Dön
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
+      {/* Bilgilendirme - Boş Grup Uyarısı - CREATE Modu */}
+      {view === 'create' && aktifTabelaRecords.length === 0 && formTabelaGroupId && (
         <Card className="bg-orange-50 border-orange-200">
           <CardContent className="pt-6">
             <div className="flex items-start gap-3 text-sm text-orange-800">
@@ -1499,17 +1741,19 @@ export function HakedisTab({
               <div>
                 <p className="mb-2"><strong>Seçili TABELA Grubunda Kayıt Bulunamadı</strong></p>
                 <p className="text-xs">
-                  "{tabelaGroups.find(g => g.id === formTabelaGroupId)?.name}" grubunda aktif TABELA kaydı bulunmuyor. 
-                  Önce TABELA sekmesinden bu gruba kayıt ekleyin veya başka bir grup seçin.
+                  "{tabelaGroups.find(g => g.id === formTabelaGroupId)?.name || 'Grup bulunamadı'}" grubunda aktif TABELA kaydı bulunmuyor.
+                  <br />Önce TABELA sekmesinden bu gruba kayıt ekleyin veya başka bir grup seçin.
                 </p>
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setView('selectGroup')}
-                  className="mt-3 bg-white"
-                >
-                  ← Farklı Grup Seç
-                </Button>
+                <div className="mt-3 flex gap-2">
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setView('selectGroup')}
+                    className="bg-white"
+                  >
+                    ← Farklı Grup Seç
+                  </Button>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -1766,7 +2010,7 @@ export function HakedisTab({
                         // Her vade için ayrı satır oluştur
                         return aktifVadeler.map((vadeData, vadeIndex) => {
                           const vadeKey = `${record.id}-${vadeData.vade}`;
-                          const islemHacmi = parseFloat((formIslemHacmiMap[vadeKey] || '0').replace(',', '.'));
+                          const islemHacmi = parseNumber(formIslemHacmiMap[vadeKey] || '0');
                           
                           // Gelir Modeline göre hesaplamalar
                           const isSabitKomisyon = record.gelirModeli?.ad === 'Sabit Komisyon';

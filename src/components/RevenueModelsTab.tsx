@@ -4,10 +4,8 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Badge } from './ui/badge';
-import { Plus, Edit2, Trash2, Bug, Check, X, Search } from 'lucide-react';
+import { Plus, Edit2, Trash2, Check, X, Search } from 'lucide-react';
 import { useState } from 'react';
-import { RevenueModelsDiagnostic } from './RevenueModelsDiagnostic';
-import { createSampleData } from '../utils/revenueModelsRecovery';
 import {
   Dialog,
   DialogContent,
@@ -16,7 +14,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from './ui/dialog';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 
 export interface HesapKalemi {
   id: string;
@@ -71,7 +69,7 @@ export function RevenueModelsTab({
   ekGelirler,
   onEkGelirlerChange
 }: RevenueModelsTabProps) {
-  const [activeSection, setActiveSection] = useState<'hesap' | 'komisyon' | 'gelir' | 'diagnostic'>('hesap');
+  const [activeSection, setActiveSection] = useState<'hesap' | 'komisyon' | 'gelir'>('hesap');
   
   // Hesap Kalemi State
   const [hesapDialogOpen, setHesapDialogOpen] = useState(false);
@@ -371,14 +369,6 @@ export function RevenueModelsTab({
           onClick={() => setActiveSection('gelir')}
         >
           💵 Ek Gelirler
-        </Button>
-        <Button
-          variant={activeSection === 'diagnostic' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setActiveSection('diagnostic')}
-        >
-          <Bug size={16} className="mr-1" />
-          Teşhis & Analiz
         </Button>
       </div>
 
@@ -690,17 +680,6 @@ export function RevenueModelsTab({
             )}
           </CardContent>
         </Card>
-      )}
-
-      {/* ==================== TEŞHİS & ANALİZ ==================== */}
-      {activeSection === 'diagnostic' && (
-        <RevenueModelsDiagnostic
-          hesapKalemleri={hesapKalemleri}
-          sabitKomisyonlar={sabitKomisyonlar}
-          ekGelirler={ekGelirler}
-          onLoadSampleData={handleLoadSampleData}
-          onRecoveryData={handleRecoveryData}
-        />
       )}
 
       {/* ==================== HESAP KALEMİ DIALOG ==================== */}

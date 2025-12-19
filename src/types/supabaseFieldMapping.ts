@@ -27,9 +27,9 @@ export const customersFieldMap = {
     email: 'email',
     yetkili_kisi: 'yetkili',
     sektor: 'sektor',
-    mcc_code: 'mcc',
+    mcc: 'mcc',  // ✅ FIX: Frontend'de mcc → Supabase'de mcc (mcc_code değil!)
     satis_temsilcisi: 'sales_rep_name',
-    aktif: 'durum',
+    durum: 'durum',  // ✅ FIX: Frontend'de durum → Supabase'de durum (aktif değil!)
     askida: 'bloke_durumu',
     domain_hierarchy: 'domain_hierarchy',
     bank_device_assignments: 'bank_device_assignments',
@@ -54,9 +54,9 @@ export const customersFieldMap = {
     email: 'email',
     yetkili: 'yetkili_kisi',
     sektor: 'sektor',
-    mcc: 'mcc_code',
+    mcc: 'mcc',  // ✅ FIX: Supabase'de mcc → Frontend'de mcc (mcc_code değil!)
     sales_rep_name: 'satis_temsilcisi',
-    durum: 'aktif',
+    durum: 'durum',  // ✅ FIX: Supabase'de durum → Frontend'de durum (aktif değil!)
     bloke_durumu: 'askida',
     domain_hierarchy: 'domain_hierarchy',
     bank_device_assignments: 'bank_device_assignments',
@@ -117,6 +117,7 @@ export const productsFieldMap = {
 // ========================================
 export const earningsFieldMap = {
   toSupabase: {
+    id: 'id',  // ✅ Keep ID field
     musteri_id: 'firma_id',
     firma_unvani: 'tabela_group_ad',
     toplam_ciro: 'total_islem_hacmi',
@@ -129,8 +130,13 @@ export const earningsFieldMap = {
     donem: 'donem',
     notlar: 'notlar',
     onaylandi: 'durum',
+    olusturma_tarihi: 'created_at',  // ✅ CRITICAL FIX
+    guncelleme_tarihi: 'updated_at', // ✅ CRITICAL FIX
+    created_at: 'created_at',  // ✅ Alternative naming
+    updated_at: 'updated_at',  // ✅ Alternative naming
   },
   fromSupabase: {
+    id: 'id',  // ✅ Keep ID field
     firma_id: 'musteri_id',
     tabela_group_ad: 'firma_unvani',
     total_islem_hacmi: 'toplam_ciro',
@@ -143,6 +149,8 @@ export const earningsFieldMap = {
     donem: 'donem',
     notlar: 'notlar',
     durum: 'onaylandi',
+    created_at: 'olusturma_tarihi',  // ✅ CRITICAL FIX
+    updated_at: 'guncelleme_tarihi', // ✅ CRITICAL FIX
   }
 } as const;
 

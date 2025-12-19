@@ -267,7 +267,7 @@ export function BankDeviceManagementTab({
     const conflictingDevices: string[] = [];
     selectedDeviceIds.forEach(deviceId => {
       const existingAssignment = assignments.find(
-        a => a.id !== currentAssignmentId && a.deviceIds.includes(deviceId)
+        a => a.id !== currentAssignmentId && a.deviceIds?.includes(deviceId)
       );
       if (existingAssignment) {
         conflictingDevices.push(deviceId);
@@ -283,10 +283,10 @@ export function BankDeviceManagementTab({
     const updatedAssignments = assignments.map(a => {
       if (a.id === currentAssignmentId) {
         // Duplicate kontrolü
-        const newDeviceIds = selectedDeviceIds.filter(id => !a.deviceIds.includes(id));
+        const newDeviceIds = selectedDeviceIds.filter(id => !(a.deviceIds || []).includes(id));
         return {
           ...a,
-          deviceIds: [...a.deviceIds, ...newDeviceIds],
+          deviceIds: [...(a.deviceIds || []), ...newDeviceIds],
         };
       }
       return a;
@@ -304,7 +304,8 @@ export function BankDeviceManagementTab({
       if (a.id === assignmentId) {
         return {
           ...a,
-          deviceIds: a.deviceIds.filter(id => id !== deviceId),
+          // ✅ NULL SAFETY: deviceIds undefined olabilir
+          deviceIds: (a.deviceIds || []).filter(id => id !== deviceId),
         };
       }
       return a;
@@ -320,12 +321,14 @@ export function BankDeviceManagementTab({
     const assignment = assignments.find(a => a.id === assignmentId);
     if (!assignment) return;
 
-    if (assignment.deviceIds.length === 0) {
+    const deviceCount = assignment.deviceIds?.length || 0;
+    
+    if (deviceCount === 0) {
       toast.info('Kaldırılacak cihaz yok');
       return;
     }
 
-    if (confirm(`${assignment.deviceIds.length} cihazın tümünü kaldırmak istediğinizden emin misiniz?`)) {
+    if (confirm(`${deviceCount} cihazın tümünü kaldırmak istediğinizden emin misiniz?`)) {
       const updatedAssignments = assignments.map(a => {
         if (a.id === assignmentId) {
           return { ...a, deviceIds: [] };
@@ -367,11 +370,11 @@ export function BankDeviceManagementTab({
 
   // Cihazın hangi bankaya atandığını kontrol et
   const getDeviceAssignment = (deviceId: string) => {
-    return assignments.find(a => a.deviceIds.includes(deviceId));
+    return assignments.find(a => (a.deviceIds || []).includes(deviceId));
   };
 
   // İstatistikler
-  const totalAssignedDevices = assignments.reduce((sum, a) => sum + a.deviceIds.length, 0);
+  const totalAssignedDevices = assignments.reduce((sum, a) => sum + (a.deviceIds?.length || 0), 0);
   const totalUnassignedDevices = payterProducts.length - totalAssignedDevices;
 
   // Checkbox değişikliği
@@ -449,7 +452,8 @@ export function BankDeviceManagementTab({
         matchedDomains.add(matchedSipayDomain);
         
         // Cihaz başka bir kategoriye atanmış mı kontrol et
-        const existingAssignment = assignments.find(a => a.deviceIds.includes(device.id));
+        // ✅ NULL SAFETY: deviceIds undefined olabilir
+        const existingAssignment = assignments.find(a => (a.deviceIds || []).includes(device.id));
         
         if (existingAssignment) {
           if (existingAssignment.bankId === sipayAssignmentId) {
@@ -632,7 +636,7 @@ export function BankDeviceManagementTab({
                       </Badge>
                     )}
                   </div>
-                  <Button type="button" onClick={handleAddSelectedCategories}>
+                  <Button type="button" size="default" onClick={handleAddSelectedCategories}>
                     <Plus size={18} className="mr-2" />
                     Kategorileri Ekle
                   </Button>
@@ -887,7 +891,7 @@ export function BankDeviceManagementTab({
       ) : (
         <div className="space-y-4">
           {assignments.map((assignment) => {
-            const deviceCount = assignment.deviceIds.length;
+            const deviceCount = assignment.deviceIds?.length || 0;
             
             return (
               <Card key={assignment.id} className="border-l-4 border-l-blue-500">
@@ -899,8 +903,8 @@ export function BankDeviceManagementTab({
                       </div>
                       <div>
                         <CardTitle className="flex items-center gap-2">
-                          {assignment.bankName}
-                          <Badge variant="outline">{assignment.bankCode}</Badge>
+                          {assignment.bankName || 'İsimsiz Banka'}
+                          <Badge variant="outline">{assignment.bankCode || 'N/A'}</Badge>
                         </CardTitle>
                         <CardDescription className="mt-1">
                           Toplam {deviceCount} cihaz atanmış
@@ -964,7 +968,7 @@ export function BankDeviceManagementTab({
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      {assignment.deviceIds.map(deviceId => {
+                      {(assignment.deviceIds || []).map(deviceId => {
                         const device = getDeviceInfo(deviceId);
                         if (!device) {
                           return (
@@ -1111,7 +1115,7 @@ export function BankDeviceManagementTab({
                   <p className="text-sm text-green-900">
                     ✓ <strong>{selectedDeviceIds.length}</strong> cihaz seçildi
                   </p>
-                  <Button type="button" onClick={handleAssignDevices}>
+                  <Button type="button" size="default" onClick={handleAssignDevices}>
                     Kayıt Et
                   </Button>
                 </div>
@@ -1233,7 +1237,7 @@ export function BankDeviceManagementTab({
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+            <Button type="button" variant="outline" size="default" onClick={() => setIsAddDialogOpen(false)}>
               İptal
             </Button>
           </DialogFooter>
@@ -1246,23 +1250,28 @@ export function BankDeviceManagementTab({
           <AlertDialogHeader>
             <AlertDialogTitle>Banka Kategorisini Sil</AlertDialogTitle>
             <AlertDialogDescription>
-              {deleteConfirmId && (
-                <>
-                  <strong>{assignments.find(a => a.id === deleteConfirmId)?.bankName}</strong> kategorisini
-                  silmek istediğinizden emin misiniz?
-                  {assignments.find(a => a.id === deleteConfirmId)?.deviceIds.length ? (
-                    <>
-                      <br />
-                      <br />
-                      <span className="text-orange-600">
-                        ⚠️ Bu kategoride{' '}
-                        <strong>{assignments.find(a => a.id === deleteConfirmId)?.deviceIds.length} cihaz</strong>{' '}
-                        atanmış. Kategori silindiğinde cihaz atamaları da kaldırılacak.
-                      </span>
-                    </>
-                  ) : null}
-                </>
-              )}
+              {deleteConfirmId && (() => {
+                const assignment = assignments.find(a => a.id === deleteConfirmId);
+                const deviceCount = assignment?.deviceIds?.length || 0;
+                
+                return (
+                  <>
+                    <strong>{assignment?.bankName}</strong> kategorisini
+                    silmek istediğinizden emin misiniz?
+                    {deviceCount > 0 && (
+                      <>
+                        <br />
+                        <br />
+                        <span className="text-orange-600">
+                          ⚠️ Bu kategoride{' '}
+                          <strong>{deviceCount} cihaz</strong>{' '}
+                          atanmış. Kategori silindiğinde cihaz atamaları da kaldırılacak.
+                        </span>
+                      </>
+                    )}
+                  </>
+                );
+              })()}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

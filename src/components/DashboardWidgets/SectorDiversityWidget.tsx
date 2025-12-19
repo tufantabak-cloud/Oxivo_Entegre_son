@@ -240,7 +240,7 @@ export function SectorDiversityWidget({ customers, payterProducts }: SectorDiver
                 </TableHeader>
                 <TableBody>
                   {sectorAnalysis.topSectors.map((sector, index) => (
-                    <TableRow key={index}>
+                    <TableRow key={sector.sector || `sector-${index}`}>
                       <TableCell className="text-xs font-medium max-w-[120px] truncate" title={sector.sector}>
                         {sector.sector}
                       </TableCell>

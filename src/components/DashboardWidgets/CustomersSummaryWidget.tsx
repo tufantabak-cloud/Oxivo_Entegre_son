@@ -121,6 +121,7 @@ export function CustomersSummaryWidget({ customers, payterProducts }: CustomersS
     const allItems = sortedCustomers.map((customer, index) => {
       const activeDevices = customer.serviceFeeSettings?.deviceSubscriptions?.filter(d => d.isActive) || [];
       return {
+        id: customer.id, // ✅ FIX: Add unique ID
         label: customer.cariAdi || 'İsimsiz Müşteri',
         value: `${activeDevices.length} cihaz`,
         badge: customer.effectiveCategory,

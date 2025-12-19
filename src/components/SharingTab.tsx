@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -7,16 +7,9 @@ import { Textarea } from './ui/textarea';
 import { Badge } from './ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
-import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
-import { Search, Plus, Edit2, Trash2, CheckCircle, AlertTriangle, RefreshCw, Info } from 'lucide-react';
-import { toast } from 'sonner';
-import { 
-  checkSharingsStatus, 
-  restoreSharingsData, 
-  diagnosticAndRepair,
-  getSharingsReport 
-} from '../utils/sharingsRecovery';
+import { Search, Plus, Edit2, Trash2 } from 'lucide-react';
+import { toast } from 'sonner@2.0.3';
 import { sharingApi } from '../utils/supabaseClient';
 
 export interface Sharing {
@@ -52,38 +45,6 @@ export function SharingTab({ sharings, onSharingsChange }: SharingTabProps) {
     aciklama: '',
     aktif: true,
   });
-  const [diagnosticStatus, setDiagnosticStatus] = useState<ReturnType<typeof checkSharingsStatus> | null>(null);
-  const [showDiagnostic, setShowDiagnostic] = useState(false);
-
-  // ✅ AUTO-REPAIR: Check data status on mount and when sharings change
-  useEffect(() => {
-    const status = checkSharingsStatus();
-    setDiagnosticStatus(status);
-    
-    // ✅ AUTO-REPAIR: If data is invalid or empty, auto-repair silently
-    if (!status.isValid || status.count === 0) {
-      console.log('[SharingTab] Auto-repairing sharings data...', status);
-      
-      // Silent auto-repair without showing diagnostic UI
-      const repairResult = diagnosticAndRepair(false); // false = no toasts
-      
-      if (repairResult.repaired) {
-        console.log('[SharingTab] Auto-repair successful:', repairResult.message);
-        
-        // Reload data from localStorage
-        const repairedStatus = checkSharingsStatus();
-        if (repairedStatus.isValid && repairedStatus.data) {
-          onSharingsChange(repairedStatus.data);
-          toast.success('Paylaşım modelleri otomatik olarak düzeltildi');
-        }
-      }
-      
-      // Only show diagnostic UI if auto-repair failed
-      if (!repairResult.repaired) {
-        setShowDiagnostic(true);
-      }
-    }
-  }, []);
 
   // ✅ SAFETY: Ensure sharings is always an array
   const safeSharings = Array.isArray(sharings) ? sharings : [];
@@ -184,132 +145,18 @@ export function SharingTab({ sharings, onSharingsChange }: SharingTabProps) {
     toast.success(`Paylaşım modeli ${!sharing.aktif ? 'aktif' : 'pasif'} edildi`);
   };
 
-  const handleRunDiagnostic = () => {
-    const result = diagnosticAndRepair(true);
-    setDiagnosticStatus(result.status);
-    
-    if (result.repaired) {
-      // Reload page to reflect changes
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
-    }
-  };
-
-  const handleForceRestore = () => {
-    const result = restoreSharingsData(true);
-    if (result.success) {
-      toast.success(result.message);
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
-    } else {
-      toast.error(result.message);
-    }
-  };
-
-  const handleViewReport = () => {
-    const report = getSharingsReport();
-    console.log(report);
-    toast.info('Detaylı rapor console\'a yazdırıldı');
-  };
-
   return (
     <div className="space-y-6">
-      {/* Diagnostic Alert */}
-      {showDiagnostic && diagnosticStatus && (!diagnosticStatus.isValid || diagnosticStatus.count === 0) && (
-        <Alert variant="destructive" className="border-orange-500 bg-orange-50">
-          <AlertTriangle className="h-5 w-5 text-orange-600" />
-          <AlertTitle className="text-orange-900">Veri Sorunu Tespit Edildi</AlertTitle>
-          <AlertDescription className="space-y-3">
-            <p className="text-orange-800">
-              {diagnosticStatus.error || 'Paylaşım modelleri verisi eksik veya bozuk.'}
-            </p>
-            <div className="flex items-center gap-2 pt-2">
-              <Button 
-                onClick={handleRunDiagnostic} 
-                variant="outline" 
-                size="sm"
-                className="border-orange-600 text-orange-700 hover:bg-orange-100"
-              >
-                <RefreshCw size={16} className="mr-2" />
-                Otomatik Onar
-              </Button>
-              <Button 
-                onClick={handleForceRestore} 
-                variant="outline" 
-                size="sm"
-                className="border-orange-600 text-orange-700 hover:bg-orange-100"
-              >
-                <RefreshCw size={16} className="mr-2" />
-                Varsayılan Değerleri Yükle
-              </Button>
-              <Button 
-                onClick={handleViewReport} 
-                variant="ghost" 
-                size="sm"
-                className="text-orange-700 hover:bg-orange-100"
-              >
-                <Info size={16} className="mr-2" />
-                Detaylı Rapor
-              </Button>
-              <Button 
-                onClick={() => setShowDiagnostic(false)} 
-                variant="ghost" 
-                size="sm"
-                className="text-orange-700 hover:bg-orange-100"
-              >
-                Kapat
-              </Button>
-            </div>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Success Status */}
-      {diagnosticStatus && diagnosticStatus.isValid && diagnosticStatus.count > 0 && (
-        <Alert className="border-green-500 bg-green-50">
-          <CheckCircle className="h-5 w-5 text-green-600" />
-          <AlertTitle className="text-green-900">Veri Sağlam</AlertTitle>
-          <AlertDescription className="text-green-800">
-            {diagnosticStatus.count} paylaşım modeli başarıyla yüklendi.
-            {showDiagnostic && (
-              <Button 
-                onClick={() => setShowDiagnostic(false)} 
-                variant="ghost" 
-                size="sm"
-                className="ml-4 text-green-700 hover:bg-green-100"
-              >
-                Kapat
-              </Button>
-            )}
-          </AlertDescription>
-        </Alert>
-      )}
-
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h3>Paylaşım Modelleri</h3>
           <p className="text-gray-600">Paylaşım gelir modellerini yönetin</p>
         </div>
-        <div className="flex items-center gap-2">
-          {!showDiagnostic && (
-            <Button 
-              onClick={() => setShowDiagnostic(true)} 
-              variant="outline" 
-              size="sm"
-              className="flex items-center space-x-2"
-            >
-              <Info size={16} />
-              <span>Veri Durumu</span>
-            </Button>
-          )}
-          <Button onClick={() => handleOpenDialog()} className="flex items-center space-x-2">
-            <Plus size={18} />
-            <span>Yeni Model Ekle</span>
-          </Button>
-        </div>
+        <Button onClick={() => handleOpenDialog()} className="flex items-center space-x-2">
+          <Plus size={18} />
+          <span>Yeni Model Ekle</span>
+        </Button>
       </div>
 
       {/* Search */}

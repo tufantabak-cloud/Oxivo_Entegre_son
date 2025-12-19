@@ -134,7 +134,7 @@ export function CustomerGrowthWidget({ customers }: CustomerGrowthWidgetProps) {
               <div className="space-y-2">
                 {recentMonths.map((month, index) => (
                   <div
-                    key={index}
+                    key={`${month.month}-${index}`}
                     className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
                   >
                     <div className="flex items-center gap-3">

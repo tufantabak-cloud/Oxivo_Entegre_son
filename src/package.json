@@ -1,7 +1,7 @@
 {
   "name": "oxivo-management-system",
   "private": true,
-  "version": "3.1.0",
+  "version": "3.2.0-uuid",
   "type": "module",
   "scripts": {
     "dev": "vite",

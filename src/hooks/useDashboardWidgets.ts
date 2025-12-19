@@ -19,56 +19,78 @@ export interface WidgetConfig {
 }
 
 const defaultWidgets: WidgetConfig[] = [
-  // ═══════════════════════════════════════════════════════
-  // MÜŞTERİLER BÖLÜMÜ (7 Widget)
-  // ═══════════════════════════════════════════════════════
+  {
+    id: 'systemStatus-1',
+    type: 'systemStatus',
+    title: 'Sistem Durumu',
+    enabled: true,
+    pinned: true, // Varsayılan olarak sabitlenmiş
+    order: 0,
+    size: 'small',
+  },
   {
     id: 'customers-1',
     type: 'customers',
     title: 'Müşteriler Özeti',
     enabled: true,
     pinned: false,
-    order: 0,
-    size: 'medium',
-  },
-  {
-    id: 'customerGrowth-1',
-    type: 'customerGrowth',
-    title: 'Müşteri Büyümesi',
-    enabled: true,
     order: 1,
     size: 'medium',
   },
   {
-    id: 'sectorDiversity-1',
-    type: 'sectorDiversity',
-    title: 'Sektör Çeşitliliği Analizi',
+    id: 'bankpf-1',
+    type: 'bankpf',
+    title: 'Banka/PF Özeti',
     enabled: true,
     order: 2,
     size: 'medium',
   },
   {
-    id: 'mccDiversity-1',
-    type: 'mccDiversity',
-    title: 'MCC Çeşitliliği Analizi',
+    id: 'bankPFMembers-1',
+    type: 'bankPFMembers',
+    title: 'Banka/PF ÜİY Özeti',
     enabled: true,
     order: 3,
     size: 'medium',
   },
   {
-    id: 'riskDashboard-1',
-    type: 'riskDashboard',
-    title: 'Risk Dashboard\'u',
-    enabled: true,
+    id: 'products-1',
+    type: 'products',
+    title: 'Ürün Özeti',
+    enabled: false,
     order: 4,
     size: 'medium',
   },
   {
-    id: 'salesRepPerformance-1',
-    type: 'salesRepPerformance',
-    title: 'Satış Temsilcisi Performansı',
-    enabled: true,
+    id: 'revenue-1',
+    type: 'revenue',
+    title: 'Gelir Özeti',
+    enabled: false,
     order: 5,
+    size: 'medium',
+  },
+  {
+    id: 'customerGrowth-1',
+    type: 'customerGrowth',
+    title: 'Müşteri Büyüme Analizi',
+    enabled: false,
+    order: 6,
+    size: 'medium',
+  },
+  {
+    id: 'sectorDiversity-1',
+    type: 'sectorDiversity',
+    title: 'Sektör Çeşitliliği',
+    enabled: false,
+    order: 7,
+    size: 'medium',
+  },
+  {
+    id: 'mccDiversity-1',
+    type: 'mccDiversity',
+    title: 'MCC Çeşitliliği',
+    enabled: false,
+    order: 8,
     size: 'medium',
   },
   {
@@ -76,89 +98,8 @@ const defaultWidgets: WidgetConfig[] = [
     type: 'topCustomers',
     title: 'Top 10 Müşteriler',
     enabled: true,
-    order: 6,
-    size: 'large', // 2 kolonu kaplasın
-  },
-  // ═══════════════════════════════════════════════════════
-  // BANKA/PF BÖLÜMÜ (4 Widget)
-  // ═══════════════════════════════════════════════════════
-  {
-    id: 'bankPFMembers-1',
-    type: 'bankPFMembers',
-    title: 'Banka/PF ÜİY Özeti',
-    enabled: true,
-    order: 7,
-    size: 'medium',
-  },
-  {
-    id: 'bankPFUiySummary-1',
-    type: 'bankPFUiySummary',
-    title: 'ÜİY İcmal Tablosu',
-    enabled: true,
-    order: 8,
-    size: 'medium',
-  },
-  {
-    id: 'bankPFUiySummary-2',
-    type: 'bankPFUiySummary',
-    title: 'ÜİY İcmal Tablosu',
-    enabled: true,
     order: 9,
-    size: 'medium',
-  },
-  {
-    id: 'bankPerformance-1',
-    type: 'bankPerformance',
-    title: 'Banka Performansı',
-    enabled: true,
-    order: 10,
-    size: 'medium',
-  },
-  // ═══════════════════════════════════════════════════════
-  // ÜRÜN BÖLÜMÜ (1 Widget)
-  // ═══════════════════════════════════════════════════════
-  {
-    id: 'products-1',
-    type: 'products',
-    title: 'Ürün Özeti',
-    enabled: true,
-    order: 11,
-    size: 'medium',
-  },
-  // ═══════════════════════════════════════════════════════
-  // GELİR BÖLÜMÜ (4 Widget)
-  // ═══════════════════════════════════════════════════════
-  {
-    id: 'revenue-1',
-    type: 'revenue',
-    title: 'Gelir Özeti',
-    enabled: true,
-    order: 12,
-    size: 'medium',
-  },
-  {
-    id: 'revenueTrend-1',
-    type: 'revenueTrend',
-    title: 'Gelir Trend Analizi',
-    enabled: true,
-    order: 13,
-    size: 'medium',
-  },
-  {
-    id: 'subscriptionRevenue-1',
-    type: 'subscriptionRevenue',
-    title: 'Abone Hizmet Bedeli Özeti',
-    enabled: true,
-    order: 14,
-    size: 'medium',
-  },
-  {
-    id: 'deviceRevenueRatio-1',
-    type: 'deviceRevenueRatio',
-    title: 'Cihaz / Aidat Bedeli Oranı',
-    enabled: true,
-    order: 15,
-    size: 'medium',
+    size: 'large', // 2 kolonu kaplasın
   },
 ];
 

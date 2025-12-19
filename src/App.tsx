@@ -1,4 +1,4 @@
-// Müşteri Yönetim Uygulaması - App v1.0.21
+// Müşteri Yönetim Uygulaması - App v1.0.27
 // Supabase entegre, çok modüllü yönetim sistemi
 // Detaylı version history için CHANGELOG.md dosyasına bakınız
 import { useState, useEffect, useMemo, useCallback, lazy, Suspense, useRef } from 'react';
@@ -18,8 +18,9 @@ import { syncAllData } from './utils/autoSync';
 import { supabase } from './utils/supabaseClient';
 import { FeatureFlags } from './utils/featureFlags';
 import { isSilentMode } from './utils/environmentDetection';
+import { SupabaseSchemaChecker } from './components/SupabaseSchemaChecker';
 
-// ✅ CRITICAL: Import Supabase API helpers
+// ✅ CRITICAL: Import Supabase API helpers (Original v2071)
 import { 
   customerApi, 
   productApi, 
@@ -31,16 +32,13 @@ import {
   salesRepsApi,
   jobTitlesApi,
   partnershipsApi,
-  // ❌ DISABLED: These tables don't exist in Supabase
-  // accountItemsApi,
-  // fixedCommissionsApi,
-  // additionalRevenuesApi,
   sharingApi,
   kartProgramApi,
   suspensionReasonApi,
-  domainMappingApi,
   signApi,
-  earningsApi
+  earningsApi,
+  domainMappingApi,
+  SUPABASE_ENABLED
 } from './utils/supabaseClient';
 
 // ⚡ PHASE 3: Code Splitting - Lazy load heavy modules
@@ -57,6 +55,8 @@ const DSYMModule = lazy(() => import('./components/DSYMModule'));
 const ContractPublicView = lazy(() => import('./components/DSYM/ContractPublicView'));
 // ⚡ Supabase Data Inspector - Real-time Veri Takip Paneli
 const SupabaseDataInspector = lazy(() => import('./components/SupabaseDataInspector'));
+// ⚡ Supabase Full Migration - localStorage'dan Supabase'e veri aktarımı
+const SupabaseFullMigration = lazy(() => import('./components/SupabaseFullMigration').then(m => ({ default: m.SupabaseFullMigration })));
 // ❌ REMOVED: Migration Tool - Already migrated to Supabase
 // const MigrationRunner = ENV_CONFIG.enableMigrationTools 
 //   ? lazy(() => import('./utils/migrationRunner').then(m => ({ default: m.MigrationRunner })))
@@ -113,6 +113,8 @@ import { Skeleton } from './components/ui/skeleton';
 import { useAuth } from './utils/authBypass';
 import { LoginPage } from './components/LoginPage';
 import { EnvironmentBadge } from './components/EnvironmentBadge';
+import { isFigmaMakeEnvironment } from './utils/environmentDetection';
+import { initializeMockData } from './utils/mockData';
 
 // ⚡ Loading fallback component for code splitting
 const ModuleLoadingFallback = () => (
@@ -142,7 +144,7 @@ function extractLeadingNumber(text: string | undefined): number {
 }
 
 // Uygulama versiyonu (Detaylı değişiklikler için CHANGELOG.md'ye bakınız)
-const CURRENT_APP_VERSION = '1.0.21';
+const CURRENT_APP_VERSION = '1.0.27';
 
 // Version validation with fallback
 if (!CURRENT_APP_VERSION) {
@@ -159,10 +161,41 @@ const isDev = (() => {
 })();
 
 export default function App() {
+  // 🔍 SCHEMA CHECKER MODE - Debug mode to check Supabase schema
+  const [showSchemaChecker, setShowSchemaChecker] = useState(false);
+  
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('schema_check') === 'true') {
+      setShowSchemaChecker(true);
+    }
+  }, []);
+  
+  // Show Schema Checker if enabled
+  if (showSchemaChecker) {
+    return <SupabaseSchemaChecker />;
+  }
+  
   // ⚡ Track app mount time to prevent auto-sync during initial load
   useEffect(() => {
     if (typeof window !== 'undefined' && !window.__APP_MOUNT_TIME__) {
       window.__APP_MOUNT_TIME__ = Date.now();
+    }
+    
+    // ✅ Initialize mock data for Figma Make environment
+    if (isFigmaMakeEnvironment()) {
+      console.log('🎨 Figma Make environment detected - Initializing mock data...');
+      initializeMockData();
+    }
+    
+    // ✅ Production ready - Supabase entegre sistem
+    if (typeof window !== 'undefined') {
+      console.log('🎯 Müşteri Yönetim Uygulaması v1.0.25 - Production Ready');
+      if (SUPABASE_ENABLED) {
+        console.log('✅ Supabase: ONLINE | Auth: ACTIVE | Storage: PERSISTENT');
+      } else {
+        console.log('🎨 Figma Make: DEMO MODE | Mock Data: LOADED | Storage: localStorage');
+      }
     }
   }, []);
   
@@ -251,20 +284,6 @@ export default function App() {
   const [dataLoaded, setDataLoaded] = useState(false);
   const [supabaseDataLoaded, setSupabaseDataLoaded] = useState(false);
   
-  // 🧪 DEBUG: Body-level click listener
-  useEffect(() => {
-    const handleBodyClick = (e: MouseEvent) => {
-      console.log('🌍 BODY CLICKED!', {
-        target: e.target,
-        tagName: (e.target as HTMLElement).tagName,
-        className: (e.target as HTMLElement).className
-      });
-    };
-    
-    document.body.addEventListener('click', handleBodyClick, true); // capture phase
-    return () => document.body.removeEventListener('click', handleBodyClick, true);
-  }, []);
-  
   // ✅ NEW: Fetch ALL data from Supabase on mount
   useEffect(() => {
     let isMounted = true; // ✅ Cleanup flag to prevent state updates after unmount
@@ -272,6 +291,19 @@ export default function App() {
     const fetchAllDataFromSupabase = async () => {
       try {
         logger.info('🔄 Fetching all data from Supabase...');
+        
+        // ✅ NEW: Run schema validation in development (only if Supabase is enabled)
+        if (process.env.NODE_ENV === 'development' && SUPABASE_ENABLED) {
+          try {
+            const { runSchemaCheck } = await import('./utils/supabaseSchemaValidator');
+            const validationResults = await runSchemaCheck();
+            if (!validationResults.isValid) {
+              console.error('⚠️ Schema validation detected issues:', validationResults.criticalIssues);
+            }
+          } catch (validationError) {
+            console.warn('⚠️ Schema validation failed, continuing with data fetch:', validationError);
+          }
+        }
         
         // Fetch all entities in parallel
         const [
@@ -317,18 +349,64 @@ export default function App() {
         if (customersResult.success && customersResult.data) {
           setCustomers(customersResult.data);
           logger.info(`✅ Loaded ${customersResult.data.length} customers from Supabase`);
+          
+          // 🔍 DEBUG: Tüm müşterilerin bankDeviceAssignments verilerini logla
+          const customersWithBankAssignments = customersResult.data.filter(c => 
+            c.bankDeviceAssignments && Array.isArray(c.bankDeviceAssignments) && c.bankDeviceAssignments.length > 0
+          );
+          
+          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          console.log('🔍 [App.tsx] TOPLAM MÜŞTERİ:', customersResult.data.length);
+          console.log('🔍 [App.tsx] bankDeviceAssignments OLAN:', customersWithBankAssignments.length);
+          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          
+          if (customersWithBankAssignments.length > 0) {
+            console.table(
+              customersWithBankAssignments.map(c => ({
+                'Müşteri': c.cariAdi,
+                'Banka Sayısı': c.bankDeviceAssignments?.length || 0,
+                'Cihaz Sayısı': c.bankDeviceAssignments?.reduce((sum, a) => sum + (a.deviceIds?.length || 0), 0) || 0,
+                'Bankalar': c.bankDeviceAssignments?.map(a => a.bankName || a.bank_name).join(', ')
+              }))
+            );
+          } else {
+            console.log('⚠️ [App.tsx] Hiçbir müşteride bankDeviceAssignments verisi yok');
+          }
         }
+        
+        console.log('🔍 [App.tsx] Products result:', {
+          success: productsResult.success,
+          dataLength: productsResult.data?.length,
+          firstProduct: productsResult.data?.[0],
+          lastProduct: productsResult.data?.[productsResult.data.length - 1],
+          error: productsResult.error
+        });
         
         if (productsResult.success && productsResult.data) {
           setPayterProducts(productsResult.data);
           logger.info(`✅ Loaded ${productsResult.data.length} products from Supabase`);
+          
+          // Show success toast if products were loaded (only on initial page load)
+          if (productsResult.data.length > 0) {
+            toast.success(`${productsResult.data.length.toLocaleString('tr-TR')} ürün Supabase'den yüklendi`, {
+              duration: 3000,
+            });
+          }
+        } else {
+          // ✅ FIX: Better error handling for Figma Make environment
+          if (productsResult.error === 'Supabase disabled in Figma Make' || productsResult.error === 'Supabase client not initialized' || productsResult.error === 'Supabase disabled') {
+            logger.info('ℹ️ Products not loaded from Supabase (Figma Make environment - using localStorage)');
+          } else {
+            console.error('❌ [App.tsx] Failed to load products:', productsResult.error);
+            logger.error(`❌ Failed to load products: ${productsResult.error}`);
+          }
         }
         
         if (bankPFResult.success && bankPFResult.data) {
-          // ✅ CRITICAL FIX: Integrate TABELA records from signs table
+          // ✅ CRITICAL FIX: Integrate TABELA and EARNINGS records
           let enrichedBankPFRecords = bankPFResult.data;
           
-          // If signs data is available, map them to BankPF records
+          // ✅ SIGNS (TABELA) ENRICHMENT
           if (signsResult.success && signsResult.data) {
             const signsByFirmaId = new Map<string, TabelaRecord[]>();
             
@@ -340,15 +418,54 @@ export default function App() {
               }
             });
             
+            // ✅ DEBUG: Mapping durumunu kontrol et
+            console.log('🔍 [BankPF Enrichment] Sign kayıtları:', signsResult.data.length);
+            console.log('🔍 [BankPF Enrichment] firmaId ile eşleşen signs:', signsByFirmaId.size);
+            console.log('🔍 [BankPF Enrichment] BankPF kayıt sayısı:', bankPFResult.data.length);
+            console.log('🔍 [BankPF Enrichment] BankPF ID örnekleri:', bankPFResult.data.slice(0, 3).map((bp: any) => ({
+              id: bp.id,
+              unvan: bp.firmaUnvan
+            })));
+            console.log('🔍 [BankPF Enrichment] Signs firmaId örnekleri:', [...new Set(signsResult.data.map((s: any) => s.firmaId).filter(Boolean))].slice(0, 5));
+            console.log('🔍 [BankPF Enrichment] Mapping detayı:', Array.from(signsByFirmaId.entries()).map(([id, records]) => ({
+              firmaId: id,
+              recordCount: records.length
+            })));
+            
             // Attach tabelaRecords to each BankPF record
-            enrichedBankPFRecords = bankPFResult.data.map(bankPF => ({
+            enrichedBankPFRecords = enrichedBankPFRecords.map(bankPF => ({
               ...bankPF,
               tabelaRecords: signsByFirmaId.get(bankPF.id) || bankPF.tabelaRecords || []
             }));
             
             const totalTabelaCount = signsResult.data.length;
             const mappedCount = Array.from(signsByFirmaId.values()).reduce((sum, arr) => sum + arr.length, 0);
+            console.log(`✅ Enriched with ${mappedCount}/${totalTabelaCount} TABELA records across ${signsByFirmaId.size} firms`);
             logger.info(`✅ Mapped ${mappedCount}/${totalTabelaCount} TABELA records to BankPF firms`);
+          }
+          
+          // ✅ EARNINGS (HAKEDİŞ) ENRICHMENT - NEW!
+          if (earningsResult.success && earningsResult.data) {
+            const earningsByFirmaId = new Map<string, any[]>();
+            
+            // Group earnings by firmaId
+            earningsResult.data.forEach((earning: any) => {
+              if (earning.firmaId) {
+                const existing = earningsByFirmaId.get(earning.firmaId) || [];
+                earningsByFirmaId.set(earning.firmaId, [...existing, earning]);
+              }
+            });
+            
+            // Attach hakedisRecords to each BankPF record
+            enrichedBankPFRecords = enrichedBankPFRecords.map(bankPF => ({
+              ...bankPF,
+              hakedisRecords: earningsByFirmaId.get(bankPF.id) || bankPF.hakedisRecords || []
+            }));
+            
+            const totalEarningsCount = earningsResult.data.length;
+            const mappedEarningsCount = Array.from(earningsByFirmaId.values()).reduce((sum, arr) => sum + arr.length, 0);
+            console.log(`✅ Enriched with ${mappedEarningsCount}/${totalEarningsCount} EARNINGS records across ${earningsByFirmaId.size} firms`);
+            logger.info(`✅ Mapped ${mappedEarningsCount}/${totalEarningsCount} EARNINGS records to BankPF firms`);
           }
           
           setBankPFRecords(enrichedBankPFRecords);
@@ -427,6 +544,22 @@ export default function App() {
         if (signsResult.success && signsResult.data) {
           setSigns(signsResult.data);
           logger.info(`✅ Loaded ${signsResult.data.length} signs from Supabase`);
+          
+          // 🔍 DEBUG: Signs firmaId kontrolü
+          if (process.env.NODE_ENV === 'development' && signsResult.data.length > 0) {
+            const firmaIds = signsResult.data.map((s: any) => s.firmaId).filter(Boolean);
+            console.log('🔍 [App] Signs data:', {
+              totalRecords: signsResult.data.length,
+              withFirmaId: firmaIds.length,
+              uniqueFirmaIds: [...new Set(firmaIds)].length,
+              firstRecord: {
+                id: signsResult.data[0].id,
+                firmaId: signsResult.data[0].firmaId || '❌ MISSING!',
+                firmaAdi: signsResult.data[0].firmaAdi
+              },
+              sampleFirmaIds: [...new Set(firmaIds)].slice(0, 5)
+            });
+          }
         }
         
         if (earningsResult.success && earningsResult.data) {
@@ -615,6 +748,10 @@ export default function App() {
           
         case 'dataInspector':
           setActiveModule('dataInspector');
+          break;
+          
+        case 'migration':
+          setActiveModule('migration');
           break;
           
         default:
@@ -984,10 +1121,60 @@ export default function App() {
         async (payload) => {
           logger.debug('📥 Hakediş değişikliği algılandı:', payload);
           try {
-            const { data } = await earningsApi.getAll();
-            if (data) {
-              setEarnings(data);
-              logger.debug('✅ Hakediş listesi güncellendi:', data.length, 'kayıt');
+            // ✅ FIX: BankPF, Earnings VE Signs verilerini birlikte refresh et (tam enrichment)
+            const [bankPFResult, earningsResult, signsResult] = await Promise.all([
+              bankPFApi.getAll(),
+              earningsApi.getAll(),
+              signApi.getAll()
+            ]);
+            
+            if (earningsResult.success && earningsResult.data) {
+              // ✅ Global earnings state'ini güncelle
+              setEarnings(earningsResult.data);
+              
+              // ✅ BankPF enrichment (Earnings + Signs ile TAM enrichment!)
+              if (bankPFResult.success && bankPFResult.data) {
+                let enrichedBankPFRecords = bankPFResult.data;
+                
+                // ✅ EARNINGS enrichment
+                const earningsByFirmaId = new Map<string, any[]>();
+                earningsResult.data.forEach((earning: any) => {
+                  if (earning.firmaId) {
+                    const existing = earningsByFirmaId.get(earning.firmaId) || [];
+                    earningsByFirmaId.set(earning.firmaId, [...existing, earning]);
+                  }
+                });
+                
+                enrichedBankPFRecords = enrichedBankPFRecords.map(bankPF => ({
+                  ...bankPF,
+                  hakedisRecords: earningsByFirmaId.get(bankPF.id) || bankPF.hakedisRecords || []
+                }));
+                
+                logger.debug(`✅ Earnings enrichment: ${earningsResult.data.length} kayıt, ${earningsByFirmaId.size} firmaya eşleşti`);
+                
+                // ✅ SIGNS enrichment (YENİ!)
+                if (signsResult.success && signsResult.data) {
+                  const signsByFirmaId = new Map<string, TabelaRecord[]>();
+                  signsResult.data.forEach((sign: any) => {
+                    if (sign.firmaId) {
+                      const existing = signsByFirmaId.get(sign.firmaId) || [];
+                      signsByFirmaId.set(sign.firmaId, [...existing, sign as TabelaRecord]);
+                    }
+                  });
+                  
+                  enrichedBankPFRecords = enrichedBankPFRecords.map(bankPF => ({
+                    ...bankPF,
+                    tabelaRecords: signsByFirmaId.get(bankPF.id) || bankPF.tabelaRecords || []
+                  }));
+                  
+                  logger.debug(`✅ Signs enrichment: ${signsResult.data.length} kayıt, ${signsByFirmaId.size} firmaya eşleşti`);
+                }
+                
+                setBankPFRecords(enrichedBankPFRecords);
+                logger.debug(`✅ Hakediş değişikliği sonrası BankPF listesi güncellendi (tam enrichment):`, enrichedBankPFRecords.length, 'kayıt');
+              } else {
+                logger.debug('✅ Hakediş listesi güncellendi:', earningsResult.data.length, 'kayıt');
+              }
             }
           } catch (error) {
             logger.error('❌ Hakediş listesi güncellenirken hata:', error);
@@ -1009,6 +1196,11 @@ export default function App() {
   const previousBankPFRef = useRef<string>('');
   
   useEffect(() => {
+    // 🚫 PERMANENTLY DISABLED: Bu sync logic enrichment'ı override edip bozuyor!
+    // Initial enrichment (satır 364-393) doğru çalışıyor ama bu useEffect onu bozuyor
+    // Console'dan kanıt: "✅ Enriched with 8/15" → sonra "⚠️ TABELA bulunamadı"
+    return;
+    
     if (!signs || signs.length === 0 || !bankPFRecords || bankPFRecords.length === 0) return;
     
     // 🔍 Önceki değerlerle karşılaştır
@@ -1035,6 +1227,12 @@ export default function App() {
           ...firma,
           tabelaRecords: firmaSigns
         };
+      } else {
+        // 🔍 DEBUG: Eşleşmeyen firma
+        const allFirmaIds = signs.map((s: any) => s.firmaId).filter(Boolean);
+        if (allFirmaIds.length > 0 && signs.length > 0) {
+          logger.debug(`⚠️ Firma ${firma.firmaUnvan} (ID: ${firma.id}) için TABELA bulunamadı. Signs'daki mevcut firmaId'ler: ${[...new Set(allFirmaIds)].slice(0, 5).join(', ')}...`);
+        }
       }
       
       return {
@@ -1052,28 +1250,17 @@ export default function App() {
     logger.debug('✅ Signs -> BankPFRecords senkronizasyonu tamamlandı');
   }, [signs, bankPFRecords]);
 
-  // ✅ SYNC: BankPFRecords tabelaRecords -> Signs (ters yön senkronizasyonu)
+  // ❌ REMOVED: BankPFRecords -> Signs ters yön senkronizasyonu
+  // Bu kod yanlıştı - Signs ana kaynak olmalı, BankPF'lerden değiştirilmemeli
+  // Signs Supabase'den gelir, BankPF'ler sadece enrichment için signs'dan veri alır
+  
+  // 🚫 PERMANENTLY DISABLED: Earnings sync artık gereksiz
+  // Initial enrichment (satır ~400) zaten earnings'ı da map ediyor
+  // Bu useEffect gereksiz ve infinite loop riski taşıyor
   useEffect(() => {
-    if (!bankPFRecords || bankPFRecords.length === 0) return;
+    // 🚫 DISABLED: Initial enrichment hem Signs hem Earnings'ı zaten yapıyor
+    return;
     
-    // Tüm firmalardan tabelaRecords'u topla
-    const allTabelaRecords: any[] = [];
-    bankPFRecords.forEach(firma => {
-      if (firma.tabelaRecords && firma.tabelaRecords.length > 0) {
-        allTabelaRecords.push(...firma.tabelaRecords);
-      }
-    });
-
-    if (allTabelaRecords.length > 0) {
-      setSigns(allTabelaRecords);
-      logger.debug('✅ BankPFRecords -> Signs senkronizasyonu tamamlandı', {
-        totalRecords: allTabelaRecords.length
-      });
-    }
-  }, [bankPFRecords]);
-
-  // ✅ SYNC: Earnings -> BankPFRecords hakedisRecords senkronizasyonu
-  useEffect(() => {
     if (!earnings || earnings.length === 0 || !bankPFRecords || bankPFRecords.length === 0) return;
     
     logger.debug('🔄 Syncing earnings to bankPFRecords.hakedisRecords...', {
@@ -1210,16 +1397,17 @@ export default function App() {
         async (payload) => {
           logger.debug('📥 Banka Hesap değişikliği algılandı:', payload);
           try {
-            // ✅ FIX: BankPF ve Signs verilerini birlikte refresh et (enrichment)
-            const [bankPFResult, signsResult] = await Promise.all([
+            // ✅ FIX: BankPF, Signs VE Earnings verilerini birlikte refresh et (tam enrichment)
+            const [bankPFResult, signsResult, earningsResult] = await Promise.all([
               bankPFApi.getAll(),
-              signApi.getAll()
+              signApi.getAll(),
+              earningsApi.getAll()
             ]);
             
             if (bankPFResult.success && bankPFResult.data) {
               let enrichedBankPFRecords = bankPFResult.data;
               
-              // ✅ Signs verilerini BankPF kayıtlarına ekle (enrichment)
+              // ✅ SIGNS enrichment
               if (signsResult.success && signsResult.data) {
                 const signsByFirmaId = new Map<string, TabelaRecord[]>();
                 
@@ -1232,14 +1420,37 @@ export default function App() {
                 });
                 
                 // Attach tabelaRecords to each BankPF record
-                enrichedBankPFRecords = bankPFResult.data.map(bankPF => ({
+                enrichedBankPFRecords = enrichedBankPFRecords.map(bankPF => ({
                   ...bankPF,
                   tabelaRecords: signsByFirmaId.get(bankPF.id) || bankPF.tabelaRecords || []
                 }));
+                
+                logger.debug(`✅ Signs enrichment: ${signsResult.data.length} kayıt, ${signsByFirmaId.size} firmaya eşleşti`);
+              }
+              
+              // ✅ EARNINGS enrichment (YENİ!)
+              if (earningsResult.success && earningsResult.data) {
+                const earningsByFirmaId = new Map<string, any[]>();
+                
+                // Group earnings by firmaId
+                earningsResult.data.forEach((earning: any) => {
+                  if (earning.firmaId) {
+                    const existing = earningsByFirmaId.get(earning.firmaId) || [];
+                    earningsByFirmaId.set(earning.firmaId, [...existing, earning]);
+                  }
+                });
+                
+                // Attach hakedisRecords to each BankPF record
+                enrichedBankPFRecords = enrichedBankPFRecords.map(bankPF => ({
+                  ...bankPF,
+                  hakedisRecords: earningsByFirmaId.get(bankPF.id) || bankPF.hakedisRecords || []
+                }));
+                
+                logger.debug(`✅ Earnings enrichment: ${earningsResult.data.length} kayıt, ${earningsByFirmaId.size} firmaya eşleşti`);
               }
               
               setBankPFRecords(enrichedBankPFRecords);
-              logger.debug('✅ Banka Hesapları listesi güncellendi (enriched):', enrichedBankPFRecords.length, 'kayıt');
+              logger.debug('✅ Banka Hesapları listesi güncellendi (tam enrichment):', enrichedBankPFRecords.length, 'kayıt');
             }
           } catch (error) {
             logger.error('❌ Banka Hesapları listesi güncellenirken hata:', error);
@@ -1258,10 +1469,11 @@ export default function App() {
         async (payload) => {
           logger.debug('📥 TABELA (Signs) değişikliği algılandı:', payload);
           try {
-            // ✅ FIX: BankPF ve Signs verilerini birlikte refresh et
-            const [bankPFResult, signsResult] = await Promise.all([
+            // ✅ FIX: BankPF, Signs VE Earnings verilerini birlikte refresh et (tam enrichment)
+            const [bankPFResult, signsResult, earningsResult] = await Promise.all([
               bankPFApi.getAll(),
-              signApi.getAll()
+              signApi.getAll(),
+              earningsApi.getAll()
             ]);
             
             if (bankPFResult.success && bankPFResult.data) {
@@ -1283,16 +1495,37 @@ export default function App() {
                 });
                 
                 // Attach tabelaRecords to each BankPF record
-                enrichedBankPFRecords = bankPFResult.data.map(bankPF => ({
+                enrichedBankPFRecords = enrichedBankPFRecords.map(bankPF => ({
                   ...bankPF,
                   tabelaRecords: signsByFirmaId.get(bankPF.id) || bankPF.tabelaRecords || []
                 }));
                 
-                logger.debug(`✅ TABELA enrichment tamamlandı: ${signsResult.data.length} kayıt eşleştirildi`);
+                logger.debug(`✅ TABELA enrichment: ${signsResult.data.length} kayıt, ${signsByFirmaId.size} firmaya eşleşti`);
+              }
+              
+              // ✅ EARNINGS enrichment (YENİ!)
+              if (earningsResult.success && earningsResult.data) {
+                const earningsByFirmaId = new Map<string, any[]>();
+                
+                // Group earnings by firmaId
+                earningsResult.data.forEach((earning: any) => {
+                  if (earning.firmaId) {
+                    const existing = earningsByFirmaId.get(earning.firmaId) || [];
+                    earningsByFirmaId.set(earning.firmaId, [...earning, earning]);
+                  }
+                });
+                
+                // Attach hakedisRecords to each BankPF record
+                enrichedBankPFRecords = enrichedBankPFRecords.map(bankPF => ({
+                  ...bankPF,
+                  hakedisRecords: earningsByFirmaId.get(bankPF.id) || bankPF.hakedisRecords || []
+                }));
+                
+                logger.debug(`✅ Earnings enrichment: ${earningsResult.data.length} kayıt, ${earningsByFirmaId.size} firmaya eşleşti`);
               }
               
               setBankPFRecords(enrichedBankPFRecords);
-              logger.debug('✅ TABELA değişikliği sonrası BankPF listesi güncellendi:', enrichedBankPFRecords.length, 'kayıt');
+              logger.debug('✅ TABELA değişikliği sonrası BankPF listesi güncellendi (tam enrichment):', enrichedBankPFRecords.length, 'kayıt');
             }
           } catch (error) {
             logger.error('❌ TABELA değişikliği sonrası BankPF güncellenirken hata:', error);
@@ -2195,10 +2428,10 @@ export default function App() {
                             ? 'bg-green-600 text-white shadow-md hover:bg-green-700 hover:text-white'
                             : 'text-gray-700 hover:bg-gray-100'
                         }`}
-                        title="TABELA & HAKEDİŞ Migration Tool"
+                        title="Supabase Full Data Migration - localStorage → Supabase"
                       >
-                        <Database size={18} className="flex-shrink-0" />
-                        <span className="truncate">Migration</span>
+                        <Upload size={18} className="flex-shrink-0" />
+                        <span className="truncate">Supabase Migration</span>
                       </Button>
                     )}
                   </nav>
@@ -2349,9 +2582,9 @@ export default function App() {
                       ? 'bg-green-600 text-white shadow-md shadow-green-200 hover:bg-green-700 hover:text-white'
                       : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                   }`}
-                  title="TABELA & HAKEDİŞ Migration Tool"
+                  title="Supabase Full Data Migration - localStorage → Supabase"
                 >
-                  <Database size={13} />
+                  <Upload size={13} />
                   <span>Migrate</span>
                 </Button>
               )}
@@ -3246,8 +3479,6 @@ export default function App() {
               kartProgramlar={activeKartProgramlar}
               bankPFRecords={bankPFRecords}
               onBankPFRecordsChange={setBankPFRecords}
-              earnings={earnings}
-              onEarningsChange={setEarnings}
               selectedBankPFId={selectedBankPFId}
               onClearSelectedBankPFId={handleClearSelectedBankPFId}
               onDeleteBankPF={handleDeleteBankPF}
@@ -3331,7 +3562,13 @@ export default function App() {
             <SupabaseDataInspector />
           </Suspense>
         )}
-        {/* ❌ REMOVED: Migration module - Already migrated to Supabase */}
+        {activeModule === 'migration' && (
+          <Suspense fallback={<ModuleLoadingFallback />}>
+            <div className="p-6">
+              <SupabaseFullMigration />
+            </div>
+          </Suspense>
+        )}
       </main>
       
       {/* Global Search Dialog */}

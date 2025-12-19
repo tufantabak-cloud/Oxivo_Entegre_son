@@ -107,6 +107,20 @@ class Logger {
       console.groupEnd();
     }
   }
+
+  /**
+   * Table logs (only in development)
+   */
+  table(data: any, label?: string): void {
+    if (this.shouldLog('info')) {
+      if (label && this.prefix) {
+        console.log(`[${this.prefix}] ${label}`);
+      } else if (label) {
+        console.log(label);
+      }
+      console.table(data);
+    }
+  }
 }
 
 /**

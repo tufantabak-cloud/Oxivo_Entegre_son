@@ -1,0 +1,44 @@
+[33mb68985f2[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m fix: move supabase client to src
+[33m72971b7c[m Update App.tsx
+[33m82fdd7bd[m Update App.tsx
+[33m4884e67a[m Update storage.ts
+[33m51797233[m Update storage.ts
+[33m3365c06a[m Update storage.ts
+[33m2c07c0d4[m update
+[33mf67b57f6[m update
+[33m70652f3b[m update
+[33mb266b675[m commit
+[33m7531c77a[m update
+[33m59383073[m update
+[33m3aaff97c[m commit
+[33mdefabd64[m commit
+[33me39f9201[m Production ready: Build fixed, Supabase migration, duplicate cleanup
+[33m4cd2c9ad[m fix: regenerate package-lock.json for vercel build
+[33mdc6afe23[m Vercel cache'ini kırmak için zorla tetikleme
+[33m7599e1e0[m Update CustomerModule.tsx
+[33mf0f0b628[m Update .gitignore
+[33mc9885431[m update
+[33mda4e30e7[m commit
+[33mfc3dcb81[m Update CustomerModule.tsx
+[33md8fd957d[m Update CustomerModule.tsx
+[33m84ad4641[m FIX: Proje KÖKTEN TEMİZLENDİ (.gitignore, node_modules, dist silindi)
+[33m20ffdbbe[m commit
+[33mbb280a98[m commit
+[33me0d22afd[m commit
+[33m47513f1f[m Update vite.config.ts
+[33m25c4587d[m Update vercel.json
+[33me1dbd4db[m Fix: Tum import hatalari temizlendi ve build duzeltildi
+[33m0647cc94[m Update tailwind.config.cjs
+[33m4218a8ca[m commit
+[33m84a04383[m Fix: Config files strictly set to CJS format
+[33m0f16a3bd[m Vercel rebuild tetikle
+[33me6ce22c8[m commit
+[33ma2e30453[m commit
+[33m62b2eacc[m commit
+[33ma30b3eb6[m commit
+[33mbbd8b05e[m commit
+[33m11f44ac9[m commit
+[33m961962e4[m push
+[33meabdab97[m update
+[33m90529e87[m push
+[33m9faaab42[m push

@@ -123,6 +123,9 @@ const COLUMN_CONFIGS: ColumnConfig[] = [
 ];
 
 export function PayterProductTab({ products, onProductsChange, customers = [] }: PayterProductTabProps) {
+  // ✅ DEBUG: Check if products are loaded correctly
+  console.log('🔍 [PayterProductTab] Products count:', products.length);
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -176,11 +179,13 @@ export function PayterProductTab({ products, onProductsChange, customers = [] }:
     const assignedDeviceIds = new Set<string>();
     
     customers.forEach(customer => {
-      if (customer.bankDeviceAssignments) {
+      if (customer.bankDeviceAssignments && Array.isArray(customer.bankDeviceAssignments)) {
         customer.bankDeviceAssignments.forEach(assignment => {
-          assignment.deviceIds.forEach(deviceId => {
-            assignedDeviceIds.add(deviceId);
-          });
+          if (assignment.deviceIds && Array.isArray(assignment.deviceIds)) {
+            assignment.deviceIds.forEach(deviceId => {
+              assignedDeviceIds.add(deviceId);
+            });
+          }
         });
       }
     });
@@ -668,7 +673,8 @@ export function PayterProductTab({ products, onProductsChange, customers = [] }:
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Toplam Ürün</p>
-                <h3 className="text-blue-600 mt-1">{products.length}</h3>
+                <h3 className="text-blue-600 mt-1">{products.length.toLocaleString('tr-TR')}</h3>
+                <p className="text-xs text-gray-500 mt-1">Supabase'den yüklendi</p>
               </div>
               <div className="p-3 bg-blue-100 rounded-lg">
                 <Monitor className="text-blue-600" size={24} />

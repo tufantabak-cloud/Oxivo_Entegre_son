@@ -462,6 +462,16 @@ export const BankPFList = React.memo(function BankPFList({ records, onSelectReco
                             );
                           }
                           
+                          // TABELA (Cihaz bilgileri)
+                          if (record.tabelaRecords && record.tabelaRecords.length > 0) {
+                            const tabelaCount = record.tabelaRecords.length;
+                            categoryBadges.push(
+                              <Badge key="tabela" variant="outline" className="text-xs bg-orange-50 border-orange-300 text-orange-700">
+                                📱 {tabelaCount} cihaz
+                              </Badge>
+                            );
+                          }
+                          
                           return categoryBadges.length > 0 ? categoryBadges : <span className="text-xs text-gray-400">-</span>;
                         })()}
                       </div>

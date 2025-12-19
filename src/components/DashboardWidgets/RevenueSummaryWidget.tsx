@@ -73,6 +73,7 @@ export function RevenueSummaryWidget({ customers, payterProducts }: RevenueSumma
 
   const handleShowFullList = () => {
     const allItems = allRevenueCustomers.map((customer, index) => ({
+      id: customer.id, // ✅ FIX: Add unique customer ID
       label: customer.cariAdi || 'İsimsiz Müşteri',
       value: `₺${(customer.subscriptionFee || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`,
       icon: <DollarSign size={14} className="text-green-600" />,

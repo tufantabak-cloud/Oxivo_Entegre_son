@@ -73,6 +73,9 @@ function SheetContent({
         )}
         {...props}
       >
+        <SheetPrimitive.Description className="sr-only">
+          Sheet content
+        </SheetPrimitive.Description>
         {children}
         <SheetPrimitive.Close className="absolute top-4 right-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:pointer-events-none bg-gray-100 hover:bg-gray-200 p-1">
           <XIcon className="size-4" />

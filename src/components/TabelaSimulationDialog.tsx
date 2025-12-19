@@ -73,7 +73,7 @@ export function TabelaSimulationDialog({
         // Gelir Ortaklığı modelinde alış-satış var
         if (tabela.gelirModeli?.ad === 'Gelir Ortaklığı') {
           // Aktif komisyon oranlarını al
-          const aktifVadeler = tabela.komisyonOranları.filter(k => k.aktif);
+          const aktifVadeler = tabela.komisyonOranları?.filter(k => k.aktif) || [];
           
           aktifVadeler.forEach(vade => {
             const alis = parseFloat(String(vade.alisTL || '0'));
@@ -102,7 +102,7 @@ export function TabelaSimulationDialog({
         } 
         // Sabit Komisyon modelinde yüzde bazlı hesaplama
         else if (tabela.gelirModeli?.ad === 'Sabit Komisyon') {
-          const aktifVadeler = tabela.komisyonOranları.filter(k => k.aktif);
+          const aktifVadeler = tabela.komisyonOranları?.filter(k => k.aktif) || [];
           
           aktifVadeler.forEach(vade => {
             const komisyonYuzde = parseFloat(vade.oran || '0');

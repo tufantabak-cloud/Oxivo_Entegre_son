@@ -80,8 +80,9 @@ if (document.readyState === 'loading') {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 // ✅ BUILD VERSION TRACKER - UUID Migration
-const BUILD_VERSION = 'v2.0-UUID-2024-12-08';
+const BUILD_VERSION = 'v3.2.1-UUID-DEBUG-2024-12-08';
 console.log(`🚀 OXIVO App ${BUILD_VERSION} - UUID Generation Active`);
+console.log(`🔍 crypto.randomUUID test: ${crypto.randomUUID()}`);
 
 // Run health check before rendering
 initStartupCheck().then((success) => {

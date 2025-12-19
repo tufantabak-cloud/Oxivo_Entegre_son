@@ -16,6 +16,21 @@
 // TANIMLAR (DEFINITIONS) - 11 TABLES
 // ========================================
 
+// ========================================
+// BACKUP & SYSTEM TABLES
+// ========================================
+
+export interface DeletedRecordsBackupRow {
+  id: string;
+  table_name: string; // Source table name (NOT NULL)
+  record_id: string; // Original record ID (NOT NULL)
+  record_data: any; // JSONB - Complete record snapshot (NOT NULL)
+  deleted_by: string; // User/system who deleted (NOT NULL)
+  deleted_at: string; // Deletion timestamp (default: NOW())
+  reason: string | null; // Deletion reason
+  created_at: string; // timestamp with time zone (default: NOW())
+}
+
 export interface MCCCodesRow {
   id: string;
   kod: string; // MCC kodu (NOT NULL)
@@ -154,6 +169,7 @@ export interface EarningsRow {
   total_pf_pay: number | null; // Total PF ödeme (numeric)
   total_oxivo_pay: number | null; // Total Oxivo ödeme (numeric)
   aktif: boolean; // Aktif/Pasif (default: true)
+  is_deleted: boolean; // Soft delete flag (default: false)
   created_at: string; // timestamp with time zone (default: now())
   updated_at: string; // timestamp with time zone (default: now())
   ek_gelir_aciklama: string | null; // Ek gelir açıklaması
@@ -281,6 +297,7 @@ export interface PettyCashRow {
   balance: number;
   currency: string;
   is_active: boolean;
+  is_deleted: boolean; // Soft delete flag (default: false)
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -299,6 +316,7 @@ export interface CategoriesRow {
   icon: string | null;
   sort_order: number;
   is_active: boolean;
+  is_deleted: boolean;
   created_at: string;
   updated_at: string;
   created_by: string | null;
@@ -324,6 +342,7 @@ export interface TransactionsRow {
   document_number: string | null;
   status: string;
   is_recurring: boolean;
+  is_deleted: boolean; // Soft delete flag (default: false)
   created_at: string;
   updated_at: string;
   created_by: string | null;
@@ -380,6 +399,7 @@ export interface IncomeRecordsRow {
   notes: string | null;
   is_recurring: boolean;
   recurrence_pattern: string | null;
+  is_deleted: boolean; // Soft delete flag (default: false)
   created_at: string;
   updated_at: string;
   created_by: string | null;
@@ -463,10 +483,65 @@ export interface DomainMappingsRow {
   last_visit_at: string | null;
   notes: string | null;
   is_active: boolean;
+  is_deleted: boolean; // Soft delete flag (default: false)
   created_at: string;
   updated_at: string;
   created_by: string | null;
   updated_by: string | null;
+}
+
+export interface CustomerDocumentsRow {
+  id: string;
+  customer_id: string; // Customer ID (NOT NULL)
+  document_type: string; // Document type (vergi_levhasi, ticaret_sicil_gazetesi, etc.)
+  file_name: string; // Original file name
+  file_path: string; // Storage path
+  file_size: number; // File size in bytes
+  file_type: string; // MIME type (application/pdf, image/jpeg, etc.)
+  is_required: boolean; // Required document flag (default: false)
+  status: string; // Status: pending, approved, rejected, expired (default: 'pending')
+  uploaded_by: string | null; // User who uploaded
+  reviewed_by: string | null; // User who reviewed
+  reviewed_at: string | null; // Review timestamp
+  notes: string | null; // Review notes
+  is_deleted: boolean; // Soft delete flag (default: false)
+  created_at: string; // timestamp with time zone (default: NOW())
+  updated_at: string; // timestamp with time zone (default: NOW())
+}
+
+export interface RevenueModelsRow {
+  id: string;
+  model_code: string; // Revenue model kodu (NOT NULL)
+  model_name: string; // Model adı (NOT NULL)
+  description: string | null; // Açıklama
+  commission_rate: number | null; // Komisyon oranı (numeric)
+  revenue_sharing_rate: number | null; // Gelir paylaşım oranı (numeric)
+  calculation_formula: string | null; // Hesaplama formülü
+  is_active: boolean; // Aktif/Pasif (default: true)
+  is_deleted: boolean; // Soft delete flag (default: false)
+  notes: string | null; // Notlar
+  created_at: string; // timestamp with time zone
+  updated_at: string; // timestamp with time zone
+  created_by: string | null; // Oluşturan kullanıcı
+  updated_by: string | null; // Güncelleyen kullanıcı
+}
+
+export interface SMSTemplatesRow {
+  id: string;
+  template_code: string; // Template kodu (NOT NULL)
+  template_name: string; // Template adı (NOT NULL)
+  template_type: string | null; // Template tipi (reminder, notification, alert, etc.)
+  message_content: string; // SMS içeriği (NOT NULL)
+  variables: any | null; // JSONB - Değişkenler array (e.g., [{name: 'customerName', description: '...'}])
+  is_active: boolean; // Aktif/Pasif (default: true)
+  is_deleted: boolean; // Soft delete flag (default: false)
+  usage_count: number; // Kullanım sayısı (default: 0)
+  last_used_at: string | null; // Son kullanım zamanı
+  notes: string | null; // Notlar
+  created_at: string; // timestamp with time zone
+  updated_at: string; // timestamp with time zone
+  created_by: string | null; // Oluşturan kullanıcı
+  updated_by: string | null; // Güncelleyen kullanıcı
 }
 
 // ========================================
@@ -496,6 +571,9 @@ export type SignsInsert = Omit<SignsRow, 'id' | 'created_at' | 'updated_at'>;
 export type IncomeRecordsInsert = Omit<IncomeRecordsRow, 'id' | 'created_at' | 'updated_at'>;
 export type ProductsInsert = Omit<ProductsRow, 'id' | 'created_at' | 'updated_at'>;
 export type DomainMappingsInsert = Omit<DomainMappingsRow, 'id' | 'created_at' | 'updated_at'>;
+export type CustomerDocumentsInsert = Omit<CustomerDocumentsRow, 'id' | 'created_at' | 'updated_at'>;
+export type RevenueModelsInsert = Omit<RevenueModelsRow, 'id' | 'created_at' | 'updated_at'>;
+export type SMSTemplatesInsert = Omit<SMSTemplatesRow, 'id' | 'created_at' | 'updated_at'>;
 
 // ========================================
 // DATABASE UPDATE TYPES (All optional)
@@ -524,6 +602,9 @@ export type SignsUpdate = Partial<SignsInsert>;
 export type IncomeRecordsUpdate = Partial<IncomeRecordsInsert>;
 export type ProductsUpdate = Partial<ProductsInsert>;
 export type DomainMappingsUpdate = Partial<DomainMappingsInsert>;
+export type CustomerDocumentsUpdate = Partial<CustomerDocumentsInsert>;
+export type RevenueModelsUpdate = Partial<RevenueModelsInsert>;
+export type SMSTemplatesUpdate = Partial<SMSTemplatesInsert>;
 
 // ========================================
 // DATABASE TYPE (Supabase SDK)
@@ -535,6 +616,11 @@ export interface Database {
       // ========================================
       // TANIMLAR (DEFINITIONS) TABLES
       // ========================================
+      deleted_records_backup: {
+        Row: DeletedRecordsBackupRow;
+        Insert: Omit<DeletedRecordsBackupRow, 'id' | 'created_at'>;
+        Update: Partial<Omit<DeletedRecordsBackupRow, 'id' | 'created_at'>>;
+      };
       mcc_codes: {
         Row: MCCCodesRow;
         Insert: MCCCodesInsert;
@@ -637,6 +723,21 @@ export interface Database {
         Row: DomainMappingsRow;
         Insert: DomainMappingsInsert;
         Update: DomainMappingsUpdate;
+      };
+      customer_documents: {
+        Row: CustomerDocumentsRow;
+        Insert: CustomerDocumentsInsert;
+        Update: CustomerDocumentsUpdate;
+      };
+      revenue_models: {
+        Row: RevenueModelsRow;
+        Insert: RevenueModelsInsert;
+        Update: RevenueModelsUpdate;
+      };
+      sms_templates: {
+        Row: SMSTemplatesRow;
+        Insert: SMSTemplatesInsert;
+        Update: SMSTemplatesUpdate;
       };
     };
     Views: {

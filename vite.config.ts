@@ -1,36 +1,27 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import path from 'path'
 
-// https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [react()],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-      "@utils": path.resolve(__dirname, "./src/utils"),
-    },
-    // React kopyalarını tekilleştirme (Çok önemli)
-    dedupe: ['react', 'react-dom'],
-  },
-  optimizeDeps: {
-    // Bu kütüphaneleri önceden işlemesini söylüyoruz
-    include: ['react', 'react-dom', 'xlsx', 'recharts'],
-  },
-  build: {
-    outDir: 'dist', // Vercel 'dist' klasörünü bekliyor
-    chunkSizeWarningLimit: 2000, // Uyarı limitini yükselttik
-    commonjsOptions: {
-      transformMixedEsModules: true, // CJS/ESM uyumsuzluklarını çözer
-    },
-    rollupOptions: {
-      output: {
-        // manualChunks KISMINI KALDIRDIK.
-        // Vite artık yükleme sırasını kendisi yönetecek.
+  import { defineConfig } from 'vite';
+  import react from '@vitejs/plugin-react-swc';
+  import path from 'path';
+
+  export default defineConfig({
+    plugins: [react()],
+    resolve: {
+      extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
+      alias: {
+        'sonner@2.0.3': 'sonner',
+        'react-hook-form@7.55.0': 'react-hook-form',
+        'hono@4.6.14': 'hono',
+        '@jsr/supabase__supabase-js@2.49.8': '@jsr/supabase__supabase-js',
+        '@jsr/supabase__supabase-js@2': '@jsr/supabase__supabase-js',
+        '@': path.resolve(__dirname, './src'),
       },
     },
-    // GEÇİCİ: Minification kapatıldı - debug için
-    minify: false,
-    sourcemap: true, // Source map ekle - hata bulma için
-  },
-})
+    build: {
+      target: 'esnext',
+      outDir: 'build',
+    },
+    server: {
+      port: 3000,
+      open: true,
+    },
+  });

@@ -64,22 +64,37 @@ export function OverdueSuspensionWarningPanel({
       });
 
       matchedProducts.forEach(product => {
-        const subscription = serviceFee.deviceSubscriptions.find(d => d.deviceId === product.id);
+        // ✅ ARRAY SAFETY: deviceSubscriptions kontrolü
+        const deviceSubscriptions = Array.isArray(serviceFee.deviceSubscriptions) 
+          ? serviceFee.deviceSubscriptions 
+          : [];
+        
+        const subscription = deviceSubscriptions.find(d => d.deviceId === product.id);
         const deviceSub: DeviceSubscription = subscription || {
           deviceId: product.id,
           deviceSerialNumber: product.serialNumber || '',
           deviceName: product.name || '',
-          monthlyFee: serviceFee.customFeePerDevice || serviceFee.standardFeePerDevice,
+          monthlyFee: serviceFee.customFeePerDevice || serviceFee.standardFeePerDevice || 0,
           isActive: true,
           activationDate: new Date().toISOString().split('T')[0],
           paymentStatus: 'pending'
         };
 
-        const currentInvoice = serviceFee.invoices.find(inv => inv.period === selectedPeriod);
+        // ✅ ARRAY SAFETY: invoices kontrolü
+        const invoices = Array.isArray(serviceFee.invoices)
+          ? serviceFee.invoices
+          : [];
+        
+        const currentInvoice = invoices.find(inv => inv.period === selectedPeriod);
+        
+        // ✅ ARRAY SAFETY: bankDeviceAssignments kontrolü
+        const bankAssignments = Array.isArray(customer.bankDeviceAssignments)
+          ? customer.bankDeviceAssignments
+          : [];
         
         // Banka atamasını bul
-        const bankAssignment = customer.bankDeviceAssignments?.find(
-          ba => ba.deviceIds.includes(product.id)
+        const bankAssignment = bankAssignments.find(
+          ba => Array.isArray(ba.deviceIds) && ba.deviceIds.includes(product.id)
         );
 
         // Sadece aktif, ödeme alınmamış ve 10+ gün gecikmiş cihazlar
@@ -274,7 +289,7 @@ export function OverdueSuspensionWarningPanel({
                         <Badge variant="outline" className="bg-white">
                           {group.totalDevices} cihaz
                         </Badge>
-                        <span className="text-red-900">{group.totalAmount.toFixed(2)} €</span>
+                        <span className="text-red-900">{(group.totalAmount || 0).toFixed(2)} €</span>
                       </div>
                     </div>
 
@@ -300,7 +315,7 @@ export function OverdueSuspensionWarningPanel({
                               </Badge>
                             )}
                             <span className="text-sm text-gray-900 min-w-[80px] text-right">
-                              {device.monthlyFee.toFixed(2)} €
+                              {(device.monthlyFee || 0).toFixed(2)} €
                             </span>
                             <Badge variant="destructive" className="min-w-[100px] text-center">
                               {device.daysOverdue} gün gecikti

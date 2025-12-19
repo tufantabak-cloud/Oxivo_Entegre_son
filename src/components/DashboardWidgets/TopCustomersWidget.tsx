@@ -29,8 +29,7 @@ export function TopCustomersWidget({ customers, payterProducts }: TopCustomersWi
   const [showFullListModal, setShowFullListModal] = useState(false);
   const [modalData, setModalData] = useState<{ title: string; items: any[] }>({ title: '', items: [] });
 
-  // ✅ Serial number bazlı eşleştirme sistemi aktif
-  // Debug log'ları kaldırıldı - sistem production ready
+  // Serial number bazlı eşleştirme - Production ready
 
   // Müşteri sıralaması oluştur
   const rankings: CustomerRanking[] = customers.map((customer) => {
@@ -132,6 +131,7 @@ export function TopCustomersWidget({ customers, payterProducts }: TopCustomersWi
 
   const handleShowFullList = () => {
     const allItems = topByDevices.map((customer, index) => ({
+      id: customer.id, // ✅ FIX: Add unique ID
       label: customer.name,
       value: `${customer.deviceCount} cihaz • €${customer.revenue.toLocaleString()}`,
       badge: customer.category,

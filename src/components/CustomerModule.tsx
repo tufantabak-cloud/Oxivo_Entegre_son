@@ -396,6 +396,12 @@ export const CustomerModule = React.memo(function CustomerModule({
       
       // ✅ INSTANT SUPABASE SYNC: Müşteri güncelleme (banka atamaları dahil)
       try {
+        console.log('🔄 Supabase sync başlıyor:', {
+          customerId: customer.id,
+          cariAdi: customer.cariAdi,
+          bankDeviceAssignments: customer.bankDeviceAssignments,
+          bankDeviceAssignmentsCount: customer.bankDeviceAssignments?.length || 0
+        });
         await customerApi.upsert([customer]);
         console.log('✅ Customer update instantly synced to Supabase (including bank assignments)');
       } catch (error) {

@@ -1,0 +1,33 @@
+export const config = {
+  // assets, favicon ve görsel dosyaları hariç tut, diğer her şeyi şifrele
+  matcher: ['/((?!assets|_vercel|favicon.ico|.*\\..*).*)'],
+};
+
+export default function middleware(request) {
+  const authorization = request.headers.get('authorization');
+  
+  // .env dosyasından veya Vercel ayarlarından şifreyi al
+  // Not: Vite projelerinde process.env bazen boş gelebilir, 
+  // bu yüzden environment variable'ları Vercel panelinden de eklemen gerekebilir.
+  const validUser = process.env.BASIC_AUTH_USER;
+  const validPass = process.env.BASIC_AUTH_PASSWORD;
+
+  if (authorization) {
+    const token = authorization.split(' ')[1];
+    const [user, pass] = atob(token).split(':');
+
+    if (user === validUser && pass === validPass) {
+      return new Response(null, {
+        status: 200,
+        headers: { 'x-middleware-next': '1' },
+      });
+    }
+  }
+
+  return new Response('Giriş Yetkisi Gerekli', {
+    status: 401,
+    headers: {
+      'WWW-Authenticate': 'Basic realm="Secure Area"',
+    },
+  });
+}

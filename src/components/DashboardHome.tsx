@@ -151,11 +151,19 @@ export function DashboardHome({
 
   // Auto-refresh: Her 30 saniyede bir otomatik yenile (opsiyonel)
   useEffect(() => {
+    // 🚫 SKIP: Mock data veya Figma Make ortamında auto-refresh gereksiz
+    const isMockEnvironment = process.env.NODE_ENV === 'development' || 
+                             window.location.hostname.includes('figma') ||
+                             localStorage.getItem('useMockData') === 'true';
+    
+    if (isMockEnvironment) {
+      console.log('⏭️ Auto-refresh SKIPPED (Mock data environment)');
+      return; // Early return - interval oluşturulmaz
+    }
+
+    // ✅ Sadece production + real data'da çalışır
     const autoRefreshInterval = setInterval(() => {
-      // ✅ PRODUCTION OPTIMIZATION: Silent refresh (no console spam)
-      if (process.env.NODE_ENV === 'development') {
-        console.log('📊 Dashboard auto-refresh triggered');
-      }
+      console.log('📊 Dashboard auto-refresh triggered');
       setRefreshKey(prev => prev + 1);
     }, 30000); // 30 seconds
 

@@ -132,7 +132,8 @@ export const ReportsModule = React.memo(function ReportsModule({
         if (def.source === 'bankPF' && customer.linkedBankPFIds?.includes(def.id)) {
           return true;
         }
-        if (customer.bankDeviceAssignments?.some(a => 
+        // ✅ SAFETY: bankDeviceAssignments array kontrolü
+        if (Array.isArray(customer.bankDeviceAssignments) && customer.bankDeviceAssignments.some(a => 
           a.bankId === def.id || 
           a.bankId === `bank-${def.id}` || 
           a.bankId === `ok-epk-${def.id}` || 
@@ -849,7 +850,7 @@ export const ReportsModule = React.memo(function ReportsModule({
                             if (kartPrograms.length === 0) return null;
 
                             return (
-                              <div key={`${firma.id}-${tabelaGroup.id}`} className="bg-white rounded-lg border border-orange-200">
+                              <div key={tabelaGroup.id} className="bg-white rounded-lg border border-orange-200">
                                 {/* TABELA Başlık Bilgileri */}
                                 <div className="px-4 py-3 bg-orange-100 border-b border-orange-200 rounded-t-lg">
                                   <div className="flex items-center justify-between flex-wrap gap-2">
@@ -1862,7 +1863,7 @@ export const ReportsModule = React.memo(function ReportsModule({
                               }
                               
                               // 2. bankDeviceAssignments kontrolü
-                              if (customer.bankDeviceAssignments && customer.bankDeviceAssignments.length > 0) {
+                              if (Array.isArray(customer.bankDeviceAssignments) && customer.bankDeviceAssignments.length > 0) {
                                 const hasAssignment = customer.bankDeviceAssignments.some(assignment => {
                                   if (assignment.bankId === definition.id) return true;
                                   if (assignment.bankId === `bank-${definition.id}`) return true;
@@ -2152,7 +2153,7 @@ export const ReportsModule = React.memo(function ReportsModule({
                           // ✅ NULL SAFETY: customers boş olabilir
                           (customers || []).some(customer => {
                             if (def.source === 'bankPF' && customer.linkedBankPFIds?.includes(def.id)) return true;
-                            if (customer.bankDeviceAssignments && customer.bankDeviceAssignments.length > 0) {
+                            if (Array.isArray(customer.bankDeviceAssignments) && customer.bankDeviceAssignments.length > 0) {
                               return customer.bankDeviceAssignments.some(assignment => {
                                 if (assignment.bankId === def.id) return true;
                                 if (assignment.bankId === `bank-${def.id}`) return true;
@@ -2216,7 +2217,7 @@ export const ReportsModule = React.memo(function ReportsModule({
                               }
                               
                               // 2. bankDeviceAssignments kontrolü (Banka/PF Kategorisi)
-                              if (customer.bankDeviceAssignments && customer.bankDeviceAssignments.length > 0) {
+                              if (Array.isArray(customer.bankDeviceAssignments) && customer.bankDeviceAssignments.length > 0) {
                                 const hasAssignment = customer.bankDeviceAssignments.some(assignment => {
                                   if (assignment.bankId === definition.id) return true;
                                   if (assignment.bankId === `bank-${definition.id}`) return true;
@@ -2422,7 +2423,7 @@ export const ReportsModule = React.memo(function ReportsModule({
                         // ✅ NULL SAFETY: customers boş olabilir
                         (customers || []).some(customer => {
                           if (def.source === 'bankPF' && customer.linkedBankPFIds?.includes(def.id)) return true;
-                          if (customer.bankDeviceAssignments && customer.bankDeviceAssignments.length > 0) {
+                          if (Array.isArray(customer.bankDeviceAssignments) && customer.bankDeviceAssignments.length > 0) {
                             return customer.bankDeviceAssignments.some(assignment => {
                               if (assignment.bankId === def.id) return true;
                               if (assignment.bankId === `bank-${def.id}`) return true;
@@ -2651,7 +2652,7 @@ export const ReportsModule = React.memo(function ReportsModule({
                         }
                         
                         // 2. bankDeviceAssignments kontrolü (Banka/PF Kategorisi - Cihaz İlişkilendirme)
-                        if (customer.bankDeviceAssignments && customer.bankDeviceAssignments.length > 0) {
+                        if (Array.isArray(customer.bankDeviceAssignments) && customer.bankDeviceAssignments.length > 0) {
                           const hasAssignment = customer.bankDeviceAssignments.some(assignment => {
                             // bankDeviceAssignments'taki bankId formatı: "bank-{id}", "ok-epk-{id}", "ok-ok-{id}"
                             // Bu ID'leri parse edip definition.id ile karşılaştır

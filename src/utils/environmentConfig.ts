@@ -59,12 +59,12 @@ export const ENV_CONFIG = {
   // ⚠️ TEMPORARY: Allow auth bypass on Vercel for testing
   // TODO: Remove IS_VERCEL after setting up real Supabase Auth
   enableAuthBypass: IS_DEVELOPMENT || IS_LOCALHOST || IS_VERCEL,
-  enableMigrationTools: IS_DEVELOPMENT || IS_LOCALHOST,
+  enableMigrationTools: true, // ✅ Always enabled for Supabase migration
   enableDebugPanel: IS_DEVELOPMENT || IS_LOCALHOST,
 
   // 🌐 API
-  enableSupabase: !IS_FIGMA_MAKE,
-  enableLocalStorageFallback: IS_FIGMA_MAKE, // Only for Figma Make
+  enableSupabase: true, // ✅ FIX: Always enabled (including Figma Make)
+  enableLocalStorageFallback: false, // ✅ FIX: Disabled - using Supabase everywhere
 
   // 🎨 UI
   showEnvironmentBadge: IS_DEVELOPMENT || IS_VERCEL,

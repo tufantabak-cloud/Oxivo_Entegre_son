@@ -45,9 +45,13 @@ export const BankPFMembersSummaryWidget = React.memo(function BankPFMembersSumma
           return true;
         }
         
-        // Yöntem 2: bankDeviceAssignments kontrolü
-        if (customer.bankDeviceAssignments && customer.bankDeviceAssignments.length > 0) {
-          const hasAssignment = customer.bankDeviceAssignments.some(assignment => {
+        // Yöntem 2: bankDeviceAssignments kontrolü - ✅ ARRAY SAFETY
+        const assignments = Array.isArray(customer.bankDeviceAssignments) 
+          ? customer.bankDeviceAssignments 
+          : [];
+          
+        if (assignments.length > 0) {
+          const hasAssignment = assignments.some(assignment => {
             if (assignment.bankId === bankPF.id) return true;
             if (assignment.bankId === `bank-${bankPF.id}`) return true;
             if (assignment.bankId === `ok-epk-${bankPF.id}`) return true;
@@ -63,7 +67,12 @@ export const BankPFMembersSummaryWidget = React.memo(function BankPFMembersSumma
 
       // Toplam cihaz sayısını hesapla
       const totalDevices = relatedCustomers.reduce((sum, customer) => {
-        const assignment = customer.bankDeviceAssignments?.find(
+        // ✅ ARRAY SAFETY: bankDeviceAssignments kontrolü
+        const assignments = Array.isArray(customer.bankDeviceAssignments) 
+          ? customer.bankDeviceAssignments 
+          : [];
+          
+        const assignment = assignments.find(
           a => a.bankId === bankPF.id || 
                a.bankId === `bank-${bankPF.id}` || 
                a.bankId === `ok-epk-${bankPF.id}` || 
@@ -111,6 +120,7 @@ export const BankPFMembersSummaryWidget = React.memo(function BankPFMembersSumma
 
   const handleShowFullList = () => {
     const allItems = bankPFSummaries.map((summary) => ({
+      id: summary.id, // ✅ FIX: Add unique ID
       label: summary.name,
       value: `${summary.customerCount} müşteri • ${summary.deviceCount} cihaz`,
       badge: summary.type,

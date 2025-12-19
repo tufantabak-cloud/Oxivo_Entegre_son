@@ -2,6 +2,8 @@ import { Button } from './ui/button';
 import { FileDown } from 'lucide-react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
+import { useState } from 'react';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 
 interface DetailPopoverProps {
   title: string;
@@ -157,17 +159,10 @@ export function DetailPopover({ title, count, percentage, items, children, itemL
                 {title}
               </h3>
               <div className="flex items-center gap-3 mt-1.5">
-                <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-2.5 py-1 rounded-lg">
+                <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-lg">
                   <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <span className="text-white text-xs font-semibold">
-                    {actualCount} {itemLabel}
-                  </span>
+                  <span className="text-xs text-white/90">Aktif</span>
                 </div>
-                {percentage && (
-                  <span className="text-blue-100 text-xs font-medium">
-                    {percentage}
-                  </span>
-                )}
               </div>
             </div>
             <Button
@@ -197,7 +192,7 @@ export function DetailPopover({ title, count, percentage, items, children, itemL
                     key={item.id ? `${item.id}-${index}` : `item-${index}`} 
                     className="px-3 py-2 hover:bg-gray-800/30 transition-colors"
                   >
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex items-center gap-3">
                       {/* Basit numara */}
                       <span className="text-xs text-gray-500 font-medium w-6 flex-shrink-0">
                         {index + 1}.

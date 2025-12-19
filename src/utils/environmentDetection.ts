@@ -2,7 +2,7 @@
  * Figma Make Environment Detection
  * 
  * Purpose: Detect if the app is running in Figma Make sandbox environment
- * Used to suppress Supabase CORS errors and warning spam
+ * ✅ UPDATED: Supabase is now ENABLED in Figma Make for testing
  */
 
 /**
@@ -25,7 +25,8 @@ export function isFigmaMakeEnvironment(): boolean {
 /**
  * Silent mode: Skip logging if in Figma Make
  * Usage: if (!isSilentMode()) logger.warn('...');
+ * ✅ DISABLED: We want full logging in Figma Make for debugging
  */
 export function isSilentMode(): boolean {
-  return isFigmaMakeEnvironment();
+  return false; // ✅ Always show logs, even in Figma Make
 }

@@ -19,7 +19,7 @@ import path from 'path';
 // CONFIGURATION
 // ========================================
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://tveqpmzgqtoyagtpapev.supabase.co';
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://okgeyuhmumlkkcpoholh.supabase.co';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
 if (!SUPABASE_SERVICE_ROLE_KEY) {

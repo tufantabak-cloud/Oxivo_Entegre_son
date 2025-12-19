@@ -59,6 +59,7 @@ export function BankPFSummaryWidget({
   // En çok tabela grubuna sahip firmalar
   const allFirmsWithTabela = bankPFRecords
     .map((r) => ({
+      id: r.id, // ✅ FIX: Add unique ID
       name: r.kurulusAdi,
       tabelaCount: r.tabelaRecords?.length || 0,
       deviceCount: r.tabelaRecords?.reduce((sum, t) => sum + (t.toplamCihazSayisi || 0), 0) || 0,
@@ -70,6 +71,7 @@ export function BankPFSummaryWidget({
 
   const handleShowFullList = () => {
     const allItems = allFirmsWithTabela.map((firm, index) => ({
+      id: firm.id, // ✅ FIX: Add unique ID
       label: firm.name,
       value: `${firm.deviceCount.toLocaleString('tr-TR')} cihaz`,
       badge: `${firm.tabelaCount} grup`,
@@ -206,7 +208,7 @@ export function BankPFSummaryWidget({
                 <div className="space-y-2">
                   {topFirmsWithTabela.map((firm, index) => (
                     <div
-                      key={index}
+                      key={firm.id}
                       className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                     >
                       <div className="flex items-center gap-2">

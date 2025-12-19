@@ -199,25 +199,40 @@ export function SubscriptionFeesTable({
       });
 
       matchedProducts.forEach(product => {
+        // ✅ ARRAY SAFETY: deviceSubscriptions kontrolü
+        const deviceSubscriptions = Array.isArray(serviceFee.deviceSubscriptions) 
+          ? serviceFee.deviceSubscriptions 
+          : [];
+          
         // Cihaz abonelik kaydını bul veya oluştur
-        const subscription = serviceFee.deviceSubscriptions.find(d => d.deviceId === product.id);
+        const subscription = deviceSubscriptions.find(d => d.deviceId === product.id);
         const deviceSub: DeviceSubscription = subscription || {
           deviceId: product.id,
           deviceSerialNumber: product.serialNumber || '',
           deviceName: product.name || '',
-          monthlyFee: serviceFee.customFeePerDevice || serviceFee.standardFeePerDevice,
+          monthlyFee: serviceFee.customFeePerDevice || serviceFee.standardFeePerDevice || 0,
           isActive: true,
           activationDate: new Date().toISOString().split('T')[0],
           paymentStatus: 'pending'
         };
 
+        // ✅ ARRAY SAFETY: bankDeviceAssignments kontrolü
+        const bankAssignments = Array.isArray(customer.bankDeviceAssignments)
+          ? customer.bankDeviceAssignments
+          : [];
+          
         // Banka atamasını bul
-        const bankAssignment = customer.bankDeviceAssignments?.find(
-          ba => ba.deviceIds.includes(product.id)
+        const bankAssignment = bankAssignments.find(
+          ba => Array.isArray(ba.deviceIds) && ba.deviceIds.includes(product.id)
         );
 
+        // ✅ ARRAY SAFETY: invoices kontrolü
+        const invoices = Array.isArray(serviceFee.invoices)
+          ? serviceFee.invoices
+          : [];
+          
         // Mevcut dönem faturasını bul
-        const currentInvoice = serviceFee.invoices.find(inv => inv.period === selectedPeriod);
+        const currentInvoice = invoices.find(inv => inv.period === selectedPeriod);
 
         // Ödeme son tarihi hesaplama
         let daysUntilDue: number | undefined = undefined;
@@ -420,7 +435,7 @@ export function SubscriptionFeesTable({
       if (row.isActive) {
         group.activeDevices++;
         if (row.hasBankAssignment) {
-          group.totalRevenue += row.monthlyFee;
+          group.totalRevenue += (row.monthlyFee || 0);
         }
       } else {
         group.suspendedDevices++;
@@ -457,7 +472,10 @@ export function SubscriptionFeesTable({
     const updatedCustomer = { ...row.customer };
     if (!updatedCustomer.serviceFeeSettings) return;
 
-    const invoiceIndex = updatedCustomer.serviceFeeSettings.invoices.findIndex(
+    const invoices = updatedCustomer.serviceFeeSettings.invoices;
+    if (!invoices || !Array.isArray(invoices)) return;
+
+    const invoiceIndex = invoices.findIndex(
       inv => inv.id === row.currentInvoice!.id
     );
 
@@ -481,7 +499,12 @@ export function SubscriptionFeesTable({
     const updatedCustomer = { ...row.customer };
     if (!updatedCustomer.serviceFeeSettings) return;
 
-    const invoiceIndex = updatedCustomer.serviceFeeSettings.invoices.findIndex(
+    // ✅ ARRAY SAFETY: invoices kontrolü
+    const invoices = Array.isArray(updatedCustomer.serviceFeeSettings.invoices)
+      ? updatedCustomer.serviceFeeSettings.invoices
+      : [];
+      
+    const invoiceIndex = invoices.findIndex(
       inv => inv.id === row.currentInvoice!.id
     );
 
@@ -506,7 +529,7 @@ export function SubscriptionFeesTable({
       email: row.customer.email,
       telefon: row.customer.tel,
       gün: dayNumber,
-      mesaj: `Sayın ${row.customer.yetkili}, ${selectedPeriod} dönemi aidat bedeliniz (${row.monthlyFee.toFixed(2)} €) için ödeme beklenmektedir.`
+      mesaj: `Sayın ${row.customer.yetkili}, ${selectedPeriod} dönemi aidat bedeliniz (${(row.monthlyFee || 0).toFixed(2)} €) için ödeme beklenmektedir.`
     });
 
     toast.success(`📧 ${dayNumber}. gün hatırlatması gönderildi (simülasyon)`);
@@ -523,7 +546,7 @@ export function SubscriptionFeesTable({
         'Banka': row.bankName || 'Tanımsız',
         'Banka Kodu': row.bankCode || '-',
         'Abonelik Tipi': row.subscriptionType === 'monthly' ? 'Aylık' : 'Yıllık',
-        'Aylık Ücret (€)': row.monthlyFee.toFixed(2),
+        'Aylık Ücret (€)': (row.monthlyFee || 0).toFixed(2),
         'Durum': row.isActive ? 'Aktif' : 'Askıda',
         'Ödeme Durumu': row.paymentConfirmed ? 'Alındı' : (row.daysUntilDue && row.daysUntilDue < 0 ? 'Gecikmiş' : 'Bekliyor'),
         'Kalan Gün': row.daysUntilDue || '-',
@@ -580,7 +603,12 @@ export function SubscriptionFeesTable({
       const updatedCustomer = { ...row.customer };
       if (!updatedCustomer.serviceFeeSettings || !row.currentInvoice) return;
 
-      const invoiceIndex = updatedCustomer.serviceFeeSettings.invoices.findIndex(
+      // ✅ ARRAY SAFETY: invoices kontrolü
+      const invoices = Array.isArray(updatedCustomer.serviceFeeSettings.invoices)
+        ? updatedCustomer.serviceFeeSettings.invoices
+        : [];
+        
+      const invoiceIndex = invoices.findIndex(
         inv => inv.id === row.currentInvoice!.id
       );
 
@@ -626,8 +654,13 @@ export function SubscriptionFeesTable({
 
       const updatedCustomer = { ...customer };
       
+      // ✅ ARRAY SAFETY: invoices kontrolü
+      const invoices = Array.isArray(updatedCustomer.serviceFeeSettings!.invoices)
+        ? updatedCustomer.serviceFeeSettings!.invoices
+        : [];
+      
       // Fatura var mı kontrol et
-      let invoiceIndex = updatedCustomer.serviceFeeSettings!.invoices.findIndex(
+      let invoiceIndex = invoices.findIndex(
         inv => inv.id === device.invoiceId
       );
 
@@ -639,7 +672,7 @@ export function SubscriptionFeesTable({
           invoiceDate: new Date().toISOString().split('T')[0],
           period: selectedPeriod,
           deviceCount: 1,
-          totalAmount: device.monthlyFee,
+          totalAmount: device.monthlyFee || 0,
           status: 'paid',
           paymentDate: new Date().toISOString().split('T')[0],
           dueDate: new Date().toISOString().split('T')[0],
@@ -647,16 +680,18 @@ export function SubscriptionFeesTable({
           paymentConfirmed: true,
           paymentConfirmedDate: new Date().toISOString().split('T')[0]
         };
-        updatedCustomer.serviceFeeSettings!.invoices.push(newInvoice);
+        invoices.push(newInvoice);
+        updatedCustomer.serviceFeeSettings!.invoices = invoices;
       } else if (invoiceIndex !== -1) {
         // Fatura varsa güncelle
-        updatedCustomer.serviceFeeSettings!.invoices[invoiceIndex] = {
-          ...updatedCustomer.serviceFeeSettings!.invoices[invoiceIndex],
+        invoices[invoiceIndex] = {
+          ...invoices[invoiceIndex],
           paymentConfirmed: true,
           paymentConfirmedDate: new Date().toISOString().split('T')[0],
           status: 'paid',
           paymentDate: new Date().toISOString().split('T')[0]
         };
+        updatedCustomer.serviceFeeSettings!.invoices = invoices;
       }
 
       onUpdateCustomer(updatedCustomer);
@@ -1085,7 +1120,7 @@ export function SubscriptionFeesTable({
                                   )}
                                   {columnVisibility['monthlyFee'] !== false && (
                                     <td className="py-2 px-3">
-                                      <p className="text-green-600 text-xs">{row.monthlyFee.toFixed(2)} €</p>
+                                      <p className="text-green-600 text-xs">{(row.monthlyFee || 0).toFixed(2)} €</p>
                                     </td>
                                   )}
                                   {columnVisibility['status'] !== false && (
@@ -1203,9 +1238,20 @@ export function SubscriptionFeesTable({
             }) : [];
 
             matchedProducts.forEach(product => {
-              const subscription = customer.serviceFeeSettings!.deviceSubscriptions.find(d => d.deviceId === product.id);
-              const currentInvoice = customer.serviceFeeSettings!.invoices.find(inv => inv.period === selectedPeriod);
-              const bankAssignment = customer.bankDeviceAssignments?.find(ba => ba.deviceIds.includes(product.id));
+              // ✅ ARRAY SAFETY
+              const deviceSubscriptions = Array.isArray(customer.serviceFeeSettings!.deviceSubscriptions)
+                ? customer.serviceFeeSettings!.deviceSubscriptions
+                : [];
+              const invoices = Array.isArray(customer.serviceFeeSettings!.invoices)
+                ? customer.serviceFeeSettings!.invoices
+                : [];
+              const bankAssignments = Array.isArray(customer.bankDeviceAssignments)
+                ? customer.bankDeviceAssignments
+                : [];
+                
+              const subscription = deviceSubscriptions.find(d => d.deviceId === product.id);
+              const currentInvoice = invoices.find(inv => inv.period === selectedPeriod);
+              const bankAssignment = bankAssignments.find(ba => Array.isArray(ba.deviceIds) && ba.deviceIds.includes(product.id));
               
               if (subscription && subscription.isActive && bankAssignment && (!currentInvoice || !currentInvoice.paymentConfirmed)) {
                 devicesToApprove.push({
@@ -1213,7 +1259,7 @@ export function SubscriptionFeesTable({
                   customerName: customer.cariAdi,
                   deviceId: product.id,
                   deviceSerial: subscription.deviceSerialNumber,
-                  monthlyFee: subscription.monthlyFee,
+                  monthlyFee: subscription.monthlyFee || 0,
                   invoiceId: currentInvoice?.id,
                   currentInvoice
                 });

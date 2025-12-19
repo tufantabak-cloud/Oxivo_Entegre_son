@@ -116,7 +116,8 @@ export const PriceListTab = React.memo(function PriceListTab({
       .filter(customer => customer.serviceFeeSettings)
       .map(customer => {
         const settings = customer.serviceFeeSettings!;
-        const currentPrice = settings.customFeePerDevice ?? settings.standardFeePerDevice;
+        // ✅ NUMERIC SAFETY: currentPrice undefined olabilir
+        const currentPrice = settings.customFeePerDevice ?? settings.standardFeePerDevice ?? 0;
         const lastChange = settings.priceHistory && settings.priceHistory.length > 0
           ? settings.priceHistory[settings.priceHistory.length - 1]
           : null;
@@ -142,8 +143,9 @@ export const PriceListTab = React.memo(function PriceListTab({
   // İstatistikler
   const stats = useMemo(() => {
     const totalCustomers = customerPriceData.length;
+    // ✅ NUMERIC SAFETY: currentPrice güvenli toplama
     const avgPrice = totalCustomers > 0
-      ? customerPriceData.reduce((sum, d) => sum + d.currentPrice, 0) / totalCustomers
+      ? customerPriceData.reduce((sum, d) => sum + (d.currentPrice || 0), 0) / totalCustomers
       : 0;
     
     const monthlyCustomers = customerPriceData.filter(d => d.settings.paymentType === 'monthly').length;
@@ -363,7 +365,7 @@ export const PriceListTab = React.memo(function PriceListTab({
           <CardContent>
             <div className="flex items-center gap-2">
               <DollarSign className="text-green-600" size={20} />
-              <span className="text-2xl">€{stats.avgPrice.toFixed(2)}</span>
+              <span className="text-2xl">€{(stats.avgPrice || 0).toFixed(2)}</span>
             </div>
           </CardContent>
         </Card>
@@ -474,8 +476,9 @@ export const PriceListTab = React.memo(function PriceListTab({
                   </TableRow>
                 ) : (
                   customerPriceData.map((data) => {
+                    // ✅ NUMERIC SAFETY: fiyat değişimleri
                     const priceChange = data.lastChange
-                      ? data.lastChange.newPrice - data.lastChange.oldPrice
+                      ? (data.lastChange.newPrice || 0) - (data.lastChange.oldPrice || 0)
                       : 0;
                     const priceChangePercent = data.lastChange && data.lastChange.increasePercentage
                       ? data.lastChange.increasePercentage
@@ -507,7 +510,7 @@ export const PriceListTab = React.memo(function PriceListTab({
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <span className="font-medium">€{data.currentPrice.toFixed(2)}</span>
+                          <span className="font-medium">€{(data.currentPrice || 0).toFixed(2)}</span>
                         </TableCell>
                         <TableCell>
                           {data.settings.customFeePerDevice !== undefined ? (
@@ -534,7 +537,7 @@ export const PriceListTab = React.memo(function PriceListTab({
                                 <ArrowDownCircle size={16} className="text-red-600" />
                               ) : null}
                               <span className={`text-sm ${priceChange > 0 ? 'text-green-600' : priceChange < 0 ? 'text-red-600' : 'text-gray-600'}`}>
-                                {priceChangePercent > 0 ? '+' : ''}{priceChangePercent.toFixed(1)}%
+                                {priceChangePercent > 0 ? '+' : ''}{(priceChangePercent || 0).toFixed(1)}%
                               </span>
                             </div>
                           ) : (
@@ -862,7 +865,8 @@ export const PriceListTab = React.memo(function PriceListTab({
                     {[...selectedCustomer.serviceFeeSettings.priceHistory]
                       .reverse()
                       .map((change) => {
-                        const priceChange = change.newPrice - change.oldPrice;
+                        // ✅ NUMERIC SAFETY: fiyat değişimi hesaplama
+                        const priceChange = (change.newPrice || 0) - (change.oldPrice || 0);
                         const percentChange = change.increasePercentage || 0;
 
                         return (
@@ -877,8 +881,8 @@ export const PriceListTab = React.memo(function PriceListTab({
                                 </span>
                               </div>
                             </TableCell>
-                            <TableCell>€{change.oldPrice.toFixed(2)}</TableCell>
-                            <TableCell>€{change.newPrice.toFixed(2)}</TableCell>
+                            <TableCell>€{(change.oldPrice || 0).toFixed(2)}</TableCell>
+                            <TableCell>€{(change.newPrice || 0).toFixed(2)}</TableCell>
                             <TableCell>
                               <div className="flex items-center gap-1">
                                 {priceChange > 0 ? (
@@ -887,9 +891,9 @@ export const PriceListTab = React.memo(function PriceListTab({
                                   <ArrowDownCircle size={16} className="text-red-600" />
                                 ) : null}
                                 <span className={`text-sm ${priceChange > 0 ? 'text-green-600' : priceChange < 0 ? 'text-red-600' : 'text-gray-600'}`}>
-                                  {priceChange > 0 ? '+' : ''}{priceChange.toFixed(2)}€
+                                  {priceChange > 0 ? '+' : ''}{(priceChange || 0).toFixed(2)}€
                                   <br />
-                                  ({percentChange > 0 ? '+' : ''}{percentChange.toFixed(1)}%)
+                                  ({percentChange > 0 ? '+' : ''}{(percentChange || 0).toFixed(1)}%)
                                 </span>
                               </div>
                             </TableCell>

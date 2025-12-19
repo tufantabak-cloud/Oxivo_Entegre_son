@@ -263,7 +263,7 @@ export const CustomerList = React.memo(function CustomerList({ customers, onSele
     }
     
     // 2. bankDeviceAssignments'tan Banka/PF kategorilerini topla (Banka/PF Kategorisi - Cihaz İlişkilendirme)
-    if (customer.bankDeviceAssignments && customer.bankDeviceAssignments.length > 0) {
+    if (customer.bankDeviceAssignments && Array.isArray(customer.bankDeviceAssignments) && customer.bankDeviceAssignments.length > 0) {
       customer.bankDeviceAssignments.forEach(assignment => {
         // Direkt olarak assignment.bankName'i kullan (zaten kayıtlı olan kategori adı)
         if (assignment.bankName) {

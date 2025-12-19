@@ -103,6 +103,7 @@ export function DeviceRevenueRatioWidget({
 
   const handleShowBestList = () => {
     const allItems = sortedByBest.map((ratio) => ({
+      id: ratio.customer.id, // ✅ FIX: Add unique customer ID
       label: ratio.customer.cariAdi || 'İsimsiz Müşteri',
       value: `€${ratio.revenuePerDevice.toLocaleString('tr-TR', { 
         minimumFractionDigits: 2 
@@ -121,6 +122,7 @@ export function DeviceRevenueRatioWidget({
 
   const handleShowWorstList = () => {
     const allItems = sortedByWorst.map((ratio) => ({
+      id: ratio.customer.id, // ✅ FIX: Add unique customer ID
       label: ratio.customer.cariAdi || 'İsimsiz Müşteri',
       value: `€${ratio.revenuePerDevice.toLocaleString('tr-TR', { 
         minimumFractionDigits: 2 

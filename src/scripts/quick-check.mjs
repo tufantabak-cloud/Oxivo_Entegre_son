@@ -12,8 +12,8 @@ import { createClient } from '@supabase/supabase-js';
 // ========================================
 
 // ⚠️ Geçici olarak buraya hardcode et (sadece test için!)
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://okgeyuhmumlkkcpoholh.supabase.co';
-const SUPABASE_KEY = process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9rZ2V5dWhtdW1sa2tjcG9ob2xoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg0MDAyMjAsImV4cCI6MjA3Mzk3NjIyMH0.wICqJoMc9a2-S7OwW6VMwcs1-ApPjpnS2QMZ4BVZFpI';
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'YOUR_SUPABASE_URL_HERE';
+const SUPABASE_KEY = process.env.VITE_SUPABASE_ANON_KEY || 'YOUR_SUPABASE_KEY_HERE';
 
 const EXPECTED_TABLES = [
   // Definitions

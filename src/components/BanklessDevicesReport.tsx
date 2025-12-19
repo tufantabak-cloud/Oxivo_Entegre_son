@@ -44,19 +44,26 @@ export function BanklessDevicesReport({ customers, payterProducts }: BanklessDev
       // ✅ NULL SAFETY: matchedProducts boş olabilir
       (matchedProducts || []).forEach(product => {
         // Banka ataması kontrolü
-        const hasBankAssignment = customer.bankDeviceAssignments?.some(
-          ba => ba.deviceIds.includes(product.id)
-        );
+        const hasBankAssignment = customer.bankDeviceAssignments && Array.isArray(customer.bankDeviceAssignments)
+          ? customer.bankDeviceAssignments.some(
+              ba => ba.deviceIds && Array.isArray(ba.deviceIds) && ba.deviceIds.includes(product.id)
+            )
+          : false;
 
         if (hasBankAssignment) return; // Gerçek banka ataması varsa atla
 
+        // ✅ ARRAY SAFETY: deviceSubscriptions kontrolü
+        const deviceSubscriptions = Array.isArray(serviceFee.deviceSubscriptions)
+          ? serviceFee.deviceSubscriptions
+          : [];
+        
         // Cihaz abonelik kaydını bul
-        const subscription = serviceFee.deviceSubscriptions.find(d => d.deviceId === product.id);
+        const subscription = deviceSubscriptions.find(d => d.deviceId === product.id);
         const deviceSub: DeviceSubscription = subscription || {
           deviceId: product.id,
           deviceSerialNumber: product.serialNumber || '',
           deviceName: product.name || '',
-          monthlyFee: serviceFee.customFeePerDevice || serviceFee.standardFeePerDevice,
+          monthlyFee: serviceFee.customFeePerDevice || serviceFee.standardFeePerDevice || 0,
           isActive: true,
           activationDate: new Date().toISOString().split('T')[0],
           paymentStatus: 'pending'
@@ -138,7 +145,7 @@ export function BanklessDevicesReport({ customers, payterProducts }: BanklessDev
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-red-700">Aylık Gelir Kaybı</p>
-                <p className="text-3xl text-red-900 mt-1">{totalRevenueLoss.toFixed(2)} €</p>
+                <p className="text-3xl text-red-900 mt-1">{(totalRevenueLoss || 0).toFixed(2)} €</p>
               </div>
               <TrendingDown className="text-red-600" size={40} />
             </div>
@@ -150,7 +157,7 @@ export function BanklessDevicesReport({ customers, payterProducts }: BanklessDev
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-orange-700">Yıllık Gelir Kaybı</p>
-                <p className="text-3xl text-orange-900 mt-1">{yearlyRevenueLoss.toFixed(2)} €</p>
+                <p className="text-3xl text-orange-900 mt-1">{(yearlyRevenueLoss || 0).toFixed(2)} €</p>
               </div>
               <Euro className="text-orange-600" size={40} />
             </div>
@@ -205,10 +212,10 @@ export function BanklessDevicesReport({ customers, payterProducts }: BanklessDev
                       </Badge>
                     </td>
                     <td className="py-3 px-3">
-                      <p className="text-red-600">{item.monthlyFee.toFixed(2)} €</p>
+                      <p className="text-red-600">{(item.monthlyFee || 0).toFixed(2)} €</p>
                     </td>
                     <td className="py-3 px-3">
-                      <p className="text-orange-600">{(item.monthlyFee * 12).toFixed(2)} €</p>
+                      <p className="text-orange-600">{((item.monthlyFee || 0) * 12).toFixed(2)} €</p>
                     </td>
                     <td className="py-3 px-3 text-center">
                       <Badge variant="destructive" className="text-xs">

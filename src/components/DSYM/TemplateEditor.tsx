@@ -137,7 +137,7 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
       ? `<span style="background-color: #fef3c7; padding: 2px 6px; border-radius: 4px;">[MANUEL: ${key}]</span>`
       : `<span style="background-color: #dbeafe; padding: 2px 6px; border-radius: 4px;">{{${key}}}</span>`;
 
-    editor.chain().focus().insertContent(variableHtml).run();
+    editor.chain().focus().insertContent(variableHtml + '&nbsp;').run();
     setShowVariableMenu(false);
   };
 
@@ -466,9 +466,11 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
         <p className="text-blue-900 mb-2">💡 Kullanım İpuçları:</p>
         <ul className="text-blue-700 space-y-1 ml-4">
-          <li>• Mavi renkli alanlar ({'{{unvan}}'}) müşteri bilgisinden otomatik doldurulur</li>
+          <li>• Mavi renkli alanlar ({'{{MUSTERI_UNVAN}}'} veya {'{{unvan}}'}) müşteri bilgisinden otomatik doldurulur</li>
+          <li>• Hem büyük hem küçük harf formatında değişken yazabilirsiniz</li>
           <li>• Sarı renkli alanlar ([MANUEL: komisyon]) admin tarafından manuel girilir</li>
-          <li>• Tablo eklemek için toolbar'daki tablo butonunu kullanın</li>
+          <li>• Tablo eklemek için toolbar&apos;daki tablo butonunu kullanın</li>
+          <li>• &quot;Değişken Ekle&quot; menüsünden otomatik alanları kolayca ekleyebilirsiniz</li>
         </ul>
       </div>
 

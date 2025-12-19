@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Switch } from './ui/switch';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Button } from './ui/button';
 import { Plus, Pencil, Trash2, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 import { signApi } from '../utils/supabaseClient';
@@ -331,8 +331,11 @@ export function TabelaTab({
       }
     }
 
+    // ✅ CRITICAL: Generate UUID for new records ONLY - v3.2.0
+    const generatedId = editingRecord?.id || crypto.randomUUID();
+    
     const newRecord: TabelaRecord = {
-      id: editingRecord?.id || crypto.randomUUID(), // ✅ UUID GENERATION for Supabase compatibility
+      id: generatedId, // ✅ UUID GENERATION for Supabase compatibility
       kurulus: {
         tip: kurulusTipi as 'EPK' | 'OK',
         id: selectedKurulus.id,
@@ -381,9 +384,12 @@ export function TabelaTab({
       const result = await signApi.create(newRecord);
       if (result.success) {
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(newRecord.id);
-        console.log(`✅ TABELA kaydı Supabase'e kaydedildi: ${newRecord.id} ${isUUID ? '(UUID ✅)' : '(TIMESTAMP ❌)'}`);
+        console.log(`✅ [v3.2.0] TABELA kaydı Supabase'e kaydedildi: ${newRecord.id} ${isUUID ? '(UUID ✅)' : '(TIMESTAMP ❌)'}`);
+        console.log(`🔍 [DEBUG] generatedId variable: ${generatedId}`);
+        console.log(`🔍 [DEBUG] editingRecord?.id: ${editingRecord?.id}`);
+        console.log(`🔍 [DEBUG] crypto.randomUUID available: ${typeof crypto.randomUUID === 'function'}`);
         if (!isUUID) {
-          console.error('🚨 CACHE SORUNU: Browser eski JavaScript kodunu çalıştırıyor! Hard refresh gerekli (Ctrl+Shift+R)');
+          console.error('🚨 CRITICAL: ID generation is still using old code! Clear ALL caches and try Incognito mode.');
         }
       } else {
         console.warn('⚠️ Supabase kaydetme hatası:', result.error);

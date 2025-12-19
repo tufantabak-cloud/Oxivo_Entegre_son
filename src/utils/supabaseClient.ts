@@ -42,13 +42,22 @@ export { objectToSnakeCase, objectToCamelCase };
 // Note: Case conversion functions (toSnakeCase, toCamelCase, objectToSnakeCase, objectToCamelCase)
 // are now imported from caseConverter.ts to prevent circular dependency issues
 
-// ✅ Detect Figma Make environment
+// ✅ Detect Figma Make environment  
 // ✅ Disable Supabase in Figma Make environment (CORS restrictions)
-export const SUPABASE_ENABLED = !isFigmaMakeEnvironment();
-
-if (isFigmaMakeEnvironment()) {
-  console.log('🎨 Figma Make environment detected - Supabase disabled, using localStorage only');
+// ✅ FIXED: Safe initialization with try-catch to prevent undefined function errors
+let _supabaseEnabled: boolean;
+try {
+  _supabaseEnabled = !isFigmaMakeEnvironment();
+  if (isFigmaMakeEnvironment()) {
+    console.log('🎨 Figma Make environment detected - Supabase disabled, using localStorage only');
+  }
+} catch (error) {
+  // Fallback: If isFigmaMakeEnvironment fails, assume production (Supabase enabled)
+  console.warn('⚠️ Environment detection failed, defaulting to Supabase enabled:', error);
+  _supabaseEnabled = true;
 }
+
+export const SUPABASE_ENABLED = _supabaseEnabled;
 
 // ✅ SIMPLIFIED: Use hard-coded credentials (for Figma Make environment)
 // These can be overridden via environment variables in production

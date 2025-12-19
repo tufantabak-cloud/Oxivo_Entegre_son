@@ -1,0 +1,15 @@
+Build çıktıları
+
+dist
+build
+.vercel
+
+Kütüphaneler (Asla yüklenmemeli)
+
+node_modules
+
+Sistem dosyaları
+
+.env
+.env.local
+*.log

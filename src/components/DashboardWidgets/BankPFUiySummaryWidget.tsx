@@ -109,6 +109,7 @@ export function BankPFUiySummaryWidget({
 
   const handleShowFullList = () => {
     const allItems = uiySummaryData.bankalar.map((banka, index) => ({
+      id: `bank-${index}`, // ✅ FIX: Add unique ID (using index as fallback since no ID field)
       label: banka.name,
       value: `${banka.toplamCihaz} cihaz`,
       badge: `${banka.toplamUiy} ÜİY`,
@@ -181,7 +182,7 @@ export function BankPFUiySummaryWidget({
                 <>
                   {uiySummaryData.bankalar.slice(0, 6).map((banka, index) => (
                     <TableRow 
-                      key={index}
+                      key={banka.name || `bank-${index}`}
                       className={index % 2 === 0 ? 'bg-white hover:bg-gray-50' : 'bg-gray-50/50 hover:bg-gray-100'}
                     >
                       <TableCell className="border-r-2 border-gray-300">

@@ -228,26 +228,7 @@ export function FirmaTabelaTab({
   const aktifBankalar = banks.filter(b => b.aktif);
   const aktifKartProgramlar = kartProgramlar.filter(k => k.aktif);
   
-  // 🔍 DEBUG: Check data structure on mount
-  useEffect(() => {
-    if (tabelaRecords.length > 0) {
-      console.log('🔍 [FirmaTabelaTab] TABELA Data Structure:', {
-        recordCount: tabelaRecords.length,
-        sampleRecord: tabelaRecords[0],
-        hasGelirModeli: !!tabelaRecords[0]?.gelirModeli,
-        gelirModeliValue: tabelaRecords[0]?.gelirModeli,
-        hasUrun: !!tabelaRecords[0]?.urun,
-        urunValue: tabelaRecords[0]?.urun,
-        hasKomisyonOranları: !!tabelaRecords[0]?.komisyonOranları,
-        komisyonOranlarıType: typeof tabelaRecords[0]?.komisyonOranları,
-        komisyonOranlarıLength: tabelaRecords[0]?.komisyonOranları?.length,
-        firstKomisyon: tabelaRecords[0]?.komisyonOranları?.[0],
-        allKeys: Object.keys(tabelaRecords[0] || {})
-      });
-    } else {
-      console.log('⚠️ [FirmaTabelaTab] TABELA kayıtları YOK! (length: 0)');
-    }
-  }, [tabelaRecords]);
+
   
   // ✅ Seçili gelir modelini bul
   const selectedGelirModeli = gelirModelleri.find(g => g.id === formData.gelirModeliId);
@@ -827,7 +808,7 @@ export function FirmaTabelaTab({
           </Button>
         </div>
       ) : (
-        <div className="border rounded-lg overflow-hidden bg-white">
+        <div className="border rounded-lg overflow-x-auto bg-white">
           <Table>
             <TableHeader>
               <TableRow className="bg-gray-50">
@@ -1210,7 +1191,7 @@ export function FirmaTabelaTab({
             </p>
           </div>
 
-          <div className="border rounded-lg overflow-hidden bg-white">
+          <div className="border rounded-lg overflow-x-auto bg-white">
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50">

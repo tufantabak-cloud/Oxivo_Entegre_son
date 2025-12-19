@@ -14,7 +14,8 @@
 
 import { SupabaseClient } from '@supabase/supabase-js';
 import { objectToSnakeCase, objectToCamelCase } from './caseConverter';
-import { addBackup } from './autoBackup';
+// ✅ REMOVED: autoBackup import - backup işlemi caller tarafından yapılacak
+// import { addBackup } from './autoBackup';
 
 export interface SoftDeleteResult {
   success: boolean;
@@ -24,6 +25,7 @@ export interface SoftDeleteResult {
 
 /**
  * Soft Delete - Kaydı veritabanından silmez, sadece işaretler
+ * ⚠️ NOT: Backup işlemi bu fonksiyonun çağrıldığı yerde yapılmalıdır (circular dependency önleme)
  */
 export async function softDelete(
   supabase: SupabaseClient | null,
@@ -39,7 +41,7 @@ export async function softDelete(
   }
 
   try {
-    // Önce kaydı getir (yedekleme için)
+    // Önce kaydı getir (caller backup için kullanabilir)
     const { data: record, error: fetchError } = await supabase
       .from(tableName)
       .select('*')
@@ -55,8 +57,8 @@ export async function softDelete(
       return { success: false, error: 'Kayıt bulunamadı' };
     }
 
-    // ✅ AUTO-BACKUP: Silmeden önce yedekle
-    addBackup(tableName, 'SOFT_DELETE', id, record);
+    // ✅ REMOVED: AUTO-BACKUP moved to caller to prevent circular dependency
+    // addBackup(tableName, 'SOFT_DELETE', id, record);
 
     // Soft delete işlemi
     const updateData: any = {
@@ -90,6 +92,7 @@ export async function softDelete(
 
 /**
  * Restore - Soft delete edilen kaydı geri getirir
+ * ⚠️ NOT: Backup işlemi bu fonksiyonun çağrıldığı yerde yapılmalıdır (circular dependency önleme)
  */
 export async function restoreDeleted(
   supabase: SupabaseClient | null,
@@ -105,7 +108,7 @@ export async function restoreDeleted(
   }
 
   try {
-    // Önce kaydı getir (yedekleme için)
+    // Önce kaydı getir (caller backup için kullanabilir)
     const { data: record, error: fetchError } = await supabase
       .from(tableName)
       .select('*')
@@ -121,8 +124,8 @@ export async function restoreDeleted(
       return { success: false, error: 'Kayıt bulunamadı' };
     }
 
-    // ✅ AUTO-BACKUP: Restore etmeden önce yedekle
-    addBackup(tableName, 'RESTORE', id, record);
+    // ✅ REMOVED: AUTO-BACKUP moved to caller to prevent circular dependency
+    // addBackup(tableName, 'RESTORE', id, record);
 
     // Restore işlemi
     const updateData: any = {
@@ -159,6 +162,7 @@ export async function restoreDeleted(
 /**
  * Hard Delete - GERÇEKTEN siler (SADECE ADMIN İÇİN!)
  * ⚠️ DİKKAT: Bu fonksiyon sadece kritik durumlarda kullanılmalıdır!
+ * ⚠️ NOT: Backup işlemi bu fonksiyonun çağrıldığı yerde yapılmalıdır (circular dependency önleme)
  */
 export async function hardDelete(
   supabase: SupabaseClient | null,
@@ -182,7 +186,7 @@ export async function hardDelete(
   }
 
   try {
-    // Önce kaydı getir (yedekleme için)
+    // Önce kaydı getir (caller backup için kullanabilir)
     const { data: record, error: fetchError } = await supabase
       .from(tableName)
       .select('*')
@@ -198,8 +202,8 @@ export async function hardDelete(
       return { success: false, error: 'Kayıt bulunamadı' };
     }
 
-    // ✅ AUTO-BACKUP: Silmeden önce yedekle (GERİ ALINAMAZ!)
-    addBackup(tableName, 'DELETE', id, record);
+    // ✅ REMOVED: AUTO-BACKUP moved to caller to prevent circular dependency
+    // addBackup(tableName, 'DELETE', id, record);
 
     // ⚠️ HARD DELETE - Kalıcı silme
     const { error } = await supabase

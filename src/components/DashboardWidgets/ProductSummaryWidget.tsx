@@ -97,6 +97,7 @@ export function ProductSummaryWidget({ payterProducts, customers }: ProductSumma
   // Durum verileri (card bazlı gösterim için)
   const statusItems = [
     {
+      id: 'online',
       icon: <CheckCircle size={16} className="text-green-600" />,
       label: 'Online',
       count: productsByStatus.aktif,
@@ -104,6 +105,7 @@ export function ProductSummaryWidget({ payterProducts, customers }: ProductSumma
       textColor: 'text-green-700'
     },
     {
+      id: 'offline',
       icon: <XCircle size={16} className="text-gray-600" />,
       label: 'Offline',
       count: productsByStatus.pasif,
@@ -111,6 +113,7 @@ export function ProductSummaryWidget({ payterProducts, customers }: ProductSumma
       textColor: 'text-gray-700'
     },
     ...(productsByStatus.synced > 0 ? [{
+      id: 'synced',
       icon: <TrendingUp size={16} className="text-blue-600" />,
       label: 'Senkronize',
       count: productsByStatus.synced,
@@ -130,6 +133,7 @@ export function ProductSummaryWidget({ payterProducts, customers }: ProductSumma
       });
       
       return {
+        id: product.id || product.serialNumber, // ✅ FIX: Add unique product ID
         label: product.serialNumber || 'Seri No Yok',
         value: customer?.cariAdi || 'Müşteri atanmamış',
         badge: product.onlineStatus || 'N/A',
@@ -209,8 +213,8 @@ export function ProductSummaryWidget({ payterProducts, customers }: ProductSumma
               )}
             </div>
             <div className="space-y-2">
-              {statusItems.map((item, index) => (
-                <div key={index} className={`flex items-center justify-between p-3 rounded-lg ${item.color}`}>
+              {statusItems.map((item) => (
+                <div key={item.id} className={`flex items-center justify-between p-3 rounded-lg ${item.color}`}>
                   <div className="flex items-center gap-2">
                     {item.icon}
                     <span className="text-sm font-medium">{item.label}</span>
@@ -252,14 +256,14 @@ export function ProductSummaryWidget({ payterProducts, customers }: ProductSumma
                 En Çok Ürüne Sahip 6 Müşteri
               </h4>
               <div className="space-y-2">
-                {customerProductCounts.map((customer, index) => (
+                {customerProductCounts.map((customer) => (
                   <div
-                    key={index}
+                    key={`${customer.name}-${customer.domain}`}
                     className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                   >
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       <span className="flex items-center justify-center w-6 h-6 bg-orange-100 text-orange-700 rounded-full text-xs font-bold flex-shrink-0">
-                        {index + 1}
+                        {customerProductCounts.indexOf(customer) + 1}
                       </span>
                       <div className="flex flex-col min-w-0">
                         <span className="text-sm font-medium truncate">

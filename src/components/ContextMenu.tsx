@@ -7,7 +7,7 @@
 // ✅ Custom aksiyonlar
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-import { useState, useEffect, useRef, ReactNode } from 'react';
+import { useState, useEffect, useRef, ReactNode, cloneElement, isValidElement } from 'react';
 import { 
   ExternalLink, 
   Copy, 
@@ -48,7 +48,6 @@ export const ContextMenu = ({ children, items, disabled = false, as = 'div' }: C
   const [isVisible, setIsVisible] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const menuRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLSpanElement | HTMLDivElement>(null);
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // HANDLE RIGHT CLICK
@@ -137,18 +136,22 @@ export const ContextMenu = ({ children, items, disabled = false, as = 'div' }: C
   // RENDER
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  // Use Fragment for table rows to avoid DOM nesting errors
-  const WrapperComponent = as === 'fragment' ? 'span' : 'div';
+  // For 'fragment' mode, clone the child element and add onContextMenu to it directly
+  // This avoids adding a wrapper element that would break table DOM structure
+  const wrappedChildren = as === 'fragment' && isValidElement(children)
+    ? cloneElement(children, { onContextMenu: handleContextMenu } as any)
+    : (
+      <div
+        onContextMenu={handleContextMenu}
+        style={{ width: '100%', height: '100%' }}
+      >
+        {children}
+      </div>
+    );
 
   return (
     <>
-      <WrapperComponent
-        ref={containerRef}
-        onContextMenu={handleContextMenu}
-        style={as === 'fragment' ? { display: 'contents' } : { width: '100%', height: '100%' }}
-      >
-        {children}
-      </WrapperComponent>
+      {wrappedChildren}
 
       {isVisible && (
         <div
@@ -163,7 +166,7 @@ export const ContextMenu = ({ children, items, disabled = false, as = 'div' }: C
             if (item.separator) {
               return (
                 <div
-                  key={`separator-${index}`}
+                  key={`sep-${index}`}
                   className="my-1 border-t border-gray-200"
                 />
               );
@@ -171,7 +174,7 @@ export const ContextMenu = ({ children, items, disabled = false, as = 'div' }: C
 
             return (
               <button
-                key={index}
+                key={item.label || `item-${index}`}
                 onClick={() => handleItemClick(item)}
                 disabled={item.disabled}
                 className={`

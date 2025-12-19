@@ -249,3 +249,53 @@ export function sanitizeSuspensionReason(item: any): any {
   
   return result;
 }
+
+/**
+ * Category için sadece mevcut kolonları tut
+ * Frontend: { id, categoryCode, name, categoryType, parentId, description, color, icon, sortOrder, isActive }
+ * Snake_case: { id, category_code, name, category_type, parent_id, description, color, icon, sort_order, is_active }
+ * 
+ * Mevcut DB kolonlar: id, category_code, name, category_type, parent_id, description, color, icon, sort_order, is_active, created_at, updated_at, created_by, updated_by
+ */
+export function sanitizeCategory(item: any): any {
+  const { 
+    id, 
+    category_code, 
+    name, 
+    category_type, 
+    parent_id, 
+    description, 
+    color, 
+    icon, 
+    sort_order, 
+    is_active 
+  } = item;
+  
+  const result: any = { 
+    id, 
+    category_code, 
+    name, 
+    category_type,
+    sort_order: sort_order !== undefined ? sort_order : 0,
+    is_active: is_active !== undefined ? is_active : true
+  };
+  
+  // Opsiyonel alanlar
+  if (parent_id !== undefined && parent_id !== null) {
+    result.parent_id = parent_id;
+  }
+  
+  if (description !== undefined && description !== null) {
+    result.description = description;
+  }
+  
+  if (color !== undefined && color !== null) {
+    result.color = color;
+  }
+  
+  if (icon !== undefined && icon !== null) {
+    result.icon = icon;
+  }
+  
+  return result;
+}

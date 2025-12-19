@@ -51,7 +51,13 @@ export function SuspendedDevicesReport({ customers, payterProducts }: SuspendedD
       matchedProducts.forEach(product => {
         // Cihaz abonelik bilgisi
         const serviceFee = customer.serviceFeeSettings;
-        const subscription = serviceFee?.deviceSubscriptions?.find(d => d.deviceId === product.id);
+        
+        // ✅ ARRAY SAFETY: deviceSubscriptions kontrolü
+        const deviceSubscriptions = Array.isArray(serviceFee?.deviceSubscriptions)
+          ? serviceFee.deviceSubscriptions
+          : [];
+        
+        const subscription = deviceSubscriptions.find(d => d.deviceId === product.id);
         
         const defaultFee = serviceFee?.customFeePerDevice || serviceFee?.standardFeePerDevice || 0;
         const deviceSub: DeviceSubscription = subscription || {
@@ -66,8 +72,13 @@ export function SuspendedDevicesReport({ customers, payterProducts }: SuspendedD
 
         // GRUP 1: Pasif Müşteri - Müşteri durumu "Pasif" ise tüm cihazları pasif
         if (customer.durum === 'Pasif') {
-          const bankAssignment = customer.bankDeviceAssignments?.find(
-            ba => ba.deviceIds.includes(product.id)
+          // ✅ ARRAY SAFETY: bankDeviceAssignments kontrolü
+          const bankAssignments = Array.isArray(customer.bankDeviceAssignments)
+            ? customer.bankDeviceAssignments
+            : [];
+          
+          const bankAssignment = bankAssignments.find(
+            ba => Array.isArray(ba.deviceIds) && ba.deviceIds.includes(product.id)
           );
 
           devices.push({
@@ -86,8 +97,13 @@ export function SuspendedDevicesReport({ customers, payterProducts }: SuspendedD
         }
         // GRUP 2: Pasif Cihaz - Cihaz durumu "Pasif" işaretlenmiş
         else if (subscription && !subscription.isActive) {
-          const bankAssignment = customer.bankDeviceAssignments?.find(
-            ba => ba.deviceIds.includes(product.id)
+          // ✅ ARRAY SAFETY: bankDeviceAssignments kontrolü (yeniden kullanım)
+          const bankAssignments2 = Array.isArray(customer.bankDeviceAssignments)
+            ? customer.bankDeviceAssignments
+            : [];
+          
+          const bankAssignment = bankAssignments2.find(
+            ba => Array.isArray(ba.deviceIds) && ba.deviceIds.includes(product.id)
           );
 
           devices.push({
@@ -281,7 +297,7 @@ export function SuspendedDevicesReport({ customers, payterProducts }: SuspendedD
                   </Badge>
                 </td>
                 <td className="py-3 px-3 text-right">
-                  <p className="text-red-600">{item.monthlyFee.toFixed(2)} €</p>
+                  <p className="text-red-600">{(item.monthlyFee || 0).toFixed(2)} €</p>
                 </td>
                 <td className="py-3 px-3 text-right">
                   <p className="text-red-700">{(item.monthlyFee * 12).toFixed(2)} €</p>
