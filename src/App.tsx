@@ -12,13 +12,15 @@ import { PayterProduct } from './components/PayterProductTab';
 import { logger, createTimer } from './utils/logger';
 import { ENV_CONFIG, FEATURE_FLAGS } from './utils/environmentConfig';
 import { getStoredData, setStoredData } from './utils/storage';
-import { migrateData, validateImportData } from './utils/dataMigration';
+// ❌ REMOVED: Migration utilities - No longer needed after Supabase migration
+// import { migrateData, validateImportData } from './utils/dataMigration';
 import { syncToSupabase } from './utils/supabaseSync';
 import { syncAllData } from './utils/autoSync';
 import { supabase } from './utils/supabaseClient';
 import { FeatureFlags } from './utils/featureFlags';
 import { isSilentMode } from './utils/environmentDetection';
-import { SupabaseSchemaChecker } from './components/SupabaseSchemaChecker';
+// ❌ REMOVED: Schema checker - Development tool not needed in production
+// import { SupabaseSchemaChecker } from './components/SupabaseSchemaChecker';
 
 // ✅ CRITICAL: Import Supabase API helpers (Original v2071)
 import { 
@@ -53,14 +55,9 @@ const DashboardHome = lazy(() => import('./components/DashboardHome').then(m => 
 // ⚡ DSYM Module - Dijital Sözleşme Yönetim Modülü
 const DSYMModule = lazy(() => import('./components/DSYMModule'));
 const ContractPublicView = lazy(() => import('./components/DSYM/ContractPublicView'));
-// ⚡ Supabase Data Inspector - Real-time Veri Takip Paneli
-const SupabaseDataInspector = lazy(() => import('./components/SupabaseDataInspector'));
-// ⚡ Supabase Full Migration - localStorage'dan Supabase'e veri aktarımı
-const SupabaseFullMigration = lazy(() => import('./components/SupabaseFullMigration').then(m => ({ default: m.SupabaseFullMigration })));
-// ❌ REMOVED: Migration Tool - Already migrated to Supabase
-// const MigrationRunner = ENV_CONFIG.enableMigrationTools 
-//   ? lazy(() => import('./utils/migrationRunner').then(m => ({ default: m.MigrationRunner })))
-//   : null;
+// ❌ REMOVED: Development/Migration tools - Not needed in production
+// const SupabaseDataInspector = lazy(() => import('./components/SupabaseDataInspector'));
+// const SupabaseFullMigration = lazy(() => import('./components/SupabaseFullMigration').then(m => ({ default: m.SupabaseFullMigration })));
 
 // Type imports (not lazy loaded)
 import type { 
@@ -99,7 +96,8 @@ const GlobalSearch = lazy(() => import('./components/GlobalSearch').then(m => ({
 const ActivityLogViewer = lazy(() => import('./components/ActivityLogViewer').then(m => ({ default: m.ActivityLogViewer })));
 import { useGlobalSearch } from './hooks/useGlobalSearch';
 import { logActivity } from './utils/activityLog';
-import { Home, Users, Building2, Settings, Package, FileText, CheckCircle, XCircle, Filter, Euro, Download, Upload, Search, Trash2, CreditCard, TrendingUp, BarChart3, PieChart, DollarSign, Target, Award, Activity, Menu, X, RefreshCw, FileSignature, LogOut, Database } from 'lucide-react';
+// ❌ REMOVED: Upload, Database (used in removed dev tools)
+import { Home, Users, Building2, Settings, Package, FileText, CheckCircle, XCircle, Filter, Euro, Download, Search, Trash2, CreditCard, TrendingUp, BarChart3, PieChart, DollarSign, Target, Award, Activity, Menu, X, RefreshCw, FileSignature, LogOut } from 'lucide-react';
 import { Toaster } from './components/ui/sonner';
 import { Button } from './components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './components/ui/sheet';
@@ -184,17 +182,17 @@ export default function App() {
     
     // ✅ Initialize mock data for Figma Make environment
     if (isFigmaMakeEnvironment()) {
-      console.log('🎨 Figma Make environment detected - Initializing mock data...');
+      logger.info('🎨 Figma Make environment detected - Initializing mock data...');
       initializeMockData();
     }
     
     // ✅ Production ready - Supabase entegre sistem
     if (typeof window !== 'undefined') {
-      console.log('🎯 Müşteri Yönetim Uygulaması v1.0.25 - Production Ready');
+      logger.info('🎯 Müşteri Yönetim Uygulaması v1.0.25 - Production Ready');
       if (SUPABASE_ENABLED) {
-        console.log('✅ Supabase: ONLINE | Auth: ACTIVE | Storage: PERSISTENT');
+        logger.info('✅ Supabase: ONLINE | Auth: ACTIVE | Storage: PERSISTENT');
       } else {
-        console.log('🎨 Figma Make: DEMO MODE | Mock Data: LOADED | Storage: localStorage');
+        logger.info('🎨 Figma Make: DEMO MODE | Mock Data: LOADED | Storage: localStorage');
       }
     }
   }, []);
@@ -298,10 +296,10 @@ export default function App() {
             const { runSchemaCheck } = await import('./utils/supabaseSchemaValidator');
             const validationResults = await runSchemaCheck();
             if (!validationResults.isValid) {
-              console.error('⚠️ Schema validation detected issues:', validationResults.criticalIssues);
+              logger.error('⚠️ Schema validation detected issues:', validationResults.criticalIssues);
             }
           } catch (validationError) {
-            console.warn('⚠️ Schema validation failed, continuing with data fetch:', validationError);
+            logger.warn('⚠️ Schema validation failed, continuing with data fetch:', validationError);
           }
         }
         
@@ -355,32 +353,30 @@ export default function App() {
             c.bankDeviceAssignments && Array.isArray(c.bankDeviceAssignments) && c.bankDeviceAssignments.length > 0
           );
           
-          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-          console.log('🔍 [App.tsx] TOPLAM MÜŞTERİ:', customersResult.data.length);
-          console.log('🔍 [App.tsx] bankDeviceAssignments OLAN:', customersWithBankAssignments.length);
-          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-          
-          if (customersWithBankAssignments.length > 0) {
-            console.table(
-              customersWithBankAssignments.map(c => ({
-                'Müşteri': c.cariAdi,
-                'Banka Sayısı': c.bankDeviceAssignments?.length || 0,
-                'Cihaz Sayısı': c.bankDeviceAssignments?.reduce((sum, a) => sum + (a.deviceIds?.length || 0), 0) || 0,
-                'Bankalar': c.bankDeviceAssignments?.map(a => a.bankName || a.bank_name).join(', ')
-              }))
-            );
-          } else {
-            console.log('⚠️ [App.tsx] Hiçbir müşteride bankDeviceAssignments verisi yok');
+          // ❌ REMOVED: Verbose debug logs for performance (only in dev with ENV flag)
+          if (process.env.NODE_ENV === 'development' && ENV_CONFIG.enableVerboseLogging) {
+            logger.debug('🔍 TOPLAM MÜŞTERİ:', customersResult.data.length);
+            logger.debug('🔍 bankDeviceAssignments OLAN:', customersWithBankAssignments.length);
+            
+            if (customersWithBankAssignments.length > 0) {
+              logger.table(
+                customersWithBankAssignments.slice(0, 5).map(c => ({
+                  'Müşteri': c.cariAdi,
+                  'Banka Sayısı': c.bankDeviceAssignments?.length || 0
+                })),
+                'Bank Device Assignments (First 5)'
+              );
+            }
           }
         }
         
-        console.log('🔍 [App.tsx] Products result:', {
-          success: productsResult.success,
-          dataLength: productsResult.data?.length,
-          firstProduct: productsResult.data?.[0],
-          lastProduct: productsResult.data?.[productsResult.data.length - 1],
-          error: productsResult.error
-        });
+        // ❌ REMOVED: Verbose products debug log
+        if (process.env.NODE_ENV === 'development' && ENV_CONFIG.enableVerboseLogging) {
+          logger.debug('🔍 Products result:', {
+            success: productsResult.success,
+            dataLength: productsResult.data?.length,
+          });
+        }
         
         if (productsResult.success && productsResult.data) {
           setPayterProducts(productsResult.data);
@@ -397,7 +393,6 @@ export default function App() {
           if (productsResult.error === 'Supabase disabled in Figma Make' || productsResult.error === 'Supabase client not initialized' || productsResult.error === 'Supabase disabled') {
             logger.info('ℹ️ Products not loaded from Supabase (Figma Make environment - using localStorage)');
           } else {
-            console.error('❌ [App.tsx] Failed to load products:', productsResult.error);
             logger.error(`❌ Failed to load products: ${productsResult.error}`);
           }
         }
@@ -418,20 +413,6 @@ export default function App() {
               }
             });
             
-            // ✅ DEBUG: Mapping durumunu kontrol et
-            console.log('🔍 [BankPF Enrichment] Sign kayıtları:', signsResult.data.length);
-            console.log('🔍 [BankPF Enrichment] firmaId ile eşleşen signs:', signsByFirmaId.size);
-            console.log('🔍 [BankPF Enrichment] BankPF kayıt sayısı:', bankPFResult.data.length);
-            console.log('🔍 [BankPF Enrichment] BankPF ID örnekleri:', bankPFResult.data.slice(0, 3).map((bp: any) => ({
-              id: bp.id,
-              unvan: bp.firmaUnvan
-            })));
-            console.log('🔍 [BankPF Enrichment] Signs firmaId örnekleri:', [...new Set(signsResult.data.map((s: any) => s.firmaId).filter(Boolean))].slice(0, 5));
-            console.log('🔍 [BankPF Enrichment] Mapping detayı:', Array.from(signsByFirmaId.entries()).map(([id, records]) => ({
-              firmaId: id,
-              recordCount: records.length
-            })));
-            
             // Attach tabelaRecords to each BankPF record
             enrichedBankPFRecords = enrichedBankPFRecords.map(bankPF => ({
               ...bankPF,
@@ -440,7 +421,6 @@ export default function App() {
             
             const totalTabelaCount = signsResult.data.length;
             const mappedCount = Array.from(signsByFirmaId.values()).reduce((sum, arr) => sum + arr.length, 0);
-            console.log(`✅ Enriched with ${mappedCount}/${totalTabelaCount} TABELA records across ${signsByFirmaId.size} firms`);
             logger.info(`✅ Mapped ${mappedCount}/${totalTabelaCount} TABELA records to BankPF firms`);
           }
           
@@ -464,7 +444,6 @@ export default function App() {
             
             const totalEarningsCount = earningsResult.data.length;
             const mappedEarningsCount = Array.from(earningsByFirmaId.values()).reduce((sum, arr) => sum + arr.length, 0);
-            console.log(`✅ Enriched with ${mappedEarningsCount}/${totalEarningsCount} EARNINGS records across ${earningsByFirmaId.size} firms`);
             logger.info(`✅ Mapped ${mappedEarningsCount}/${totalEarningsCount} EARNINGS records to BankPF firms`);
           }
           
@@ -545,36 +524,11 @@ export default function App() {
           setSigns(signsResult.data);
           logger.info(`✅ Loaded ${signsResult.data.length} signs from Supabase`);
           
-          // 🔍 DEBUG: Signs firmaId kontrolü
-          if (process.env.NODE_ENV === 'development' && signsResult.data.length > 0) {
-            const firmaIds = signsResult.data.map((s: any) => s.firmaId).filter(Boolean);
-            console.log('🔍 [App] Signs data:', {
-              totalRecords: signsResult.data.length,
-              withFirmaId: firmaIds.length,
-              uniqueFirmaIds: [...new Set(firmaIds)].length,
-              firstRecord: {
-                id: signsResult.data[0].id,
-                firmaId: signsResult.data[0].firmaId || '❌ MISSING!',
-                firmaAdi: signsResult.data[0].firmaAdi
-              },
-              sampleFirmaIds: [...new Set(firmaIds)].slice(0, 5)
-            });
-          }
         }
         
         if (earningsResult.success && earningsResult.data) {
           setEarnings(earningsResult.data);
           logger.info(`✅ Loaded ${earningsResult.data.length} earnings from Supabase`);
-          
-          // 🔍 DEBUG: Earnings firmaId kontrolü
-          if (process.env.NODE_ENV === 'development' && earningsResult.data.length > 0) {
-            console.log('🔍 [App] First earning record:', {
-              id: earningsResult.data[0].id,
-              firmaId: earningsResult.data[0].firmaId || '❌ MISSING!',
-              donem: earningsResult.data[0].donem,
-              tabelaGroupId: earningsResult.data[0].tabelaGroupId
-            });
-          }
         }
         
         setSupabaseDataLoaded(true);
@@ -746,13 +700,9 @@ export default function App() {
           setActiveModule('dsym');
           break;
           
-        case 'dataInspector':
-          setActiveModule('dataInspector');
-          break;
-          
-        case 'migration':
-          setActiveModule('migration');
-          break;
+        // ❌ REMOVED: Development tools not needed
+        // case 'dataInspector':
+        // case 'migration':
           
         default:
           logger.warn('Unknown module:', route.module);
@@ -2396,44 +2346,7 @@ export default function App() {
                       <FileSignature size={18} className="flex-shrink-0" />
                       <span className="truncate">DSYM</span>
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="default"
-                      style={{ minHeight: '48px' }}
-                      onClick={() => {
-                        setActiveModule('dataInspector');
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className={`justify-start gap-3 ${
-                        activeModule === 'dataInspector'
-                          ? 'bg-purple-600 text-white shadow-md hover:bg-purple-700 hover:text-white'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
-                      title="Supabase Data Inspector"
-                    >
-                      <Database size={18} className="flex-shrink-0" />
-                      <span className="truncate">Data Inspector</span>
-                    </Button>
-                    {ENV_CONFIG.enableMigrationTools && (
-                      <Button
-                        variant="ghost"
-                        size="default"
-                        style={{ minHeight: '48px' }}
-                        onClick={() => {
-                          setActiveModule('migration');
-                          setIsMobileMenuOpen(false);
-                        }}
-                        className={`justify-start gap-3 ${
-                          activeModule === 'migration'
-                            ? 'bg-green-600 text-white shadow-md hover:bg-green-700 hover:text-white'
-                            : 'text-gray-700 hover:bg-gray-100'
-                        }`}
-                        title="Supabase Full Data Migration - localStorage → Supabase"
-                      >
-                        <Upload size={18} className="flex-shrink-0" />
-                        <span className="truncate">Supabase Migration</span>
-                      </Button>
-                    )}
+                    {/* ❌ REMOVED: Development tools (Data Inspector, Migration) for performance */}
                   </nav>
                 </SheetContent>
               </Sheet>
@@ -2557,37 +2470,7 @@ export default function App() {
                 <span>DSYM</span>
               </Button>
               
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setActiveModule('dataInspector')}
-                className={`gap-1 h-7 px-2 text-[10px] ${
-                  activeModule === 'dataInspector'
-                    ? 'bg-purple-600 text-white shadow-md shadow-purple-200 hover:bg-purple-700 hover:text-white'
-                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-                title="Supabase Data Inspector"
-              >
-                <Database size={13} />
-                <span className="text-[13px]">Inspector</span>
-              </Button>
-              
-              {ENV_CONFIG.enableMigrationTools && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setActiveModule('migration')}
-                  className={`gap-1 h-7 px-2 text-[10px] ${
-                    activeModule === 'migration'
-                      ? 'bg-green-600 text-white shadow-md shadow-green-200 hover:bg-green-700 hover:text-white'
-                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                  }`}
-                  title="Supabase Full Data Migration - localStorage → Supabase"
-                >
-                  <Upload size={13} />
-                  <span>Migrate</span>
-                </Button>
-              )}
+              {/* ❌ REMOVED: Development tools (Data Inspector, Migration) for performance */}
             </nav>
             
             {/* User Info & Logout */}
@@ -3552,19 +3435,9 @@ export default function App() {
               bankPFRecords={bankPFRecords}
               onCustomersUpdated={async () => {
                 // ✅ Refresh customers from Supabase after bulk operations
-                console.log('🔄 [App.tsx] Refreshing customers after bulk operation...');
                 try {
                   const { data } = await customerApi.getAll();
                   if (data) {
-                    // 🔍 DEBUG: Log sample customer with linkedBankPfIds
-                    const sampleWithLinks = data.find(c => c.linkedBankPfIds && c.linkedBankPfIds.length > 0);
-                    console.log('🔍 [App.tsx] Sample customer with linkedBankPfIds:', {
-                      cariAdi: sampleWithLinks?.cariAdi,
-                      linkedBankPfIds: sampleWithLinks?.linkedBankPfIds,
-                      totalCustomers: data.length,
-                      customersWithLinks: data.filter(c => c.linkedBankPfIds && c.linkedBankPfIds.length > 0).length
-                    });
-                    
                     setCustomers(data);
                     logger.debug('✅ Müşteriler listesi toplu işlem sonrası güncellendi:', data.length, 'kayıt');
                   }
@@ -3581,18 +3454,9 @@ export default function App() {
             <DSYMModule />
           </Suspense>
         )}
-        {activeModule === 'dataInspector' && (
-          <Suspense fallback={<ModuleLoadingFallback />}>
-            <SupabaseDataInspector />
-          </Suspense>
-        )}
-        {activeModule === 'migration' && (
-          <Suspense fallback={<ModuleLoadingFallback />}>
-            <div className="p-6">
-              <SupabaseFullMigration />
-            </div>
-          </Suspense>
-        )}
+        {/* ❌ REMOVED: Development tools for performance */}
+        {/* {activeModule === 'dataInspector' && <SupabaseDataInspector />} */}
+        {/* {activeModule === 'migration' && <SupabaseFullMigration />} */}
       </main>
       
       {/* Global Search Dialog */}

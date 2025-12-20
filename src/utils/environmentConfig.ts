@@ -53,6 +53,7 @@ export const ENV_CONFIG = {
   // 🔍 Logging
   enableConsoleLogs: IS_DEVELOPMENT || IS_LOCALHOST,
   enableDebugLogs: IS_DEVELOPMENT,
+  enableVerboseLogging: IS_DEVELOPMENT && env.VITE_VERBOSE_LOGS === 'true', // 🆕 Opt-in verbose debug
   enableErrorReporting: IS_PRODUCTION,
 
   // 🔐 Security

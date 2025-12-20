@@ -3,6 +3,7 @@ import { Checkbox } from './ui/checkbox';
 import { Input } from './ui/input';
 import { Search } from 'lucide-react';
 import { Label } from './ui/label';
+import { logger } from '../utils/logger';
 
 export interface Bank {
   id: string;
@@ -49,16 +50,14 @@ export function BankPFCategorySelector({
   onSelectionChange,
 }: BankPFCategorySelectorProps) {
   // Debug log (development only)
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🏦 BankPFCategorySelector yüklendi:', {
-      bankaSayısı: banks.length,
-      epkSayısı: epkList.length,
-      okSayısı: okList.length,
-      seçiliBankalar: selectedBankIds.length,
-      seçiliEPKler: selectedEPKIds.length,
-      seçiliÖKler: selectedOKIds.length,
-    });
-  }
+  logger.debug('🏦 BankPFCategorySelector yüklendi:', {
+    bankaSayısı: banks.length,
+    epkSayısı: epkList.length,
+    okSayısı: okList.length,
+    seçiliBankalar: selectedBankIds.length,
+    seçiliEPKler: selectedEPKIds.length,
+    seçiliÖKler: selectedOKIds.length,
+  });
   
   const [selectedBanks, setSelectedBanks] = useState<string[]>(selectedBankIds);
   const [selectedEPKs, setSelectedEPKs] = useState<string[]>(selectedEPKIds);

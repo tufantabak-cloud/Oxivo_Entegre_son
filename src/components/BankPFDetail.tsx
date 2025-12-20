@@ -28,6 +28,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { earningsApi } from '../utils/supabaseClient';
+import { logger } from '../utils/logger';
 
 interface BankPFDetailProps {
   record: BankPF | null;
@@ -131,9 +132,7 @@ export function BankPFDetail({
       autoSaveTimeoutRef.current = window.setTimeout(() => {
         onSave(formData);
         setOriginalData(formData);
-        if (process.env.NODE_ENV === 'development') {
-          console.log('✅ BankPF otomatik kayıt yapıldı:', new Date().toLocaleTimeString('tr-TR'));
-        }
+        logger.debug('✅ BankPF otomatik kayıt yapıldı:', new Date().toLocaleTimeString('tr-TR'));
       }, 1500);
     }
 
@@ -152,16 +151,12 @@ export function BankPFDetail({
       if (autoSaveTimeoutRef.current) {
         clearTimeout(autoSaveTimeoutRef.current);
         autoSaveTimeoutRef.current = null;
-        if (process.env.NODE_ENV === 'development') {
-          console.log('⚠️ BankPFDetail: Pending auto-save CANCELLED (record updated from parent)');
-        }
+        logger.debug('⚠️ BankPFDetail: Pending auto-save CANCELLED (record updated from parent)');
       }
       
       setFormData(record);
       setOriginalData(record);
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🔄 BankPFDetail: formData güncellendi (tabelaRecords sayısı:', record.tabelaRecords?.length || 0, ')');
-      }
+      logger.debug('🔄 BankPFDetail: formData güncellendi (tabelaRecords sayısı:', record.tabelaRecords?.length || 0, ')');
     }
   }, [record]);
   
@@ -171,13 +166,9 @@ export function BankPFDetail({
       if (!formData.id || isCreating) return;
       
       try {
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`📥 Hakediş kayıtları yükleniyor (firmaId: ${formData.id})...`);
-        }
+        logger.debug(`📥 Hakediş kayıtları yükleniyor (firmaId: ${formData.id})...`);
         const earnings = await earningsApi.getByFirmaId(formData.id);
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`✅ ${earnings.length} hakediş kaydı yüklendi`);
-        }
+        logger.debug(`✅ ${earnings.length} hakediş kaydı yüklendi`);
         
         // FormData'yı güncelle
         setFormData(prev => ({ ...prev, hakedisRecords: earnings }));
