@@ -6,6 +6,7 @@ import { Plus } from 'lucide-react';
 import { Button } from './ui/button';
 import { toast } from 'sonner';
 import { customerApi } from '../utils/supabaseClient';
+import { logger } from '../utils/logger';
 // XLSX import - ES6 module format (v3.0.8 - fixed require issue)
 import * as XLSX from 'xlsx';
 
@@ -331,13 +332,20 @@ export const CustomerModule = React.memo(function CustomerModule({
     if (selectedCustomer && customers.length > 0) {
       const updatedCustomer = customers.find(c => c.id === selectedCustomer.id);
       if (updatedCustomer) {
-        // Check if data has actually changed (avoid infinite loops)
-        const hasChanged = JSON.stringify(updatedCustomer.linkedBankPFIds) !== JSON.stringify(selectedCustomer.linkedBankPFIds);
-        if (hasChanged) {
-          console.log('🔄 [CustomerModule] Updating selectedCustomer after bulk operation:', {
+        // ✅ CRITICAL FIX: Check BOTH linkedBankPFIds AND bank_device_assignments
+        const linkedIdsChanged = JSON.stringify(updatedCustomer.linkedBankPFIds) !== JSON.stringify(selectedCustomer.linkedBankPFIds);
+        const assignmentsChanged = JSON.stringify(updatedCustomer.bankDeviceAssignments) !== JSON.stringify(selectedCustomer.bankDeviceAssignments);
+        
+        if (linkedIdsChanged || assignmentsChanged) {
+          logger.debug('🔄 [CustomerModule] Updating selectedCustomer after bulk operation:', {
             customerId: selectedCustomer.id,
+            customerName: selectedCustomer.cariAdi,
+            linkedIdsChanged,
+            assignmentsChanged,
             oldLinkedIds: selectedCustomer.linkedBankPFIds,
-            newLinkedIds: updatedCustomer.linkedBankPFIds
+            newLinkedIds: updatedCustomer.linkedBankPFIds,
+            oldAssignments: selectedCustomer.bankDeviceAssignments,
+            newAssignments: updatedCustomer.bankDeviceAssignments
           });
           setSelectedCustomer(updatedCustomer);
         }
