@@ -19,6 +19,7 @@ interface Customer {
   sektor?: string | null;
   mcc?: string | null;
   serviceFeeSettings?: any;
+  bank_device_assignments?: any;
 }
 
 interface BankPF {
@@ -209,7 +210,7 @@ export function BulkOperationsTab({
         // Fetch customers
         const { data: customersData, error: customersError } = await supabase
           .from('customers')
-          .select('id, cari_adi, cari_hesap_kodu, linked_bank_pf_ids, sektor, mcc, service_fee_settings')
+          .select('id, cari_adi, cari_hesap_kodu, linked_bank_pf_ids, sektor, mcc, service_fee_settings, bank_device_assignments')
           .eq('is_deleted', false)
           .order('cari_adi');
 
@@ -264,11 +265,21 @@ export function BulkOperationsTab({
 
     try {
       for (const customerId of selectedCustomers) {
-        const customer = customers.find(c => c.id === customerId);
-        if (!customer) continue;
+        // ✅ CRITICAL FIX: Fetch full customer data to get bank_device_assignments
+        const { data: customerData, error: fetchError } = await supabase
+          .from('customers')
+          .select('*')
+          .eq('id', customerId)
+          .single();
+
+        if (fetchError || !customerData) {
+          logger.error(`Failed to fetch customer ${customerId}:`, fetchError);
+          failCount++;
+          continue;
+        }
 
         // Get existing bank/PF IDs
-        const existingBankPFIds = customer.linkedBankPfIds || [];
+        const existingBankPFIds = customerData.linked_bank_pf_ids || [];
         
         // Merge with new ones (avoid duplicates)
         const newBankPFIds = Array.from(new Set([
@@ -276,21 +287,82 @@ export function BulkOperationsTab({
           ...selectedBankPFForCustomers
         ]));
 
-        // Update customer
+        // ✅ CRITICAL FIX: Also update bank_device_assignments (JSONB)
+        let existingAssignments = [];
+        if (customerData.bank_device_assignments) {
+          existingAssignments = typeof customerData.bank_device_assignments === 'string'
+            ? JSON.parse(customerData.bank_device_assignments)
+            : customerData.bank_device_assignments;
+        }
+
+        // Create new assignments for each selected bank/PF
+        const newAssignments = selectedBankPFForCustomers
+          .filter(bankPFId => {
+            // Don't add if already exists
+            return !existingAssignments.some((a: any) => 
+              a.bank_id?.includes(bankPFId)
+            );
+          })
+          .map(bankPFId => {
+            const option = allBankOptions.find(opt => opt.value === bankPFId);
+            const bankPF = bankPFs.find(b => b.id === bankPFId);
+            const bank = propBanks?.find(b => b.id === bankPFId);
+            const epk = propEPK?.find(e => e.id === bankPFId);
+            const ok = propOK?.find(o => o.id === bankPFId);
+
+            let finalBankId = bankPFId;
+            let bankName = option?.label || 'Bilinmeyen';
+            let bankCode = '';
+
+            if (bankPF) {
+              finalBankId = `bank-bank-${bankPF.id}`;
+              bankName = bankPF.hesap_adi || bankPF.banka_pf_ad || bankName;
+              bankCode = bankPF.hesap_kodu || bankPF.muhasebe_kodu || '';
+            } else if (bank) {
+              finalBankId = `bank-bank-${bank.id}`;
+              bankName = bank.bankaAdi || bankName;
+              bankCode = bank.kod || '';
+            } else if (epk) {
+              finalBankId = `epk-epk-${epk.id}`;
+              bankName = epk.kurumAdi || bankName;
+              bankCode = epk.kod || '';
+            } else if (ok) {
+              finalBankId = `ok-ok-${ok.id}`;
+              bankName = ok.kurumAdi || bankName;
+              bankCode = ok.kod || '';
+            }
+
+            return {
+              id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+              bank_id: finalBankId,
+              bank_name: bankName,
+              bank_code: bankCode,
+              device_ids: [],
+              created_at: new Date().toISOString(),
+            };
+          });
+
+        const allAssignments = [...existingAssignments, ...newAssignments];
+        const assignmentsJSON = JSON.stringify(allAssignments);
+
+        // ✅ Update BOTH fields
         const { error } = await supabase
           .from('customers')
-          .update({ linked_bank_pf_ids: newBankPFIds })
+          .update({ 
+            linked_bank_pf_ids: newBankPFIds,
+            bank_device_assignments: assignmentsJSON  // ✅ CRITICAL: Also update this!
+          })
           .eq('id', customerId);
 
         if (error) {
-          console.error(`Müşteri ${customer.cariAdi} güncellenemedi:`, error);
+          logger.error(`Failed to update customer ${customerData.cari_adi}:`, error);
           failCount++;
         } else {
           successCount++;
         }
       }
 
-      toast.success(`✅ ${successCount} müşteri Banka/PF'ye eklendi${failCount > 0 ? `, ${failCount} hata` : ''}`);
+      toast.success(`✅ ${successCount} müşteriye ${selectedBankPFForCustomers.length} Banka/PF eklendi${failCount > 0 ? `, ${failCount} hata` : ''}`);
       
       // Reset selection and refresh
       setSelectedCustomers([]);
