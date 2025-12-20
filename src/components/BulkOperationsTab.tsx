@@ -34,12 +34,31 @@ interface MCCCode {
   aciklama?: string;
 }
 
-export function BulkOperationsTab() {
+// ✅ NEW: Props interface
+interface BulkOperationsTabProps {
+  customers?: Customer[];
+  bankPFRecords?: BankPF[];
+}
+
+export function BulkOperationsTab({ customers: propCustomers, bankPFRecords: propBankPFRecords }: BulkOperationsTabProps = {}) {
   const [loading, setLoading] = useState(false);
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [bankPFs, setBankPFs] = useState<BankPF[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>(propCustomers || []);
+  const [bankPFs, setBankPFs] = useState<BankPF[]>(propBankPFRecords || []);
   const [mccCodes, setMccCodes] = useState<MCCCode[]>([]);
   
+  // ✅ DEBUG: Log received props
+  useEffect(() => {
+    console.log('🔍 [BulkOperationsTab] Received props:', {
+      propCustomers: propCustomers?.length || 0,
+      propBankPFRecords: propBankPFRecords?.length || 0,
+      bankPFs: bankPFs.length,
+      customers: customers.length
+    });
+    if (propBankPFRecords && propBankPFRecords.length > 0) {
+      console.log('🔍 [BulkOperationsTab] BankPF Sample:', propBankPFRecords[0]);
+    }
+  }, [propCustomers, propBankPFRecords, bankPFs, customers]);
+
   // Operation 1: Toplu Cari'ye Banka/PF Ekleme
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
   const [selectedBankPFForCustomers, setSelectedBankPFForCustomers] = useState<string[]>([]);
@@ -66,6 +85,19 @@ export function BulkOperationsTab() {
     fetchData();
   }, []);
 
+  // ✅ OPTIMIZE: Sync with props when they change
+  useEffect(() => {
+    if (propCustomers && propCustomers.length > 0) {
+      setCustomers(propCustomers);
+    }
+  }, [propCustomers]);
+
+  useEffect(() => {
+    if (propBankPFRecords && propBankPFRecords.length > 0) {
+      setBankPFs(propBankPFRecords);
+    }
+  }, [propBankPFRecords]);
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -75,27 +107,33 @@ export function BulkOperationsTab() {
         return;
       }
 
-      // Fetch customers
-      const { data: customersData, error: customersError } = await supabase
-        .from('customers')
-        .select('id, cari_adi, cari_hesap_kodu, linked_bank_pf_ids, sektor, mcc, service_fee_settings')
-        .eq('is_deleted', false)
-        .order('cari_adi');
+      // ✅ OPTIMIZE: Only fetch if not already provided via props
+      if (!propCustomers || propCustomers.length === 0) {
+        // Fetch customers
+        const { data: customersData, error: customersError } = await supabase
+          .from('customers')
+          .select('id, cari_adi, cari_hesap_kodu, linked_bank_pf_ids, sektor, mcc, service_fee_settings')
+          .eq('is_deleted', false)
+          .order('cari_adi');
 
-      if (customersError) throw customersError;
-      setCustomers(customersData || []);
+        if (customersError) throw customersError;
+        setCustomers(customersData || []);
+      }
 
-      // Fetch bank/PF accounts
-      const { data: bankPFData, error: bankPFError } = await supabase
-        .from('bank_accounts')
-        .select('id, hesap_adi, hesap_kodu, category')
-        .eq('is_deleted', false)
-        .order('hesap_adi');
+      // ✅ OPTIMIZE: Only fetch if not already provided via props
+      if (!propBankPFRecords || propBankPFRecords.length === 0) {
+        // Fetch bank/PF accounts
+        const { data: bankPFData, error: bankPFError } = await supabase
+          .from('bank_accounts')
+          .select('id, hesap_adi, hesap_kodu, category')
+          .eq('is_deleted', false)
+          .order('hesap_adi');
 
-      if (bankPFError) throw bankPFError;
-      setBankPFs(bankPFData || []);
+        if (bankPFError) throw bankPFError;
+        setBankPFs(bankPFData || []);
+      }
 
-      // Fetch MCC codes
+      // Fetch MCC codes (always fetch - not passed via props)
       const { data: mccCodesData, error: mccCodesError } = await supabase
         .from('mcc_codes')
         .select('id, kod, kategori, aciklama')

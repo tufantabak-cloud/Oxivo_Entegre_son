@@ -3548,6 +3548,8 @@ export default function App() {
               onSalesRepsChange={setSalesReps}
               suspensionReasons={suspensionReasons}
               onSuspensionReasonsChange={setSuspensionReasons}
+              customers={customers}
+              bankPFRecords={bankPFRecords}
               isReadOnly={isViewer}
             />
           </Suspense>

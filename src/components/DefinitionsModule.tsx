@@ -570,6 +570,9 @@ interface DefinitionsModuleProps {
   onSalesRepsChange: (reps: SalesRepresentative[]) => void;
   suspensionReasons: SuspensionReason[];
   onSuspensionReasonsChange: (reasons: SuspensionReason[]) => void;
+  // ✅ NEW: BulkOperationsTab için customers ve bankPFRecords
+  customers?: any[]; // Optional: Toplu İşlemler için müşteri listesi
+  bankPFRecords?: any[]; // Optional: Toplu İşlemler için Banka/PF listesi
 }
 
 // PERFORMANCE: React.memo prevents unnecessary re-renders (critical for 22 props!)
@@ -599,7 +602,10 @@ export const DefinitionsModule = React.memo(function DefinitionsModule({
   salesReps,
   onSalesRepsChange,
   suspensionReasons,
-  onSuspensionReasonsChange
+  onSuspensionReasonsChange,
+  // ✅ NEW: BulkOperationsTab için customers ve bankPFRecords
+  customers,
+  bankPFRecords
 }: DefinitionsModuleProps) {
   // ⚡ PERFORMANCE: Wrap all onChange handlers in useCallback to prevent child re-renders
   const handleJobTitlesChange = useCallback((titles: typeof jobTitles) => {
@@ -740,7 +746,10 @@ export const DefinitionsModule = React.memo(function DefinitionsModule({
         </TabsContent>
 
         <TabsContent value="bulkOperations">
-          <BulkOperationsTab />
+          <BulkOperationsTab 
+            customers={customers}
+            bankPFRecords={bankPFRecords}
+          />
         </TabsContent>
       </Tabs>
     </div>
