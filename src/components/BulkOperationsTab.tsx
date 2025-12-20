@@ -81,6 +81,15 @@ export function BulkOperationsTab({
   const [bankPFs, setBankPFs] = useState<BankPF[]>(propBankPFRecords || []);
   const [mccCodes, setMccCodes] = useState<MCCCode[]>([]);
 
+  // ✅ SORT: Alphabetically sorted customers
+  const sortedCustomers = React.useMemo(() => {
+    return [...customers].sort((a, b) => {
+      const nameA = (a.cariAdi || '').toLowerCase();
+      const nameB = (b.cariAdi || '').toLowerCase();
+      return nameA.localeCompare(nameB, 'tr-TR');
+    });
+  }, [customers]);
+
   // ✅ COMBINE: Bank/PF + Banks + EPK + OK → Unified list
   const allBankOptions = React.useMemo(() => {
     const combinedList: Array<{value: string, label: string, source: string}> = [];
@@ -292,7 +301,7 @@ export function BulkOperationsTab({
         }
       }
 
-      toast.success(`✅ ${successCount} müşteriye Banka/PF eklendi${failCount > 0 ? `, ${failCount} hata` : ''}`);
+      toast.success(`✅ ${successCount} müşteri Banka/PF'ye eklendi${failCount > 0 ? `, ${failCount} hata` : ''}`);
       
       // Reset selection and refresh
       setSelectedCustomers([]);
@@ -643,10 +652,10 @@ export function BulkOperationsTab({
             </div>
             
             <div className="border rounded-lg p-4 max-h-64 overflow-y-auto space-y-2">
-              {customers.length === 0 ? (
+              {sortedCustomers.length === 0 ? (
                 <p className="text-sm text-gray-500 text-center py-4">Müşteri bulunamadı</p>
               ) : (
-                customers.map(customer => (
+                sortedCustomers.map(customer => (
                   <div key={customer.id} className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded">
                     <Checkbox
                       checked={selectedCustomers.includes(customer.id)}
@@ -728,11 +737,11 @@ export function BulkOperationsTab({
             </div>
             
             <div className="border rounded-lg p-4 max-h-64 overflow-y-auto space-y-2">
-              {customers.length === 0 ? (
+              {sortedCustomers.length === 0 ? (
                 <p className="text-sm text-gray-500 text-center py-4">Müşteri bulunamadı</p>
               ) : (
-                customers.map(customer => {
-                  const alreadyLinked = selectedBankPF && customer.linked_bank_pf_ids?.includes(selectedBankPF);
+                sortedCustomers.map(customer => {
+                  const alreadyLinked = selectedBankPF && customer.linkedBankPfIds?.includes(selectedBankPF);
                   return (
                     <div key={customer.id} className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded">
                       <Checkbox
@@ -741,9 +750,9 @@ export function BulkOperationsTab({
                         disabled={alreadyLinked}
                       />
                       <div className="flex-1">
-                        <div className="text-sm font-medium">{customer.cari_adi}</div>
+                        <div className="text-sm font-medium">{customer.cariAdi}</div>
                         <div className="text-xs text-gray-500">
-                          {customer.cari_hesap_kodu}
+                          {customer.cariHesapKodu}
                           {alreadyLinked && (
                             <Badge variant="secondary" className="ml-2">
                               Zaten Ekli
@@ -816,7 +825,7 @@ export function BulkOperationsTab({
                 { value: 'Other', label: 'Diğer' }
               ]}
               selectedValues={selectedSector ? [selectedSector] : []}
-              onChange={(values) => setSelectedSector(values[0] || '')}
+              onChangeMulti={(values) => setSelectedSector(values[0] || '')}
               clearable
             />
           </div>
@@ -835,19 +844,19 @@ export function BulkOperationsTab({
             </div>
             
             <div className="border rounded-lg p-4 max-h-64 overflow-y-auto space-y-2">
-              {customers.length === 0 ? (
+              {sortedCustomers.length === 0 ? (
                 <p className="text-sm text-gray-500 text-center py-4">Müşteri bulunamadı</p>
               ) : (
-                customers.map(customer => (
+                sortedCustomers.map(customer => (
                   <div key={customer.id} className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded">
                     <Checkbox
                       checked={selectedCustomersForSector.includes(customer.id)}
                       onCheckedChange={() => toggleCustomerForSector(customer.id)}
                     />
                     <div className="flex-1">
-                      <div className="text-sm font-medium">{customer.cari_adi}</div>
+                      <div className="text-sm font-medium">{customer.cariAdi}</div>
                       <div className="text-xs text-gray-500">
-                        {customer.cari_hesap_kodu}
+                        {customer.cariHesapKodu}
                         {customer.sektor && (
                           <Badge variant="secondary" className="ml-2">
                             {customer.sektor}
@@ -904,7 +913,7 @@ export function BulkOperationsTab({
                 label: `${mcc.kod} - ${mcc.kategori}${mcc.aciklama ? ` (${mcc.aciklama})` : ''}`
               }))}
               selectedValues={selectedMCC ? [selectedMCC] : []}
-              onChange={(values) => setSelectedMCC(values[0] || '')}
+              onChangeMulti={(values) => setSelectedMCC(values[0] || '')}
               clearable
             />
           </div>
@@ -923,19 +932,19 @@ export function BulkOperationsTab({
             </div>
             
             <div className="border rounded-lg p-4 max-h-64 overflow-y-auto space-y-2">
-              {customers.length === 0 ? (
+              {sortedCustomers.length === 0 ? (
                 <p className="text-sm text-gray-500 text-center py-4">Müşteri bulunamadı</p>
               ) : (
-                customers.map(customer => (
+                sortedCustomers.map(customer => (
                   <div key={customer.id} className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded">
                     <Checkbox
                       checked={selectedCustomersForMCC.includes(customer.id)}
                       onCheckedChange={() => toggleCustomerForMCC(customer.id)}
                     />
                     <div className="flex-1">
-                      <div className="text-sm font-medium">{customer.cari_adi}</div>
+                      <div className="text-sm font-medium">{customer.cariAdi}</div>
                       <div className="text-xs text-gray-500">
-                        {customer.cari_hesap_kodu}
+                        {customer.cariHesapKodu}
                         {customer.mcc && (
                           <Badge variant="secondary" className="ml-2">
                             {customer.mcc}
@@ -1021,22 +1030,22 @@ export function BulkOperationsTab({
             </div>
             
             <div className="border rounded-lg p-4 max-h-64 overflow-y-auto space-y-2">
-              {customers.length === 0 ? (
+              {sortedCustomers.length === 0 ? (
                 <p className="text-sm text-gray-500 text-center py-4">Müşteri bulunamadı</p>
               ) : (
-                customers.map(customer => (
+                sortedCustomers.map(customer => (
                   <div key={customer.id} className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded">
                     <Checkbox
                       checked={selectedCustomersForServiceFee.includes(customer.id)}
                       onCheckedChange={() => toggleCustomerForServiceFee(customer.id)}
                     />
                     <div className="flex-1">
-                      <div className="text-sm font-medium">{customer.cari_adi}</div>
+                      <div className="text-sm font-medium">{customer.cariAdi}</div>
                       <div className="text-xs text-gray-500">
-                        {customer.cari_hesap_kodu}
-                        {customer.service_fee_settings && (
+                        {customer.cariHesapKodu}
+                        {customer.serviceFeeSettings && (
                           <Badge variant="secondary" className="ml-2">
-                            {serviceFeePaymentType === 'monthly' ? 'Aylık' : 'Yıllık'} {customer.service_fee_settings.amount} TL
+                            {serviceFeePaymentType === 'monthly' ? 'Aylık' : 'Yıllık'} {customer.serviceFeeSettings.amount} TL
                           </Badge>
                         )}
                       </div>

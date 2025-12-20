@@ -2439,7 +2439,7 @@ export default function App() {
               </Sheet>
 
               <div className="flex items-center gap-1 sm:gap-1.5">
-                <h1 className="font-bold text-blue-600 text-sm sm:text-base text-[32px]">Oxivo</h1>
+                <h1 className="font-bold text-blue-600 text-sm sm:text-base text-[40px]">OXİVO-box</h1>
               </div>
             </div>
             
