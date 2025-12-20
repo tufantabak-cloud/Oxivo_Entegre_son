@@ -361,33 +361,43 @@ export function BulkOperationsTab({
           });
 
         const allAssignments = [...existingAssignments, ...newAssignments];
-        const assignmentsJSON = JSON.stringify(allAssignments);
+        // ❌ OLD: JSON.stringify - Supabase JSONB expects object, not string!
+        // const assignmentsJSON = JSON.stringify(allAssignments);
 
         // ✅ Prepare update object
         updates.push({
           id: customerId,
           linked_bank_pf_ids: newBankPFIds,
-          bank_device_assignments: assignmentsJSON
+          bank_device_assignments: allAssignments  // ✅ Send as array, not string!
         });
       }
 
       // ✅ PERFORMANCE: Batch update all at once (much faster!)
       toast.loading(`Kaydediliyor...`, { id: toastId });
       
-      // Split into chunks of 100 for safety (Supabase limit)
+      // ✅ CRITICAL FIX: Use UPDATE instead of UPSERT to avoid NOT NULL constraint errors
+      // UPSERT tries to INSERT when id exists, but we only have 2 fields!
+      // UPDATE only modifies the specific fields we want to change.
       const chunkSize = 100;
       for (let i = 0; i < updates.length; i += chunkSize) {
         const chunk = updates.slice(i, i + chunkSize);
         
-        const { error } = await supabase
-          .from('customers')
-          .upsert(chunk);
+        // ✅ UPDATE each customer individually in the chunk
+        for (const update of chunk) {
+          const { error } = await supabase
+            .from('customers')
+            .update({
+              linked_bank_pf_ids: update.linked_bank_pf_ids,
+              bank_device_assignments: update.bank_device_assignments
+            })
+            .eq('id', update.id);
 
-        if (error) {
-          logger.error(`Batch update failed for chunk ${i / chunkSize + 1}:`, error);
-          failCount += chunk.length;
-        } else {
-          successCount += chunk.length;
+          if (error) {
+            logger.error(`Failed to update customer ${update.id}:`, error);
+            failCount++;
+          } else {
+            successCount++;
+          }
         }
       }
 
