@@ -67,6 +67,7 @@ interface BulkOperationsTabProps {
   banks?: Bank[];
   epkList?: EPK[];
   okList?: OK[];
+  onCustomersUpdated?: () => void; // ✅ NEW: Callback when customers are updated
 }
 
 export function BulkOperationsTab({ 
@@ -74,7 +75,8 @@ export function BulkOperationsTab({
   bankPFRecords: propBankPFRecords,
   banks: propBanks,
   epkList: propEPK,
-  okList: propOK
+  okList: propOK,
+  onCustomersUpdated // ✅ NEW: Callback prop
 }: BulkOperationsTabProps = {}) {
   const [loading, setLoading] = useState(false);
   const [customers, setCustomers] = useState<Customer[]>(propCustomers || []);
@@ -308,6 +310,11 @@ export function BulkOperationsTab({
       setSelectedBankPFForCustomers([]);
       await fetchData();
 
+      // ✅ NEW: Call callback if provided
+      if (onCustomersUpdated) {
+        onCustomersUpdated();
+      }
+
     } catch (error: any) {
       console.error('Toplu işlem hatası:', error);
       toast.error('İşlem sırasında hata oluştu: ' + error.message);
@@ -364,6 +371,11 @@ export function BulkOperationsTab({
       setSelectedCustomersForBankPF([]);
       await fetchData();
 
+      // ✅ NEW: Call callback if provided
+      if (onCustomersUpdated) {
+        onCustomersUpdated();
+      }
+
     } catch (error: any) {
       console.error('Toplu işlem hatası:', error);
       toast.error('İşlem sırasında hata oluştu: ' + error.message);
@@ -411,6 +423,11 @@ export function BulkOperationsTab({
       // Reset selection and refresh
       setSelectedCustomersForSector([]);
       await fetchData();
+
+      // ✅ NEW: Call callback if provided
+      if (onCustomersUpdated) {
+        onCustomersUpdated();
+      }
 
     } catch (error: any) {
       console.error('Toplu işlem hatası:', error);
@@ -460,6 +477,11 @@ export function BulkOperationsTab({
       setSelectedCustomersForMCC([]);
       await fetchData();
 
+      // ✅ NEW: Call callback if provided
+      if (onCustomersUpdated) {
+        onCustomersUpdated();
+      }
+
     } catch (error: any) {
       console.error('Toplu işlem hatası:', error);
       toast.error('İşlem sırasında hata oluştu: ' + error.message);
@@ -507,6 +529,11 @@ export function BulkOperationsTab({
       // Reset selection and refresh
       setSelectedCustomersForServiceFee([]);
       await fetchData();
+
+      // ✅ NEW: Call callback if provided
+      if (onCustomersUpdated) {
+        onCustomersUpdated();
+      }
 
     } catch (error: any) {
       console.error('Toplu işlem hatası:', error);

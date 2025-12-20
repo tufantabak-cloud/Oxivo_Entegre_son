@@ -576,6 +576,7 @@ interface DefinitionsModuleProps {
   banks?: any[]; // Optional: Bankalar tablosu
   epkList?: any[]; // Optional: EPK tablosu
   okList?: any[]; // Optional: ÖK tablosu
+  onCustomersUpdated?: () => void; // ✅ NEW: Callback when bulk operations update customers
 }
 
 // PERFORMANCE: React.memo prevents unnecessary re-renders (critical for 22 props!)
@@ -611,7 +612,8 @@ export const DefinitionsModule = React.memo(function DefinitionsModule({
   bankPFRecords,
   banks: banksProp,
   epkList: epkListProp,
-  okList: okListProp
+  okList: okListProp,
+  onCustomersUpdated
 }: DefinitionsModuleProps) {
   // ⚡ PERFORMANCE: Wrap all onChange handlers in useCallback to prevent child re-renders
   const handleJobTitlesChange = useCallback((titles: typeof jobTitles) => {
@@ -758,6 +760,7 @@ export const DefinitionsModule = React.memo(function DefinitionsModule({
             banks={banksProp}
             epkList={epkListProp}
             okList={okListProp}
+            onCustomersUpdated={onCustomersUpdated}
           />
         </TabsContent>
       </Tabs>

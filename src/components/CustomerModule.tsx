@@ -326,6 +326,25 @@ export const CustomerModule = React.memo(function CustomerModule({
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isCreating, setIsCreating] = useState(false);
 
+  // ✅ NEW: Update selectedCustomer when customers prop changes (after bulk operations)
+  React.useEffect(() => {
+    if (selectedCustomer && customers.length > 0) {
+      const updatedCustomer = customers.find(c => c.id === selectedCustomer.id);
+      if (updatedCustomer) {
+        // Check if data has actually changed (avoid infinite loops)
+        const hasChanged = JSON.stringify(updatedCustomer.linkedBankPFIds) !== JSON.stringify(selectedCustomer.linkedBankPFIds);
+        if (hasChanged) {
+          console.log('🔄 [CustomerModule] Updating selectedCustomer after bulk operation:', {
+            customerId: selectedCustomer.id,
+            oldLinkedIds: selectedCustomer.linkedBankPFIds,
+            newLinkedIds: updatedCustomer.linkedBankPFIds
+          });
+          setSelectedCustomer(updatedCustomer);
+        }
+      }
+    }
+  }, [customers, selectedCustomer]);
+
   // useCallback ile memoize edilmiş navigation handler
   const handleNavigateToCustomer = useCallback((customer: Customer) => {
     setSelectedCustomer(customer);

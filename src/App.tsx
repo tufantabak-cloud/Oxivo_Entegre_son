@@ -3550,6 +3550,19 @@ export default function App() {
               onSuspensionReasonsChange={setSuspensionReasons}
               customers={customers}
               bankPFRecords={bankPFRecords}
+              onCustomersUpdated={async () => {
+                // ✅ Refresh customers from Supabase after bulk operations
+                console.log('🔄 Refreshing customers after bulk operation...');
+                try {
+                  const { data } = await customerApi.getAll();
+                  if (data) {
+                    setCustomers(data);
+                    logger.debug('✅ Müşteriler listesi toplu işlem sonrası güncellendi:', data.length, 'kayıt');
+                  }
+                } catch (error) {
+                  console.error('❌ Müşteri listesi yenileme hatası:', error);
+                }
+              }}
               isReadOnly={isViewer}
             />
           </Suspense>
