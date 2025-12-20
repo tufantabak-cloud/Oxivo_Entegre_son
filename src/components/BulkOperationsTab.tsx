@@ -406,7 +406,9 @@ export function BulkOperationsTab({
       // Reset selection and refresh
       setSelectedCustomers([]);
       setSelectedBankPFForCustomers([]);
-      await fetchData();
+      
+      // ❌ REMOVED: await fetchData() - causes double fetch & freeze!
+      // The parent component will refresh via onCustomersUpdated callback
 
       // ✅ NEW: Call callback if provided
       if (onCustomersUpdated) {
@@ -467,7 +469,7 @@ export function BulkOperationsTab({
       // Reset selection and refresh
       setSelectedBankPF('');
       setSelectedCustomersForBankPF([]);
-      await fetchData();
+      // ❌ REMOVED: await fetchData() - causes double fetch & freeze!
 
       // ✅ NEW: Call callback if provided
       if (onCustomersUpdated) {
@@ -520,7 +522,7 @@ export function BulkOperationsTab({
       
       // Reset selection and refresh
       setSelectedCustomersForSector([]);
-      await fetchData();
+      // ❌ REMOVED: await fetchData() - causes double fetch & freeze!
 
       // ✅ NEW: Call callback if provided
       if (onCustomersUpdated) {

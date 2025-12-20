@@ -351,7 +351,7 @@ export const CustomerModule = React.memo(function CustomerModule({
         }
       }
     }
-  }, [customers, selectedCustomer]);
+  }, [customers, selectedCustomer?.id]); // ✅ FIX: Only depend on ID, not entire object to avoid infinite loop!
 
   // useCallback ile memoize edilmiş navigation handler
   const handleNavigateToCustomer = useCallback((customer: Customer) => {
