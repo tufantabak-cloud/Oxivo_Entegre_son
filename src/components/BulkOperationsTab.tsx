@@ -57,6 +57,9 @@ export function BulkOperationsTab({ customers: propCustomers, bankPFRecords: pro
     if (propBankPFRecords && propBankPFRecords.length > 0) {
       console.log('🔍 [BulkOperationsTab] BankPF Sample:', propBankPFRecords[0]);
     }
+    if (propCustomers && propCustomers.length > 0) {
+      console.log('🔍 [BulkOperationsTab] Customer Sample:', propCustomers[0]);
+    }
   }, [propCustomers, propBankPFRecords, bankPFs, customers]);
 
   // Operation 1: Toplu Cari'ye Banka/PF Ekleme
