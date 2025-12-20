@@ -263,19 +263,37 @@ export function BulkOperationsTab({
     let successCount = 0;
     let failCount = 0;
 
-    try {
-      for (const customerId of selectedCustomers) {
-        // ✅ CRITICAL FIX: Fetch full customer data to get bank_device_assignments
-        const { data: customerData, error: fetchError } = await supabase
-          .from('customers')
-          .select('*')
-          .eq('id', customerId)
-          .single();
+    // ✅ PERFORMANCE: Show progress toast
+    const toastId = toast.loading(`İşleniyor... 0/${selectedCustomers.length}`);
 
-        if (fetchError || !customerData) {
-          logger.error(`Failed to fetch customer ${customerId}:`, fetchError);
+    try {
+      // ✅ PERFORMANCE OPTIMIZATION: Batch fetch all customers first
+      const { data: allCustomerData, error: batchFetchError } = await supabase
+        .from('customers')
+        .select('*')
+        .in('id', selectedCustomers);
+
+      if (batchFetchError) {
+        logger.error('Batch fetch failed:', batchFetchError);
+        toast.error('Müşteriler yüklenemedi', { id: toastId });
+        return;
+      }
+
+      // ✅ Prepare all updates in memory first
+      const updates = [];
+      
+      for (let i = 0; i < selectedCustomers.length; i++) {
+        const customerId = selectedCustomers[i];
+        const customerData = allCustomerData?.find(c => c.id === customerId);
+
+        if (!customerData) {
           failCount++;
           continue;
+        }
+
+        // ✅ Update progress every 10 customers (reduce UI updates)
+        if (i % 10 === 0) {
+          toast.loading(`İşleniyor... ${i}/${selectedCustomers.length}`, { id: toastId });
         }
 
         // Get existing bank/PF IDs
@@ -345,24 +363,35 @@ export function BulkOperationsTab({
         const allAssignments = [...existingAssignments, ...newAssignments];
         const assignmentsJSON = JSON.stringify(allAssignments);
 
-        // ✅ Update BOTH fields
+        // ✅ Prepare update object
+        updates.push({
+          id: customerId,
+          linked_bank_pf_ids: newBankPFIds,
+          bank_device_assignments: assignmentsJSON
+        });
+      }
+
+      // ✅ PERFORMANCE: Batch update all at once (much faster!)
+      toast.loading(`Kaydediliyor...`, { id: toastId });
+      
+      // Split into chunks of 100 for safety (Supabase limit)
+      const chunkSize = 100;
+      for (let i = 0; i < updates.length; i += chunkSize) {
+        const chunk = updates.slice(i, i + chunkSize);
+        
         const { error } = await supabase
           .from('customers')
-          .update({ 
-            linked_bank_pf_ids: newBankPFIds,
-            bank_device_assignments: assignmentsJSON  // ✅ CRITICAL: Also update this!
-          })
-          .eq('id', customerId);
+          .upsert(chunk);
 
         if (error) {
-          logger.error(`Failed to update customer ${customerData.cari_adi}:`, error);
-          failCount++;
+          logger.error(`Batch update failed for chunk ${i / chunkSize + 1}:`, error);
+          failCount += chunk.length;
         } else {
-          successCount++;
+          successCount += chunk.length;
         }
       }
 
-      toast.success(`✅ ${successCount} müşteriye ${selectedBankPFForCustomers.length} Banka/PF eklendi${failCount > 0 ? `, ${failCount} hata` : ''}`);
+      toast.success(`✅ ${successCount} müşteriye ${selectedBankPFForCustomers.length} Banka/PF eklendi${failCount > 0 ? `, ${failCount} hata` : ''}`, { id: toastId });
       
       // Reset selection and refresh
       setSelectedCustomers([]);
