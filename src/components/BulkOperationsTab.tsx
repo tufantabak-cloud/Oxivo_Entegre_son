@@ -12,12 +12,12 @@ import { FilterDropdown } from './FilterDropdown';
 
 interface Customer {
   id: string;
-  cari_adi: string;
-  cari_hesap_kodu: string;
-  linked_bank_pf_ids?: string[];
+  cariAdi: string;
+  cariHesapKodu: string;
+  linkedBankPfIds?: string[];
   sektor?: string | null;
   mcc?: string | null;
-  service_fee_settings?: any;
+  serviceFeeSettings?: any;
 }
 
 interface BankPF {
@@ -174,7 +174,7 @@ export function BulkOperationsTab({ customers: propCustomers, bankPFRecords: pro
         if (!customer) continue;
 
         // Get existing bank/PF IDs
-        const existingBankPFIds = customer.linked_bank_pf_ids || [];
+        const existingBankPFIds = customer.linkedBankPfIds || [];
         
         // Merge with new ones (avoid duplicates)
         const newBankPFIds = Array.from(new Set([
@@ -189,7 +189,7 @@ export function BulkOperationsTab({ customers: propCustomers, bankPFRecords: pro
           .eq('id', customerId);
 
         if (error) {
-          console.error(`Müşteri ${customer.cari_adi} güncellenemedi:`, error);
+          console.error(`Müşteri ${customer.cariAdi} güncellenemedi:`, error);
           failCount++;
         } else {
           successCount++;
@@ -232,7 +232,7 @@ export function BulkOperationsTab({ customers: propCustomers, bankPFRecords: pro
         if (!customer) continue;
 
         // Get existing bank/PF IDs
-        const existingBankPFIds = customer.linked_bank_pf_ids || [];
+        const existingBankPFIds = customer.linkedBankPfIds || [];
         
         // Add new bank/PF if not already present
         if (!existingBankPFIds.includes(selectedBankPF)) {
@@ -560,12 +560,12 @@ export function BulkOperationsTab({ customers: propCustomers, bankPFRecords: pro
                       onCheckedChange={() => toggleCustomerSelection(customer.id)}
                     />
                     <div className="flex-1">
-                      <div className="text-sm font-medium">{customer.cari_adi}</div>
+                      <div className="text-sm font-medium">{customer.cariAdi}</div>
                       <div className="text-xs text-gray-500">
-                        {customer.cari_hesap_kodu}
-                        {customer.linked_bank_pf_ids && customer.linked_bank_pf_ids.length > 0 && (
+                        {customer.cariHesapKodu}
+                        {customer.linkedBankPfIds && customer.linkedBankPfIds.length > 0 && (
                           <Badge variant="secondary" className="ml-2">
-                            {customer.linked_bank_pf_ids.length} Banka/PF
+                            {customer.linkedBankPfIds.length} Banka/PF
                           </Badge>
                         )}
                       </div>
