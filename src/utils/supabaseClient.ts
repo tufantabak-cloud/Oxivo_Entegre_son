@@ -27,6 +27,7 @@ import {
 import { isFigmaMakeEnvironment } from './environmentDetection';
 import { softDelete, restoreDeleted, hardDelete, getDeletedRecords } from './softDelete';
 import { addBackup } from './autoBackup';
+import { logger } from './logger';
 import { 
   objectToSnakeCase, 
   objectToCamelCase 
@@ -285,7 +286,7 @@ export const customerApi = {
       return { success: false, error: error.message, data: [] };
     }
 
-    console.log(`✅ Fetched ${data.length} customers from Supabase`);
+    logger.info(`✅ Fetched ${data.length} customers from Supabase`);
     
     // ✅ FIX: Parse JSONB strings back to objects when reading
     const parsedData = data.map(record => {
@@ -354,6 +355,31 @@ export const customerApi = {
     if (error) {
       logError('Error fetching customer:', error);
       return { success: false, error: error.message };
+    }
+
+    // ✅ CRITICAL FIX: Parse JSONB fields (same as getAll)
+    if (data) {
+      const jsonbFields = [
+        'bank_device_assignments',
+        'service_fee_settings',
+        'device_subscriptions',
+        'service_fee_invoices',
+        'payment_reminders',
+        'reminder_settings',
+        'suspension_history',
+        'domain_hierarchy'
+      ];
+      
+      jsonbFields.forEach(field => {
+        if (typeof data[field] === 'string') {
+          try {
+            data[field] = JSON.parse(data[field]);
+          } catch (e) {
+            logger.error(`❌ Failed to parse ${field} for customer ${id}:`, e);
+            data[field] = null;
+          }
+        }
+      });
     }
 
     return { success: true, data: objectToCamelCase(data) };
@@ -803,7 +829,7 @@ export const productApi = {
 
         if (data && data.length > 0) {
           allProducts = [...allProducts, ...data];
-          console.log(`✅ Fetched page ${page + 1}: ${data.length} products (total: ${allProducts.length}/${count})`);
+          logger.debug(`✅ Fetched page ${page + 1}: ${data.length} products (total: ${allProducts.length}/${count})`);
         }
 
         // Daha fazla veri var mı?
@@ -817,7 +843,7 @@ export const productApi = {
         }
       }
 
-      console.log(`✅ Fetched total ${allProducts.length} products from Supabase`);
+      logger.info(`✅ Fetched total ${allProducts.length} products from Supabase`);
       return { success: true, data: allProducts.map(objectToCamelCase) || [] };
     } catch (error: any) {
       console.warn('⚠️ Products fetch failed, falling back to localStorage');
@@ -1021,8 +1047,8 @@ export const bankPFApi = {
       };
     });
 
-    console.log(`✅ Fetched ${bankAccounts.length} bankPF records from Supabase`);
-    console.log(`✅ Enriched with ${allSigns?.length || 0} total TABELA records across all firms`);
+    logger.info(`✅ Fetched ${bankAccounts.length} bankPF records from Supabase`);
+    logger.info(`✅ Enriched with ${allSigns?.length || 0} total TABELA records across all firms`);
     
     return { success: true, data: enrichedData };
   },
@@ -1133,7 +1159,7 @@ export const mccCodesApi = {
       return { success: false, error: error.message, data: [] };
     }
 
-    console.log(`✅ Fetched ${data.length} MCC codes from Supabase`);
+    logger.info(`✅ Fetched ${data.length} MCC codes from Supabase`);
     return { success: true, data: data.map(objectToCamelCase) || [] };
   },
 
@@ -1226,7 +1252,7 @@ export const banksApi = {
       return { success: false, error: error.message, data: [] };
     }
 
-    console.log(`✅ Fetched ${data.length} banks from Supabase`);
+    logger.info(`✅ Fetched ${data.length} banks from Supabase`);
     // ✅ CRITICAL FIX: Map 'ad' → 'bankaAdi' for frontend compatibility
     const mappedData = data.map(item => {
       const camelItem = objectToCamelCase(item);
@@ -1335,7 +1361,7 @@ export const epkListApi = {
       return { success: false, error: error.message, data: [] };
     }
 
-    console.log(`✅ Fetched ${data.length} EPK entries from Supabase`);
+    logger.info(`✅ Fetched ${data.length} EPK entries from Supabase`);
     // ✅ CRITICAL FIX: Map 'ad' → 'kurumAdi' for frontend compatibility
     const mappedData = data.map(item => {
       const camelItem = objectToCamelCase(item);
@@ -1444,7 +1470,7 @@ export const okListApi = {
       return { success: false, error: error.message, data: [] };
     }
 
-    console.log(`✅ Fetched ${data.length} OK entries from Supabase`);
+    logger.info(`✅ Fetched ${data.length} OK entries from Supabase`);
     // ✅ CRITICAL FIX: Map 'ad' → 'kurumAdi' for frontend compatibility
     const mappedData = data.map(item => {
       const camelItem = objectToCamelCase(item);
@@ -1553,7 +1579,7 @@ export const salesRepsApi = {
       return { success: false, error: error.message, data: [] };
     }
 
-    console.log(`✅ Fetched ${data.length} sales representatives from Supabase`);
+    logger.info(`✅ Fetched ${data.length} sales representatives from Supabase`);
     return { success: true, data: data.map(objectToCamelCase) || [] };
   },
 
@@ -1605,7 +1631,7 @@ export const jobTitlesApi = {
       return { success: false, error: error.message, data: [] };
     }
 
-    console.log(`✅ Fetched ${data.length} job titles from Supabase`);
+    logger.info(`✅ Fetched ${data.length} job titles from Supabase`);
     return { success: true, data: data.map(objectToCamelCase) || [] };
   },
 
@@ -1657,7 +1683,7 @@ export const partnershipsApi = {
       return { success: false, error: error.message, data: [] };
     }
 
-    console.log(`✅ Fetched ${data.length} partnerships from Supabase`);
+    logger.info(`✅ Fetched ${data.length} partnerships from Supabase`);
     return { success: true, data: data.map(objectToCamelCase) || [] };
   },
 
@@ -1749,7 +1775,7 @@ export const accountItemsApi = {
       return { success: false, error: error.message, data: [] };
     }
 
-    console.log(`✅ Fetched ${data.length} account items from Supabase`);
+    logger.info(`✅ Fetched ${data.length} account items from Supabase`);
     return { success: true, data: data.map(objectToCamelCase) || [] };
   },
 
@@ -1800,7 +1826,7 @@ export const fixedCommissionsApi = {
       return { success: false, error: error.message, data: [] };
     }
 
-    console.log(`✅ Fetched ${data.length} fixed commissions from Supabase`);
+    logger.info(`✅ Fetched ${data.length} fixed commissions from Supabase`);
     return { success: true, data: data.map(objectToCamelCase) || [] };
   },
 
@@ -1857,7 +1883,7 @@ export const additionalRevenuesApi = {
       return { success: false, error: error.message, data: [] };
     }
 
-    console.log(`✅ Fetched ${data.length} additional revenues from Supabase`);
+    logger.info(`✅ Fetched ${data.length} additional revenues from Supabase`);
     return { success: true, data: data.map(objectToCamelCase) || [] };
   },
 
@@ -1909,7 +1935,7 @@ export const sharingApi = {
       return { success: false, error: error.message, data: [] };
     }
 
-    console.log(`✅ Fetched ${data.length} sharing records from Supabase`);
+    logger.info(`✅ Fetched ${data.length} sharing records from Supabase`);
     return { success: true, data: data.map(objectToCamelCase) || [] };
   },
 
@@ -2002,7 +2028,7 @@ export const kartProgramApi = {
       return { success: false, error: error.message, data: [] };
     }
 
-    console.log(`✅ Fetched ${data.length} kart program records from Supabase`);
+    logger.info(`✅ Fetched ${data.length} kart program records from Supabase`);
     return { success: true, data: data.map(objectToCamelCase) || [] };
   },
 
@@ -2095,7 +2121,7 @@ export const suspensionReasonApi = {
       return { success: false, error: error.message, data: [] };
     }
 
-    console.log(`✅ Fetched ${data.length} suspension reason records from Supabase`);
+    logger.info(`✅ Fetched ${data.length} suspension reason records from Supabase`);
     
     // ✅ CRITICAL FIX: Manual field mapping 'neden' (Supabase) → 'reason' (Frontend)
     const mappedData = data.map(item => {
@@ -2279,7 +2305,7 @@ export const domainMappingApi = {
       return { success: false, error: error.message, data: [] };
     }
 
-    console.log(`✅ Fetched ${data.length} domain mapping records from Supabase`);
+    logger.info(`✅ Fetched ${data.length} domain mapping records from Supabase`);
     return { success: true, data: data.map(objectToCamelCase) || [] };
   },
 
@@ -2369,7 +2395,7 @@ export const signApi = {
     }
 
     const camelCasedData = data.map(objectToCamelCase);
-    console.log(`✅ Fetched ${data.length} sign records from Supabase`);
+    logger.info(`✅ Fetched ${data.length} sign records from Supabase`);
     return { success: true, data: camelCasedData || [] };
   },
 
@@ -2487,7 +2513,7 @@ export const earningsApi = {
       return { success: false, error: error.message, data: [] };
     }
 
-    console.log(`✅ Fetched ${data.length} earnings records from Supabase`);
+    logger.info(`✅ Fetched ${data.length} earnings records from Supabase`);
     if (process.env.NODE_ENV === 'development') {
       console.log('🔍 [DEBUG] RAW EARNINGS FROM DB:', JSON.stringify(data, null, 2));
     }
@@ -2514,7 +2540,7 @@ export const earningsApi = {
       return [];
     }
 
-    console.log(`✅ Fetched ${data.length} earnings records for firma ${firmaId}`);
+    logger.debug(`✅ Fetched ${data.length} earnings records for firma ${firmaId}`);
     return data.map(objectToCamelCase) || [];
   },
 
@@ -2629,7 +2655,7 @@ export const documentApi = {
       return { success: false, error: error.message, data: [] };
     }
 
-    console.log(`✅ Fetched ${data.length} documents for customer ${customerId}`);
+    logger.debug(`✅ Fetched ${data.length} documents for customer ${customerId}`);
     return { success: true, data: data.map(objectToCamelCase) || [] };
   },
 

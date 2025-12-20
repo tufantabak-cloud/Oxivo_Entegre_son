@@ -2992,23 +2992,7 @@ export function CustomerDetail({
                       ...autoMatchedIds
                     ]));
                     
-                    console.log('🔄 BankDeviceAssignments güncellendi, linkedBankPFIds senkronize ediliyor:', {
-                      cariAdi: prevFormData.cariAdi,
-                      assignmentsCount: safeAssignments.length,
-                      assignments: safeAssignments.map(a => ({ bankId: a.bankId, bankName: a.bankName, deviceCount: a.deviceIds?.length || 0 })),
-                      currentManualIds,
-                      assignmentBasedIds,
-                      autoMatchedIds,
-                      allLinkedIds,
-                      bankPFRecordsCount: bankPFRecords.length,
-                      bankPFRecordsSample: bankPFRecords.slice(0, 3).map(r => ({ 
-                        id: r.id, 
-                        firmaUnvan: r.firmaUnvan, 
-                        linkedBankIds: r.linkedBankIds,
-                        linkedEPKIds: r.linkedEPKIds,
-                        linkedOKIds: r.linkedOKIds
-                      }))
-                    });
+                    // ❌ REMOVED: Verbose debug log (use logger.debug if needed)
                     
                     const updatedFormData = { 
                       ...prevFormData, 
