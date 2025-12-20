@@ -524,7 +524,7 @@ export function BulkOperationsTab({ customers: propCustomers, bankPFRecords: pro
               label="Banka/PF Seç"
               options={bankPFs.map(bp => ({
                 value: bp.id,
-                label: `${bp.hesap_adi} (${bp.hesap_kodu})${bp.category ? ` - ${bp.category}` : ''}`
+                label: `${bp.bankaPfAd || bp.firmaUnvan || 'İsimsiz'} (${bp.muhasebeKodu || 'Kod Yok'})${bp.bankaOrPf ? ` - ${bp.bankaOrPf}` : ''}`
               }))}
               selectedValues={selectedBankPFForCustomers}
               onChange={setSelectedBankPFForCustomers}
@@ -613,7 +613,7 @@ export function BulkOperationsTab({ customers: propCustomers, bankPFRecords: pro
               label="Banka/PF Seç"
               options={bankPFs.map(bp => ({
                 value: bp.id,
-                label: `${bp.hesap_adi} (${bp.hesap_kodu})${bp.category ? ` - ${bp.category}` : ''}`
+                label: `${bp.bankaPfAd || bp.firmaUnvan || 'İsimsiz'} (${bp.muhasebeKodu || 'Kod Yok'})${bp.bankaOrPf ? ` - ${bp.bankaOrPf}` : ''}`
               }))}
               selectedValues={selectedBankPF ? [selectedBankPF] : []}
               onChange={(values) => setSelectedBankPF(values[0] || '')}
