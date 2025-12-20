@@ -573,6 +573,9 @@ interface DefinitionsModuleProps {
   // ✅ NEW: BulkOperationsTab için customers ve bankPFRecords
   customers?: any[]; // Optional: Toplu İşlemler için müşteri listesi
   bankPFRecords?: any[]; // Optional: Toplu İşlemler için Banka/PF listesi
+  banks?: any[]; // Optional: Bankalar tablosu
+  epkList?: any[]; // Optional: EPK tablosu
+  okList?: any[]; // Optional: ÖK tablosu
 }
 
 // PERFORMANCE: React.memo prevents unnecessary re-renders (critical for 22 props!)
@@ -605,7 +608,10 @@ export const DefinitionsModule = React.memo(function DefinitionsModule({
   onSuspensionReasonsChange,
   // ✅ NEW: BulkOperationsTab için customers ve bankPFRecords
   customers,
-  bankPFRecords
+  bankPFRecords,
+  banks: banksProp,
+  epkList: epkListProp,
+  okList: okListProp
 }: DefinitionsModuleProps) {
   // ⚡ PERFORMANCE: Wrap all onChange handlers in useCallback to prevent child re-renders
   const handleJobTitlesChange = useCallback((titles: typeof jobTitles) => {
@@ -749,6 +755,9 @@ export const DefinitionsModule = React.memo(function DefinitionsModule({
           <BulkOperationsTab 
             customers={customers}
             bankPFRecords={bankPFRecords}
+            banks={banksProp}
+            epkList={epkListProp}
+            okList={okListProp}
           />
         </TabsContent>
       </Tabs>

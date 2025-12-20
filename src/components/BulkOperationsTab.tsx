@@ -22,9 +22,35 @@ interface Customer {
 
 interface BankPF {
   id: string;
-  hesap_adi: string;
-  hesap_kodu: string;
+  hesap_adi?: string;
+  hesap_kodu?: string;
   category?: string;
+  // BankPF alanları (camelCase)
+  bankaPfAd?: string;
+  firmaUnvan?: string;
+  muhasebeKodu?: string;
+  bankaOrPf?: string;
+}
+
+interface Bank {
+  id: string;
+  kod?: string;
+  bankaAdi?: string;
+  aciklama?: string;
+}
+
+interface EPK {
+  id: string;
+  kod?: string;
+  kurumAdi?: string;
+  aciklama?: string;
+}
+
+interface OK {
+  id: string;
+  kod?: string;
+  kurumAdi?: string;
+  aciklama?: string;
 }
 
 interface MCCCode {
@@ -38,14 +64,84 @@ interface MCCCode {
 interface BulkOperationsTabProps {
   customers?: Customer[];
   bankPFRecords?: BankPF[];
+  banks?: Bank[];
+  epkList?: EPK[];
+  okList?: OK[];
 }
 
-export function BulkOperationsTab({ customers: propCustomers, bankPFRecords: propBankPFRecords }: BulkOperationsTabProps = {}) {
+export function BulkOperationsTab({ 
+  customers: propCustomers, 
+  bankPFRecords: propBankPFRecords,
+  banks: propBanks,
+  epkList: propEPK,
+  okList: propOK
+}: BulkOperationsTabProps = {}) {
   const [loading, setLoading] = useState(false);
   const [customers, setCustomers] = useState<Customer[]>(propCustomers || []);
   const [bankPFs, setBankPFs] = useState<BankPF[]>(propBankPFRecords || []);
   const [mccCodes, setMccCodes] = useState<MCCCode[]>([]);
-  
+
+  // ✅ COMBINE: Bank/PF + Banks + EPK + OK → Unified list
+  const allBankOptions = React.useMemo(() => {
+    const combinedList: Array<{value: string, label: string, source: string}> = [];
+    
+    // 1. Bank Accounts (bank_accounts table)
+    if (propBankPFRecords) {
+      propBankPFRecords.forEach(bp => {
+        const name = bp.bankaPfAd || bp.firmaUnvan || bp.hesap_adi || 'İsimsiz';
+        const code = bp.muhasebeKodu || bp.hesap_kodu || 'Kod Yok';
+        const category = bp.bankaOrPf || bp.category || 'Hesap';
+        combinedList.push({
+          value: bp.id,
+          label: `${name} (${code}) - ${category}`,
+          source: 'bank_accounts'
+        });
+      });
+    }
+    
+    // 2. Banks (banks table)
+    if (propBanks) {
+      propBanks.forEach(b => {
+        combinedList.push({
+          value: b.id,
+          label: `${b.bankaAdi} (${b.kod}) - Banka`,
+          source: 'banks'
+        });
+      });
+    }
+    
+    // 3. EPK (epk_list table)
+    if (propEPK) {
+      propEPK.forEach(e => {
+        combinedList.push({
+          value: e.id,
+          label: `${e.kurumAdi} (${e.kod}) - EPK`,
+          source: 'epk'
+        });
+      });
+    }
+    
+    // 4. ÖK (ok_list table)
+    if (propOK) {
+      propOK.forEach(o => {
+        combinedList.push({
+          value: o.id,
+          label: `${o.kurumAdi} (${o.kod}) - ÖK`,
+          source: 'ok'
+        });
+      });
+    }
+    
+    console.log(`✅ [BulkOperationsTab] Combined ${combinedList.length} bank options:`, {
+      bankAccounts: propBankPFRecords?.length || 0,
+      banks: propBanks?.length || 0,
+      epk: propEPK?.length || 0,
+      ok: propOK?.length || 0
+    });
+    
+    return combinedList;
+  }, [propBankPFRecords, propBanks, propEPK, propOK]);
+
   // ✅ DEBUG: Log received props
   useEffect(() => {
     console.log('🔍 [BulkOperationsTab] Received props:', {
@@ -128,7 +224,7 @@ export function BulkOperationsTab({ customers: propCustomers, bankPFRecords: pro
         // Fetch bank/PF accounts
         const { data: bankPFData, error: bankPFError } = await supabase
           .from('bank_accounts')
-          .select('id, hesap_adi, hesap_kodu, category')
+          .select('id, hesap_adi, hesap_kodu, category, banka_pf_ad, firma_unvan, muhasebe_kodu, banka_or_pf')
           .eq('is_deleted', false)
           .order('hesap_adi');
 
@@ -525,12 +621,9 @@ export function BulkOperationsTab({ customers: propCustomers, bankPFRecords: pro
             <Label>Eklenecek Banka/PF Hesapları ({selectedBankPFForCustomers.length} seçili)</Label>
             <FilterDropdown
               label="Banka/PF Seç"
-              options={bankPFs.map(bp => ({
-                value: bp.id,
-                label: `${bp.bankaPfAd || bp.firmaUnvan || 'İsimsiz'} (${bp.muhasebeKodu || 'Kod Yok'})${bp.bankaOrPf ? ` - ${bp.bankaOrPf}` : ''}`
-              }))}
+              options={allBankOptions}
               selectedValues={selectedBankPFForCustomers}
-              onChange={setSelectedBankPFForCustomers}
+              onChangeMulti={setSelectedBankPFForCustomers}
               multiSelect
               clearable
             />
@@ -614,12 +707,9 @@ export function BulkOperationsTab({ customers: propCustomers, bankPFRecords: pro
             <Label>Banka/PF Hesabı Seçin</Label>
             <FilterDropdown
               label="Banka/PF Seç"
-              options={bankPFs.map(bp => ({
-                value: bp.id,
-                label: `${bp.bankaPfAd || bp.firmaUnvan || 'İsimsiz'} (${bp.muhasebeKodu || 'Kod Yok'})${bp.bankaOrPf ? ` - ${bp.bankaOrPf}` : ''}`
-              }))}
+              options={allBankOptions}
               selectedValues={selectedBankPF ? [selectedBankPF] : []}
-              onChange={(values) => setSelectedBankPF(values[0] || '')}
+              onChangeMulti={(values) => setSelectedBankPF(values[0] || '')}
               clearable
             />
           </div>
