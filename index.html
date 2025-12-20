@@ -99,7 +99,8 @@
       });
       
       // Console error override (production için - optional)
-      if (import.meta.env.PROD) {
+      // ✅ FIX: import.meta yerine window.location.hostname kontrolü
+      if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
         const originalError = console.error;
         console.error = function(...args) {
           const errorMessage = args.join(' ');

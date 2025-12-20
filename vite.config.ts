@@ -40,6 +40,6 @@ export default defineConfig({
     },
     // Production build - minified & optimized
     minify: 'terser',
-    sourcemap: true, // ✅ TEMPORARY: Enable sourcemap for debugging React Error #426
+    sourcemap: false, // ✅ PERFORMANCE: Disabled sourcemap for production (reduces bundle size)
   },
 })
