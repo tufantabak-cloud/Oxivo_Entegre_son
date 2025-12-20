@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { useDashboardWidgets } from '../hooks/useDashboardWidgets';
 import type { WidgetConfig } from '../hooks/useDashboardWidgets';
+import { logger } from '../utils/logger';
 import {
   CustomersSummaryWidget,
   BankPFSummaryWidget,
@@ -163,7 +164,7 @@ export function DashboardHome({
 
     // ✅ Sadece production + real data'da çalışır
     const autoRefreshInterval = setInterval(() => {
-      console.log('📊 Dashboard auto-refresh triggered');
+      logger.debug('📊 Dashboard auto-refresh triggered');
       setRefreshKey(prev => prev + 1);
     }, 30000); // 30 seconds
 

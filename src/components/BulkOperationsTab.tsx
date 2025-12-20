@@ -7,6 +7,7 @@ import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { supabase } from '../utils/supabaseClient';
 import { toast } from 'sonner';
+import { logger } from '../utils/logger';
 import { Users, Building2, CheckCircle2, XCircle, Loader2, Tag, BarChart3, Euro } from 'lucide-react';
 import { FilterDropdown } from './FilterDropdown';
 
@@ -143,7 +144,7 @@ export function BulkOperationsTab({
       });
     }
     
-    console.log(`✅ [BulkOperationsTab] Combined ${combinedList.length} bank options:`, {
+    logger.debug(`✅ Combined ${combinedList.length} bank options`, {
       bankAccounts: propBankPFRecords?.length || 0,
       banks: propBanks?.length || 0,
       epk: propEPK?.length || 0,
@@ -153,21 +154,7 @@ export function BulkOperationsTab({
     return combinedList;
   }, [propBankPFRecords, propBanks, propEPK, propOK]);
 
-  // ✅ DEBUG: Log received props
-  useEffect(() => {
-    console.log('🔍 [BulkOperationsTab] Received props:', {
-      propCustomers: propCustomers?.length || 0,
-      propBankPFRecords: propBankPFRecords?.length || 0,
-      bankPFs: bankPFs.length,
-      customers: customers.length
-    });
-    if (propBankPFRecords && propBankPFRecords.length > 0) {
-      console.log('🔍 [BulkOperationsTab] BankPF Sample:', propBankPFRecords[0]);
-    }
-    if (propCustomers && propCustomers.length > 0) {
-      console.log('🔍 [BulkOperationsTab] Customer Sample:', propCustomers[0]);
-    }
-  }, [propCustomers, propBankPFRecords, bankPFs, customers]);
+  // ❌ REMOVED: Verbose debug logs (use logger.debug if needed)
 
   // Operation 1: Toplu Cari'ye Banka/PF Ekleme
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
