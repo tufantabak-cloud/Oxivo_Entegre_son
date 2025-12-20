@@ -3059,9 +3059,32 @@ export function CustomerDetail({
 
               {(() => {
                 // linkedBankPFIds ile eşleşen kayıtları bul
+                
+                // 🔍 DEBUG: Log all relevant data for troubleshooting
+                console.log('🔍 [CustomerDetail - Banka/PF Section] Debug Info:', {
+                  formDataLinkedIds: formData.linkedBankPFIds,
+                  formDataLinkedIdsLength: formData.linkedBankPFIds?.length || 0,
+                  bankPFRecordsLength: bankPFRecords?.length || 0,
+                  bankPFRecordsSample: bankPFRecords?.slice(0, 3).map(r => ({
+                    id: r.id,
+                    firmaUnvan: r.firmaUnvan,
+                    hesapAdi: r.hesapAdi
+                  })),
+                  cariAdi: formData.cariAdi
+                });
+                
                 const linkedRecords = bankPFRecords?.filter((record: BankPF) => 
                   formData.linkedBankPFIds?.includes(record.id)
                 ) || [];
+                
+                console.log('🔍 [CustomerDetail - Banka/PF Section] Filtered Results:', {
+                  linkedRecordsCount: linkedRecords.length,
+                  linkedRecords: linkedRecords.map(r => ({
+                    id: r.id,
+                    firmaUnvan: r.firmaUnvan,
+                    hesapAdi: r.hesapAdi
+                  }))
+                });
 
                 return (
                   <>

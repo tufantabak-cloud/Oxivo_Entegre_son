@@ -3552,10 +3552,19 @@ export default function App() {
               bankPFRecords={bankPFRecords}
               onCustomersUpdated={async () => {
                 // ✅ Refresh customers from Supabase after bulk operations
-                console.log('🔄 Refreshing customers after bulk operation...');
+                console.log('🔄 [App.tsx] Refreshing customers after bulk operation...');
                 try {
                   const { data } = await customerApi.getAll();
                   if (data) {
+                    // 🔍 DEBUG: Log sample customer with linkedBankPfIds
+                    const sampleWithLinks = data.find(c => c.linkedBankPfIds && c.linkedBankPfIds.length > 0);
+                    console.log('🔍 [App.tsx] Sample customer with linkedBankPfIds:', {
+                      cariAdi: sampleWithLinks?.cariAdi,
+                      linkedBankPfIds: sampleWithLinks?.linkedBankPfIds,
+                      totalCustomers: data.length,
+                      customersWithLinks: data.filter(c => c.linkedBankPfIds && c.linkedBankPfIds.length > 0).length
+                    });
+                    
                     setCustomers(data);
                     logger.debug('✅ Müşteriler listesi toplu işlem sonrası güncellendi:', data.length, 'kayıt');
                   }

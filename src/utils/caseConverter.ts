@@ -19,6 +19,9 @@ export function toSnakeCase(str: string): string {
     'ekGelirOXTL': 'ek_gelir_ox_tl',
     'ekKesintiPFTL': 'ek_kesinti_pf_tl',
     'ekKesintiOXTL': 'ek_kesinti_ox_tl',
+    // ✅ NEW: Bank/PF related fields (PF must remain uppercase)
+    'linkedBankPFIds': 'linked_bank_pf_ids',
+    'bankPFRecords': 'bank_pf_records',
   };
   
   if (specialCases[str]) {
@@ -72,7 +75,10 @@ export function toCamelCase(str: string): string {
     'ek_gelir_pf_tl': 'ekGelirPFTL',
     'ek_gelir_ox_tl': 'ekGelirOXTL',
     'ek_kesinti_pf_tl': 'ekKesintiPFTL',
-    'ek_kesinti_ox_tl': 'ekKesintiOXTL'
+    'ek_kesinti_ox_tl': 'ekKesintiOXTL',
+    // ✅ NEW: Bank/PF related fields (PF must be uppercase)
+    'linked_bank_pf_ids': 'linkedBankPFIds',
+    'bank_pf_records': 'bankPFRecords'
   };
   
   if (specialCases[str]) {
