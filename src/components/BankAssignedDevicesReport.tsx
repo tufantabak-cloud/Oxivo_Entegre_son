@@ -31,11 +31,24 @@ export function BankAssignedDevicesReport({ customers, payterProducts, bankPFRec
   const bankAssignedDevices = useMemo((): BankAssignedDevice[] => {
     const devices: BankAssignedDevice[] = [];
 
+    // 🔍 DEBUG: Prop'ların gelip gelmediğini kontrol et
+    console.log('🔍 [BankAssignedDevicesReport] DEBUG START:');
+    console.log('  - customers count:', customers?.length || 0);
+    console.log('  - payterProducts count:', payterProducts?.length || 0);
+    console.log('  - bankPFRecords count:', bankPFRecords?.length || 0);
+    console.log('  - bankPFRecords RAW:', bankPFRecords);
+
     // ✅ SOFT DELETE: Aktif BankPF kayıtlarını filtrele
     const activeBankPFs = (bankPFRecords || []).filter(bp => !bp.isDeleted);
     
+    console.log('  - activeBankPFs count (after isDeleted filter):', activeBankPFs.length);
+    console.log('  - activeBankPFs sample:', activeBankPFs.slice(0, 3));
+    
     // ✅ BankPF ID to Record map (hızlı erişim için)
     const bankPFMap = new Map(activeBankPFs.map(bp => [bp.id, bp]));
+
+    console.log('  - bankPFMap size:', bankPFMap.size);
+    console.log('  - bankPFMap keys sample:', Array.from(bankPFMap.keys()).slice(0, 5));
 
     // ✅ NULL SAFETY: customers boş olabilir
     (customers || []).forEach(customer => {
@@ -45,13 +58,22 @@ export function BankAssignedDevicesReport({ customers, payterProducts, bankPFRec
       const serviceFee = customer.serviceFeeSettings;
       
       // ✅ FIX 2: ServiceFee aktif değilse atla (gelir hesabına dahil etme!)
-      if (!serviceFee.isActive) return;
+      if (!serviceFee.isActive) {
+        console.log(`  ⏭️ SKIPPED (serviceFee inactive): ${customer.cariAdi}`);
+        return;
+      }
       
       // ✅ FIX 3: ServiceFee dondurulmuşsa atla
-      if (serviceFee.suspensionStartDate && !serviceFee.suspensionReason?.includes('devam')) return;
+      if (serviceFee.suspensionStartDate && !serviceFee.suspensionReason?.includes('devam')) {
+        console.log(`  ⏭️ SKIPPED (suspended): ${customer.cariAdi}`);
+        return;
+      }
       
       // ✅ FIX 4: Müşteri pasif/bloke ise atla (gelir hesabına dahil etme!)
-      if (customer.durum === 'Pasif' || customer.durum === 'Bloke') return;
+      if (customer.durum === 'Pasif' || customer.durum === 'Bloke') {
+        console.log(`  ⏭️ SKIPPED (durum=${customer.durum}): ${customer.cariAdi}`);
+        return;
+      }
       
       // Müşterinin Payter cihazlarını bul (Ana Domain görmezden gelme desteği ile)
       const customerDomain = customer.domain || customer.guncelMyPayterDomain;
@@ -70,19 +92,35 @@ export function BankAssignedDevicesReport({ customers, payterProducts, bankPFRec
           ? customer.bankDeviceAssignments
           : [];
         
+        // 🔍 DEBUG: bankDeviceAssignments'ı logla
+        if (bankAssignments.length > 0) {
+          console.log(`  📋 Customer: ${customer.cariAdi}`);
+          console.log(`    - bankAssignments count:`, bankAssignments.length);
+          console.log(`    - bankAssignments:`, bankAssignments);
+        }
+        
         // Banka ataması kontrolü
         const bankAssignment = bankAssignments.find(
           ba => Array.isArray(ba.deviceIds) && ba.deviceIds.includes(product.id)
         );
 
-        if (!bankAssignment) return; // Gerçek banka ataması yoksa atla
+        if (!bankAssignment) {
+          console.log(`  ⏭️ NO BANK ASSIGNMENT for device: ${product.serialNumber} (${customer.cariAdi})`);
+          return; // Gerçek banka ataması yoksa atla
+        }
+        
+        console.log(`  ✅ FOUND bankAssignment:`, bankAssignment);
         
         // ✅ FIX 6: BankPF kaydı silinmişse atla
         const bankPFRecord = bankPFMap.get(bankAssignment.bankId);
         if (!bankPFRecord) {
           // BankPF kaydı silinmiş veya bulunamıyor - atla
+          console.log(`  ❌ BankPF NOT FOUND for bankId: ${bankAssignment.bankId} (${customer.cariAdi})`);
+          console.log(`     - Available bankPF IDs:`, Array.from(bankPFMap.keys()));
           return;
         }
+        
+        console.log(`  ✅ BankPF FOUND:`, bankPFRecord);
 
         // ✅ ARRAY SAFETY: deviceSubscriptions kontrolü
         const deviceSubscriptions = Array.isArray(serviceFee.deviceSubscriptions)
@@ -93,8 +131,14 @@ export function BankAssignedDevicesReport({ customers, payterProducts, bankPFRec
         const subscription = deviceSubscriptions.find(d => d.deviceId === product.id);
         
         // ✅ FIX 7: Abonelik pasif ise atla
-        if (subscription && !subscription.isActive) return;
-        if (subscription && subscription.paymentStatus === 'cancelled') return;
+        if (subscription && !subscription.isActive) {
+          console.log(`  ⏭️ SKIPPED (subscription inactive): ${product.serialNumber}`);
+          return;
+        }
+        if (subscription && subscription.paymentStatus === 'cancelled') {
+          console.log(`  ⏭️ SKIPPED (subscription cancelled): ${product.serialNumber}`);
+          return;
+        }
         
         const deviceSub: DeviceSubscription = subscription || {
           deviceId: product.id,
@@ -107,6 +151,7 @@ export function BankAssignedDevicesReport({ customers, payterProducts, bankPFRec
         };
 
         // ✅ Sadece AKTİF cihazları ekle
+        console.log(`  ✅✅ ADDING DEVICE: ${product.serialNumber} - ${bankAssignment.bankName}`);
         devices.push({
           customer,
           device: deviceSub,
@@ -118,6 +163,10 @@ export function BankAssignedDevicesReport({ customers, payterProducts, bankPFRec
         });
       });
     });
+
+    console.log('🔍 [BankAssignedDevicesReport] DEBUG END:');
+    console.log('  - TOTAL devices found:', devices.length);
+    console.log('  - devices sample:', devices.slice(0, 3));
 
     return devices;
   }, [customers, payterProducts, bankPFRecords]);
