@@ -584,11 +584,6 @@ export default function App() {
     
     // Debounce sync to avoid too many requests (wait 2 seconds after last change)
     const syncTimer = setTimeout(() => {
-      // ⚠️ TEMPORARY FIX: Auto-sync disabled due to infinite loop issue
-      // TODO: Fix autoSync.ts to use UPSERT instead of CREATE
-      logger.debug('⏭️ Auto-sync temporarily disabled to prevent console spam');
-      return;
-      
       logger.debug('🔄 Auto-syncing all data to Supabase...', {
         customers: customers.length,
         products: payterProducts.length,

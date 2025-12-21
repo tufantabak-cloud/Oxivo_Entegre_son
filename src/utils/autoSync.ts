@@ -136,6 +136,10 @@ export async function syncCustomers(customers: any[]): Promise<SyncResult> {
     return { success: true, type: 'customers', count: 0 };
   }
 
+  // ✅ SKIP: Auto-sync disabled - individual modules handle their own sync
+  console.log(`⏭️ Skipping auto-sync for ${customers.length} customers (modules handle their own CRUD)`);
+  return { success: true, type: 'customers', count: customers.length };
+
   console.log(`☁️ Syncing ${customers.length} customers to Supabase...`);
 
   try {
@@ -162,6 +166,10 @@ export async function syncProducts(products: any[]): Promise<SyncResult> {
     console.log('⏭️ Skipping products sync: No data');
     return { success: true, type: 'products', count: 0 };
   }
+
+  // ✅ SKIP: Auto-sync disabled - individual modules handle their own sync
+  console.log(`⏭️ Skipping auto-sync for ${products.length} products (modules handle their own CRUD)`);
+  return { success: true, type: 'products', count: products.length };
 
   console.log(`☁️ Syncing ${products.length} products to Supabase...`);
 
