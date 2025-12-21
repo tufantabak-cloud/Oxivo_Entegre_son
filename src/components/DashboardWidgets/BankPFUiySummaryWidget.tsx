@@ -30,6 +30,17 @@ export function BankPFUiySummaryWidget({
 
   // ÜİY İcmal Verisi - Her banka için toplam ÜİY ve cihaz sayıları
   const uiySummaryData = useMemo(() => {
+    // ✅ DEBUG: Check if bankaAdi mapping is working
+    if (banks.length > 0) {
+      const firstBank = banks[0];
+      console.log('🔍 DEBUG - First Bank in Widget:', {
+        id: firstBank.id,
+        ad: firstBank.ad,
+        bankaAdi: firstBank.bankaAdi,
+        allKeys: Object.keys(firstBank)
+      });
+    }
+    
     // TÜM banka/PF/EPK/ÖK tanımlarını birleştir
     const allBankDefinitions = [
       ...bankPFRecords.filter(bp => bp.firmaUnvan).map(bp => ({

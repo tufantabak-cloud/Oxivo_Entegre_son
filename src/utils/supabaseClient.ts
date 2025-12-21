@@ -1256,7 +1256,8 @@ export const banksApi = {
     // ✅ CRITICAL FIX: Map 'ad' → 'bankaAdi' for frontend compatibility
     const mappedData = data.map(item => {
       const camelItem = objectToCamelCase(item);
-      if (camelItem.ad) {
+      // ✅ FORCE MAPPING: Ensure bankaAdi is always set from ad field
+      if (camelItem.ad !== undefined && camelItem.ad !== null) {
         camelItem.bankaAdi = camelItem.ad;
       }
       return camelItem;
@@ -1365,7 +1366,8 @@ export const epkListApi = {
     // ✅ CRITICAL FIX: Map 'ad' → 'kurumAdi' for frontend compatibility
     const mappedData = data.map(item => {
       const camelItem = objectToCamelCase(item);
-      if (camelItem.ad) {
+      // ✅ FORCE MAPPING: Ensure kurumAdi is always set from ad field
+      if (camelItem.ad !== undefined && camelItem.ad !== null) {
         camelItem.kurumAdi = camelItem.ad;
       }
       return camelItem;
@@ -1474,7 +1476,8 @@ export const okListApi = {
     // ✅ CRITICAL FIX: Map 'ad' → 'kurumAdi' for frontend compatibility
     const mappedData = data.map(item => {
       const camelItem = objectToCamelCase(item);
-      if (camelItem.ad) {
+      // ✅ FORCE MAPPING: Ensure kurumAdi is always set from ad field
+      if (camelItem.ad !== undefined && camelItem.ad !== null) {
         camelItem.kurumAdi = camelItem.ad;
       }
       return camelItem;
