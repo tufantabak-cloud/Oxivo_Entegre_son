@@ -105,7 +105,7 @@ export type BatchOperationData =
   | { salesRepId?: string }
   | { userId?: string }
   | { groupName?: string }
-  | { feeAmount?: number; paymentType?: string }
+  | { standardFeePerDevice?: number; customFeePerDevice?: number; paymentType?: string; contractStartDate?: string; isActive?: boolean }
   | undefined;
 
 export function BatchOperationsDialog({
