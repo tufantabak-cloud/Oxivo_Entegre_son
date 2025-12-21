@@ -723,18 +723,73 @@ export const customerApi = {
    * Müşteri günceller
    */
   async update(id: string, updates: any) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📤 Updating customer in Supabase...');
+    }
+    
+    // Convert to snake_case
+    const snakeCaseUpdates = objectToSnakeCase(updates);
+    
+    // ✅ CRITICAL FIX: Convert JSONB fields to JSON strings (same as create())
+    const jsonbFields = [
+      'bank_device_assignments',
+      'service_fee_settings',
+      'device_subscriptions',
+      'service_fee_invoices',
+      'payment_reminders',
+      'reminder_settings',
+      'suspension_history',
+      'domain_hierarchy'
+    ];
+    
+    jsonbFields.forEach(field => {
+      if (snakeCaseUpdates[field] !== undefined && snakeCaseUpdates[field] !== null) {
+        try {
+          // Skip if already a string
+          if (typeof snakeCaseUpdates[field] === 'string') {
+            return;
+          }
+          
+          // Convert object/array to JSON string
+          snakeCaseUpdates[field] = JSON.stringify(snakeCaseUpdates[field]);
+          
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`✅ Converted ${field} to JSON string (${snakeCaseUpdates[field].length} chars)`);
+          }
+        } catch (e) {
+          console.error(`❌ Failed to stringify ${field}:`, e);
+          snakeCaseUpdates[field] = null;
+        }
+      }
+    });
+    
+    // ✅ CRITICAL FIX: linked_bank_pf_ids is TEXT[] NOT JSONB!
+    if (snakeCaseUpdates.linked_bank_pf_ids !== undefined && snakeCaseUpdates.linked_bank_pf_ids !== null) {
+      if (typeof snakeCaseUpdates.linked_bank_pf_ids === 'string') {
+        try {
+          snakeCaseUpdates.linked_bank_pf_ids = JSON.parse(snakeCaseUpdates.linked_bank_pf_ids);
+        } catch (e) {
+          console.warn('⚠️ Failed to parse linked_bank_pf_ids, using empty array');
+          snakeCaseUpdates.linked_bank_pf_ids = [];
+        }
+      }
+      if (!Array.isArray(snakeCaseUpdates.linked_bank_pf_ids)) {
+        snakeCaseUpdates.linked_bank_pf_ids = [];
+      }
+    }
+    
     let data, error;
     try {
       const result = await supabase
         .from('customers')
-        .update(objectToSnakeCase(updates))
+        .update(snakeCaseUpdates)
         .eq('id', id)
         .select()
         .single();
       data = result.data;
       error = result.error;
     } catch (fetchError: any) {
-      console.error('❌ Network error during Supabase fetch:', fetchError);
+      console.error('❌ Network error during Supabase update:', fetchError);
       return { 
         success: false, 
         error: 'Supabase bağlantısı kurulamadı. Lütfen internet bağlantınızı kontrol edin.' 
@@ -746,10 +801,38 @@ export const customerApi = {
       return { success: false, error: error.message };
     }
 
+    // ✅ FIX: Parse JSONB strings back to objects (same as getAll/create)
+    if (data) {
+      const jsonbFieldsForParsing = [
+        'bank_device_assignments',
+        'service_fee_settings',
+        'device_subscriptions',
+        'service_fee_invoices',
+        'payment_reminders',
+        'reminder_settings',
+        'suspension_history',
+        'domain_hierarchy'
+      ];
+      
+      jsonbFieldsForParsing.forEach(field => {
+        if (typeof data[field] === 'string') {
+          try {
+            data[field] = JSON.parse(data[field]);
+          } catch (e) {
+            console.error(`❌ [update] Failed to parse ${field}:`, e);
+            data[field] = null;
+          }
+        }
+      });
+    }
+
     // ✅ AUTO-BACKUP: Güncellenmiş kaydı yedekle
     addBackup('customers', 'UPDATE', id, data);
 
-    console.log(`✅ Updated customer ${id} in Supabase`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`✅ Updated customer ${id} in Supabase`);
+    }
+    
     return { success: true, data: objectToCamelCase(data) };
   },
 
