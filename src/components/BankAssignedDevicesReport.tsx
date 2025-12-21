@@ -87,35 +87,29 @@ export function BankAssignedDevicesReport({ customers, payterProducts, bankPFRec
       });
 
       matchedProducts.forEach(product => {
-        // ✅ ARRAY SAFETY: bankDeviceAssignments kontrolü
-        const bankAssignments = Array.isArray(customer.bankDeviceAssignments)
-          ? customer.bankDeviceAssignments
-          : [];
+        // ✅ FIX: linkedBankPFIds kullan! (Supabase'de 188 müşteri için dolu)
+        // İlk olarak müşterinin banka ataması var mı kontrol et
+        const linkedBankPFIds = customer.linkedBankPFIds || [];
         
-        // 🔍 DEBUG: bankDeviceAssignments'ı logla
-        if (bankAssignments.length > 0) {
-          console.log(`  📋 Customer: ${customer.cariAdi}`);
-          console.log(`    - bankAssignments count:`, bankAssignments.length);
-          console.log(`    - bankAssignments:`, bankAssignments);
+        // 🔍 DEBUG: Müşteri bilgileri
+        if (matchedProducts.length > 0) {
+          console.log(`  👤 Customer: ${customer.cariAdi}`);
+          console.log(`    - Matched products: ${matchedProducts.length}`);
+          console.log(`    - linkedBankPFIds count: ${linkedBankPFIds.length}`);
+          console.log(`    - linkedBankPFIds:`, linkedBankPFIds);
         }
         
-        // Banka ataması kontrolü
-        const bankAssignment = bankAssignments.find(
-          ba => Array.isArray(ba.deviceIds) && ba.deviceIds.includes(product.id)
-        );
-
-        if (!bankAssignment) {
-          console.log(`  ⏭️ NO BANK ASSIGNMENT for device: ${product.serialNumber} (${customer.cariAdi})`);
-          return; // Gerçek banka ataması yoksa atla
+        // Müşterinin atandığı ilk BankPF'yi al (birden fazla olabilir, ilkini kullan)
+        if (linkedBankPFIds.length === 0) {
+          console.log(`    ⚠️ NO linkedBankPFIds for customer: ${customer.cariAdi}`);
+          return; // Banka ataması yoksa atla
         }
         
-        console.log(`  ✅ FOUND bankAssignment:`, bankAssignment);
+        const firstBankPFId = linkedBankPFIds[0];
+        const bankPFRecord = bankPFMap.get(firstBankPFId);
         
-        // ✅ FIX 6: BankPF kaydı silinmişse atla
-        const bankPFRecord = bankPFMap.get(bankAssignment.bankId);
         if (!bankPFRecord) {
-          // BankPF kaydı silinmiş veya bulunamıyor - atla
-          console.log(`  ❌ BankPF NOT FOUND for bankId: ${bankAssignment.bankId} (${customer.cariAdi})`);
+          console.log(`  ❌ BankPF NOT FOUND for ID: ${firstBankPFId} (${customer.cariAdi})`);
           console.log(`     - Available bankPF IDs:`, Array.from(bankPFMap.keys()));
           return;
         }
@@ -151,15 +145,15 @@ export function BankAssignedDevicesReport({ customers, payterProducts, bankPFRec
         };
 
         // ✅ Sadece AKTİF cihazları ekle
-        console.log(`  ✅✅ ADDING DEVICE: ${product.serialNumber} - ${bankAssignment.bankName}`);
+        console.log(`  ✅✅ ADDING DEVICE: ${product.serialNumber} - ${bankPFRecord.firmaUnvan}`);
         devices.push({
           customer,
           device: deviceSub,
           deviceDomain: product.domain || '',
           monthlyFee: deviceSub.monthlyFee,
           subscriptionType: serviceFee.paymentType,
-          bankName: bankAssignment.bankName,
-          bankCode: bankAssignment.bankCode
+          bankName: bankPFRecord.firmaUnvan || bankPFRecord.selectedBanka || 'Bilinmeyen Banka',
+          bankCode: bankPFRecord.selectedBanka || ''
         });
       });
     });

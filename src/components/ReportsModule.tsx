@@ -129,10 +129,13 @@ export const ReportsModule = React.memo(function ReportsModule({
     const bankaStats = allBankDefinitions.map(def => {
       // İlişkili tüm müşterileri bul
       const relatedCustomers = customers.filter(customer => {
-        if (def.source === 'bankPF' && customer.linkedBankPFIds?.includes(def.id)) {
+        // ✅ FIX: linkedBankPFIds ÖNCE kontrol edilmeli! (188 müşteri Supabase'de banka ataması var)
+        // Bu alan CustomerList.tsx'te de kullanılıyor ve primary source
+        if (customer.linkedBankPFIds?.includes(def.id)) {
           return true;
         }
-        // ✅ SAFETY: bankDeviceAssignments array kontrolü
+        
+        // ✅ SAFETY: bankDeviceAssignments array kontrolü (Cihaz bazlı atama - ikincil kaynak)
         if (Array.isArray(customer.bankDeviceAssignments) && customer.bankDeviceAssignments.some(a => 
           a.bankId === def.id || 
           a.bankId === `bank-${def.id}` || 
@@ -141,6 +144,7 @@ export const ReportsModule = React.memo(function ReportsModule({
         )) {
           return true;
         }
+        
         return false;
       });
 

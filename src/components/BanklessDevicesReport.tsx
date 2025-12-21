@@ -52,14 +52,11 @@ export function BanklessDevicesReport({ customers, payterProducts }: BanklessDev
 
       // ✅ NULL SAFETY: matchedProducts boş olabilir
       (matchedProducts || []).forEach(product => {
-        // Banka ataması kontrolü
-        const hasBankAssignment = customer.bankDeviceAssignments && Array.isArray(customer.bankDeviceAssignments)
-          ? customer.bankDeviceAssignments.some(
-              ba => ba.deviceIds && Array.isArray(ba.deviceIds) && ba.deviceIds.includes(product.id)
-            )
-          : false;
+        // ✅ FIX: linkedBankPFIds kontrolü (Müşterinin banka ataması var mı?)
+        // Eğer müşterinin herhangi bir bankaya ataması varsa, o müşterinin cihazları "bankasız" değildir
+        const hasBankAssignment = customer.linkedBankPFIds && customer.linkedBankPFIds.length > 0;
 
-        if (hasBankAssignment) return; // Gerçek banka ataması varsa atla
+        if (hasBankAssignment) return; // Müşterinin banka ataması varsa atla
 
         // ✅ ARRAY SAFETY: deviceSubscriptions kontrolü
         const deviceSubscriptions = Array.isArray(serviceFee.deviceSubscriptions)
