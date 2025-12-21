@@ -152,26 +152,34 @@ export const ReportsModule = React.memo(function ReportsModule({
       const aktifCustomers = relatedCustomers.filter(c => c.durum === 'Aktif');
       const pasifCustomers = relatedCustomers.filter(c => c.durum !== 'Aktif');
 
-      // Aktif müşterilerin cihazlarını say
+      // ✅ FIX: Aktif müşterilerin cihazlarını serviceFeeSettings'den say
       const aktifDevices = aktifCustomers.reduce((sum, customer) => {
-        const assignment = customer.bankDeviceAssignments?.find(
-          a => a.bankId === def.id || 
-               a.bankId === `bank-${def.id}` || 
-               a.bankId === `ok-epk-${def.id}` || 
-               a.bankId === `ok-ok-${def.id}`
-        );
-        return sum + (assignment?.deviceIds?.length || 0);
+        // ServiceFee yoksa veya aktif değilse 0
+        if (!customer.serviceFeeSettings || !customer.serviceFeeSettings.isActive) {
+          return sum;
+        }
+        
+        // Aktif cihaz aboneliklerini say
+        const activeDeviceCount = (customer.serviceFeeSettings.deviceSubscriptions || [])
+          .filter(sub => sub.isActive && sub.paymentStatus !== 'cancelled')
+          .length;
+        
+        return sum + activeDeviceCount;
       }, 0);
 
-      // Pasif müşterilerin cihazlarını say
+      // ✅ FIX: Pasif müşterilerin cihazlarını serviceFeeSettings'den say
       const pasifDevices = pasifCustomers.reduce((sum, customer) => {
-        const assignment = customer.bankDeviceAssignments?.find(
-          a => a.bankId === def.id || 
-               a.bankId === `bank-${def.id}` || 
-               a.bankId === `ok-epk-${def.id}` || 
-               a.bankId === `ok-ok-${def.id}`
-        );
-        return sum + (assignment?.deviceIds?.length || 0);
+        // ServiceFee yoksa veya aktif değilse 0
+        if (!customer.serviceFeeSettings || !customer.serviceFeeSettings.isActive) {
+          return sum;
+        }
+        
+        // Aktif cihaz aboneliklerini say
+        const activeDeviceCount = (customer.serviceFeeSettings.deviceSubscriptions || [])
+          .filter(sub => sub.isActive && sub.paymentStatus !== 'cancelled')
+          .length;
+        
+        return sum + activeDeviceCount;
       }, 0);
 
       return {
