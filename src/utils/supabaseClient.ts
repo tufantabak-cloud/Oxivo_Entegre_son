@@ -288,6 +288,16 @@ export const customerApi = {
 
     logger.info(`✅ Fetched ${data.length} customers from Supabase`);
     
+    // ✅ DEBUG: Log first customer's service_fee_settings
+    if (data.length > 0 && data[0].service_fee_settings) {
+      console.log('🔍 [DEBUG] First customer service_fee_settings (RAW):', {
+        type: typeof data[0].service_fee_settings,
+        value: data[0].service_fee_settings,
+        isString: typeof data[0].service_fee_settings === 'string',
+        length: typeof data[0].service_fee_settings === 'string' ? data[0].service_fee_settings.length : 'N/A'
+      });
+    }
+    
     // ✅ FIX: Parse JSONB strings back to objects when reading
     const parsedData = data.map(record => {
       const parsed = { ...record };
@@ -311,6 +321,34 @@ export const customerApi = {
         if (typeof parsed[field] === 'string') {
           try {
             parsed[field] = JSON.parse(parsed[field]);
+            
+            // ✅ BACKWARD COMPATIBILITY: Migrate old "amount" key to "standard_fee_per_device"
+            if (field === 'service_fee_settings' && parsed[field]) {
+              const settings = parsed[field];
+              
+              // If old schema exists (amount), migrate to new schema (standard_fee_per_device)
+              if (settings.amount !== undefined && settings.standard_fee_per_device === undefined) {
+                settings.standard_fee_per_device = settings.amount;
+                console.log(`🔄 [MIGRATION] Migrated "amount" → "standard_fee_per_device" for customer:`, parsed.cari_adi || parsed.id);
+              }
+              
+              // Also handle payment_type: ensure it's consistent (some might be 'y', some 'yearly')
+              if (settings.payment_type === 'y') {
+                settings.payment_type = 'yearly';
+              } else if (settings.payment_type === 'm') {
+                settings.payment_type = 'monthly';
+              }
+            }
+            
+            // ✅ DEBUG: Log after parse
+            if (field === 'service_fee_settings' && parsed.cari_adi) {
+              console.log(`🔍 [DEBUG] Parsed ${field} for ${parsed.cari_adi}:`, {
+                keys: Object.keys(parsed[field] || {}),
+                paymentType: parsed[field]?.payment_type,
+                standardFee: parsed[field]?.standard_fee_per_device,
+                amount: parsed[field]?.amount // Show if old key still exists
+              });
+            }
           } catch (e) {
             console.error(`❌ [getAll] Failed to parse ${field}:`, e);
             console.error(`❌ Error message:`, (e as Error).message);
@@ -328,7 +366,17 @@ export const customerApi = {
       return parsed;
     });
     
-    return { success: true, data: parsedData.map(objectToCamelCase) || [] };
+    // ✅ DEBUG: Log after camelCase conversion
+    const finalData = parsedData.map(objectToCamelCase);
+    if (finalData.length > 0 && finalData[0].serviceFeeSettings) {
+      console.log('🔍 [DEBUG] After camelCase conversion:', {
+        keys: Object.keys(finalData[0].serviceFeeSettings || {}),
+        paymentType: finalData[0].serviceFeeSettings?.paymentType,
+        standardFeePerDevice: finalData[0].serviceFeeSettings?.standardFeePerDevice
+      });
+    }
+    
+    return { success: true, data: finalData || [] };
   },
 
   /**
