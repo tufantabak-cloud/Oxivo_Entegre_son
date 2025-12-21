@@ -723,7 +723,7 @@ export default function App() {
     const epkChannel = supabase
       .channel('epk-list-realtime')
       .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'epk_list' },
+        { event: '*', schema: 'public', table: 'epk_institutions' }, // ✅ FIXED: epk_list → epk_institutions
         async (payload) => {
           logger.debug('📥 EPK değişikliği algılandı:', payload);
           try {
@@ -754,7 +754,7 @@ export default function App() {
     const okChannel = supabase
       .channel('ok-list-realtime')
       .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'ok_list' },
+        { event: '*', schema: 'public', table: 'ok_institutions' }, // ✅ FIXED: ok_list → ok_institutions
         async (payload) => {
           logger.debug('📥 ÖK değişikliği algılandı:', payload);
           try {
