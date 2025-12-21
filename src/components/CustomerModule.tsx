@@ -427,10 +427,11 @@ export const CustomerModule = React.memo(function CustomerModule({
           customerId: customer.id,
           cariAdi: customer.cariAdi,
           bankDeviceAssignments: customer.bankDeviceAssignments,
-          bankDeviceAssignmentsCount: customer.bankDeviceAssignments?.length || 0
+          bankDeviceAssignmentsCount: customer.bankDeviceAssignments?.length || 0,
+          serviceFeeSettings: customer.serviceFeeSettings // ✅ DEBUG
         });
         await customerApi.upsert([customer]);
-        console.log('✅ Customer update instantly synced to Supabase (including bank assignments)');
+        console.log('✅ Customer update instantly synced to Supabase (including bank assignments + serviceFeeSettings)');
       } catch (error) {
         console.error('❌ Customer update instant sync error:', error);
       }

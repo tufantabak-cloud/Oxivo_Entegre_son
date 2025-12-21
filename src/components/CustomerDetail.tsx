@@ -3405,12 +3405,21 @@ export function CustomerDetail({
                                 options={paymentTypeOptions}
                                 value={serviceFee.paymentType}
                                 onChange={(value) => {
-                                  setFormData({
-                                    ...formData,
-                                    serviceFeeSettings: {
-                                      ...serviceFee,
-                                      paymentType: value as 'monthly' | 'yearly'
-                                    }
+                                  console.log('🔍 [HİZMET BEDELİ] Ödeme Şekli değişti:', value);
+                                  setFormData(prev => {
+                                    const updated = {
+                                      ...prev,
+                                      serviceFeeSettings: {
+                                        ...(prev.serviceFeeSettings || serviceFee),
+                                        paymentType: value as 'monthly' | 'yearly'
+                                      }
+                                    };
+                                    console.log('📤 [HİZMET BEDELİ] Yeni formData:', {
+                                      customerId: updated.id,
+                                      cariAdi: updated.cariAdi,
+                                      serviceFeeSettings: updated.serviceFeeSettings
+                                    });
+                                    return updated;
                                   });
                                 }}
                                 allLabel="Seçiniz"
@@ -3433,12 +3442,21 @@ export function CustomerDetail({
                                   value={serviceFee.customFeePerDevice || serviceFee.standardFeePerDevice}
                                   onChange={(e) => {
                                     const value = e.target.value ? parseFloat(e.target.value) : undefined;
-                                    setFormData({
-                                      ...formData,
-                                      serviceFeeSettings: {
-                                        ...serviceFee,
-                                        customFeePerDevice: !isNaN(value as number) ? value : undefined
-                                      }
+                                    console.log('🔍 [HİZMET BEDELİ] Standart Ücret değişti:', value);
+                                    setFormData(prev => {
+                                      const updated = {
+                                        ...prev,
+                                        serviceFeeSettings: {
+                                          ...(prev.serviceFeeSettings || serviceFee),
+                                          customFeePerDevice: !isNaN(value as number) ? value : undefined
+                                        }
+                                      };
+                                      console.log('📤 [HİZMET BEDELİ] Yeni formData:', {
+                                        customerId: updated.id,
+                                        cariAdi: updated.cariAdi,
+                                        serviceFeeSettings: updated.serviceFeeSettings
+                                      });
+                                      return updated;
                                     });
                                   }}
                                   className="flex-1"
@@ -3456,12 +3474,21 @@ export function CustomerDetail({
                                 type="date"
                                 value={serviceFee.contractStartDate}
                                 onChange={(e) => {
-                                  setFormData({
-                                    ...formData,
-                                    serviceFeeSettings: {
-                                      ...serviceFee,
-                                      contractStartDate: e.target.value
-                                    }
+                                  console.log('🔍 [HİZMET BEDELİ] Sözleşme Tarihi değişti:', e.target.value);
+                                  setFormData(prev => {
+                                    const updated = {
+                                      ...prev,
+                                      serviceFeeSettings: {
+                                        ...(prev.serviceFeeSettings || serviceFee),
+                                        contractStartDate: e.target.value
+                                      }
+                                    };
+                                    console.log('📤 [HİZMET BEDELİ] Yeni formData:', {
+                                      customerId: updated.id,
+                                      cariAdi: updated.cariAdi,
+                                      serviceFeeSettings: updated.serviceFeeSettings
+                                    });
+                                    return updated;
                                   });
                                 }}
                               />
