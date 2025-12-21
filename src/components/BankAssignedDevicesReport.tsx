@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Customer, DeviceSubscription } from './CustomerModule';
 import { PayterProduct } from './PayterProductTab';
+import { BankPF } from './BankPFModule';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { CheckCircle, Building2, Euro, TrendingUp, Search } from 'lucide-react';
@@ -21,19 +22,36 @@ interface BankAssignedDevice {
 interface BankAssignedDevicesReportProps {
   customers: Customer[];
   payterProducts: PayterProduct[];
+  bankPFRecords?: BankPF[]; // ✅ NEW: BankPF kayıtları eklendi (soft delete kontrolü için)
 }
 
-export function BankAssignedDevicesReport({ customers, payterProducts }: BankAssignedDevicesReportProps) {
+export function BankAssignedDevicesReport({ customers, payterProducts, bankPFRecords }: BankAssignedDevicesReportProps) {
   const [searchTerm, setSearchTerm] = useState('');
 
   const bankAssignedDevices = useMemo((): BankAssignedDevice[] => {
     const devices: BankAssignedDevice[] = [];
 
+    // ✅ SOFT DELETE: Aktif BankPF kayıtlarını filtrele
+    const activeBankPFs = (bankPFRecords || []).filter(bp => !bp.isDeleted);
+    
+    // ✅ BankPF ID to Record map (hızlı erişim için)
+    const bankPFMap = new Map(activeBankPFs.map(bp => [bp.id, bp]));
+
     // ✅ NULL SAFETY: customers boş olabilir
     (customers || []).forEach(customer => {
+      // ✅ FIX 1: ServiceFee yoksa atla
       if (!customer.serviceFeeSettings) return;
 
       const serviceFee = customer.serviceFeeSettings;
+      
+      // ✅ FIX 2: ServiceFee aktif değilse atla (gelir hesabına dahil etme!)
+      if (!serviceFee.isActive) return;
+      
+      // ✅ FIX 3: ServiceFee dondurulmuşsa atla
+      if (serviceFee.suspensionStartDate && !serviceFee.suspensionReason?.includes('devam')) return;
+      
+      // ✅ FIX 4: Müşteri pasif/bloke ise atla (gelir hesabına dahil etme!)
+      if (customer.durum === 'Pasif' || customer.durum === 'Bloke') return;
       
       // Müşterinin Payter cihazlarını bul (Ana Domain görmezden gelme desteği ile)
       const customerDomain = customer.domain || customer.guncelMyPayterDomain;
@@ -41,6 +59,8 @@ export function BankAssignedDevicesReport({ customers, payterProducts }: BankAss
       
       const matchedProducts = payterProducts.filter(product => {
         if (!product.domain) return false;
+        // ✅ FIX 5: Silinmiş cihazları filtrele (eğer isDeleted field'i varsa)
+        if ('isDeleted' in product && (product as any).isDeleted) return false;
         return matchDomain(product.domain, customerDomain, customer.ignoreMainDomain || false, customer.domainHierarchy);
       });
 
@@ -56,6 +76,13 @@ export function BankAssignedDevicesReport({ customers, payterProducts }: BankAss
         );
 
         if (!bankAssignment) return; // Gerçek banka ataması yoksa atla
+        
+        // ✅ FIX 6: BankPF kaydı silinmişse atla
+        const bankPFRecord = bankPFMap.get(bankAssignment.bankId);
+        if (!bankPFRecord) {
+          // BankPF kaydı silinmiş veya bulunamıyor - atla
+          return;
+        }
 
         // ✅ ARRAY SAFETY: deviceSubscriptions kontrolü
         const deviceSubscriptions = Array.isArray(serviceFee.deviceSubscriptions)
@@ -64,6 +91,11 @@ export function BankAssignedDevicesReport({ customers, payterProducts }: BankAss
         
         // Cihaz abonelik kaydını bul
         const subscription = deviceSubscriptions.find(d => d.deviceId === product.id);
+        
+        // ✅ FIX 7: Abonelik pasif ise atla
+        if (subscription && !subscription.isActive) return;
+        if (subscription && subscription.paymentStatus === 'cancelled') return;
+        
         const deviceSub: DeviceSubscription = subscription || {
           deviceId: product.id,
           deviceSerialNumber: product.serialNumber || '',
@@ -74,7 +106,7 @@ export function BankAssignedDevicesReport({ customers, payterProducts }: BankAss
           paymentStatus: 'pending'
         };
 
-        // Tüm cihazları ekle (aktif + pasif)
+        // ✅ Sadece AKTİF cihazları ekle
         devices.push({
           customer,
           device: deviceSub,
@@ -88,7 +120,7 @@ export function BankAssignedDevicesReport({ customers, payterProducts }: BankAss
     });
 
     return devices;
-  }, [customers, payterProducts]);
+  }, [customers, payterProducts, bankPFRecords]);
 
   // Filtreleme
   const filteredDevices = useMemo(() => {

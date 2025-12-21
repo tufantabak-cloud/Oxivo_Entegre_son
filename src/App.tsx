@@ -3396,6 +3396,7 @@ export default function App() {
             <RevenueModule
               customers={customers}
               payterProducts={payterProducts}
+              bankPFRecords={bankPFRecords}
               onUpdateCustomer={handleUpdateCustomer}
               suspensionReasons={suspensionReasons}
               isReadOnly={isViewer}

@@ -27,9 +27,16 @@ export function BanklessDevicesReport({ customers, payterProducts }: BanklessDev
 
     // ✅ NULL SAFETY: customers boş olabilir
     (customers || []).forEach(customer => {
+      // ✅ FIX 1: ServiceFee yoksa atla
       if (!customer.serviceFeeSettings) return;
 
       const serviceFee = customer.serviceFeeSettings;
+      
+      // ✅ FIX 2: ServiceFee aktif değilse atla
+      if (!serviceFee.isActive) return;
+      
+      // ✅ FIX 3: Müşteri pasif/bloke ise atla
+      if (customer.durum === 'Pasif' || customer.durum === 'Bloke') return;
       
       // Müşterinin Payter cihazlarını bul (Ana Domain görmezden gelme desteği ile)
       const customerDomain = customer.domain || customer.guncelMyPayterDomain;
@@ -38,6 +45,8 @@ export function BanklessDevicesReport({ customers, payterProducts }: BanklessDev
       // ✅ NULL SAFETY: payterProducts boş olabilir
       const matchedProducts = (payterProducts || []).filter(product => {
         if (!product.domain) return false;
+        // ✅ FIX 4: Silinmiş cihazları filtrele
+        if ('isDeleted' in product && (product as any).isDeleted) return false;
         return matchDomain(product.domain, customerDomain, customer.ignoreMainDomain || false, customer.domainHierarchy);
       });
 
@@ -59,6 +68,11 @@ export function BanklessDevicesReport({ customers, payterProducts }: BanklessDev
         
         // Cihaz abonelik kaydını bul
         const subscription = deviceSubscriptions.find(d => d.deviceId === product.id);
+        
+        // ✅ FIX 5: Pasif abonelikleri atla
+        if (subscription && !subscription.isActive) return;
+        if (subscription && subscription.paymentStatus === 'cancelled') return;
+        
         const deviceSub: DeviceSubscription = subscription || {
           deviceId: product.id,
           deviceSerialNumber: product.serialNumber || '',
@@ -69,8 +83,7 @@ export function BanklessDevicesReport({ customers, payterProducts }: BanklessDev
           paymentStatus: 'pending'
         };
 
-        // Tüm cihazları ekle (aktif + pasif)
-        // Pasif cihazlar da banka ataması olmadığı için gelir kaybı oluşturur
+        // ✅ Sadece AKTİF cihazları ekle
         devices.push({
           customer,
           device: deviceSub,

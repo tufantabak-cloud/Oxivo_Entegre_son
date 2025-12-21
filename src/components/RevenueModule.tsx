@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Customer, DeviceSubscription, DomainNode } from './CustomerModule';
 import { PayterProduct } from './PayterProductTab';
+import { BankPF } from './BankPFModule';
 import { SuspensionReason } from './DefinitionsModule';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -19,12 +20,14 @@ import { Calendar, TrendingUp, DollarSign, CheckCircle, XCircle, Pause } from 'l
 interface RevenueModuleProps {
   customers: Customer[];
   payterProducts: PayterProduct[];
+  bankPFRecords?: BankPF[]; // ✅ NEW: BankPF kayıtları eklendi
   onUpdateCustomer: (customer: Customer) => void;
   suspensionReasons: SuspensionReason[];
+  isReadOnly?: boolean; // ✅ FIXED: Missing isReadOnly prop
 }
 
 // PERFORMANCE: React.memo prevents unnecessary re-renders
-export const RevenueModule = React.memo(function RevenueModule({ customers, payterProducts, onUpdateCustomer, suspensionReasons }: RevenueModuleProps) {
+export const RevenueModule = React.memo(function RevenueModule({ customers, payterProducts, bankPFRecords, onUpdateCustomer, suspensionReasons, isReadOnly }: RevenueModuleProps) {
   // Dönem seçimi - varsayılan olarak mevcut ay
   const [selectedPeriod, setSelectedPeriod] = useState<string>(
     new Date().toISOString().substring(0, 7)
@@ -352,6 +355,7 @@ export const RevenueModule = React.memo(function RevenueModule({ customers, payt
             onUpdateCustomer={onUpdateCustomer}
             selectedPeriod={selectedPeriod}
             suspensionReasons={suspensionReasons}
+            isReadOnly={isReadOnly}
           />
         </TabsContent>
 
@@ -377,6 +381,7 @@ export const RevenueModule = React.memo(function RevenueModule({ customers, payt
           <BankAssignedDevicesReport
             customers={customers}
             payterProducts={payterProducts}
+            bankPFRecords={bankPFRecords}
           />
         </TabsContent>
 
