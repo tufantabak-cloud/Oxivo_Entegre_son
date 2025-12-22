@@ -2919,7 +2919,7 @@ export function CustomerDetail({
                               <p className="text-sm text-gray-600">{count} cihaz</p>
                             </div>
                           </div>
-                          <div className="overflow-x-auto">
+                          <div className="overflow-x-auto overflow-y-visible">
                             <table className="w-full text-sm">
                               <thead>
                                 <tr className="border-b border-gray-200">
@@ -2971,7 +2971,7 @@ export function CustomerDetail({
                                         <SelectTrigger className="w-[110px] h-8 text-xs">
                                           <SelectValue />
                                         </SelectTrigger>
-                                        <SelectContent>
+                                        <SelectContent className="z-[9999]" position="popper" sideOffset={5}>
                                           <SelectItem value="Müşteri">Müşteri</SelectItem>
                                           <SelectItem value="Oxivo">Oxivo</SelectItem>
                                           <SelectItem value="Kiralık">Kiralık</SelectItem>
