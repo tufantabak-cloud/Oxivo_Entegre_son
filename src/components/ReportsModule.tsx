@@ -1352,79 +1352,190 @@ export const ReportsModule = React.memo(function ReportsModule({
                   <CardContent>
                     {(() => {
                       // ✅ FIX: Seçili bankaya göre müşterileri filtrele
-                      const filteredCustomers = selectedBankPFId === 'ALL'
-                        ? customers.filter(c => 
-                            c.linkedBankPFIds?.length > 0 || 
-                            (c.bankDeviceAssignments && c.bankDeviceAssignments.length > 0)
-                          )
-                        : (() => {
-                            const selectedBankDef = allBankDefinitions.find(b => b.id === selectedBankPFId);
-                            if (!selectedBankDef) return [];
-                            return customers.filter(c => isCustomerRelatedToBank(c, selectedBankDef));
-                          })();
+                      if (selectedBankPFId === 'ALL') {
+                        // ✅ YENİ: "Tüm Banka/PF" seçiliyse → Banka/PF'lere göre grupla
+                        const banksWithCustomers = allBankDefinitions
+                          .map(bankDef => {
+                            const relatedCustomers = customers.filter(c => isCustomerRelatedToBank(c, bankDef));
+                            return {
+                              bankDef,
+                              customers: relatedCustomers
+                            };
+                          })
+                          .filter(item => item.customers.length > 0)
+                          .sort((a, b) => b.customers.length - a.customers.length);
 
-                      if (filteredCustomers.length === 0) {
+                        if (banksWithCustomers.length === 0) {
+                          return (
+                            <div className="text-center py-12 text-gray-500">
+                              <Users size={48} className="mx-auto mb-4 text-gray-400" />
+                              <p className="font-medium">Henüz ÜİY bulunamadı</p>
+                              <p className="text-sm mt-2">
+                                Henüz hiçbir müşteri Banka/PF kaydına bağlanmamış.
+                              </p>
+                            </div>
+                          );
+                        }
+
+                        const totalCustomers = banksWithCustomers.reduce((sum, item) => sum + item.customers.length, 0);
+
                         return (
-                          <div className="text-center py-12 text-gray-500">
-                            <Users size={48} className="mx-auto mb-4 text-gray-400" />
-                            <p className="font-medium">Bu filtrede ÜİY bulunamadı</p>
-                            <p className="text-sm mt-2">
-                              {selectedBankPFId === 'ALL'
-                                ? 'Henüz hiçbir müşteri Banka/PF kaydına bağlanmamış.'
-                                : 'Bu Banka/PF kaydına bağlı müşteri bulunmuyor.'}
-                            </p>
+                          <div className="space-y-6">
+                            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                              <p className="text-sm text-blue-900">
+                                <strong>📊 Toplam:</strong> {banksWithCustomers.length} Banka/PF • {totalCustomers} Müşteri
+                              </p>
+                            </div>
+
+                            {banksWithCustomers.map((item, index) => {
+                              const { bankDef, customers: bankCustomers } = item;
+                              
+                              const bankIcon = bankDef.type === 'Banka' ? '🏦' 
+                                : bankDef.type === 'EPK' ? '💳' 
+                                : bankDef.type === 'ÖK' ? '💰' 
+                                : '🏢';
+
+                              return (
+                                <div key={bankDef.id} className="border border-gray-200 rounded-lg overflow-hidden">
+                                  <div className="bg-gradient-to-r from-blue-50 to-blue-100 px-4 py-3 border-b border-blue-200">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-3">
+                                        <span className="text-2xl">{bankIcon}</span>
+                                        <div>
+                                          <h4 className="font-semibold text-gray-900">{bankDef.name}</h4>
+                                          <p className="text-xs text-gray-600">
+                                            {bankDef.type} • {bankCustomers.length} müşteri
+                                          </p>
+                                        </div>
+                                      </div>
+                                      <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                                        #{index + 1}
+                                      </Badge>
+                                    </div>
+                                  </div>
+
+                                  <div className="overflow-x-auto">
+                                    <Table>
+                                      <TableHeader>
+                                        <TableRow className="bg-gray-50">
+                                          <TableHead className="w-12 text-center">#</TableHead>
+                                          <TableHead>Cari Adı</TableHead>
+                                          <TableHead>Hesap Kodu</TableHead>
+                                          <TableHead className="text-center">Durum</TableHead>
+                                          <TableHead className="text-center">Cihaz Sayısı</TableHead>
+                                        </TableRow>
+                                      </TableHeader>
+                                      <TableBody>
+                                        {bankCustomers.map((customer, customerIndex) => {
+                                          const deviceCount = (customer.products || []).filter(p => 
+                                            p.serialNumber && 
+                                            p.serialNumber.trim() !== '' && 
+                                            !p.iptalTarihi
+                                          ).length;
+                                          
+                                          return (
+                                            <TableRow key={customer.id}>
+                                              <TableCell className="text-center text-xs text-gray-500">
+                                                {customerIndex + 1}
+                                              </TableCell>
+                                              <TableCell className="font-medium">{customer.cariAdi}</TableCell>
+                                              <TableCell className="text-sm text-gray-600">
+                                                {customer.cariHesapKodu || '-'}
+                                              </TableCell>
+                                              <TableCell className="text-center">
+                                                <Badge 
+                                                  variant={customer.durum === 'Aktif' ? 'default' : 'secondary'}
+                                                  className={customer.durum === 'Aktif' ? 'bg-green-600' : ''}
+                                                >
+                                                  {customer.durum}
+                                                </Badge>
+                                              </TableCell>
+                                              <TableCell className="text-center font-medium">
+                                                {deviceCount}
+                                              </TableCell>
+                                            </TableRow>
+                                          );
+                                        })}
+                                      </TableBody>
+                                    </Table>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      } else {
+                        const selectedBankDef = allBankDefinitions.find(b => b.id === selectedBankPFId);
+                        if (!selectedBankDef) {
+                          return (
+                            <div className="text-center py-12 text-gray-500">
+                              <p className="font-medium">Banka/PF bulunamadı</p>
+                            </div>
+                          );
+                        }
+
+                        const filteredCustomers = customers.filter(c => isCustomerRelatedToBank(c, selectedBankDef));
+
+                        if (filteredCustomers.length === 0) {
+                          return (
+                            <div className="text-center py-12 text-gray-500">
+                              <Users size={48} className="mx-auto mb-4 text-gray-400" />
+                              <p className="font-medium">Bu filtrede ÜİY bulunamadı</p>
+                              <p className="text-sm mt-2">
+                                Bu Banka/PF kaydına bağlı müşteri bulunmuyor.
+                              </p>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div className="overflow-x-auto">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Cari Adı</TableHead>
+                                  <TableHead>Hesap Kodu</TableHead>
+                                  <TableHead className="text-center">Durum</TableHead>
+                                  <TableHead className="text-center">Cihaz Sayısı</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {filteredCustomers.map((customer) => {
+                                  const deviceCount = (customer.products || []).filter(p => 
+                                    p.serialNumber && 
+                                    p.serialNumber.trim() !== '' && 
+                                    !p.iptalTarihi
+                                  ).length;
+                                  
+                                  return (
+                                    <TableRow key={customer.id}>
+                                      <TableCell className="font-medium">{customer.cariAdi}</TableCell>
+                                      <TableCell className="text-sm text-gray-600">
+                                        {customer.cariHesapKodu || '-'}
+                                      </TableCell>
+                                      <TableCell className="text-center">
+                                        <Badge 
+                                          variant={customer.durum === 'Aktif' ? 'default' : 'secondary'}
+                                          className={customer.durum === 'Aktif' ? 'bg-green-600' : ''}
+                                        >
+                                          {customer.durum}
+                                        </Badge>
+                                      </TableCell>
+                                      <TableCell className="text-center font-medium">
+                                        {deviceCount}
+                                      </TableCell>
+                                    </TableRow>
+                                  );
+                                })}
+                              </TableBody>
+                            </Table>
+                            
+                            <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700">
+                              <strong>Toplam:</strong> {filteredCustomers.length} müşteri
+                            </div>
                           </div>
                         );
                       }
-
-                      return (
-                        <div className="overflow-x-auto">
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Cari Adı</TableHead>
-                                <TableHead>Hesap Kodu</TableHead>
-                                <TableHead className="text-center">Durum</TableHead>
-                                <TableHead className="text-center">Cihaz Sayısı</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {filteredCustomers.map((customer) => {
-                                // ✅ FIX: customer.products üzerinden cihaz say
-                                const deviceCount = (customer.products || []).filter(p => 
-                                  p.serialNumber && 
-                                  p.serialNumber.trim() !== '' && 
-                                  !p.iptalTarihi
-                                ).length;
-                                
-                                return (
-                                  <TableRow key={customer.id}>
-                                    <TableCell className="font-medium">{customer.cariAdi}</TableCell>
-                                    <TableCell className="text-sm text-gray-600">
-                                      {customer.cariHesapKodu || '-'}
-                                    </TableCell>
-                                    <TableCell className="text-center">
-                                      <Badge 
-                                        variant={customer.durum === 'Aktif' ? 'default' : 'secondary'}
-                                        className={customer.durum === 'Aktif' ? 'bg-green-600' : ''}
-                                      >
-                                        {customer.durum}
-                                      </Badge>
-                                    </TableCell>
-                                    <TableCell className="text-center font-medium">
-                                      {deviceCount}
-                                    </TableCell>
-                                  </TableRow>
-                                );
-                              })}
-                            </TableBody>
-                          </Table>
-                          
-                          <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700">
-                            <strong>Toplam:</strong> {filteredCustomers.length} müşteri
-                          </div>
-                        </div>
-                      );
                     })()}
                   </CardContent>
                 </Card>
