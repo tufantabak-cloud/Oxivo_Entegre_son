@@ -3378,6 +3378,7 @@ export default function App() {
               epkList={epkList}
               okList={okList}
               kartProgramlar={kartProgramlar}
+              payterProducts={payterProducts}
             />
           </Suspense>
         )}
