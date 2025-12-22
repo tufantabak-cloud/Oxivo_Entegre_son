@@ -39,6 +39,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Switch } from './ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 // Tooltip removed - import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { toast } from 'sonner';
 import { matchDomain as utilMatchDomain, normalizeDomain as utilNormalizeDomain } from '../utils/domainMatching';
@@ -1190,6 +1191,19 @@ export function CustomerDetail({
       return b.count - a.count;
     });
   }, [matchedProducts, formData]);
+
+  // ✅ YENİ: Mülkiyet güncelleme handler'ı
+  const handleOwnershipChange = async (productId: string, newOwnership: 'Müşteri' | 'Oxivo' | 'Kiralık') => {
+    try {
+      // Backend'e kaydet
+      await productApi.updateProduct(productId, { ownership: newOwnership });
+      
+      toast.success(`Mülkiyet "${newOwnership}" olarak güncellendi`);
+    } catch (error) {
+      console.error('Mülkiyet güncellenirken hata:', error);
+      toast.error('Mülkiyet güncellenirken hata oluştu!');
+    }
+  };
 
   // Domain Hiyerarşisi Yönetimi
   const addDomain = (parentPath: number[] = []) => {
@@ -2711,7 +2725,8 @@ export function CustomerDetail({
                                     'TID': '',
                                     'Model': '',
                                     'Type': '',
-                                    'Status': ''
+                                    'Status': '',
+                                    'Mülkiyet': ''
                                   });
                                   
                                   // Cihazlar
@@ -2722,7 +2737,8 @@ export function CustomerDetail({
                                       'TID': product.tid || '-',
                                       'Model': product.terminalModel || '-',
                                       'Type': product.terminalType || '-',
-                                      'Status': product.onlineStatus || '-'
+                                      'Status': product.onlineStatus || '-',
+                                      'Mülkiyet': product.ownership || 'Müşteri'
                                     });
                                   });
                                   
@@ -2733,7 +2749,8 @@ export function CustomerDetail({
                                     'TID': '',
                                     'Model': '',
                                     'Type': '',
-                                    'Status': ''
+                                    'Status': '',
+                                    'Mülkiyet': ''
                                   });
                                 });
                                 
@@ -2747,7 +2764,8 @@ export function CustomerDetail({
                                   { wch: 15 }, // TID
                                   { wch: 20 }, // Model
                                   { wch: 15 }, // Type
-                                  { wch: 12 }  // Status
+                                  { wch: 12 }, // Status
+                                  { wch: 12 }  // Mülkiyet
                                 ];
                                 
                                 XLSX.utils.book_append_sheet(wb, ws, 'Cihaz Listesi');
@@ -2800,14 +2818,15 @@ export function CustomerDetail({
                                   currentY += 5;
                                   
                                   // Tablo
-                                  const headers = [['Serial Number', 'Name', 'TID', 'Model', 'Type', 'Status']];
+                                  const headers = [['Serial Number', 'Name', 'TID', 'Model', 'Type', 'Status', 'Mülkiyet']];
                                   const tableData = item.products.map(p => [
                                     p.serialNumber || '-',
                                     p.name || '-',
                                     p.tid || '-',
                                     p.terminalModel || '-',
                                     p.terminalType || '-',
-                                    p.onlineStatus || '-'
+                                    p.onlineStatus || '-',
+                                    p.ownership || 'Müşteri'
                                   ]);
                                   
                                   autoTable(doc, {
@@ -2829,12 +2848,13 @@ export function CustomerDetail({
                                       halign: 'center'
                                     },
                                     columnStyles: {
-                                      0: { cellWidth: 35 },
-                                      1: { cellWidth: 50 },
-                                      2: { cellWidth: 30 },
-                                      3: { cellWidth: 40 },
-                                      4: { cellWidth: 30 },
-                                      5: { cellWidth: 25, halign: 'center' }
+                                      0: { cellWidth: 30 },
+                                      1: { cellWidth: 40 },
+                                      2: { cellWidth: 25 },
+                                      3: { cellWidth: 35 },
+                                      4: { cellWidth: 25 },
+                                      5: { cellWidth: 22, halign: 'center' },
+                                      6: { cellWidth: 20, halign: 'center' }
                                     },
                                     alternateRowStyles: {
                                       fillColor: [249, 250, 251]
@@ -2909,6 +2929,7 @@ export function CustomerDetail({
                                   <th className="text-left py-2 px-3">Model</th>
                                   <th className="text-left py-2 px-3">Type</th>
                                   <th className="text-left py-2 px-3">Status</th>
+                                  <th className="text-left py-2 px-3">Mülkiyet</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -2939,6 +2960,23 @@ export function CustomerDetail({
                                       ) : (
                                         <span className="text-gray-400">-</span>
                                       )}
+                                    </td>
+                                    <td className="py-2 px-3">
+                                      <Select
+                                        value={product.ownership || 'Müşteri'}
+                                        onValueChange={(value: 'Müşteri' | 'Oxivo' | 'Kiralık') => 
+                                          handleOwnershipChange(product.id, value)
+                                        }
+                                      >
+                                        <SelectTrigger className="w-[110px] h-8 text-xs">
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="Müşteri">Müşteri</SelectItem>
+                                          <SelectItem value="Oxivo">Oxivo</SelectItem>
+                                          <SelectItem value="Kiralık">Kiralık</SelectItem>
+                                        </SelectContent>
+                                      </Select>
                                     </td>
                                   </tr>
                                 ))}

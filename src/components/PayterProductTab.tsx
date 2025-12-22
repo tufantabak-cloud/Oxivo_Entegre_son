@@ -35,6 +35,7 @@ export interface PayterProduct {
   terminalModel?: string;
   macAddress?: string;
   ptid?: string;
+  ownership?: 'Müşteri' | 'Oxivo' | 'Kiralık'; // ✅ YENİ: Mülkiyet alanı
 }
 
 /**
