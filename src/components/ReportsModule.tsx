@@ -174,30 +174,30 @@ export const ReportsModule = React.memo(function ReportsModule({
       const aktifCustomers = relatedCustomers.filter(c => c.durum === 'Aktif');
       const pasifCustomers = relatedCustomers.filter(c => c.durum !== 'Aktif');
       
-      // ✅ FIX: Cihaz sayısını bankDeviceAssignments üzerinden hesapla (Müşteri Listesi ile tutarlı)
+      // ✅ FIX: AKTİF müşterilerin TÜM cihazlarını say (products üzerinden) → "Aktif Cihaz" sütunu
       const aktifDevices = aktifCustomers.reduce((sum, customer) => {
-        // Bu banka için atanmış cihazları bul
-        const assignment = customer.bankDeviceAssignments?.find(
-          a => a.bankId === def.id || 
-               a.bankId === `bank-${def.id}` || 
-               a.bankId === `ok-epk-${def.id}` || 
-               a.bankId === `ok-ok-${def.id}`
-        );
+        // Bu aktif müşterinin tüm cihazlarını say (iptal edilmemiş, seri numarası olan)
+        const deviceCount = (customer.products || [])
+          .filter(p => 
+            p.serialNumber && 
+            p.serialNumber.trim() !== '' && 
+            !p.iptalTarihi
+          ).length;
         
-        return sum + (assignment?.deviceIds?.length || 0);
+        return sum + deviceCount;
       }, 0);
       
-      // ✅ FIX: Pasif müşteriler için de aynı mantık
+      // ✅ FIX: PASİF müşterilerin TÜM cihazlarını say (products üzerinden) → "Pasif Cihaz" sütunu
       const pasifDevices = pasifCustomers.reduce((sum, customer) => {
-        // Bu banka için atanmış cihazları bul
-        const assignment = customer.bankDeviceAssignments?.find(
-          a => a.bankId === def.id || 
-               a.bankId === `bank-${def.id}` || 
-               a.bankId === `ok-epk-${def.id}` || 
-               a.bankId === `ok-ok-${def.id}`
-        );
+        // Bu pasif müşterinin tüm cihazlarını say (iptal edilmemiş, seri numarası olan)
+        const deviceCount = (customer.products || [])
+          .filter(p => 
+            p.serialNumber && 
+            p.serialNumber.trim() !== '' && 
+            !p.iptalTarihi
+          ).length;
         
-        return sum + (assignment?.deviceIds?.length || 0);
+        return sum + deviceCount;
       }, 0);
       
       return {
@@ -207,7 +207,7 @@ export const ReportsModule = React.memo(function ReportsModule({
         pasifUiy: pasifCustomers.length,
         pasifCihaz: pasifDevices,
         toplamUiy: relatedCustomers.length,
-        toplamCihaz: aktifDevices + pasifDevices
+        toplamCihaz: aktifDevices + pasifDevices  // ← TOPLAM = Aktif Cihaz + Pasif Cihaz
       };
     });
     
