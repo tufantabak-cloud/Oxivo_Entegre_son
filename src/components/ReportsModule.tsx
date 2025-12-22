@@ -60,33 +60,63 @@ export const ReportsModule = React.memo(function ReportsModule({
   const [selectedBankPFId, setSelectedBankPFId] = useState<string>('ALL');
 
   // ✅ OPTIMIZATION: All bank/PF/EPK/ÖK definitions combined - memoized
+  // ✅ FIX: Aynı isimdeki bankaları birleştirmek için Map kullan (duplikasyonu önle)
   const allBankDefinitions = useMemo<BankDefinition[]>(() => {
-    return [
-      ...bankPFRecords.filter(bp => bp.firmaUnvan).map(bp => ({
-        id: bp.id,
-        name: bp.firmaUnvan,
-        type: (bp.bankaOrPF === 'Banka' ? 'Banka' : bp.odemeKurulusuTipi || 'PF') as 'Banka' | 'EPK' | 'ÖK' | 'PF',
-        source: 'bankPF' as const
-      })),
-      ...banks.filter(b => b.bankaAdi).map(b => ({
-        id: b.id,
-        name: b.bankaAdi,
-        type: 'Banka' as const,
-        source: 'definitions' as const
-      })),
-      ...epkList.filter(e => e.kurumAdi).map(e => ({
-        id: e.id,
-        name: e.kurumAdi,
-        type: 'EPK' as const,
-        source: 'definitions' as const
-      })),
-      ...okList.filter(o => o.kurumAdi).map(o => ({
-        id: o.id,
-        name: o.kurumAdi,
-        type: 'ÖK' as const,
-        source: 'definitions' as const
-      }))
-    ];
+    const bankMap = new Map<string, BankDefinition>();
+    
+    // 1. BankPF records'dan ekle (öncelikli kaynak)
+    bankPFRecords.filter(bp => bp.firmaUnvan).forEach(bp => {
+      const normalizedName = bp.firmaUnvan.trim().toLowerCase();
+      if (!bankMap.has(normalizedName)) {
+        bankMap.set(normalizedName, {
+          id: bp.id,
+          name: bp.firmaUnvan,
+          type: (bp.bankaOrPF === 'Banka' ? 'Banka' : bp.odemeKurulusuTipi || 'PF') as 'Banka' | 'EPK' | 'ÖK' | 'PF',
+          source: 'bankPF' as const
+        });
+      }
+    });
+    
+    // 2. Banks definitions'dan ekle (sadece BankPF'de yoksa)
+    banks.filter(b => b.bankaAdi).forEach(b => {
+      const normalizedName = b.bankaAdi.trim().toLowerCase();
+      if (!bankMap.has(normalizedName)) {
+        bankMap.set(normalizedName, {
+          id: b.id,
+          name: b.bankaAdi,
+          type: 'Banka' as const,
+          source: 'definitions' as const
+        });
+      }
+    });
+    
+    // 3. EPK definitions'dan ekle (sadece yoksa)
+    epkList.filter(e => e.kurumAdi).forEach(e => {
+      const normalizedName = e.kurumAdi.trim().toLowerCase();
+      if (!bankMap.has(normalizedName)) {
+        bankMap.set(normalizedName, {
+          id: e.id,
+          name: e.kurumAdi,
+          type: 'EPK' as const,
+          source: 'definitions' as const
+        });
+      }
+    });
+    
+    // 4. ÖK definitions'dan ekle (sadece yoksa)
+    okList.filter(o => o.kurumAdi).forEach(o => {
+      const normalizedName = o.kurumAdi.trim().toLowerCase();
+      if (!bankMap.has(normalizedName)) {
+        bankMap.set(normalizedName, {
+          id: o.id,
+          name: o.kurumAdi,
+          type: 'ÖK' as const,
+          source: 'definitions' as const
+        });
+      }
+    });
+    
+    return Array.from(bankMap.values());
   }, [bankPFRecords, banks, epkList, okList]);
 
   // ✅ OPTIMIZATION: ÜİY Listesi için Banka/PF dropdown options - memoized
@@ -147,20 +177,32 @@ export const ReportsModule = React.memo(function ReportsModule({
   }, [bankPFRecords, banks, epkList, okList]);
 
   // ✅ OPTIMIZATION: Helper function to check if customer is related to bank - memoized callback
-  const isCustomerRelatedToBank = useCallback((customer: Customer, bankDefId: string): boolean => {
+  // ✅ FIX: Banka ilişkisini hem ID hem isim ile kontrol et
+  const isCustomerRelatedToBank = useCallback((customer: Customer, bankDef: BankDefinition): boolean => {
+    const bankDefId = bankDef.id;
+    const bankDefName = bankDef.name.trim().toLowerCase();
+    
     // Method 1: linkedBankPFIds check (primary source)
     if (customer.linkedBankPFIds?.includes(bankDefId)) {
       return true;
     }
     
-    // Method 2: bankDeviceAssignments check (secondary source)
+    // Method 2: bankDeviceAssignments check - ID ile
     if (Array.isArray(customer.bankDeviceAssignments) && customer.bankDeviceAssignments.length > 0) {
-      return customer.bankDeviceAssignments.some(assignment => 
+      const hasIdMatch = customer.bankDeviceAssignments.some(assignment => 
         assignment.bankId === bankDefId || 
         assignment.bankId === `bank-${bankDefId}` || 
         assignment.bankId === `ok-epk-${bankDefId}` || 
         assignment.bankId === `ok-ok-${bankDefId}`
       );
+      if (hasIdMatch) return true;
+      
+      // Method 3: bankDeviceAssignments check - İsim ile (fallback)
+      const hasNameMatch = customer.bankDeviceAssignments.some(assignment => {
+        if (!assignment.bankName) return false;
+        return assignment.bankName.trim().toLowerCase() === bankDefName;
+      });
+      if (hasNameMatch) return true;
     }
     
     return false;
@@ -169,7 +211,7 @@ export const ReportsModule = React.memo(function ReportsModule({
   // ✅ OPTIMIZATION: ÜİY İcmal Tablosu Verisi - memoized with improved calculations
   const uiySummaryData = useMemo(() => {
     const bankaStats: UiySummaryBankaStats[] = allBankDefinitions.map(def => {
-      const relatedCustomers = customers.filter(customer => isCustomerRelatedToBank(customer, def.id));
+      const relatedCustomers = customers.filter(customer => isCustomerRelatedToBank(customer, def));
       
       const aktifCustomers = relatedCustomers.filter(c => c.durum === 'Aktif');
       const pasifCustomers = relatedCustomers.filter(c => c.durum !== 'Aktif');
@@ -1286,6 +1328,104 @@ export const ReportsModule = React.memo(function ReportsModule({
                         Müşteriler durum alanına göre (Aktif/Pasif) ayrılmıştır. Toplam cihaz sayısına göre sıralıdır.
                       </p>
                     </div>
+                  </CardContent>
+                </Card>
+
+                {/* ✅ FIX: ÜİY Detay Listesi - Filtreli Müşteri Tablosu */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users size={20} />
+                      ÜİY Detay Listesi
+                      {selectedBankPFId !== 'ALL' && (
+                        <Badge variant="secondary">
+                          {bankPFFilterOptions.find(opt => opt.value === selectedBankPFId)?.label || 'Filtreli'}
+                        </Badge>
+                      )}
+                    </CardTitle>
+                    <CardDescription>
+                      {selectedBankPFId === 'ALL' 
+                        ? 'Tüm Banka/PF kayıtlarına bağlı müşteriler'
+                        : 'Seçili Banka/PF kaydına bağlı müşteriler'}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {(() => {
+                      // ✅ FIX: Seçili bankaya göre müşterileri filtrele
+                      const filteredCustomers = selectedBankPFId === 'ALL'
+                        ? customers.filter(c => 
+                            c.linkedBankPFIds?.length > 0 || 
+                            (c.bankDeviceAssignments && c.bankDeviceAssignments.length > 0)
+                          )
+                        : (() => {
+                            const selectedBankDef = allBankDefinitions.find(b => b.id === selectedBankPFId);
+                            if (!selectedBankDef) return [];
+                            return customers.filter(c => isCustomerRelatedToBank(c, selectedBankDef));
+                          })();
+
+                      if (filteredCustomers.length === 0) {
+                        return (
+                          <div className="text-center py-12 text-gray-500">
+                            <Users size={48} className="mx-auto mb-4 text-gray-400" />
+                            <p className="font-medium">Bu filtrede ÜİY bulunamadı</p>
+                            <p className="text-sm mt-2">
+                              {selectedBankPFId === 'ALL'
+                                ? 'Henüz hiçbir müşteri Banka/PF kaydına bağlanmamış.'
+                                : 'Bu Banka/PF kaydına bağlı müşteri bulunmuyor.'}
+                            </p>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="overflow-x-auto">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Cari Adı</TableHead>
+                                <TableHead>Hesap Kodu</TableHead>
+                                <TableHead className="text-center">Durum</TableHead>
+                                <TableHead className="text-center">Cihaz Sayısı</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {filteredCustomers.map((customer) => {
+                                // ✅ FIX: customer.products üzerinden cihaz say
+                                const deviceCount = (customer.products || []).filter(p => 
+                                  p.serialNumber && 
+                                  p.serialNumber.trim() !== '' && 
+                                  !p.iptalTarihi
+                                ).length;
+                                
+                                return (
+                                  <TableRow key={customer.id}>
+                                    <TableCell className="font-medium">{customer.cariAdi}</TableCell>
+                                    <TableCell className="text-sm text-gray-600">
+                                      {customer.cariHesapKodu || '-'}
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                      <Badge 
+                                        variant={customer.durum === 'Aktif' ? 'default' : 'secondary'}
+                                        className={customer.durum === 'Aktif' ? 'bg-green-600' : ''}
+                                      >
+                                        {customer.durum}
+                                      </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-center font-medium">
+                                      {deviceCount}
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              })}
+                            </TableBody>
+                          </Table>
+                          
+                          <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700">
+                            <strong>Toplam:</strong> {filteredCustomers.length} müşteri
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </CardContent>
                 </Card>
               </div>
