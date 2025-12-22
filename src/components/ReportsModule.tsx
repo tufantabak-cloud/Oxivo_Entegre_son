@@ -174,24 +174,30 @@ export const ReportsModule = React.memo(function ReportsModule({
       const aktifCustomers = relatedCustomers.filter(c => c.durum === 'Aktif');
       const pasifCustomers = relatedCustomers.filter(c => c.durum !== 'Aktif');
       
+      // ✅ FIX: Cihaz sayısını bankDeviceAssignments üzerinden hesapla (Müşteri Listesi ile tutarlı)
       const aktifDevices = aktifCustomers.reduce((sum, customer) => {
-        if (!customer.serviceFeeSettings?.isActive) return sum;
+        // Bu banka için atanmış cihazları bul
+        const assignment = customer.bankDeviceAssignments?.find(
+          a => a.bankId === def.id || 
+               a.bankId === `bank-${def.id}` || 
+               a.bankId === `ok-epk-${def.id}` || 
+               a.bankId === `ok-ok-${def.id}`
+        );
         
-        const activeDeviceCount = (customer.serviceFeeSettings.deviceSubscriptions || [])
-          .filter(sub => sub.isActive && sub.paymentStatus !== 'cancelled')
-          .length;
-        
-        return sum + activeDeviceCount;
+        return sum + (assignment?.deviceIds?.length || 0);
       }, 0);
       
+      // ✅ FIX: Pasif müşteriler için de aynı mantık
       const pasifDevices = pasifCustomers.reduce((sum, customer) => {
-        if (!customer.serviceFeeSettings?.isActive) return sum;
+        // Bu banka için atanmış cihazları bul
+        const assignment = customer.bankDeviceAssignments?.find(
+          a => a.bankId === def.id || 
+               a.bankId === `bank-${def.id}` || 
+               a.bankId === `ok-epk-${def.id}` || 
+               a.bankId === `ok-ok-${def.id}`
+        );
         
-        const activeDeviceCount = (customer.serviceFeeSettings.deviceSubscriptions || [])
-          .filter(sub => sub.isActive && sub.paymentStatus !== 'cancelled')
-          .length;
-        
-        return sum + activeDeviceCount;
+        return sum + (assignment?.deviceIds?.length || 0);
       }, 0);
       
       return {
